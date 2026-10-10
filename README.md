@@ -14,9 +14,10 @@ has a typed Python package, reproducible development dependencies, automated
 quality checks, and a multi-version CI workflow. The API, generation pipeline,
 validator, and web interface are not implemented yet.
 
-Python and the package toolchain are now fixed, while framework, model provider,
-browser automation, and deployment choices remain intentionally open until the
-first end-to-end slice needs them.
+The target application stack is FastAPI and PostgreSQL, Celery with Redis,
+React/Vite, Playwright, and content-addressed artifacts on a persistent
+filesystem. Model-provider and deployment-vendor choices remain open behind
+project-owned interfaces.
 
 ## MVP
 
@@ -42,8 +43,12 @@ supports an appropriate completion, failure, or restart flow.
 - Validation must measure playability, not only successful compilation.
 - Repair attempts must be bounded and observable.
 
-See [docs/architecture.md](docs/architecture.md) for component boundaries,
-artifact shape, and the proposed delivery sequence.
+See [docs/architecture.md](docs/architecture.md) for the target system,
+generation workflow, trust boundaries, artifact contract, and delivery plan.
+The decisions are recorded in
+[ADR 0001](docs/adr/0001-target-architecture.md) and
+[ADR 0002](docs/adr/0002-generation-harness.md), with supporting evidence in
+the [landscape review](docs/research/landscape.md).
 
 ## Repository contents
 
@@ -59,7 +64,9 @@ artifact shape, and the proposed delivery sequence.
 ├── SECURITY.md          # Security policy and generated-code threat model
 ├── uv.lock               # Reproducible dependency resolution
 ├── docs/
-│   └── architecture.md  # MVP architecture and implementation sequence
+│   ├── adr/              # Accepted architectural decisions
+│   ├── research/         # Product, implementation, and research analysis
+│   └── architecture.md  # Target architecture and evolution plan
 └── README.md
 ```
 
