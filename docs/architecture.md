@@ -127,10 +127,13 @@ snapshot of generated source.
 
 ## Proposed implementation sequence
 
-1. Select a minimal typed web stack and document reproducible commands.
-2. Define schemas and a deterministic fake model provider.
-3. Implement artifact creation and a single self-contained game fixture.
-4. Add static validation and API orchestration.
+The Python package, dependency lock, quality tools, and CI matrix are in place.
+Continue with the product in this order:
+
+1. Define schemas and a deterministic fake model provider.
+2. Implement artifact creation and a single self-contained game fixture.
+3. Select the smallest suitable HTTP framework and add API orchestration.
+4. Add static validation.
 5. Add isolated browser validation with captured evidence.
 6. Add one bounded repair attempt driven by structured findings.
 7. Add the prompt UI and safe playable preview.
@@ -144,7 +147,7 @@ then be added behind the same interface.
 
 The bootstrap intentionally leaves these choices unresolved:
 
-- application language and web framework;
+- HTTP framework and web-interface stack;
 - model provider and default model;
 - browser automation library;
 - artifact persistence beyond local development;

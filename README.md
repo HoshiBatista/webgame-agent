@@ -9,13 +9,14 @@ The intended experience is simple:
 
 ## Project status
 
-**Planning / repository bootstrap.** The product contract and initial
-architecture are documented, but no application code or technology stack has
-been selected yet.
+**Python foundation ready; product implementation not started.** The repository
+has a typed Python package, reproducible development dependencies, automated
+quality checks, and a multi-version CI workflow. The API, generation pipeline,
+validator, and web interface are not implemented yet.
 
-This status is intentional: framework, provider, and deployment choices should
-be made alongside the first end-to-end implementation rather than encoded as
-unused scaffolding.
+Python and the package toolchain are now fixed, while framework, model provider,
+browser automation, and deployment choices remain intentionally open until the
+first end-to-end slice needs them.
 
 ## MVP
 
@@ -48,31 +49,57 @@ artifact shape, and the proposed delivery sequence.
 
 ```text
 .
+├── .github/workflows/ci.yml  # Lint, types, tests, and package build
+├── src/prompt2play/          # Installable Python package
+├── tests/                    # Automated Python tests
 ├── AGENTS.md            # Repository-wide engineering and agent guidance
 ├── CLAUDE.md            # Claude Code-specific working instructions
 ├── CONTRIBUTING.md      # Contribution workflow and quality expectations
+├── pyproject.toml        # Package metadata and tool configuration
 ├── SECURITY.md          # Security policy and generated-code threat model
+├── uv.lock               # Reproducible dependency resolution
 ├── docs/
 │   └── architecture.md  # MVP architecture and implementation sequence
 └── README.md
 ```
 
-Application directories will be added with the first working vertical slice.
-The likely boundaries are an API, web interface, shared contracts, generator,
-validator, templates, and tests; the final layout should follow the chosen
-toolchain rather than this preliminary list.
+Application modules will be added with the first working vertical slice. The
+likely boundaries are contracts, an API, generator, validator, artifact store,
+templates, and a web interface. New directories should contain working code,
+not placeholders.
 
 ## Getting started
 
-There is not yet a runnable application. To contribute at this stage:
+Prerequisites:
+
+- Python 3.11 or newer; Python 3.13 is the default local version;
+- [uv](https://docs.astral.sh/uv/) for environments, dependencies, and builds.
+
+Install the package and development tools from the lock file:
+
+```bash
+uv sync --locked --all-groups
+```
+
+Run the same checks used by CI:
+
+```bash
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy
+uv run pytest
+uv build
+```
+
+There is not yet a runnable API or web application. To contribute at this stage:
 
 1. read [AGENTS.md](AGENTS.md) and [docs/architecture.md](docs/architecture.md);
 2. choose work that advances the first end-to-end vertical slice;
-3. document any new runtime, package-manager, or provider requirement; and
+3. document any new runtime or provider requirement; and
 4. include tests and exact verification results with implementation changes.
 
-Once a stack is selected, this section must be updated in the same change with
-the exact install, run, test, lint, and build commands.
+GitHub Actions runs formatting, linting, strict type checking, package building,
+and tests on Python 3.11, 3.12, 3.13, and 3.14.
 
 ## Contributing and security
 

@@ -28,20 +28,38 @@ scaffolding.
 
 ## Local verification
 
-The repository does not yet define a runtime toolchain. The first implementation
-must add and document reproducible commands for:
+The project uses Python 3.11 or newer and uv. Create or update the local
+environment from the committed lock file:
 
-- dependency installation;
-- development startup;
-- formatting and linting;
-- type checking, if applicable;
-- unit and integration tests;
-- production build; and
-- browser-based game validation.
+```bash
+uv sync --locked --all-groups
+```
+
+Format code while working:
+
+```bash
+uv run ruff format .
+uv run ruff check --fix .
+```
+
+Before review, run the complete local check set:
+
+```bash
+uv run ruff format --check .
+uv run ruff check .
+uv run mypy
+uv run pytest
+uv build
+```
+
+Add runtime dependencies with `uv add <package>` and development dependencies
+with `uv add --dev <package>`. Commit `pyproject.toml` and `uv.lock` together;
+do not edit the lock file manually.
 
 Run all checks relevant to your change. In the change description, list the
 exact commands and their outcomes. Clearly label checks that were skipped or
-could not be run.
+could not be run. Once browser validation exists, include it for changes that
+affect generated games or previews.
 
 ## Commit and review expectations
 

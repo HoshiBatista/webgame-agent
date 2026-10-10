@@ -122,8 +122,13 @@ practical.
 
 ## Engineering standards
 
-- Follow the established language, dependency manager, formatting, and naming
-  conventions once they exist.
+- Use Python 3.11 or newer, the `src` package layout, and uv for environments,
+  dependencies, locking, and builds.
+- Keep `pyproject.toml` and `uv.lock` synchronized. Do not edit `uv.lock`
+  manually or introduce another Python dependency manager.
+- Before completing Python changes, run Ruff formatting and lint checks, strict
+  Mypy, Pytest, and the package build using the commands documented in the
+  README.
 - Keep modules focused and public interfaces typed.
 - Put provider-specific model integration behind a small adapter. Support
   timeouts, cancellation, bounded retries, and rate-limit failures.
