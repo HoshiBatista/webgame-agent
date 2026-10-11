@@ -133,9 +133,16 @@ shown once. Start them in separate terminals with the respective token supplied
 through `PROMPT2PLAY_RUNNER_TOKEN`:
 
 ```bash
-uv run prompt2play worker --role generator --provider codex --model YOUR_AVAILABLE_MODEL
+uv run prompt2play worker --role generator --provider codex
 uv run prompt2play worker --role validator
 ```
+
+The studio's launch settings list models reported by the connected Codex runner
+through `model/list`. The catalog refreshes between stages every five minutes;
+failed discovery retries after one minute and leaves the configured default and
+manual entry available. Add `--model YOUR_AVAILABLE_MODEL` to set an explicit
+runner default, or select a model for each game in the studio. API model names
+remain a separate setting. Catalog discovery never starts an inference turn.
 
 The generator uses the controlled single-author runtime by default. The
 `--mode four_author` option preserves the adopted donor strategy for measured

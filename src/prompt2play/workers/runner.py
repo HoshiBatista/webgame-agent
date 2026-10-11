@@ -27,6 +27,7 @@ from prompt2play.generation import (
 from prompt2play.generation.workspace import GenerationStopped
 from prompt2play.validation import IsolatedValidator
 from prompt2play.workers.diagnostics import emit, exception_details, safe_message
+from prompt2play.workers.model_catalog import CodexModelCatalog
 
 
 class LeaseRejected(RuntimeError):
@@ -347,8 +348,17 @@ def main(argv: list[str] | None = None) -> int:
             else [],
         }
         emit("worker_started", role=args.role, provider=args.provider, model=args.model)
+        catalog = (
+            CodexModelCatalog(args.codex)
+            if args.role == "generator" and args.provider == "codex"
+            else None
+        )
         claim_failures = 0
         while not stopping.is_set():
+            if catalog is not None:
+                capabilities.update(catalog.capabilities())
+                if stopping.is_set():
+                    break
             try:
                 claim = coordinator.post("api/worker/claim/", {"capabilities": capabilities})
             except LeaseRejected as exc:

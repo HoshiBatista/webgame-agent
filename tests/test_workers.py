@@ -24,6 +24,15 @@ from prompt2play.workers.runner import (
 )
 
 
+@pytest.fixture(autouse=True)
+def fake_model_catalog(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Worker tests must not inspect the developer's actual Codex account.
+    monkeypatch.setattr(
+        "prompt2play.workers.model_catalog.discover_codex_models",
+        lambda _executable: [{"id": "fixture-model", "label": "Fixture", "is_default": True}],
+    )
+
+
 def claim() -> dict[str, Any]:
     return {
         "lease_token": "authored-fixture-token",

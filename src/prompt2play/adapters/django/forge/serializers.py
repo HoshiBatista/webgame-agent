@@ -94,7 +94,7 @@ class ClaimSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120, required=False, allow_blank=True)
 
     def validate_capabilities(self, value):
-        bounded_object(value, 8192, "capabilities")
+        bounded_object(value, 32768, "capabilities")
         providers = value.get("providers")
         if (
             not isinstance(providers, list)
@@ -104,6 +104,35 @@ class ClaimSerializer(serializers.Serializer):
             raise serializers.ValidationError("providers должен содержать codex и/или openai.")
         if not isinstance(value.get("model", ""), str) or len(value.get("model", "")) > 120:
             raise serializers.ValidationError("Некорректная модель исполнителя.")
+        if "codex_models" in value:
+            models = value["codex_models"]
+            if (
+                "codex" not in providers
+                or not isinstance(models, list)
+                or len(models) > 64
+                or value.get("model_catalog_status") not in ["ready", "unavailable"]
+                or not isinstance(value.get("model_catalog_checked_at"), str)
+                or len(value["model_catalog_checked_at"]) > 40
+            ):
+                raise serializers.ValidationError("Некорректный каталог моделей Codex.")
+            seen = set()
+            for model in models:
+                if (
+                    not isinstance(model, dict)
+                    or set(model) != {"id", "label", "is_default"}
+                    or not isinstance(model["is_default"], bool)
+                    or any(
+                        not isinstance(model[key], str)
+                        or not 1 <= len(model[key]) <= 120
+                        or any(ord(char) < 32 for char in model[key])
+                        for key in ["id", "label"]
+                    )
+                    or model["id"] in seen
+                ):
+                    raise serializers.ValidationError("Некорректная запись каталога моделей.")
+                seen.add(model["id"])
+            if value["model_catalog_status"] == "unavailable" and models:
+                raise serializers.ValidationError("Недоступный каталог должен быть пустым.")
         if value.get("validator", "static") not in ["static", "docker"]:
             raise serializers.ValidationError("validator: static или docker.")
         requires = value.get("requires_job_model", [])
