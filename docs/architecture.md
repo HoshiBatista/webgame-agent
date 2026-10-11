@@ -225,7 +225,7 @@ operations which the application validates and applies; do not enable unrestrict
 CLI tools to simulate the target interface. Adapters advertise capabilities and
 reject unsupported modes explicitly.
 
-Check cancellation, fence, deadline, turns, tokens, estimated cost where known,
+Check cancellation, fence, deadline, turns, the selected run budget policy,
 file count, bytes, and quick-check budgets before operations. Bound retries and
 stop on repeated identical calls, no-op writes, or unchanged failures. Provider
 output limits are only enforced where supported; a Codex reservation estimate is
@@ -442,3 +442,28 @@ cost when available, and validation resource use. The
   only with explicit scope, acceptance, and deployment-boundary changes.
 - Compare single-author and bounded parallel-author generation experimentally;
   neither is presumed superior from architecture alone.
+
+### USD API-equivalent budget (implemented 2026-10-12)
+
+Studio creates runs with `budget_usd`; the coordinator resolves and freezes the
+model and versioned Standard tariff before queueing. `pricing.py` performs
+Decimal arithmetic and returns integer nanodollar cost bounds. Each invocation
+reserves estimated input/output cost, then replaces the reservation with its
+usage receipt. Cached input is a subset of total input. Context thresholds apply
+per invocation, with a lower/upper bound for aggregated Codex turns. Cache-write
+counts are unavailable, so the upper bound treats fresh input as cache writes.
+The budget uses that upper estimate plus all unresolved reservations.
+
+The coordinator serializes reservations and accounting through the job write
+fence, including late receipts after cancellation. Worker-side admission uses
+the same frozen policy. Restarted workers receive both known cost and unresolved
+reservations. Receipt identity makes reconciliation idempotent. USD runs never
+apply the legacy total-token ceiling; old token jobs and evaluation replays keep
+their original semantics. A running provider call may exceed its estimated
+reservation; the overrun is visible and prevents additional calls.
+
+The UI displays the rate date, model, three token rates, current USD range, held
+reservations and remaining budget. Rates can be updated through the server's
+`PROMPT2PLAY_PRICING_FILE`; old snapshots remain immutable. New or unrecognized
+models require an operator-reviewed tariff. Standard-equivalent cost does not
+claim to reproduce subscription usage limits or an actual API invoice.

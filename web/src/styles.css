@@ -26,3 +26,9 @@
 .check-row.unbound>svg,.check-row.unbound>span,.scenario-card.unbound>summary>b,.contract-result.unbound{color:#dac294}
 
 .validation-unverified { color: #d9b67e; border-color: #6c5439; background: #322b24; }
+
+.price-card, .cost-panel { border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 16px 0; font-size: 13px; }
+.price-rates { display: flex; flex-wrap: wrap; gap: 12px 28px; margin: 12px 0; }
+.price-rates span { display: grid; gap: 5px; }
+.price-card small, .cost-panel small { line-height: 1.6; opacity: .75; }
+.cost-panel .section-label { flex-wrap: wrap; gap: 8px; }

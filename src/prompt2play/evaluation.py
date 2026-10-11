@@ -109,7 +109,13 @@ class FileJournal:
             write_json(self.path, self.records)
 
     def reserve(
-        self, key: str, reserved_tokens: int, operation: str, request_sha256: str
+        self,
+        key: str,
+        reserved_tokens: int,
+        operation: str,
+        request_sha256: str,
+        *,
+        estimate: dict[str, int] | None = None,
     ) -> dict[str, Any] | None:
         with self.lock:
             existing = self.records.get(key)

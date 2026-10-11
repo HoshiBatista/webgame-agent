@@ -16,6 +16,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from prompt2play.contracts.source_policy import source_findings
+from prompt2play.pricing import cost_bounds, reservation_usage
 
 
 class GenerationStopped(RuntimeError):
@@ -47,6 +48,10 @@ class GenerationControl:
             "calls": 0,
         }
     )
+    cost_limit_nano: int | None = None
+    pricing: dict[str, Any] = field(default_factory=dict)
+    spent_nano: int = 0
+    uncertain_cost_nano: int = 0
     uncertain_tokens: int = 0
     reservations: dict[str, int] = field(default_factory=dict)
     lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
@@ -63,7 +68,10 @@ class GenerationControl:
         if not self.fence_check():
             raise GenerationStopped("Current execution fence is no longer owned")
         with self.lock:
-            if self.usage["total_tokens"] + self.uncertain_tokens > self.token_limit:
+            if self.cost_limit_nano is not None:
+                if self.spent_nano + self.uncertain_cost_nano > self.cost_limit_nano:
+                    raise GenerationStopped("Расчётный долларовый бюджет исчерпан")
+            elif self.usage["total_tokens"] + self.uncertain_tokens > self.token_limit:
                 raise GenerationStopped("Run token budget exceeded")
 
     def reserve(self, key: str, amount: int) -> None:
@@ -71,12 +79,12 @@ class GenerationControl:
         with self.lock:
             if key in self.reservations:
                 raise GenerationStopped("Invocation already reserved")
-            committed = (
-                self.usage["total_tokens"] + self.uncertain_tokens + sum(self.reservations.values())
-            )
-            if committed + amount > self.token_limit:
+            committed, limit = self._budget()
+            if committed + sum(self.reservations.values()) + amount > limit:
                 raise GenerationStopped(
-                    f"Cannot reserve {amount} tokens within remaining run budget"
+                    "Следующий запрос не помещается в оставшийся долларовый бюджет"
+                    if self.cost_limit_nano is not None
+                    else f"Cannot reserve {amount} tokens within remaining run budget"
                 )
             self.reservations[key] = amount
 
@@ -84,16 +92,24 @@ class GenerationControl:
         with self.lock:
             reservation = self.reservations.pop(key)
             if usage is None:
-                self.uncertain_tokens += reservation
+                self._hold(reservation)
             else:
                 if any(
                     type(usage.get(name)) is not int or usage[name] < 0
                     for name in ("input_tokens", "output_tokens", "total_tokens", "calls")
                 ):
-                    self.uncertain_tokens += reservation
+                    self._hold(reservation)
                     raise GenerationStopped(
                         "Provider usage is malformed; reservation remains charged"
                     )
+                if self.cost_limit_nano is not None:
+                    try:
+                        self.spent_nano += cost_bounds(usage, self.pricing)[1]
+                    except ValueError as exc:
+                        self._hold(reservation)
+                        raise GenerationStopped(
+                            "Invalid cost receipt; reservation retained"
+                        ) from exc
                 for name in self.usage:
                     self.usage[name] += usage.get(name, 0)
 
@@ -103,19 +119,40 @@ class GenerationControl:
                 "usage": dict(self.usage),
                 "uncertain_tokens": self.uncertain_tokens,
                 "reservations": dict(self.reservations),
+                "reservation_unit": "nano_usd" if self.cost_limit_nano is not None else "tokens",
+                "cost_limit_nano": self.cost_limit_nano,
+                "spent_nano": self.spent_nano,
+                "uncertain_cost_nano": self.uncertain_cost_nano,
+                "pricing": self.pricing,
             }
 
-    def available_tokens(self) -> int:
-        """Conservative remaining headroom, including outstanding/unknown calls."""
+    def _hold(self, amount: int) -> None:
+        if self.cost_limit_nano is not None:
+            self.uncertain_cost_nano += amount
+        else:
+            self.uncertain_tokens += amount
+
+    def _budget(self) -> tuple[int, int]:
+        if self.cost_limit_nano is not None:
+            return self.spent_nano + self.uncertain_cost_nano, self.cost_limit_nano
+        return self.usage["total_tokens"] + self.uncertain_tokens, self.token_limit
+
+    def estimate(self, prompt: str, max_output: int, schema: str = "") -> int:
+        if self.cost_limit_nano is not None:
+            return cost_bounds(reservation_usage(prompt, max_output, schema), self.pricing)[1]
+        return invocation_reservation(prompt, max_output)
+
+    def available_budget(self) -> int:
+        """Headroom in the active unit, including outstanding/unknown calls."""
         self.guard()
         with self.lock:
-            return max(
-                0,
-                self.token_limit
-                - self.usage["total_tokens"]
-                - self.uncertain_tokens
-                - sum(self.reservations.values()),
-            )
+            committed, limit = self._budget()
+            return max(0, limit - committed - sum(self.reservations.values()))
+
+    def available_tokens(self) -> int:
+        if self.cost_limit_nano is not None:
+            raise ValueError("Dollar budgets do not have a total-token ceiling")
+        return self.available_budget()
 
 
 def invocation_reservation(prompt: str, max_output: int) -> int:

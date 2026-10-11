@@ -52,6 +52,18 @@ class Coordinator:
 
     def post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         response = self.client.post(path.lstrip("/"), json=payload)
+        if response.status_code == 409:
+            with contextlib.suppress(ValueError):
+                detail = response.json()
+                code = detail.get("code") if isinstance(detail, dict) else None
+                if code == "budget_exhausted":
+                    raise GenerationStopped(
+                        "Недостаточно бюджета для следующего запроса. Учтены незавершённые вызовы."
+                    )
+                if code == "pricing_required":
+                    raise GenerationStopped(
+                        "Обновите исполнителя для поддержки долларового бюджета."
+                    )
         if response.status_code in (401, 403, 409):
             raise LeaseRejected(
                 f"Coordinator rejected credentials or fence ({response.status_code})"
@@ -141,11 +153,26 @@ class RemoteJournal:
         self.lock = threading.RLock()
 
     def reserve(
-        self, key: str, reserved_tokens: int, operation: str, request_sha256: str
+        self,
+        key: str,
+        reserved_tokens: int,
+        operation: str,
+        request_sha256: str,
+        *,
+        estimate: dict[str, int] | None = None,
     ) -> dict[str, Any] | None:
         with self.lock:
+            extra = (
+                {
+                    "reservation_input_tokens": estimate["input_tokens"],
+                    "reservation_output_tokens": estimate["output_tokens"],
+                }
+                if estimate is not None
+                else {}
+            )
             result = self.lease.write(
                 "reserve",
+                **extra,
                 invocation_key=key,
                 reserved_tokens=reserved_tokens,
                 operation=operation,
@@ -159,6 +186,7 @@ class RemoteJournal:
                 operation=operation,
                 reserved_tokens=reserved_tokens,
                 state=result["state"],
+                reserved_cost_nano=result.get("reserved_cost_nano"),
             )
             if result["state"] == "completed":
                 response = result["response"]
@@ -200,6 +228,7 @@ class RemoteJournal:
                 invocation_key=key,
                 status=status,
                 usage=usage,
+                cost=self.control.snapshot(),
             )
             try:
                 self.lease.write("settle", **payload)
@@ -242,9 +271,17 @@ def generation_request(claim: dict[str, Any], mode: str) -> GenerationRequest:
 
 
 def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
+    from prompt2play.pricing import nano_usd
+
+    dollar_budget = lease.job.get("budget_usd")
+    cost = lease.job.get("cost") or {}
     control = GenerationControl.bounded(
         lease.remaining(args.deadline),
         token_limit=lease.job["budget_tokens"],
+        cost_limit_nano=nano_usd(str(dollar_budget)) if dollar_budget is not None else None,
+        pricing=lease.job.get("pricing") or {},
+        spent_nano=nano_usd(cost.get("upper_usd", "0")),
+        uncertain_cost_nano=nano_usd(cost.get("reserved_usd", "0")),
         cancel=lease.cancel,
         fence_check=lease.alive,
         usage=dict(lease.job["usage"]),

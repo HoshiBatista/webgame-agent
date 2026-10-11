@@ -11,6 +11,7 @@ from django.db.models import F, Q, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework.exceptions import AuthenticationFailed, NotFound, ValidationError
+from prompt2play.pricing import snapshot
 
 from .authentication import secret_hash
 from .errors import Conflict
@@ -57,6 +58,29 @@ def scrub_log(value):
 
 def create_job(project, user, values):
     values = dict(values)
+    if values.get("budget_usd") is not None:
+        model = values.get("model", "")
+        if not model:
+            defaults = {
+                runner.capabilities.get("model", "")
+                for runner in Runner.objects.filter(
+                    role="generator",
+                    revoked=False,
+                    last_seen__gte=timezone.now() - timedelta(seconds=settings.FORGE_LEASE_SECONDS),
+                )
+                if values["provider"] in runner.capabilities.get("providers", [])
+            }
+            if len(defaults) != 1 or not next(iter(defaults)):
+                raise ValidationError(
+                    "Для расчёта бюджета выберите модель явно или подключите исполнителя с моделью по умолчанию.",
+                    code="pricing_model_required",
+                )
+            model = next(iter(defaults))
+        try:
+            values["pricing"] = snapshot(model, values["provider"])
+        except ValueError as exc:
+            raise ValidationError(str(exc), code="pricing_unavailable") from exc
+        values["model"] = model
     try:
         with transaction.atomic():
             # First database operation is a write: serializes SQLite writers too.

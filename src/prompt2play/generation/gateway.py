@@ -11,6 +11,7 @@ from typing import Any, Protocol, cast
 from prompt2play.contracts.models import stable
 from prompt2play.legacy.worker.core import ProviderError
 from prompt2play.legacy.worker.providers import CodexProvider, OpenAIProvider
+from prompt2play.pricing import reservation_usage
 
 from .workspace import GenerationControl, GenerationStopped, invocation_reservation
 
@@ -25,7 +26,13 @@ class GatewayReply:
 
 class InvocationJournal(Protocol):
     def reserve(
-        self, key: str, reserved_tokens: int, operation: str, request_sha256: str
+        self,
+        key: str,
+        reserved_tokens: int,
+        operation: str,
+        request_sha256: str,
+        *,
+        estimate: dict[str, int] | None = None,
     ) -> dict[str, Any] | None: ...
     def settle(
         self, key: str, *, data: dict[str, Any] | None, usage: dict[str, int] | None, status: str
@@ -96,6 +103,11 @@ class ProviderGateway:
         max_output: int = 16000,
     ) -> GatewayReply:
         control.guard()
+        if control.cost_limit_nano is not None and (
+            control.pricing.get("model") != self.model
+            or control.pricing.get("provider") != self.name
+        ):
+            raise GenerationStopped("Model differs from the frozen job tariff")
         request_sha = hashlib.sha256(
             stable(
                 {
@@ -109,8 +121,20 @@ class ProviderGateway:
             ).encode()
         ).hexdigest()
         key = role + ":" + request_sha
-        reservation = invocation_reservation(prompt, max_output)
-        reused = self.journal.reserve(key, reservation, role, request_sha) if self.journal else None
+        reservation = control.estimate(prompt, max_output, stable(schema))
+        journal_tokens = invocation_reservation(prompt, max_output)
+        reused = None
+        if self.journal:
+            if control.cost_limit_nano is not None:
+                reused = self.journal.reserve(
+                    key,
+                    journal_tokens,
+                    role,
+                    request_sha,
+                    estimate=reservation_usage(prompt, max_output, stable(schema)),
+                )
+            else:
+                reused = self.journal.reserve(key, journal_tokens, role, request_sha)
         if reused:
             control.guard()
             data = cast(dict[str, Any], reused["data"])

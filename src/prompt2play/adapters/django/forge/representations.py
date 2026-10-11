@@ -58,6 +58,9 @@ def job_data(job):
     from .services import remaining_seconds
 
     result["remaining_seconds"] = remaining_seconds(job)
+    result["budget_usd"] = str(job.budget_usd) if job.budget_usd is not None else None
+    result["pricing"] = job.pricing
+    result["cost"] = workflow.cost_summary(job)
     return result
 
 

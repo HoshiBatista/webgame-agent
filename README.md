@@ -128,6 +128,38 @@ Setup asks for the administrator password and creates a private local
 The `--slim` validator build uses a system Chromium image when the larger official
 Playwright image is impractical; reports record the actual image and browser.
 
+New Studio runs use a **USD API-equivalent budget** (default $10, editable
+from $0.01 to $1,000), including Codex subscription runs. Fresh input, cached
+input, and output use different Standard rates. The server fixes the explicit
+model and dated tariff at job creation; the UI shows those rates before launch.
+Cached input is subtracted from total input, and reasoning is already included
+in output. Actual receipts are priced per invocation, never from the run's
+aggregate context size. There is no additional total-token ceiling for USD runs.
+
+The bundled rate card covers seven models, checked against official OpenAI model
+pages on **2026-10-12** (`src/prompt2play/resources/pricing.json`). To update it,
+configure `PROMPT2PLAY_PRICING_FILE` on the server with a reviewed file of the same
+schema. Existing jobs keep their snapshot. Unknown model IDs are rejected rather
+than assigned an invented price; blank models require a unique, explicit default
+among online generators. The catalog is not fetched/scraped during generation.
+
+Reports show a cost range because current receipts omit cache-write counts;
+Codex also aggregates potentially multiple internal requests into one turn.
+The upper estimate accounts for cache writes and possible long context and is
+used for the budget. Standard API equivalent excludes Fast/Batch/Flex, regional
+premiums, discounts, tax and subscription billing. This is a comparison and
+stopping policy, not an invoice. Before dispatch, reserve estimated input and
+output cost without assuming a cache hit. An in-flight response can exceed the
+reservation (Codex exposes no portable hard output cap); record the overrun and
+stop subsequent calls. Unreported usage retains its reservation even after
+cancellation or restart. Repeated receipts never charge twice.
+
+`budget_usd` is a decimal API field; send it without `budget_tokens`. Legacy API
+clients omitting `budget_usd`, existing jobs, and the offline evaluation CLI
+retain the old token policy for reproducibility. No token limit is silently
+converted to dollars. Browser preferences migrate model/provider/repair settings;
+the new dollar limit starts at $10. Migration 0006 is additive.
+
 In settings create a generation runner and a validation runner. Each token is
 shown once. Start them in separate terminals with the respective token supplied
 through `PROMPT2PLAY_RUNNER_TOKEN`:

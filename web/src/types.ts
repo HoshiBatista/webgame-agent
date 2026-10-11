@@ -29,6 +29,7 @@ export interface Job {
   id: string; project_id: string; kind: 'generate' | 'revise'; prompt: string; provider: Provider; model: string;
   status: JobStatus; stage: string; progress: number; base_version_id: string | null; result_version_id: string | null;
   runner_id: string | null; created_at: string; updated_at: string; error: string; max_repairs: number; budget_tokens: number; usage: Usage;
+  budget_usd?: string | null; cost?: Cost | null; pricing?: { model: string; as_of: string; source: string };
 }
 export interface Project { id: string; title: string; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }
 export interface Version {
@@ -39,5 +40,7 @@ export interface Version {
 export interface VersionDetail extends Version { files: Record<string, string>; html: string }
 export interface JobEvent { id: number; job_id: string; stage: string; level: 'info' | 'warning' | 'error'; message: string; data: unknown; created_at: string }
 export interface Runner { id: string; name: string; role?: RunnerRole; created_at: string; last_seen: string | null; online: boolean; revoked: boolean; capabilities: Record<string, unknown> }
-export interface JobSettings { provider: Provider; model: string; max_repairs: number; budget_tokens: number }
+export interface PriceCatalog { as_of: string; service_tier: string; source: string; models: Record<string, {input: string; cached_input: string; cache_write: string; output: string}> }
+export interface Cost { estimated_usd: string; upper_usd: string; reserved_usd: string; remaining_usd: string; over_budget: boolean }
+export interface JobSettings { provider: Provider; model: string; max_repairs: number; budget_usd: number }
 export interface JobInput extends JobSettings { kind: 'generate' | 'revise'; prompt: string; base_version_id?: string | null }

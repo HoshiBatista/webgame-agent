@@ -1,4 +1,4 @@
-import type { Job, JobEvent, JobInput, Project, Runner, RunnerRole, Session, Version, VersionDetail } from '../types';
+import type { Job, JobEvent, JobInput, PriceCatalog, Project, Runner, RunnerRole, Session, Version, VersionDetail } from '../types';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -99,6 +99,7 @@ const authPost = <T>(path: string, body: unknown, guard: (value: unknown) => boo
 const id = encodeURIComponent;
 export const api = {
   session: readSession,
+  pricing: (signal?: AbortSignal) => checked(requestJson<PriceCatalog>('/api/pricing/', {signal}), value => record(value) && typeof value.as_of === 'string' && record(value.models)),
   login: (username: string, password: string) => authPost<Session>('/api/auth/login/', { username, password }, session).then(rememberSession),
   logout: () => authPost<{ ok: boolean }>('/api/auth/logout/', {}, value => record(value) && value.ok === true).then(value => { sessionCsrfToken = ''; return value; }),
   projects: (signal?: AbortSignal) => checked(requestJson<Project[]>('/api/projects/', { signal }), listOf(project)),

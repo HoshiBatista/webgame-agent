@@ -194,6 +194,26 @@ def submit_candidate(job_id, runner, values):
     return finalize_intent(candidate)
 
 
+def cost_summary(job):
+    from prompt2play.pricing import usd, nano_usd
+
+    if job.budget_usd is None:
+        return None
+    held = (
+        job.invocations.filter(actual_usage__isnull=True).aggregate(
+            value=Sum("reserved_cost_nano")
+        )["value"]
+        or 0
+    )
+    return {
+        "estimated_usd": usd(job.cost_nano),
+        "upper_usd": usd(job.cost_upper_nano),
+        "reserved_usd": usd(held),
+        "remaining_usd": usd(max(0, nano_usd(job.budget_usd) - job.cost_upper_nano - held)),
+        "over_budget": job.cost_upper_nano > nano_usd(job.budget_usd),
+    }
+
+
 def reserve_invocation(job_id, runner, values):
     require_role(runner, "generator")
     with transaction.atomic():
@@ -214,19 +234,46 @@ def reserve_invocation(job_id, runner, values):
                     "Invocation key reused for another request.", code="invocation_conflict"
                 )
             return invocation
-        reserved = (
-            ModelInvocation.objects.filter(job=job, actual_usage__isnull=True)
-            .exclude(state="completed")
-            .aggregate(value=Sum("reserved_tokens"))["value"]
-            or 0
-        )
-        if (
-            job.usage.get("total_tokens", 0) + reserved + values["reserved_tokens"]
-            > job.budget_tokens
-        ):
-            raise Conflict(
-                "Token budget exhausted or held by uncertain calls.", code="budget_exhausted"
+        reserved_cost = 0
+        if job.budget_usd is not None:
+            from prompt2play.pricing import cost_bounds, nano_usd
+
+            if not {"reservation_input_tokens", "reservation_output_tokens"} <= values.keys():
+                raise Conflict(
+                    "Исполнитель не поддерживает долларовый бюджет. Обновите его.",
+                    code="pricing_required",
+                )
+            estimate = {
+                "input_tokens": values["reservation_input_tokens"],
+                "cached_input_tokens": 0,
+                "output_tokens": values["reservation_output_tokens"],
+            }
+            reserved_cost = cost_bounds(estimate, job.pricing)[1]
+            held = (
+                job.invocations.filter(actual_usage__isnull=True).aggregate(
+                    value=Sum("reserved_cost_nano")
+                )["value"]
+                or 0
             )
+            if job.cost_upper_nano + held + reserved_cost > nano_usd(job.budget_usd):
+                raise Conflict(
+                    "Недостаточно долларового бюджета для следующего запроса; учтены незавершённые вызовы.",
+                    code="budget_exhausted",
+                )
+        else:
+            reserved = (
+                ModelInvocation.objects.filter(job=job, actual_usage__isnull=True)
+                .exclude(state="completed")
+                .aggregate(value=Sum("reserved_tokens"))["value"]
+                or 0
+            )
+            if (
+                job.usage.get("total_tokens", 0) + reserved + values["reserved_tokens"]
+                > job.budget_tokens
+            ):
+                raise Conflict(
+                    "Token budget exhausted or held by uncertain calls.", code="budget_exhausted"
+                )
         return ModelInvocation.objects.create(
             job=job,
             generator=runner,
@@ -235,6 +282,7 @@ def reserve_invocation(job_id, runner, values):
             prompt_sha256=values["prompt_sha256"],
             stage_fence=job.stage_fence,
             reserved_tokens=values["reserved_tokens"],
+            reserved_cost_nano=reserved_cost,
         )
 
 
@@ -244,6 +292,9 @@ def invocation_data(invocation):
         "state": invocation.state,
         "stage_fence": invocation.stage_fence,
         "reserved_tokens": invocation.reserved_tokens,
+        "reserved_cost_nano": invocation.reserved_cost_nano,
+        "cost_nano": invocation.cost_nano,
+        "cost_upper_nano": invocation.cost_upper_nano,
         "actual_usage": invocation.actual_usage,
         "response": None,
     }
@@ -314,6 +365,10 @@ def account_invocation(job_id, runner, values):
                 )
             return invocation
         changes = {"actual_usage": usage}
+        if job.budget_usd is not None:
+            from prompt2play.pricing import cost_bounds
+
+            changes["cost_nano"], changes["cost_upper_nano"] = cost_bounds(usage, job.pricing)
         if invocation.state == "reserved":
             changes["state"] = "ambiguous"
         ModelInvocation.objects.filter(pk=invocation.pk).update(**changes)
@@ -325,7 +380,14 @@ def account_invocation(job_id, runner, values):
                 aggregate[name] += recorded.get(name, 0)
         reconciled = {name: max(job.usage.get(name, 0), value) for name, value in aggregate.items()}
         reconciled["total_tokens"] = reconciled["input_tokens"] + reconciled["output_tokens"]
-        Job.objects.filter(pk=job.pk).update(usage=reconciled)
+        cost_changes = {}
+        if job.budget_usd is not None:
+            totals = job.invocations.aggregate(lower=Sum("cost_nano"), upper=Sum("cost_upper_nano"))
+            cost_changes = {
+                "cost_nano": totals["lower"] or 0,
+                "cost_upper_nano": totals["upper"] or 0,
+            }
+        Job.objects.filter(pk=job.pk).update(usage=reconciled, **cost_changes)
         invocation.refresh_from_db()
         return invocation
 

@@ -111,7 +111,7 @@
       "source": "backend/forge/models.py",
       "destination": "src/prompt2play/adapters/django/forge/models.py",
       "source_sha256": "c5d5a0d9d6c2dc6fc5aaa27f3e442d8c2121b2768f382361a48738f0cdffec8d",
-      "destination_sha256": "e6db5edb407917b6dbc6f2ffe5d067d83a0dd8e03d1d7fce78d8c556525059e1",
+      "destination_sha256": "ca68a6eb94bb6f19d23f40c6359f990f53fe1df3f24577afdf5727f64e0c4be1",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -135,7 +135,7 @@
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "b4b9f2049e13b5e90f87f74703baa66b38365809a1bc51175f93cdb013ae5249",
+      "destination_sha256": "14ef874cdc01ac1ea675bebfa03dda56fee5578813fe5f2bed3b542c71b2c41b",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -143,7 +143,7 @@
       "source": "backend/forge/serializers.py",
       "destination": "src/prompt2play/adapters/django/forge/serializers.py",
       "source_sha256": "8d8a07894f9b5e4acc3caf49a18f57000e5241b53ac82816401aab15535f3824",
-      "destination_sha256": "dd3640361e4cd02ef2cbf6c5c179c6d9a0714140f2dd4bcf887825fb0ae468b3",
+      "destination_sha256": "61403de6635bc4c8efd2fbc8c90cf6ca4949d341d4e6cbe9d96625174003414a",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -151,7 +151,7 @@
       "source": "backend/forge/services.py",
       "destination": "src/prompt2play/adapters/django/forge/services.py",
       "source_sha256": "6a81de265c7c23a6060405d1797703e2cd8b2fd1a2c5226fcef73708f5610568",
-      "destination_sha256": "439bccc02b165cf6aae5e2b683e2cdbd53a27cdca754a184e48b19e128158020",
+      "destination_sha256": "713150b7fd4322864bd1e5d86e7fd779bdc2969291ec2e381cfdd430343ee3e1",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -207,7 +207,7 @@
       "source": "backend/forge/urls.py",
       "destination": "src/prompt2play/adapters/django/forge/urls.py",
       "source_sha256": "91d876887830ae6f77c9910b7891578ade6a74fc6392d2c91a2e3ba5c24acc41",
-      "destination_sha256": "94464934b3a220a8d2c10f0761c25b21347761010e1230c5a5a6f5720bc373fa",
+      "destination_sha256": "ed1da20dde6f3b159c09373b5c517253032bf68df0c6a6e892b526805a865109",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -215,7 +215,7 @@
       "source": "backend/forge/views.py",
       "destination": "src/prompt2play/adapters/django/forge/views.py",
       "source_sha256": "e2311c7540a26fcf54bb81aef2a9f6b3c0e1d0c8cc1932449bcf9e5c5fb68f31",
-      "destination_sha256": "15fabc46eb90bca18b5ed7a0e664a98e107fbe3a6a0f04cd759073a99a0579d3",
+      "destination_sha256": "c0b27ede45f7b8146b41417846f8088059a095798f01855114de45e20a11be30",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -1255,15 +1255,15 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "modified": false,
+      "destination_sha256": "3f08afbb1db793d41b40d66be5b5aa51022253b18ec047571667640fb3eaab20",
+      "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
     {
       "source": "frontend/src/components/JobSettings.tsx",
       "destination": "web/src/components/JobSettings.tsx",
       "source_sha256": "f552bb8504c859167a88f923a4bf1c5f86f26ad5805b1d1079140a3c279a5eec",
-      "destination_sha256": "48efbda1382caab8923062558b8f1970fb77403d37273198cfa8a08586114c50",
+      "destination_sha256": "74c737b311fcb86710b3e36eb8f203763350ed6dbca2fd2aa4f302533da16e8c",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1303,7 +1303,7 @@
       "source": "frontend/src/components/ui.tsx",
       "destination": "web/src/components/ui.tsx",
       "source_sha256": "0919a2bf7faea4228f8c0af6cf66d11360da29d803dc6581989710e02b1ad644",
-      "destination_sha256": "2bb4b3acc96927c25576dd6f33cd78e1e68c619046a0d3a089396a385de76525",
+      "destination_sha256": "b75e96e61b32a6a76c5b78f3640e62669aa8a0d48568f75dc03080a920c7edac",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1311,7 +1311,7 @@
       "source": "frontend/src/lib/api.ts",
       "destination": "web/src/lib/api.ts",
       "source_sha256": "3b054504e03ab25c193fa7d766be43f60c01735067a35de3c0ed18a19236d32b",
-      "destination_sha256": "5dd20bbe64f18d1af060c6a981244c02f4d0db7dcfd0ca153c190939fa151688",
+      "destination_sha256": "1a646b09cadd7280b49cb3184f5e097ea322881a115aebd0441b3ecbc2c04241",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1319,7 +1319,7 @@
       "source": "frontend/src/lib/format.ts",
       "destination": "web/src/lib/format.ts",
       "source_sha256": "92b75dce945e753f038d600d1d2cae92476c3249dc75502fdaaeda1e67e91923",
-      "destination_sha256": "bc5b51bf7531d81bc017a27728dcb7e080d459b941ae2c131d0ab9c40515cf35",
+      "destination_sha256": "285d0dd0353ecc33b9dc60e5294f24928d21ee84e717f097207272ea6f5802d0",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1399,7 +1399,7 @@
       "source": "frontend/src/styles.css",
       "destination": "web/src/styles.css",
       "source_sha256": "bf0104eddfda38faedfe3302ac6ab39e160eb4d2799abe04512c61499573e762",
-      "destination_sha256": "6cf45766eb65bcdb50098398584f04a6d076e62ae0e3d496db78ec78da293022",
+      "destination_sha256": "5abeb3cdb3c59acf0f9589379a9914e33263845caa9fc33c4b308100b18bc828",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1407,7 +1407,7 @@
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "4356ed8284614357783e6ffd759bcfae689def34dc69d8b93eebd75ee87c70c1",
+      "destination_sha256": "7436b2e6db92cf15852cb9e515ebb979888593038c9a7d5cef1519f27c7e551c",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1447,7 +1447,7 @@
       "source": "frontend/tests/settings.test.ts",
       "destination": "web/tests/settings.test.ts",
       "source_sha256": "a3f3af95cdcadfe2aceee950bba8d1ad1b7a28937a2528afada4b7cec66a1909",
-      "destination_sha256": "b2e64cd34e17723458c2e77a11b4ec14154b2edb4cc8ab42f2dc42e556f9bbfd",
+      "destination_sha256": "cbb0d34d70f760e7116a22be41fe19c2c5321e6151d20429fd45042f23f06dd7",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },

@@ -1,5 +1,6 @@
 import json
 import math
+from decimal import Decimal
 
 from rest_framework import serializers
 
@@ -81,7 +82,21 @@ class JobCreateSerializer(serializers.Serializer):
     base_version_id = serializers.UUIDField(allow_null=True, required=False)
     max_repairs = serializers.IntegerField(min_value=0, max_value=2, default=2)
     budget_tokens = serializers.IntegerField(min_value=1000, max_value=2000000, default=400000)
+    budget_usd = serializers.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        max_value=Decimal("1000.00"),
+        required=False,
+    )
     budget_seconds = serializers.IntegerField(min_value=1, max_value=600, default=600)
+
+    def validate(self, attrs):
+        if "budget_usd" in self.initial_data and "budget_tokens" in self.initial_data:
+            raise serializers.ValidationError(
+                "Укажите один вид бюджета: доллары или устаревший лимит токенов."
+            )
+        return attrs
 
 
 class RunnerCreateSerializer(serializers.Serializer):
@@ -421,6 +436,12 @@ class ReserveSerializer(FencedSerializer):
     operation = serializers.CharField(max_length=64)
     prompt_sha256 = serializers.RegexField(r"^[a-f0-9]{64}$")
     reserved_tokens = serializers.IntegerField(min_value=1, max_value=10**8)
+    reservation_input_tokens = serializers.IntegerField(
+        min_value=1, max_value=10**8, required=False
+    )
+    reservation_output_tokens = serializers.IntegerField(
+        min_value=1, max_value=10**8, required=False
+    )
 
 
 class SettleSerializer(FencedSerializer):

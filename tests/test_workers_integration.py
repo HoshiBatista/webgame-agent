@@ -29,6 +29,7 @@ from prompt2play.adapters.django.forge.models import (
     User,
 )
 from prompt2play.generation import GenerationControl, ProviderGateway
+from prompt2play.generation.workspace import GenerationStopped
 from prompt2play.legacy.worker.core import Reply
 from prompt2play.paths import RESOURCE_ROOT
 from prompt2play.workers import runner as worker
@@ -247,4 +248,95 @@ def test_worker_reclaimed_completed_response_reuses_without_double_charge(
     assert reply.reused and reply.data == {"structured": "cached fixture"}
     assert second_provider.calls == 0 and second_control.usage["total_tokens"] == 7
     assert Job.objects.get(pk=claim["job"]["id"]).usage["total_tokens"] == 7
+    transport.close()
+
+
+@pytest.mark.parametrize("budget", ["0.01", "10.00"])
+def test_usd_worker_uses_frozen_model_and_real_ledger_without_total_token_gate(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+    budget: str,
+) -> None:
+    from decimal import Decimal
+
+    from prompt2play.adapters.django.forge.representations import job_data
+    from prompt2play.pricing import cost_bounds, snapshot
+
+    _, transport, claim = prepared
+    pricing = snapshot("gpt-6-astra", "codex")
+    Job.objects.filter(pk=claim["job"]["id"]).update(
+        model="gpt-6-astra", budget_usd=Decimal(budget), pricing=pricing, budget_tokens=1
+    )
+    claim["job"] = cast(Any, job_data)(Job.objects.get(pk=claim["job"]["id"]))
+    provider = ScriptedProvider(replies())
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        assert configured.model == "gpt-6-astra"
+        configured.provider = provider
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    lease = worker.StageLease(transport, claim, threading.Event())
+    if budget == "0.01":
+        with pytest.raises(GenerationStopped, match="бюджета"):
+            worker.generate_stage(lease, arguments())
+        assert lease.alive()  # the worker can persist the terminal budget reason
+        assert provider.calls == 0 and not ModelInvocation.objects.exists()
+    else:
+        worker.generate_stage(lease, arguments())
+        job = Job.objects.get(pk=claim["job"]["id"])
+        assert provider.calls == 2 and job.usage["total_tokens"] == 14
+        lower, upper = cost_bounds(USAGE, pricing)
+        assert job.cost_nano == lower * 2 and job.cost_upper_nano == upper * 2
+        assert cast(Any, job_data)(job)["cost"]["reserved_usd"] == "0.000000000"
+        assert Candidate.objects.get().committed
+    transport.close()
+
+
+def test_usd_restart_replays_saved_responses_without_repricing_or_paid_calls(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from decimal import Decimal
+
+    from prompt2play.adapters.django.forge.representations import job_data
+    from prompt2play.pricing import snapshot
+
+    _, transport, claim = prepared
+    Job.objects.filter(pk=claim["job"]["id"]).update(
+        model="gpt-6-astra",
+        budget_usd=Decimal("10"),
+        pricing=snapshot("gpt-6-astra", "codex"),
+        budget_tokens=1,
+    )
+    claim["job"] = cast(Any, job_data)(Job.objects.get(pk=claim["job"]["id"]))
+    provider = ScriptedProvider(replies())
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        configured.provider = provider
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    original = transport.post
+
+    def unavailable(path: str, values: dict[str, Any]) -> dict[str, Any]:
+        if path.endswith("/candidates/"):
+            raise httpx.ReadTimeout("Authored failure before candidate delivery")
+        return original(path, values)
+
+    monkeypatch.setattr(transport, "post", unavailable)
+    with pytest.raises(httpx.ReadTimeout):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    before = Job.objects.get(pk=claim["job"]["id"])
+    assert provider.calls == 2 and not Candidate.objects.exists()
+    monkeypatch.setattr(transport, "post", original)
+    Job.objects.filter(pk=before.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
+    resumed = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
+    worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
+    after = Job.objects.get(pk=before.pk)
+    assert provider.calls == 2 and ModelInvocation.objects.count() == 2
+    assert after.cost_nano == before.cost_nano and after.cost_upper_nano == before.cost_upper_nano
+    assert after.usage == before.usage and Candidate.objects.get().committed
     transport.close()

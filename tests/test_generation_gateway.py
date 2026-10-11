@@ -19,7 +19,13 @@ class Journal:
         self.completed: dict[str, Any] | None = None
 
     def reserve(
-        self, key: str, reserved_tokens: int, operation: str, request_sha256: str
+        self,
+        key: str,
+        reserved_tokens: int,
+        operation: str,
+        request_sha256: str,
+        *,
+        estimate: dict[str, int] | None = None,
     ) -> dict[str, Any] | None:
         assert reserved_tokens > 0 and operation and request_sha256
         self.requests.append(key)
@@ -197,3 +203,18 @@ def test_schema_failure_exposes_safe_coordinates_without_payload() -> None:
     assert diagnostic["schema_path"] == ["properties", "save", "additionalProperties", "type"]
     assert "private" not in str(caught.value) and "secret-value" not in str(caught.value)
     assert caught.value.__suppress_context__
+
+
+@pytest.mark.parametrize("journal", [None, Journal()])
+def test_frozen_rate_model_mismatch_cannot_dispatch(journal: Journal | None) -> None:
+    from prompt2play.pricing import nano_usd, snapshot
+
+    control = GenerationControl.bounded(
+        cost_limit_nano=nano_usd("10"), pricing=snapshot("gpt-6-astra", "codex")
+    )
+    gateway = ProviderGateway("codex", "gpt-6-sol", journal=journal)
+    provider = ReplyProvider()
+    gateway.provider = provider
+    with pytest.raises(GenerationStopped, match="tariff"):
+        gateway.generate("fixture", {}, "plan", control)
+    assert provider.calls == 0

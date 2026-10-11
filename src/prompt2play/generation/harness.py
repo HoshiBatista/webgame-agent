@@ -24,7 +24,6 @@ from .workspace import (
     GenerationControl,
     GenerationStopped,
     WorkspaceLimits,
-    invocation_reservation,
 )
 
 HARNESS_VERSION = "generation-harness-v1.1"
@@ -155,7 +154,12 @@ class GenerationHarness:
             "base_spec": request.base_spec,
             "base_plan": request.base_plan,
             "findings": request.findings,
-            "token_ceiling": control.token_limit,
+            "token_ceiling": control.token_limit if control.cost_limit_nano is None else None,
+            **(
+                {"cost_ceiling_nano_usd": control.cost_limit_nano}
+                if control.cost_limit_nano is not None
+                else {}
+            ),
             "attempt_id": request.attempt_id,
         }
         reply = gateway.generate(
@@ -209,7 +213,12 @@ class GenerationHarness:
                 "tool_results": feedback,
                 "turn": turn + 1,
                 "remaining_turns": self.limits.max_turns - turn,
-                "token_ceiling": control.token_limit,
+                "token_ceiling": control.token_limit if control.cost_limit_nano is None else None,
+                **(
+                    {"cost_ceiling_nano_usd": control.cost_limit_nano}
+                    if control.cost_limit_nano is not None
+                    else {}
+                ),
                 "attempt_id": request.attempt_id,
             }
             reply = gateway.generate(
@@ -350,11 +359,13 @@ class GenerationHarness:
         pending = list(prompts)
         files: dict[str, str] = {}
         while pending:
-            headroom = control.available_tokens()
+            headroom = control.available_budget()
             reserved = 0
             batch: list[str] = []
             for role in pending:
-                estimate = invocation_reservation(prompts[role], self.code_output_tokens)
+                estimate = control.estimate(
+                    prompts[role], self.code_output_tokens, stable(COMPONENT_SCHEMA)
+                )
                 if reserved + estimate <= headroom:
                     batch.append(role)
                     reserved += estimate

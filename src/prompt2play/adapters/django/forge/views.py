@@ -140,6 +140,13 @@ class ProjectsView(TeamView):
         return Response(project_data(project), status=201)
 
 
+class PricingView(TeamView):
+    def get(self, request):
+        from prompt2play.pricing import catalog
+
+        return Response(catalog())
+
+
 class ProjectView(TeamView):
     def get(self, request, pk):
         return Response(project_data(get_object_or_404(public_projects(), pk=pk)))
