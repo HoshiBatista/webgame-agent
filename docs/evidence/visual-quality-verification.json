@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-12",
+  "branch": "codex/hybrid-architecture-plan",
+  "scope": "Mandatory detailed art/UI and extensibility planning plus bounded source critique for native single-author generation",
+  "versions": {
+    "harness": "generation-harness-v1.2",
+    "visual_quality": "visual-quality-v1"
+  },
+  "checks": {
+    "ruff_format": {
+      "command": ".venv/bin/ruff format --check .",
+      "result": "passed"
+    },
+    "ruff_lint": {
+      "command": ".venv/bin/ruff check .",
+      "result": "passed"
+    },
+    "strict_mypy": {
+      "command": ".venv/bin/mypy",
+      "result": "passed",
+      "source_files": 123
+    },
+    "python": {
+      "command": ".venv/bin/pytest -q",
+      "passed": 218,
+      "skipped": 22,
+      "coverage_percent": 90.43,
+      "skips": "7 PostgreSQL-only cases and 15 opt-in Docker/browser cases"
+    },
+    "frontend": {
+      "commands": [
+        "npm run build",
+        "npm test"
+      ],
+      "passed": 61,
+      "failed": 0
+    },
+    "package": {
+      "command": "uv build --offline",
+      "result": "wheel and sdist built"
+    },
+    "browser": "Authenticated historical version shows the new design section, its saved short direction, absent detailed design/review, and no invented quality pass. Original user tab kept intact.",
+    "deployment": "Idle native generator restarted and studio reloaded; original game, other worker and historical reports retained"
+  },
+  "covered_invariants": [
+    "New plans cannot omit art/UI or maintainability design",
+    "Historical plans remain readable; old revisions receive new planning without widening file capabilities",
+    "Review requires all seven criteria and exact source citations",
+    "Rejected unchanged source never gets a candidate or another paid review",
+    "Modified source gets a new hash-bound critique",
+    "Persistent findings stop after at most three reviews",
+    "Cancellation during critique cannot submit",
+    "Worker integration accounts for the added call and reuses all completed receipts after restart"
+  ],
+  "baseline_preservation": "Original user prompt, spec, plan, provenance and model/budget settings saved privately. All four original model request payloads reconstructed and matched against durable SHA-256 fingerprints without paid inference.",
+  "limitations": [
+    "No new live generation was requested or run for this patch. New artwork has not been visually evaluated.",
+    "Critique is based on source; rendered_visual_review is explicitly not_performed. Browser functional validation remains separate.",
+    "Four-author historical comparison mode retains its original strategy.",
+    "Existing total time, dollar, operation and source-size limits still apply; exceeding them stops the attempt instead of reducing scope."
+  ]
+}

@@ -181,9 +181,27 @@ contact, the current model operation and elapsed time, and saved call history.
 These come from durable invocation receipts and worker leases; elapsed time is
 not presented as a completion percentage. Usage appears when a request returns.
 
+New native runs require a detailed art/UI design and a maintainable implementation
+plan before coding: palette, scene composition, actor/object detail, interface
+states, motion, responsive layout and concrete visual criteria. The generator
+preserves the requested scope and supports later revisions; it is not instructed
+to create a small demo. State/rules, rendering, interface and content definitions
+have explicit ownership even when packaged in one JavaScript file.
+
+Before submission a separate `visual_review` model call critiques the exact source
+against that plan. Material findings return to the author for changes; unchanged
+rejected source cannot be submitted. At most three critiques fit inside the same
+attempt and its original dollar/time budget. A remaining issue, invalid source
+citation or exhausted budget stops the attempt instead of silently accepting a
+placeholder. Plans and review rounds are visible on the Checks tab. This is a
+source critique, not a screenshot review or proof of artistic quality. Browser
+validation still runs separately on the committed bytes. Older versions remain
+unchanged; a revision of an old plan adds design through a new planning call.
+
 The generator uses the controlled single-author runtime by default. The
 `--mode four_author` option preserves the adopted donor strategy for measured
-comparisons. Fresh evaluation results, failures, costs and remaining quality
+comparisons and does not use the new native art-review gate. Fresh evaluation
+results, failures, costs and remaining quality
 gaps are recorded in the [implementation report](docs/implementation-report.md).
 Legacy games require independent real-input acceptance configuration;
 native games also have a fixed platform conformance profile. Neither profile

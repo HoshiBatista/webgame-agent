@@ -137,7 +137,63 @@ BUILD_PLAN_SCHEMA = obj(
         "audio_direction": {"type": "string", "maxLength": 4000},
     }
 )
-PLAN_SCHEMA = obj({"game_spec": GAME_SPEC_SCHEMA, "build_plan": BUILD_PLAN_SCHEMA})
+VISUAL_DESIGN_SCHEMA = obj(
+    {
+        "art_direction": STRING,
+        "palette": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 12,
+            "items": obj({"role": STRING, "color": STRING, "usage": STRING}),
+        },
+        "composition": obj({"desktop": STRING, "mobile": STRING, "focal_hierarchy": STRING}),
+        "world_and_surfaces": STRING,
+        "assets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 24,
+            "items": obj(
+                {
+                    "name": STRING,
+                    "silhouette": STRING,
+                    "detail_layers": STRING,
+                    "states": STRING,
+                    "technique": STRING,
+                }
+            ),
+        },
+        "interface": obj(
+            {
+                "typography": STRING,
+                "hud": STRING,
+                "controls": STRING,
+                "interaction_states": STRING,
+                "overlays": STRING,
+            }
+        ),
+        "motion_and_feedback": STRING,
+        "rendering_budget": STRING,
+        "quality_checks": {**STRINGS, "minItems": 5},
+    }
+)
+IMPLEMENTATION_DESIGN_SCHEMA = obj(
+    {
+        "state_and_rules": STRING,
+        "rendering": STRING,
+        "interface": STRING,
+        "content_definitions": STRING,
+        "extension_points": {**STRINGS, "minItems": 1},
+        "revision_invariants": {**STRINGS, "minItems": 1},
+    }
+)
+# Historical plans remain readable without inventing an art direction for them.
+# New model responses must contain both detailed design contracts.
+BUILD_PLAN_SCHEMA["properties"].update(
+    visual_design=VISUAL_DESIGN_SCHEMA, implementation_design=IMPLEMENTATION_DESIGN_SCHEMA
+)
+PLANNING_BUILD_PLAN_SCHEMA = copy.deepcopy(BUILD_PLAN_SCHEMA)
+PLANNING_BUILD_PLAN_SCHEMA["required"] += ["visual_design", "implementation_design"]
+PLAN_SCHEMA = obj({"game_spec": GAME_SPEC_SCHEMA, "build_plan": PLANNING_BUILD_PLAN_SCHEMA})
 
 
 def validate(value: JSON, schema: JSON, label: str) -> None:

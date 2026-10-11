@@ -34,6 +34,7 @@ class ScriptedGateway:
     def __init__(self, replies: list[dict[str, Any]]) -> None:
         self.replies = list(replies)
         self.prompts: list[str] = []
+        self.roles: list[str] = []
 
     def generate(
         self,
@@ -47,8 +48,17 @@ class ScriptedGateway:
         del schema, max_output
         control.guard()
         self.prompts.append(prompt)
+        self.roles.append(role)
+        # Existing operation fixtures are not art-quality evaluations. Dedicated
+        # review tests below supply explicit failures and inspect the round trips.
+        if role == "visual_review" and (not self.replies or "criteria" not in self.replies[0]):
+            data = json.loads(
+                (Path(__file__).parent / "fixtures/visual-review-ready.json").read_text()
+            )
+        else:
+            data = self.replies.pop(0)
         return GatewayReply(
-            self.replies.pop(0),
+            data,
             {"input_tokens": 1, "output_tokens": 2, "total_tokens": 3, "calls": 1},
             role,
         )
@@ -62,9 +72,10 @@ def operation(
 
 def fixture() -> tuple[dict[str, Any], str]:
     root = RESOURCE_ROOT / "runtime" / "examples" / "dom"
+    design = json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text())
     return {
         "game_spec": json.loads((root / "spec.json").read_text()),
-        "build_plan": json.loads((root / "plan.json").read_text()),
+        "build_plan": {**json.loads((root / "plan.json").read_text()), **design},
     }, (root / "game.js").read_text()
 
 
@@ -125,7 +136,7 @@ def test_author_can_apply_local_fix_after_quick_check_without_global_repair() ->
         GenerationRequest("Fixture"), gateway, GenerationControl.bounded()
     )
     assert "const repaired = 1;" in candidate.files["game.js"]
-    assert "javascript_syntax" in gateway.prompts[-1]
+    assert "javascript_syntax" in gateway.prompts[gateway.roles.index("author", 2)]
     assert candidate.provenance["turns"] == 2
 
 
@@ -148,7 +159,7 @@ def test_runtime_write_is_rejected_and_feedback_returns_to_model() -> None:
         GenerationRequest("Fixture"), gateway, GenerationControl.bounded()
     )
     assert set(candidate.files) == {"game.js"}
-    assert "immutable" in gateway.prompts[-1]
+    assert "immutable" in gateway.prompts[gateway.roles.index("author", 2)]
 
 
 def test_local_visual_edit_preserves_mechanics_bytes() -> None:
@@ -305,3 +316,195 @@ def test_provider_spanning_runtime_upgrade_keeps_one_exact_version(
     assert original["runtime-v1.js"] in candidate.html
     assert 'const VERSION = "runtime-v9.0.0"' not in candidate.html
     assert runtime.assemble_runtime(candidate.files, candidate.spec) == candidate.html
+
+
+def review_fixture(*, reject: bool = False) -> dict[str, Any]:
+    value = json.loads((Path(__file__).parent / "fixtures/visual-review-ready.json").read_text())
+    if reject:
+        value["criteria"]["assets_and_detail"].update(
+            status="needs_revision", required_change="Replace flat placeholder beacon treatment."
+        )
+    return cast_review(value)
+
+
+def cast_review(value: Any) -> dict[str, Any]:
+    assert isinstance(value, dict)
+    return value
+
+
+def test_new_plan_requires_detailed_design_but_historical_plan_remains_readable() -> None:
+    from prompt2play.contracts import BuildPlan, ContractError
+
+    plan, _ = fixture()
+    del plan["build_plan"]["visual_design"]
+    del plan["build_plan"]["implementation_design"]
+    assert BuildPlan(plan["build_plan"]).data["format"] == "runtime-v1"
+    gateway = ScriptedGateway([plan])
+    with pytest.raises(ContractError, match="New game plan"):
+        GenerationHarness().attempt(
+            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+        )
+    assert gateway.roles == ["plan"]
+
+
+def test_visual_findings_require_changed_source_and_new_review_before_submission() -> None:
+    from prompt2play.contracts.models import digest
+
+    plan, source = fixture()
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Draft",
+            },
+            review_fixture(reject=True),
+            {"operations": [operation("submit")], "summary": "Attempt unchanged submission"},
+            {
+                "operations": [
+                    operation("patch", "game.js", old='"#227a58"', new='"#287950"'),
+                    operation("submit"),
+                ],
+                "summary": "Authored patch fixture",
+            },
+            review_fixture(),
+        ]
+    )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+    )
+    assert gateway.roles == ["plan", "author", "visual_review", "author", "author", "visual_review"]
+    feedback = json.loads(gateway.prompts[3].split(PROMPT_BOUNDARY)[1])["tool_results"]
+    assert feedback[-1]["op"] == "visual_review" and feedback[-1]["release_eligible"] is False
+    assert "unchanged source" in gateway.prompts[4]
+    reviews = candidate.provenance["visual_quality"]["reviews"]
+    assert [item["status"] for item in reviews] == ["needs_revision", "source_ready"]
+    assert reviews[-1]["source_sha256"] == digest(candidate.files)
+    assert reviews[0]["source_sha256"] != reviews[-1]["source_sha256"]
+    assert candidate.provenance["visual_quality"]["rendered_visual_review"] == "not_performed"
+
+
+@pytest.mark.parametrize("defect", ["invented_excerpt", "missing_area", "contradictory_status"])
+def test_visual_review_cannot_approve_with_unbound_or_incomplete_evidence(defect: str) -> None:
+    plan, source = fixture()
+    review = review_fixture()
+    if defect == "invented_excerpt":
+        review["criteria"]["art_direction"]["excerpt"] = "nonexistentArtwork()"
+    elif defect == "missing_area":
+        del review["criteria"]["interface"]
+    else:
+        review["criteria"]["interface"]["required_change"] = "Must be changed"
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Draft",
+            },
+            review,
+        ]
+    )
+    with pytest.raises(GenerationStopped, match="invalid evidence"):
+        GenerationHarness().attempt(
+            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+        )
+
+
+def test_persistent_visual_findings_stop_without_promoting_a_candidate() -> None:
+    plan, source = fixture()
+    replies = [plan]
+    for index in range(4):
+        replies.append(
+            {
+                "operations": [
+                    operation(
+                        "create" if index == 0 else "replace",
+                        "game.js",
+                        content=source + f"\n// Authored version {index}",
+                    ),
+                    operation("submit"),
+                ],
+                "summary": f"Draft {index}",
+            }
+        )
+        if index < 3:
+            replies.append(review_fixture(reject=True))
+    gateway = ScriptedGateway(replies)
+    with pytest.raises(GenerationStopped, match="still requires changes"):
+        GenerationHarness().attempt(
+            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+        )
+    assert gateway.roles.count("visual_review") == 3
+
+
+def test_cancel_during_art_review_does_not_submit() -> None:
+    plan, source = fixture()
+
+    class CancelReview(ScriptedGateway):
+        def generate(
+            self,
+            prompt: str,
+            schema: dict[str, Any],
+            role: str,
+            control: GenerationControl,
+            *,
+            max_output: int = 16000,
+        ) -> GatewayReply:
+            if role == "visual_review":
+                control.cancel.set()
+            return super().generate(prompt, schema, role, control, max_output=max_output)
+
+    gateway = CancelReview(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Draft",
+            },
+        ]
+    )
+    with pytest.raises(GenerationStopped):
+        GenerationHarness().attempt(
+            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+        )
+
+
+def test_old_revision_replans_design_without_widening_file_permissions() -> None:
+    plan, source = fixture()
+    old_plan = {
+        key: value
+        for key, value in plan["build_plan"].items()
+        if key not in ("visual_design", "implementation_design")
+    }
+    for value in (old_plan, plan["build_plan"]):
+        value["files"] = [
+            *value["files"],
+            {"path": "style.css", "purpose": "Style", "dependencies": []},
+        ]
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("patch", "style.css", old="red", new="blue"),
+                    operation("submit"),
+                ],
+                "summary": "Authored local edit",
+            },
+        ]
+    )
+    result = GenerationHarness().attempt(
+        GenerationRequest(
+            "Change red to blue",
+            kind="revise",
+            base_files={"game.js": source, "style.css": "article{color:red}"},
+            base_spec=plan["game_spec"],
+            base_plan=old_plan,
+            changed_files=frozenset({"style.css"}),
+        ),
+        gateway,
+        GenerationControl.bounded(),
+    )
+    assert gateway.roles == ["plan", "author", "visual_review"]
+    assert result.files["game.js"] == source and result.files["style.css"] == "article{color:blue}"
+    assert "visual_design" in result.plan and "visual_design" not in old_plan

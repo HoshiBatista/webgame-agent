@@ -1,0 +1,53 @@
+{
+  "criteria": {
+    "art_direction": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    },
+    "assets_and_detail": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    },
+    "composition": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    },
+    "interface": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    },
+    "feedback": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    },
+    "responsive_rendering": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    },
+    "maintainability": {
+      "status": "ready",
+      "observation": "Authored control-flow fixture only; not evidence of visual quality.",
+      "file": "game.js",
+      "excerpt": "function createGame(ctx)",
+      "required_change": ""
+    }
+  }
+}

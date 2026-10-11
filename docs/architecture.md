@@ -234,6 +234,27 @@ reservations after interrupted calls.
 
 ### Repair policy
 
+Native harness v1.2 requires structured `visual_design` and
+`implementation_design` in new plans. The former defines art direction, palette,
+desktop/mobile composition, asset silhouettes and detail layers, UI states,
+motion, rendering cost and visual criteria. The latter records rule ownership,
+read-only rendering, input/UI boundaries, data-driven content and extension
+points for subsequent edits. A short `visual_direction` remains readable in
+historical plans but is no longer sufficient for new generation. New work must
+match requested scope and quality, without an implicit small-game/demo target.
+
+Before native draft submission, a separate `visual_review` call critiques source
+against these plans in seven areas. Each result cites an exact source excerpt;
+the harness validates coverage and citations and binds the result to source and
+plan hashes. `needs_revision` returns findings to the author; acceptance requires
+a fresh critique of changed source. Three critiques at most share the attempt's
+existing accounting, cancellation, lease and deadline. Invalid evidence or
+remaining findings stop submission. This is a draft tool round trip, not a
+second application repair or promotion loop. Provenance explicitly records
+`rendered_visual_review: not_performed`; no source review becomes browser or
+artistic-quality evidence. The retained four-author comparison baseline is
+unchanged. New artistic quality still needs evaluation on actual rendered runs.
+
 Application code chooses `LOCAL_PATCH`, `STRUCTURAL_REPAIR`, `REPLAN`,
 `REGENERATE`, or `STOP` from structured findings. Local fixes preserve unrelated
 files; shared contract changes expand to declared dependencies. A bad plan can

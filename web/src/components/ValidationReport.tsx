@@ -4,10 +4,11 @@ import { numbers } from '../lib/format';
 import { checkGroups, checkKindLabels, checkState, executionFacts, record, records, scenarioCategoryLabels, scenarioResults, validationState } from '../lib/validation';
 import { Empty, ValidationBadge } from './ui';
 import SemanticContract from './SemanticContract';
+import VisualDesign from './VisualDesign';
 
 const resultLabels = { passed: 'Пройдено', failed: 'Ошибка', skipped: 'Пропущено', not_run: 'Не запускался', stale: 'Устарел', unbound: 'Без привязки' };
 
-export default function ValidationReport({ validation, spec = {} }: { validation?: Validation | null; spec?: Record<string, unknown> }) {
+export default function ValidationReport({ validation, spec = {}, plan, provenance }: { validation?: Validation | null; spec?: Record<string, unknown>; plan?: Record<string, unknown>; provenance?: Record<string, unknown> }) {
   if (!validation) return <Empty icon={<FileCheck2 size={28}/>} title="Отчёт появится после проверки">Готовая версия сохранит результаты проверок вместе с исходниками.</Empty>;
   const checks = validation.checks || [], state = validationState(validation);
   const scenarios = scenarioResults(spec, validation), groups = checkGroups(validation);
@@ -15,7 +16,8 @@ export default function ValidationReport({ validation, spec = {} }: { validation
   const review = validation.review, manifest = validation.artifact;
   return <div className="validation-report">
     <div className="report-heading"><div><h3>Отчёт проверки</h3><p>Результаты, область проверки и история этой сборки</p></div><ValidationBadge value={validation}/></div>
-    <p className="report-explanation">Каждый результат подтверждает только указанную проверку. Ревью модели — анализ исходников. Качество музыки, удобство и интерес игры оцениваются отдельно.</p>
+    <p className="report-explanation">Каждый результат подтверждает только указанную проверку. Ревью модели — анализ исходников. Качество графики, музыки, удобство и интерес игры оцениваются отдельно.</p>
+    <VisualDesign plan={plan} provenance={provenance}/>
     {legacy && <div className="notice amber"><AlertTriangle size={19}/><div><strong>Исторический отчёт без привязки к файлам</strong><p>В нём нет сопоставимых хешей HTML, исходников и спецификации. Этот отчёт не подтверждает точное соответствие сохранённой сборке.</p></div></div>}
     {validation.binding_status === 'mismatch' && <div className="error-banner"><XCircle size={19}/><span>Файлы изменились относительно проверенной сборки. Скачивание заблокировано; нужна проверка новой версии.</span></div>}
     {(state === 'partial' || state === 'unverified') && !legacy && <div className="notice amber"><AlertTriangle size={19}/><div><strong>Проверено не всё</strong><p>Пропущенный запуск и запланированный сценарий не подтверждают поведение игры. Посмотрите их статус и ограничения ниже.</p></div></div>}

@@ -1255,7 +1255,7 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "e049b77c2e2e6d163349478cb4ba09809fbbfa129d0de566417e40356995a6ec",
+      "destination_sha256": "8a0698529409a40a90c1b0c64ed465a3f72ae81399ea1d193f477270a5aa16b1",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1295,7 +1295,7 @@
       "source": "frontend/src/components/ValidationReport.tsx",
       "destination": "web/src/components/ValidationReport.tsx",
       "source_sha256": "739e4833b415e597edb674e938b886d776b4e14a7f1677ff15c2666cbb24b65f",
-      "destination_sha256": "808e20045eb853c52df0f116378644f872c88add83246e16021f076870199044",
+      "destination_sha256": "2509e2ae2d2c463b785d3f77dafb97ce2af6d083c783bee7898f1ae10f9b5bd2",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1319,7 +1319,7 @@
       "source": "frontend/src/lib/format.ts",
       "destination": "web/src/lib/format.ts",
       "source_sha256": "92b75dce945e753f038d600d1d2cae92476c3249dc75502fdaaeda1e67e91923",
-      "destination_sha256": "40b6c293ed749d12ad16a903ccb8dabb64240178aa3b769216c3d2212ea64f13",
+      "destination_sha256": "075e2af79e1c7c985395b63f1be5c915ae2d2aa831028f184a37949a43c5bcf1",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1391,7 +1391,7 @@
       "source": "frontend/src/pages/Workspace.tsx",
       "destination": "web/src/pages/Workspace.tsx",
       "source_sha256": "361a81c4a93bd4528479768df3324f39dec505403f9982fcebfd951faddc3d9f",
-      "destination_sha256": "f87ca34904de50c6693b26f59456c2d08b30bffa2d116b64f8665b6a720d47f4",
+      "destination_sha256": "9568a5569ba01f1511dafee583077dfba5369324f78025f855b0273c7261c598",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1407,7 +1407,7 @@
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "edc20ce867aeb9dfad66bbefafddfa39c7d0dcae8210e2d0db0b6fb1d64edbfa",
+      "destination_sha256": "a24437caf92ef61836b07ab36c1d6601b54ecc3261ea179a516230b273c2e3b0",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },

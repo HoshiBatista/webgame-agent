@@ -96,7 +96,10 @@ def replies() -> list[dict[str, Any]]:
     return [
         {
             "game_spec": json.loads((example / "spec.json").read_text()),
-            "build_plan": json.loads((example / "plan.json").read_text()),
+            "build_plan": {
+                **json.loads((example / "plan.json").read_text()),
+                **json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text()),
+            },
         },
         {
             "operations": [
@@ -111,6 +114,7 @@ def replies() -> list[dict[str, Any]]:
             ],
             "summary": "Scripted worker fixture",
         },
+        json.loads((Path(__file__).parent / "fixtures/visual-review-ready.json").read_text()),
     ]
 
 
@@ -148,12 +152,12 @@ def test_worker_harness_posts_exact_native_candidate_and_persists_usage(
     monkeypatch.setattr(worker, "ProviderGateway", gateway)
     lease = worker.StageLease(transport, claim, threading.Event())
     worker.generate_stage(lease, arguments())
-    assert provider.calls == 2
+    assert provider.calls == 3
     candidate = Candidate.objects.get()
     job = Job.objects.get(pk=claim["job"]["id"])
     assert candidate.committed and job.stage == "validate" and job.status == "queued"
-    assert job.usage["total_tokens"] == 14 and job.usage["calls"] == 2
-    assert ModelInvocation.objects.filter(state="completed").count() == 2
+    assert job.usage["total_tokens"] == 21 and job.usage["calls"] == 3
+    assert ModelInvocation.objects.filter(state="completed").count() == 3
     transport.close()
 
 
@@ -286,9 +290,9 @@ def test_usd_worker_uses_frozen_model_and_real_ledger_without_total_token_gate(
     else:
         worker.generate_stage(lease, arguments())
         job = Job.objects.get(pk=claim["job"]["id"])
-        assert provider.calls == 2 and job.usage["total_tokens"] == 14
+        assert provider.calls == 3 and job.usage["total_tokens"] == 21
         lower, upper = cost_bounds(USAGE, pricing)
-        assert job.cost_nano == lower * 2 and job.cost_upper_nano == upper * 2
+        assert job.cost_nano == lower * 3 and job.cost_upper_nano == upper * 3
         assert cast(Any, job_data)(job)["cost"]["reserved_usd"] == "0.000000000"
         assert Candidate.objects.get().committed
     transport.close()
@@ -330,13 +334,13 @@ def test_usd_restart_replays_saved_responses_without_repricing_or_paid_calls(
     with pytest.raises(httpx.ReadTimeout):
         worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
     before = Job.objects.get(pk=claim["job"]["id"])
-    assert provider.calls == 2 and not Candidate.objects.exists()
+    assert provider.calls == 3 and not Candidate.objects.exists()
     monkeypatch.setattr(transport, "post", original)
     Job.objects.filter(pk=before.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
     resumed = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
     worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
     after = Job.objects.get(pk=before.pk)
-    assert provider.calls == 2 and ModelInvocation.objects.count() == 2
+    assert provider.calls == 3 and ModelInvocation.objects.count() == 3
     assert after.cost_nano == before.cost_nano and after.cost_upper_nano == before.cost_upper_nano
     assert after.usage == before.usage and Candidate.objects.get().committed
     transport.close()

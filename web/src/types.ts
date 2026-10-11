@@ -40,7 +40,7 @@ export interface Version {
   validation: Validation; usage: Usage; spec: Record<string, unknown>; download_url: string; source_url: string;
   eligible?: boolean; preview_url?: string | null;
 }
-export interface VersionDetail extends Version { files: Record<string, string>; html: string }
+export interface VersionDetail extends Version { files: Record<string, string>; html: string; plan?: Record<string, unknown>; provenance?: Record<string, unknown> }
 export interface JobEvent { id: number; job_id: string; stage: string; level: 'info' | 'warning' | 'error'; message: string; data: unknown; created_at: string }
 export interface Runner { id: string; name: string; role?: RunnerRole; created_at: string; last_seen: string | null; online: boolean; revoked: boolean; capabilities: Record<string, unknown> }
 export interface PriceCatalog { as_of: string; service_tier: string; source: string; models: Record<string, {input: string; cached_input: string; cache_write: string; output: string}> }
