@@ -124,6 +124,9 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+# App-specific names avoid collisions with other Django apps on the same host.
+SESSION_COOKIE_NAME = "prompt2play_sessionid"
+CSRF_COOKIE_NAME = "prompt2play_csrftoken"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_PATH = "/api/"
@@ -171,6 +174,15 @@ LOGGING["formatters"]["django.server"]["()"] = (
     "prompt2play.adapters.django.forge.log_filters.PreviewServerFormatter"
 )
 LOGGING["handlers"]["console"]["formatter"] = "preview_errors"
+LOGGING["handlers"]["auth_audit"] = {
+    "class": "logging.StreamHandler",
+    "formatter": "preview_errors",
+}
+LOGGING["loggers"]["prompt2play.auth"] = {
+    "handlers": ["auth_audit"],
+    "level": "WARNING",
+    "propagate": False,
+}
 for logging_handler in LOGGING["handlers"].values():
     logging_handler.setdefault("filters", []).append("preview_token")
 LOGGING["loggers"]["django.server"]["filters"] = ["preview_token"]

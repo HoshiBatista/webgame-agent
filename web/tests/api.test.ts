@@ -3,20 +3,20 @@ import assert from 'node:assert/strict';
 import { api, ApiError, csrfToken, requestJson } from '../src/lib/api.ts';
 
 test('CSRF cookie parsing matches only the exact cookie and tolerates malformed data', () => {
-  assert.equal(csrfToken('notcsrftoken=wrong; csrftoken=fresh%20value; sessionid=secret'), 'fresh value');
-  assert.equal(csrfToken('csrftoken_extra=x; sessionid=y'), '');
-  assert.equal(csrfToken('csrftoken=%invalid'), '');
+  assert.equal(csrfToken('notprompt2play_csrftoken=wrong; prompt2play_csrftoken=fresh%20value; sessionid=secret'), 'fresh value');
+  assert.equal(csrfToken('prompt2play_csrftoken_extra=x; sessionid=y'), '');
+  assert.equal(csrfToken('prompt2play_csrftoken=%invalid'), '');
 });
 
 test('JSON client sends cookies and a fresh CSRF value on each mutation', async () => {
   const previous = Object.getOwnPropertyDescriptor(globalThis, 'document');
-  const document = { cookie: 'csrftoken=first; sessionid=private' };
+  const document = { cookie: 'prompt2play_csrftoken=first; sessionid=private' };
   Object.defineProperty(globalThis, 'document', { value: document, configurable: true });
   try {
     const observed: RequestInit[] = [];
     const fetcher = (async (_path: unknown, options: RequestInit) => { observed.push(options); return new Response('{"ok":true}', { status: 200 }); }) as typeof fetch;
     await requestJson('/api/projects/', { method: 'POST', body: '{"title":"Game"}' }, fetcher);
-    document.cookie = 'csrftoken=rotated';
+    document.cookie = 'prompt2play_csrftoken=rotated';
     await requestJson('/api/projects/id/', { method: 'PATCH', body: '{"title":"Other"}' }, fetcher);
     for (const options of observed) { assert.equal(options.credentials, 'same-origin'); assert.equal(new Headers(options.headers).get('Content-Type'), 'application/json'); }
     assert.equal(new Headers(observed[0].headers).get('X-CSRFToken'), 'first');
@@ -114,13 +114,49 @@ test('old-session 401 arriving before login completes cannot invalidate the succ
   Object.defineProperty(globalThis, 'window', { value: { dispatchEvent: (event: Event) => notifications.push(event.type) }, configurable: true });
   try {
     const old = requestJson('/api/projects/', {}, (() => new Promise<Response>(resolve => { oldResponse = resolve; })) as typeof fetch);
-    globalThis.fetch = (() => new Promise<Response>(resolve => { loginResponse = resolve; })) as typeof fetch;
+    globalThis.fetch = ((path: unknown) => String(path).endsWith('/session/')
+      ? Promise.resolve(new Response(JSON.stringify({authenticated: false, user: null})))
+      : new Promise<Response>(resolve => { loginResponse = resolve; })) as typeof fetch;
     const login = api.login('user', 'password');
     oldResponse(new Response('{"error":"Expired","code":"not_authenticated"}', { status: 401 }));
     await assert.rejects(() => old, (error: unknown) => error instanceof Error && error.name === 'AbortError');
+    // Allow the safe session refresh to finish before the held login response.
+    while (!loginResponse) await new Promise(resolve => setImmediate(resolve));
     loginResponse(new Response(JSON.stringify({ authenticated: true, user: { id: 1, username: 'user', is_staff: false } })));
     assert.equal((await login).authenticated, true); assert.deepEqual(notifications, []);
   } finally { globalThis.fetch = original; if (previous) Object.defineProperty(globalThis, 'window', previous); else Reflect.deleteProperty(globalThis, 'window'); }
+});
+
+test('root-page login uses the session token, refreshes it, and preserves login rotation', async () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'document'), original = globalThis.fetch;
+  Object.defineProperty(globalThis, 'document', {value: {cookie: ''}, configurable: true});
+  const initial = 'a'.repeat(64), refreshed = 'b'.repeat(64), rotated = 'c'.repeat(64);
+  const paths: string[] = []; let reads = 0;
+  try {
+    globalThis.fetch = (async (path: unknown, options: RequestInit) => {
+      paths.push(String(path));
+      if (String(path).endsWith('/session/')) {
+        reads++;
+        return new Response(JSON.stringify({authenticated: false, user: null, csrf_token: reads === 1 ? initial : refreshed}));
+      }
+      const header = new Headers(options.headers).get('X-CSRFToken');
+      if (String(path).endsWith('/login/')) {
+        assert.equal(header, refreshed, 'authentication refresh handles a cookie rotated in another tab');
+        return new Response(JSON.stringify({authenticated: true, user: {username: 'tester'}, csrf_token: rotated}));
+      }
+      assert.equal(header, rotated, 'the first post-login mutation uses the newly rotated secret');
+      return new Response('{"ok":true}');
+    }) as typeof fetch;
+    await api.session();
+    await api.login('tester', 'authored-password');
+    await requestJson('/api/authored-mutation/', {method: 'POST'});
+    assert.deepEqual(paths, ['/api/auth/session/', '/api/auth/session/', '/api/auth/login/', '/api/authored-mutation/']);
+  } finally {
+    globalThis.fetch = (async () => new Response('{"authenticated":false,"user":null}')) as typeof fetch;
+    await api.session();
+    globalThis.fetch = original;
+    if (previous) Object.defineProperty(globalThis, 'document', previous); else Reflect.deleteProperty(globalThis, 'document');
+  }
 });
 
 test('ambiguous POST network failure is reported as unknown outcome and never replayed', async () => {

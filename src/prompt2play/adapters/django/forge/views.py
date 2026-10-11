@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.db import DatabaseError, connection, transaction
 from django.http import HttpResponse
+from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -54,8 +55,9 @@ def validated(serializer_class, data):
     return serializer.validated_data
 
 
-def session_data(user):
+def session_data(user, request):
     return {
+        "csrf_token": get_token(request),
         "authenticated": bool(user.is_authenticated),
         "user": {
             "id": str(user.pk),
@@ -100,7 +102,7 @@ class SessionView(TeamView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        return Response(session_data(request.user))
+        return Response(session_data(request.user, request))
 
 
 @method_decorator(csrf_protect, name="dispatch")
@@ -115,7 +117,7 @@ class LoginView(APIView):
         if user is None:
             raise AuthenticationFailed("Неверный логин или пароль.", code="invalid_credentials")
         login(request, user)
-        return Response(session_data(user))
+        return Response(session_data(user, request))
 
     def get_authenticate_header(self, request):
         return "Session"

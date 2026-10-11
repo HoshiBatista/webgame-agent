@@ -1,3 +1,6 @@
+import logging
+
+from django.conf import settings
 from django.http import JsonResponse
 from django.core.exceptions import RequestDataTooBig
 from rest_framework.exceptions import APIException
@@ -47,6 +50,30 @@ def exception_handler(exc, context):
 
 
 def csrf_failure(request, reason=""):
+    # Log the failure category, never cookies, tokens, credentials or raw headers.
+    category = "unknown"
+    for prefix, code in (
+        ("Origin checking failed", "origin_rejected"),
+        ("Referer checking failed", "referer_rejected"),
+        ("CSRF cookie not set", "cookie_missing"),
+        ("CSRF token missing", "token_missing"),
+        ("CSRF cookie", "cookie_invalid"),
+        ("CSRF token", "token_invalid"),
+    ):
+        if reason.startswith(prefix):
+            category = code
+            break
+    logging.getLogger("prompt2play.auth").warning(
+        "csrf_rejected reason=%s cookie_present=%s header_present=%s cookie_length=%s cookie_count=%s",
+        category,
+        settings.CSRF_COOKIE_NAME in request.COOKIES,
+        settings.CSRF_HEADER_NAME in request.META,
+        len(request.COOKIES.get(settings.CSRF_COOKIE_NAME, "")),
+        sum(
+            entry.strip().split("=", 1)[0] == settings.CSRF_COOKIE_NAME
+            for entry in request.META.get("HTTP_COOKIE", "").split(";")
+        ),
+    )
     return JsonResponse(
         {"error": "Проверка CSRF не пройдена. Обновите страницу.", "code": "csrf_failed"},
         status=403,

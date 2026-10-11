@@ -2,7 +2,7 @@ export type RunnerRole = 'generator' | 'validator';
 export type Provider = 'codex' | 'openai';
 export type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 export interface User { id: string | number; username: string; is_staff: boolean }
-export interface Session { authenticated: boolean; user: User | null }
+export interface Session { authenticated: boolean; user: User | null; csrf_token?: string }
 export interface Usage { input_tokens: number; cached_input_tokens: number; output_tokens: number; total_tokens: number; calls: number }
 export interface ArtifactManifest { html_sha256: string; html_bytes: number; files_sha256: Record<string, string>; spec_sha256: string }
 export interface ValidationCheck {

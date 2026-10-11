@@ -9,6 +9,7 @@ from datetime import timedelta
 from pathlib import Path
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.management import call_command
 from django.db import DatabaseError, IntegrityError, connection, transaction
@@ -126,8 +127,12 @@ class APITestCase(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["code"], "not_authenticated")
         response = client.get("/api/auth/session/")
-        self.assertEqual(response.json(), {"authenticated": False, "user": None})
-        self.assertIn("csrftoken", client.cookies)
+        self.assertFalse(response.json()["authenticated"])
+        self.assertIsNone(response.json()["user"])
+        csrf_before_login = response.json()["csrf_token"]
+        self.assertEqual(len(csrf_before_login), 64)
+        self.assertIn(settings.CSRF_COOKIE_NAME, client.cookies)
+        self.assertEqual(client.cookies[settings.CSRF_COOKIE_NAME]["path"], "/api/")
         response = client.post(
             "/api/auth/login/", {"username": "builder", "password": PASSWORD}, format="json"
         )
@@ -137,7 +142,7 @@ class APITestCase(TestCase):
             "/api/auth/login/",
             {"username": "builder", "password": "bad"},
             format="json",
-            HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_before_login,
         )
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["code"], "invalid_credentials")
@@ -145,27 +150,38 @@ class APITestCase(TestCase):
             "/api/auth/login/",
             {"username": "builder", "password": PASSWORD},
             format="json",
-            HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_before_login,
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(response.json()["authenticated"])
+        csrf_after_login = response.json()["csrf_token"]
+        self.assertNotEqual(csrf_after_login, csrf_before_login)
         self.assertEqual(response.json()["user"]["id"], str(self.user.pk))
         self.assertEqual(
             client.post("/api/projects/", {"title": "X", "prompt": "Y"}, format="json").status_code,
+            403,
+        )
+        self.assertEqual(
+            client.post(
+                "/api/projects/",
+                {"title": "X", "prompt": "Y"},
+                format="json",
+                HTTP_X_CSRFTOKEN=csrf_before_login,
+            ).status_code,
             403,
         )
         response = client.post(
             "/api/projects/",
             {"title": "X", "prompt": "Y"},
             format="json",
-            HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_after_login,
         )
         self.assertEqual(response.status_code, 201)
         response = client.post(
             "/api/auth/logout/",
             {},
             format="json",
-            HTTP_X_CSRFTOKEN=client.cookies["csrftoken"].value,
+            HTTP_X_CSRFTOKEN=csrf_after_login,
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(client.get("/api/auth/session/").json()["authenticated"])

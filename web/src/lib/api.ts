@@ -8,13 +8,14 @@ export class ApiError extends Error {
 }
 
 export function csrfToken(cookie: string): string {
-  const entry = cookie.split(';').map(item => item.trim()).find(item => item.startsWith('csrftoken='));
+  const entry = cookie.split(';').map(item => item.trim()).find(item => item.startsWith('prompt2play_csrftoken='));
   if (!entry) return '';
-  try { return decodeURIComponent(entry.slice('csrftoken='.length)); } catch { return ''; }
+  try { return decodeURIComponent(entry.slice('prompt2play_csrftoken='.length)); } catch { return ''; }
 }
 
 let sessionEpoch = 0;
 let sessionExpired = false;
+let sessionCsrfToken = '';
 const sessionChanged = () => { sessionEpoch++; sessionExpired = false; };
 const aborted = () => new DOMException('Request no longer belongs to the current session', 'AbortError');
 
@@ -35,7 +36,8 @@ export async function requestJson<T>(path: string, options: RequestInit = {}, fe
     headers.set('Accept', 'application/json');
     if (options.body) headers.set('Content-Type', 'application/json');
     if (mutation) {
-      const csrf = csrfToken(typeof document === 'undefined' ? '' : document.cookie);
+      // API-scoped cookies are sent by the browser but cannot be read from `/`.
+      const csrf = sessionCsrfToken || csrfToken(typeof document === 'undefined' ? '' : document.cookie);
       if (csrf) headers.set('X-CSRFToken', csrf);
     }
     let response: Response;
@@ -76,7 +78,7 @@ const project = (value: unknown) => record(value) && strings(value, ['id', 'titl
 const runner = (value: unknown) => record(value) && strings(value, ['id', 'name']) && record(value.capabilities) && (value.role === undefined || ['generator', 'validator'].includes(String(value.role)));
 const validation = (value: unknown) => record(value) && ['passed', 'partial', 'failed', 'unverified'].includes(String(value.status)) && Array.isArray(value.checks) && value.checks.every(check => record(check) && strings(check, ['name', 'status', 'message'])) && stringArray(value.errors) && stringArray(value.warnings);
 const version = (value: unknown) => record(value) && strings(value, ['id', 'project_id', 'prompt', 'summary', 'created_at']) && typeof value.number === 'number' && validation(value.validation);
-const session = (value: unknown) => record(value) && typeof value.authenticated === 'boolean' && (!value.authenticated || (record(value.user) && typeof value.user.username === 'string'));
+const session = (value: unknown) => record(value) && typeof value.authenticated === 'boolean' && (value.csrf_token === undefined || (typeof value.csrf_token === 'string' && /^[A-Za-z0-9]{64}$/.test(value.csrf_token))) && (!value.authenticated || (record(value.user) && typeof value.user.username === 'string'));
 const listOf = (guard: (value: unknown) => boolean) => (value: unknown) => Array.isArray(value) && value.every(guard);
 async function checked<T>(response: Promise<T>, guard: (value: unknown) => boolean, mutation = false): Promise<T> {
   const value = await response;
@@ -85,16 +87,20 @@ async function checked<T>(response: Promise<T>, guard: (value: unknown) => boole
 }
 
 const post = <T>(path: string, body?: unknown) => requestJson<T>(path, { method: 'POST', body: JSON.stringify(body || {}) });
+const rememberSession = (value: Session) => { sessionCsrfToken = value.csrf_token || ''; return value; };
+const readSession = (signal?: AbortSignal) => checked(requestJson<Session>('/api/auth/session/', { signal }), session).then(rememberSession);
 const authPost = <T>(path: string, body: unknown, guard: (value: unknown) => boolean) => {
   // Fence old session reads before auth starts, not only after its response.
   sessionChanged();
-  return checked(post<T>(path, body), guard, true).then(value => { sessionChanged(); return value; });
+  // Another tab may have rotated the cookie since this page loaded. Refresh the
+  // masked token before authentication; never replay an uncertain POST.
+  return readSession().then(() => checked(post<T>(path, body), guard, true)).then(value => { sessionChanged(); return value; });
 };
 const id = encodeURIComponent;
 export const api = {
-  session: (signal?: AbortSignal) => checked(requestJson<Session>('/api/auth/session/', { signal }), session),
-  login: (username: string, password: string) => authPost<Session>('/api/auth/login/', { username, password }, session),
-  logout: () => authPost<{ ok: boolean }>('/api/auth/logout/', {}, value => record(value) && value.ok === true),
+  session: readSession,
+  login: (username: string, password: string) => authPost<Session>('/api/auth/login/', { username, password }, session).then(rememberSession),
+  logout: () => authPost<{ ok: boolean }>('/api/auth/logout/', {}, value => record(value) && value.ok === true).then(value => { sessionCsrfToken = ''; return value; }),
   projects: (signal?: AbortSignal) => checked(requestJson<Project[]>('/api/projects/', { signal }), listOf(project)),
   createProject: (title: string, prompt: string) => checked(post<Project>('/api/projects/', { title, prompt }), project, true),
   project: (projectId: string, signal?: AbortSignal) => checked(requestJson<Project>(`/api/projects/${id(projectId)}/`, { signal }), project),
