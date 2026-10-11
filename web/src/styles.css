@@ -32,3 +32,13 @@
 .price-rates span { display: grid; gap: 5px; }
 .price-card small, .cost-panel small { line-height: 1.6; opacity: .75; }
 .cost-panel .section-label { flex-wrap: wrap; gap: 8px; }
+
+.live-status { margin: 14px 0; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 11px; line-height: 1.7; }
+.live-status p + p { margin-top: 6px; }
+.live-status small { display: block; color: var(--muted); margin-top: 6px; }
+.model-calls { display: grid; gap: 8px; margin: 12px 0; }
+.model-call { display: grid; gap: 5px; padding: 10px 12px; background: var(--panel); border-radius: 6px; font-size: 11px; }
+.model-call small { color: var(--muted); }
+.progress-track.indeterminate i { width: 30%; animation: model-wait 2s ease-in-out infinite alternate; }
+@keyframes model-wait { from { transform: translateX(0); } to { transform: translateX(230%); } }
+@media (prefers-reduced-motion: reduce) { .progress-track.indeterminate i { animation: none; width: 100%; opacity: .35; } }

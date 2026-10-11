@@ -25,10 +25,13 @@ export interface Validation {
   schema_version?: number; artifact?: ArtifactManifest; review?: ModelReview;
   provenance?: { calls?: unknown[]; iterations?: unknown[]; module_summaries?: Record<string, string> }; binding_status?: 'verified' | 'legacy' | 'mismatch';
 }
+export interface ModelCall { id: string; operation: string; state: string; started_at: string; finished_at: string | null; usage_known: boolean; stage_fence: number }
+export interface JobActivity { worker_contact_at: string | null; worker_connected: boolean; calls: ModelCall[] }
 export interface Job {
   id: string; project_id: string; kind: 'generate' | 'revise'; prompt: string; provider: Provider; model: string;
   status: JobStatus; stage: string; progress: number; base_version_id: string | null; result_version_id: string | null;
   runner_id: string | null; created_at: string; updated_at: string; error: string; max_repairs: number; budget_tokens: number; usage: Usage;
+  activity?: JobActivity; stage_fence?: number;
   budget_usd?: string | null; cost?: Cost | null; pricing?: { model: string; as_of: string; source: string };
 }
 export interface Project { id: string; title: string; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }

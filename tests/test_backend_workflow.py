@@ -853,3 +853,43 @@ def test_validation_crossing_deadline_cannot_publish(team: Team) -> None:
     assert team[1].latest_version_id is None and not Version.objects.exists()
     assert not hasattr(Candidate.objects.get(), "result")
     assert job.status == "failed" and job.stage == "deadline"
+
+
+def test_public_activity_exposes_current_call_and_contact_without_source(team: Team) -> None:
+    job, _ = job_for(team)
+    first = ModelInvocation.objects.create(
+        job=job,
+        generator=team[2],
+        invocation_key="completed-plan",
+        operation="plan",
+        prompt_sha256="a" * 64,
+        stage_fence=job.stage_fence,
+        reserved_tokens=100,
+        state="completed",
+        actual_usage={"calls": 1},
+        settled_at=timezone.now(),
+        response_key="private-response-not-for-polling",
+    )
+    second = ModelInvocation.objects.create(
+        job=job,
+        generator=team[2],
+        invocation_key="pending-author",
+        operation="author",
+        prompt_sha256="b" * 64,
+        stage_fence=job.stage_fence,
+        reserved_tokens=100,
+    )
+    result = job_data(job)
+    assert result["activity"]["worker_connected"] is True
+    assert result["activity"]["worker_contact_at"]
+    assert [call["id"] for call in result["activity"]["calls"]] == [str(first.pk), str(second.pk)]
+    assert result["activity"]["calls"][-1]["operation"] == "author"
+    assert result["activity"]["calls"][-1]["finished_at"] is None
+    assert "private-response" not in str(result)
+    assert "lease_hash" not in result
+    job.refresh_from_db()
+    assert job.stage == "plan"  # model activity must not mutate orchestration state
+    job.status = "failed"
+    result = job_data(job)
+    assert result["activity"]["worker_contact_at"] is None
+    assert result["activity"]["worker_connected"] is False

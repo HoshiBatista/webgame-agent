@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Job, JobEvent } from '../src/types.ts';
-import { cancellationMessage, chooseVersion, readJobFeed, reconcileJob, ResultSelection } from '../src/lib/workspace.ts';
+import { cancellationMessage, chooseVersion, currentModelCall, elapsed, readJobFeed, reconcileJob, ResultSelection } from '../src/lib/workspace.ts';
 import { RequestGate, startPolling } from '../src/lib/requests.ts';
 
 const job = (overrides: Partial<Job> = {}): Job => ({
@@ -123,4 +123,18 @@ test('failed or cancelled diagnostic candidates never replace the selected playa
   assert.equal(tracker.takePreferred([{id: 'playable'}, {id: 'failed-candidate'}]), undefined);
   tracker.complete(job({status: 'cancelled', result_version_id: 'cancelled-candidate'}));
   assert.equal(tracker.takePreferred([{id: 'playable'}, {id: 'cancelled-candidate'}]), undefined);
+});
+
+
+test('live activity distinguishes author work from the orchestration plan and terminal jobs', () => {
+  const current = job({stage:'plan', stage_fence:2, activity:{worker_contact_at:null, worker_connected:true, calls:[
+    {id:'old', operation:'plan', state:'reserved', started_at:'2026-10-12T00:00:00Z', finished_at:null, usage_known:false, stage_fence:1},
+    {id:'author', operation:'author', state:'reserved', started_at:'2026-10-12T00:01:00Z', finished_at:null, usage_known:false, stage_fence:2},
+  ]}});
+  assert.equal(currentModelCall(current)?.operation, 'author');
+  assert.equal(currentModelCall({...current, status:'failed'}), undefined);
+  assert.equal(currentModelCall({...current, stage:'validate'}), undefined);
+  assert.equal(currentModelCall({...current, stage_fence:3}), undefined);
+  assert.equal(elapsed('2026-10-12T00:00:00Z', Date.parse('2026-10-12T00:03:27Z')), '3 мин 27 с');
+  assert.equal(elapsed('bad'), '—');
 });

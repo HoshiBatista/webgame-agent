@@ -61,6 +61,42 @@ def job_data(job):
     result["budget_usd"] = str(job.budget_usd) if job.budget_usd is not None else None
     result["pricing"] = job.pricing
     result["cost"] = workflow.cost_summary(job)
+    result["activity"] = {
+        "worker_contact_at": dated(
+            job.lease_expires_at - timedelta(seconds=settings.FORGE_LEASE_SECONDS)
+        )
+        if job.status == "running" and job.lease_expires_at
+        else None,
+        "worker_connected": bool(
+            job.status == "running"
+            and job.lease_expires_at
+            and job.lease_expires_at > timezone.now()
+        ),
+        "calls": [
+            {
+                "id": str(call["id"]),
+                "operation": call["operation"],
+                "state": call["state"],
+                "started_at": dated(call["created_at"]),
+                "finished_at": dated(call["settled_at"]),
+                "usage_known": call["actual_usage"] is not None,
+                "stage_fence": call["stage_fence"],
+            }
+            for call in reversed(
+                list(
+                    job.invocations.order_by("-created_at", "-id").values(
+                        "id",
+                        "operation",
+                        "state",
+                        "created_at",
+                        "settled_at",
+                        "actual_usage",
+                        "stage_fence",
+                    )[:100]
+                )
+            )
+        ],
+    }
     return result
 
 

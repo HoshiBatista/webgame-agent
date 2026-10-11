@@ -73,3 +73,13 @@ export class ResultSelection {
     return undefined;
   }
 }
+
+export function currentModelCall(job: Job) {
+  if (job.status !== 'running' || ['commit', 'validate', 'done'].includes(job.stage)) return undefined;
+  return job.activity?.calls.slice().reverse().find(call => call.state === 'reserved' && call.stage_fence === job.stage_fence);
+}
+export function elapsed(value: string, now = Date.now()): string {
+  const seconds = Math.max(0, Math.floor((now - Date.parse(value)) / 1000));
+  if (!Number.isFinite(seconds)) return '—';
+  return `${Math.floor(seconds / 60)} мин ${String(seconds % 60).padStart(2, '0')} с`;
+}

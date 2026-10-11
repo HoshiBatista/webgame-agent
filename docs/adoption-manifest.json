@@ -135,7 +135,7 @@
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "14ef874cdc01ac1ea675bebfa03dda56fee5578813fe5f2bed3b542c71b2c41b",
+      "destination_sha256": "87c4778c0f579cf083ed78cfb9a6cac9749a8aa493ad258ec364a6ceea593931",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -1255,7 +1255,7 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "3f08afbb1db793d41b40d66be5b5aa51022253b18ec047571667640fb3eaab20",
+      "destination_sha256": "e049b77c2e2e6d163349478cb4ba09809fbbfa129d0de566417e40356995a6ec",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1319,7 +1319,7 @@
       "source": "frontend/src/lib/format.ts",
       "destination": "web/src/lib/format.ts",
       "source_sha256": "92b75dce945e753f038d600d1d2cae92476c3249dc75502fdaaeda1e67e91923",
-      "destination_sha256": "285d0dd0353ecc33b9dc60e5294f24928d21ee84e717f097207272ea6f5802d0",
+      "destination_sha256": "40b6c293ed749d12ad16a903ccb8dabb64240178aa3b769216c3d2212ea64f13",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1359,7 +1359,7 @@
       "source": "frontend/src/lib/workspace.ts",
       "destination": "web/src/lib/workspace.ts",
       "source_sha256": "14594539d402ab9ac59c14d3b8ea5abf90f289ff55ea97f78cdd9555d5a2bf30",
-      "destination_sha256": "9dcdd8d036c76ec6ce90a70fa738794ecbe0023c224f010a34e1b729a74256cc",
+      "destination_sha256": "4181f42feb63c03b3797a761d16e688d75f58b23f7199f937b7c452c5acd2ff4",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1399,7 +1399,7 @@
       "source": "frontend/src/styles.css",
       "destination": "web/src/styles.css",
       "source_sha256": "bf0104eddfda38faedfe3302ac6ab39e160eb4d2799abe04512c61499573e762",
-      "destination_sha256": "5abeb3cdb3c59acf0f9589379a9914e33263845caa9fc33c4b308100b18bc828",
+      "destination_sha256": "e1dabb449d5c2040582ca90d9a66d513a3e5b0d69703cb9becd86d23e848e28d",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1407,7 +1407,7 @@
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "7436b2e6db92cf15852cb9e515ebb979888593038c9a7d5cef1519f27c7e551c",
+      "destination_sha256": "edc20ce867aeb9dfad66bbefafddfa39c7d0dcae8210e2d0db0b6fb1d64edbfa",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1463,7 +1463,7 @@
       "source": "frontend/tests/workspace.test.ts",
       "destination": "web/tests/workspace.test.ts",
       "source_sha256": "f4790ddc4dcbcfc1b613a647a6df770c7bf7308a93fcf9059f8f51811a5ca01a",
-      "destination_sha256": "ccbef633bdf70da8e6a7194bc2e5bde8132a6599dd90ed54938da870dcbeb54e",
+      "destination_sha256": "d2110d54d2398e17157ec08eec68581127bb7df4dcc2140a0987bc798d9ca2de",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },

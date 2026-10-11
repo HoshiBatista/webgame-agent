@@ -176,6 +176,11 @@ manual entry available. Add `--model YOUR_AVAILABLE_MODEL` to set an explicit
 runner default, or select a model for each game in the studio. API model names
 remain a separate setting. Catalog discovery never starts an inference turn.
 
+The job monitor polls every 1.5 seconds while a run is active. It shows worker
+contact, the current model operation and elapsed time, and saved call history.
+These come from durable invocation receipts and worker leases; elapsed time is
+not presented as a completion percentage. Usage appears when a request returns.
+
 The generator uses the controlled single-author runtime by default. The
 `--mode four_author` option preserves the adopted donor strategy for measured
 comparisons. Fresh evaluation results, failures, costs and remaining quality
