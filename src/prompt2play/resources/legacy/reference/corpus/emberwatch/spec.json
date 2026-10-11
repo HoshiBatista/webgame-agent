@@ -1,0 +1,302 @@
+{
+  "title": "Emberwatch · recorded compatibility corpus",
+  "summary": "Trusted authored reference replay, not live generation",
+  "genre": "tower defence",
+  "rules": [
+    "Build four tower types on 14 fixed pads",
+    "Survive 12 waves using towers, upgrades and meteor",
+    "Only active enemies may be targeted or reward gold"
+  ],
+  "state_schema": "{\"phase\": \"string; Current run state; terminal states stop advancing rules\", \"time\": \"number; Accumulated unpaused simulation time\", \"gold\": \"integer; Spendable currency\", \"kills\": \"integer; Enemies killed once, excluding escapes\", \"stats/leaks\": \"integer; Escapes counted once, regardless of life damage\"}",
+  "action_schema": "{\"type\": \"start|pause|tick|build|upgrade|sell|target|wave|meteor\"}",
+  "event_schema": "{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}, \"type\": {\"const\": \"wave-complete\"}, \"value\": {\"type\": \"integer\"}, \"text\": {\"type\": \"string\"}}, \"required\": [\"id\", \"type\", \"value\", \"text\"], \"additionalProperties\": false}",
+  "visual_direction": "Procedural Canvas from the recorded source",
+  "audio_direction": "Procedural Web Audio; not externally generated assets",
+  "controls": [
+    "start",
+    "pause",
+    "restart",
+    "build",
+    "upgrade",
+    "sell",
+    "target",
+    "wave",
+    "meteor"
+  ],
+  "win_condition": "12 waves accounted and lives positive",
+  "lose_condition": "lives reach zero",
+  "smoke_actions": [
+    "{\"type\": \"start\"}"
+  ],
+  "affected_files": [
+    "engine.js",
+    "renderer.js",
+    "audio.js",
+    "ui.js"
+  ],
+  "acceptance_criteria": [
+    "Complete a real wave and account each enemy exactly once",
+    "Paused simulation stays frozen and restart restores initial resources",
+    "Build/sell preserves the intended integer currency rule"
+  ],
+  "semantic_contract": {
+    "version": 3,
+    "timing": {
+      "mode": "fixed_step",
+      "step_action": "{\"type\":\"tick\"}",
+      "step_seconds": 0.016666666666666666,
+      "max_catchup_steps": 12,
+      "pause_policy": "Paused state rejects progress; reset creates a fresh run; hidden time is discarded."
+    },
+    "fields": [
+      {
+        "id": "phase",
+        "path": "/phase",
+        "type": "string",
+        "unit": "state label",
+        "meaning": "Current run state; terminal states stop advancing rules",
+        "owner": "engine.js",
+        "consumers": [
+          "renderer.js",
+          "ui.js"
+        ],
+        "example_json": "\"menu\""
+      },
+      {
+        "id": "time",
+        "path": "/time",
+        "type": "number",
+        "unit": "simulation seconds",
+        "meaning": "Accumulated unpaused simulation time",
+        "owner": "engine.js",
+        "consumers": [
+          "renderer.js",
+          "ui.js"
+        ],
+        "example_json": "1.0"
+      },
+      {
+        "id": "gold",
+        "path": "/gold",
+        "type": "integer",
+        "unit": "gold pieces",
+        "meaning": "Spendable currency",
+        "owner": "engine.js",
+        "consumers": [
+          "renderer.js",
+          "ui.js"
+        ],
+        "example_json": "260"
+      },
+      {
+        "id": "kills",
+        "path": "/kills",
+        "type": "integer",
+        "unit": "enemies",
+        "meaning": "Enemies killed once, excluding escapes",
+        "owner": "engine.js",
+        "consumers": [
+          "renderer.js",
+          "ui.js"
+        ],
+        "example_json": "0"
+      },
+      {
+        "id": "stats-leaks",
+        "path": "/stats/leaks",
+        "type": "integer",
+        "unit": "enemies",
+        "meaning": "Escapes counted once, regardless of life damage",
+        "owner": "engine.js",
+        "consumers": [
+          "renderer.js",
+          "ui.js"
+        ],
+        "example_json": "0"
+      }
+    ],
+    "events": [
+      {
+        "type": "wave-complete",
+        "payload_schema": "{\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}, \"type\": {\"const\": \"wave-complete\"}, \"value\": {\"type\": \"integer\"}, \"text\": {\"type\": \"string\"}}, \"required\": [\"id\", \"type\", \"value\", \"text\"], \"additionalProperties\": false}",
+        "example_json": "{\"id\": \"1\", \"type\": \"wave-complete\", \"value\": 1, \"text\": \"Доход за волну: 41\"}",
+        "delivery": "Engine drains real event queue after dispatch; IDs identify a run sequence and audio is recreated on reset. wave-complete.value is the wave number, not its gold reward.",
+        "owner": "engine.js",
+        "consumers": [
+          "audio.js",
+          "ui.js"
+        ]
+      }
+    ],
+    "state_machines": [
+      {
+        "id": "campaign",
+        "owner": "engine.js",
+        "states": [
+          "menu",
+          "build",
+          "wave",
+          "won",
+          "lost"
+        ],
+        "initial_state": "menu",
+        "terminal_states": [
+          "won",
+          "lost"
+        ],
+        "transitions": [
+          {
+            "from": "menu",
+            "to": "build",
+            "trigger": "start action",
+            "effect": "Start the run exactly once"
+          },
+          {
+            "from": "build",
+            "to": "wave",
+            "trigger": "wave action",
+            "effect": "Schedule next wave"
+          },
+          {
+            "from": "wave",
+            "to": "build",
+            "trigger": "last live enemy accounted before final wave",
+            "effect": "Award reward once"
+          },
+          {
+            "from": "wave",
+            "to": "won",
+            "trigger": "final wave cleared and lives positive",
+            "effect": "End combat once"
+          },
+          {
+            "from": "wave",
+            "to": "lost",
+            "trigger": "lives reach zero",
+            "effect": "End combat once"
+          }
+        ]
+      }
+    ],
+    "resources": [
+      {
+        "name": "raf",
+        "owner": "ui.js",
+        "acquire": "mount creates one loop",
+        "release": "dispose cancels it",
+        "stale_work_policy": "Session identity rejects callbacks after disposal"
+      }
+    ],
+    "invariants": [
+      {
+        "id": "enemy-accounting",
+        "statement": "Completed enemies equal kills plus escapes; no escaped enemy can reward a kill",
+        "owners": [
+          "engine.js"
+        ],
+        "check_strategy": "Assert total after wave and varied legal-action campaigns"
+      },
+      {
+        "id": "economy",
+        "statement": "Gold is integer; 90-gold tower sale returns floor(90*70/100)=63",
+        "owners": [
+          "engine.js",
+          "ui.js"
+        ],
+        "check_strategy": "Real build and sell scenario"
+      }
+    ],
+    "state_domains": [
+      {
+        "id": "match-state",
+        "owner": "engine.js",
+        "field_ids": [
+          "phase",
+          "time",
+          "gold",
+          "kills",
+          "stats-leaks"
+        ],
+        "lifetime": "attempt",
+        "reset_policy": "The existing public reset starts the declared new seeded match",
+        "preserve_policy": "Pause and readonly snapshots retain current match values"
+      }
+    ],
+    "transactions": [],
+    "progression": [],
+    "persistence": [],
+    "first_playable_loop": {
+      "description": "Win an actual first wave with a legal tower placement",
+      "scenario_id": "wave-one"
+    }
+  },
+  "qa_scenarios": [
+    {
+      "id": "wave-one",
+      "purpose": "Complete a real wave and account each enemy exactly once",
+      "category": "progress",
+      "seed": "20261011",
+      "steps": [
+        "{\"op\": \"act\", \"action\": {\"type\": \"start\"}}",
+        "{\"op\": \"act\", \"action\": {\"type\": \"build\", \"padId\": \"P4\", \"towerType\": \"archer\"}}",
+        "{\"op\": \"act\", \"action\": {\"type\": \"build\", \"padId\": \"P5\", \"towerType\": \"cannon\"}}",
+        "{\"op\": \"act\", \"action\": {\"type\": \"wave\"}}",
+        "{\"op\": \"advance\", \"frames\": 3600}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/phase\"}, \"cmp\": \"eq\", \"right\": {\"value\": \"build\"}}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/wave\"}, \"cmp\": \"eq\", \"right\": {\"value\": 1}}",
+        "{\"op\": \"assert\", \"left\": {\"sum\": [{\"path\": \"/kills\"}, {\"path\": \"/stats/leaks\"}]}, \"cmp\": \"eq\", \"right\": {\"value\": 10}}"
+      ],
+      "affected_files": [
+        "engine.js",
+        "ui.js"
+      ],
+      "limitations": [
+        "Recorded trusted fixture; engine adapter is not browser interaction or a live model evaluation"
+      ]
+    },
+    {
+      "id": "pause-and-restart",
+      "purpose": "Paused simulation stays frozen and restart restores initial resources",
+      "category": "lifecycle",
+      "seed": "20261011",
+      "steps": [
+        "{\"op\": \"act\", \"action\": {\"type\": \"start\"}}",
+        "{\"op\": \"act\", \"action\": {\"type\": \"pause\", \"value\": true}}",
+        "{\"op\": \"capture\", \"key\": \"paused\"}",
+        "{\"op\": \"advance\", \"frames\": 120}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/time\"}, \"cmp\": \"eq\", \"right\": {\"saved\": \"paused\", \"path\": \"/time\"}}",
+        "{\"op\": \"reset\", \"seed\": \"20261011\"}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/phase\"}, \"cmp\": \"eq\", \"right\": {\"value\": \"menu\"}}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/gold\"}, \"cmp\": \"eq\", \"right\": {\"value\": 260}}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/time\"}, \"cmp\": \"eq\", \"right\": {\"value\": 0}}"
+      ],
+      "affected_files": [
+        "engine.js",
+        "ui.js"
+      ],
+      "limitations": [
+        "Recorded trusted fixture; engine adapter is not browser interaction or a live model evaluation"
+      ]
+    },
+    {
+      "id": "integer-refund",
+      "purpose": "Build/sell preserves the intended integer currency rule",
+      "category": "accounting",
+      "seed": "20261011",
+      "steps": [
+        "{\"op\": \"act\", \"action\": {\"type\": \"start\"}}",
+        "{\"op\": \"act\", \"action\": {\"type\": \"build\", \"padId\": \"P4\", \"towerType\": \"archer\"}}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/gold\"}, \"cmp\": \"eq\", \"right\": {\"value\": 170}}",
+        "{\"op\": \"act\", \"action\": {\"type\": \"sell\", \"padId\": \"P4\"}}",
+        "{\"op\": \"assert\", \"left\": {\"path\": \"/gold\"}, \"cmp\": \"eq\", \"right\": {\"value\": 233}}"
+      ],
+      "affected_files": [
+        "engine.js",
+        "ui.js"
+      ],
+      "limitations": [
+        "Recorded trusted fixture; engine adapter is not browser interaction or a live model evaluation"
+      ]
+    }
+  ]
+}

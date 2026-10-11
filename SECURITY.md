@@ -35,8 +35,15 @@ misleading validation results.
 - Never pass raw prompt or model text to a shell.
 - Run generated games in an isolated browser context with restrictive sandbox,
   Content Security Policy, network, and resource settings.
-- Separate generation and validation workers from application secrets and
-  privileged internal services.
+- Keep application/database secrets outside generation and validation workers.
+  Provider credentials stay in the model adapter's worker environment and never
+  enter generated files or validation containers. Only a separately authorized
+  validation runner can provide authoritative release evidence.
+- Enforce validator network denial outside the browser and serve eligible
+  previews from a separate origin without studio cookies. A required skipped
+  validation check cannot authorize preview or publication.
+- Fence worker submissions and commits against current persisted ownership.
+  Store immutable candidates and validate the exact delivered artifact digest.
 - Bound generation size, execution time, repair attempts, browser resources,
   and retained artifacts.
 - Redact secrets and sensitive prompt content from logs and diagnostics.

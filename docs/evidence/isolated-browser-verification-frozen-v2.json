@@ -1,0 +1,3853 @@
+{
+  "schema_version": 1,
+  "verification_scope": "Eight actual container-only Chromium regressions of reviewed fixture code. No live-model quality score or actual Android/iOS WebView is claimed.",
+  "executed_image_id": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+  "oci_build_config_digest": "sha256:5c8302aeeaea5d622ccf8c6e7f1ff568020c611baf433e456fbe3c0bc6c5a590",
+  "browser": "154.0.8037.92",
+  "result": {
+    "passed_tests": 8,
+    "positive_reports": 6,
+    "expected_negative_reports": 2,
+    "evidence_files": 128,
+    "evidence_bytes": 10826235
+  },
+  "isolation": {
+    "network": "none",
+    "filesystem": "read-only root and read-only input; separate evidence mount",
+    "uid": 10001,
+    "capabilities": "all dropped",
+    "no_new_privileges": true,
+    "cpus": 1,
+    "memory_bytes": 805306368,
+    "pids_limit": 256,
+    "wall_time_seconds_per_case": 90
+  },
+  "visual_measurement": {
+    "decoded_actual_png": true,
+    "maximum_channel_noise": 8,
+    "minimum_material_input_pixels": 16,
+    "state_and_no_input_timeline_mandatory": true
+  },
+  "limits": [
+    "Web Audio source scheduling was observed with an ALSA null sink; audible quality is not claimed.",
+    "Lifecycle uses synthetic visibility events, not OS backgrounding.",
+    "Game and bridge share a browser realm; this is not proof against deliberately falsified mechanics.",
+    "Human gameplay/rules quality review and target WebView verification remain separate."
+  ],
+  "cases": [
+    {
+      "case": "blocked-egress",
+      "expected_status": "failed",
+      "observed_status": "failed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+      "request_sha256": "b56ded18b17ed97ccb38b95cc1f6735a16725d05c8b9f84ef75f021edecdb1c8",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "6e146a13a581b31d3ef36c073668a385ae9c1555264bca32ccb1296e84e33359"
+        },
+        "html_bytes": 16633,
+        "html_sha256": "67cad804b9df13f8b59686b571ff8b9d4e8be8ad76e5f0eb4070162b1345c8e2",
+        "spec_sha256": "231994adfe86e7b1900f8cf86df93ae84ae81e7da1f02bf0a558652db2365bb0"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 1280,
+            "height": 720,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "failed",
+          "kind": "browser",
+          "evidence": {
+            "count": 10,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 390,
+            "height": 764,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "failed",
+          "kind": "browser",
+          "evidence": {
+            "count": 10,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/blocked-egress",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "039ec0b6bf393606a7b8d43c0e902bf5dd60a6755fa66034ac9e41537c83b67f",
+          "bytes": 25728
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "3d252c4e20feceffd3fd62a67bf5aec064c2f9c65a714bb65606258c319ef84e",
+          "bytes": 21454
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "81316d9ef49046dd27d4406045ef69e6faf7eed471e93d6702a6e805ae93a0a3",
+          "bytes": 21445
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "ec8f3091ef055d97ffe2b25a60fcc1c876f91fe59515801bc3f973d32752bb98",
+          "bytes": 25754
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "1c58144dbcc0adf7416588aa51a85d309882e338e4322dcf3d5576ad70d1f0ea",
+          "bytes": 2227
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "bef573edcd9832a8ccd93f7d6670b9a43c759ce2a26d9dcd78b91822e05ed3e5",
+          "bytes": 1262
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "3d9583f768d87c494facadaf7d120964b417064a88f0ff4701851d1ebd94869d",
+          "bytes": 444965
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "0eec0b67db78ac7b6ac1bb5196787a90481dcfb33d75f5ae3191ffb8c62b2b63",
+          "bytes": 24257
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "f526179e064fb54c4828f4b9d8a3115f66423406304687aac7f7d9789cf8a704",
+          "bytes": 27835
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb",
+          "bytes": 24838
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "1c58144dbcc0adf7416588aa51a85d309882e338e4322dcf3d5576ad70d1f0ea",
+          "bytes": 2227
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "bef573edcd9832a8ccd93f7d6670b9a43c759ce2a26d9dcd78b91822e05ed3e5",
+          "bytes": 1262
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "20c784273a5f6d54c3362280cbcff7c71d83abcd4870e6a41f0588a0b121fabc",
+          "bytes": 716336
+        }
+      ]
+    },
+    {
+      "case": "broken-input",
+      "expected_status": "failed",
+      "observed_status": "failed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+      "request_sha256": "24f71afda7538605678d6959aadb06b19234b98fa4ccc15d62515dabf36e4b99",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "ba6e762c281e16c1f036fc4f4c26e909ce1c714c60acb5f3ec612f63332c659b"
+        },
+        "html_bytes": 16216,
+        "html_sha256": "9bc1b7f4cabd804dc08342b7045822f0b836651a72003b04b84f9603e9b7606e",
+        "spec_sha256": "f81271db7f499d71416f7a241ce1db150eae23b8b719405622e94d16b7870422"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "canvas",
+            "tag": "canvas",
+            "width": 640,
+            "height": 280,
+            "visible_canvases": 1,
+            "canvas_backing_valid": true,
+            "opacity_chain_visible": true,
+            "markup_elements": 0
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "failed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "state_changed": false,
+            "visible_changed": false,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": false,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "failed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "playing",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Playing"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "failed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "assertions": 1,
+            "steps_completed": 5,
+            "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "canvas",
+            "tag": "canvas",
+            "width": 357.984375,
+            "height": 257.015625,
+            "visible_canvases": 1,
+            "canvas_backing_valid": true,
+            "opacity_chain_visible": true,
+            "markup_elements": 0
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "assertions": 1,
+            "steps_completed": 5,
+            "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/broken-input",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "b86dc3751d5a2a7c7142e22f3b1b61c89a5fb131f35e365a2c02776cccc7bc93",
+          "bytes": 24617
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "d935418a2105a07c6f3393011249927804d5482eab0fcf7a8d654071551c7f14",
+          "bytes": 2146
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "d935418a2105a07c6f3393011249927804d5482eab0fcf7a8d654071551c7f14",
+          "bytes": 2146
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "48cfc87de9b6c1fa11e130f739dba4bdacd5a4e3ae0628c53776ad2d88341cef",
+          "bytes": 24627
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "3993f46e70e0d72c5b15b3986c4746d3cbce77bafcfe61b1873f18e9c796676e",
+          "bytes": 24602
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "bff19e6e26fbdbce4728b245d12c4d6765a94dff7176115aa4ae3911b9f6edb9",
+          "bytes": 664603
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "7b3a1d709fcb72ce36ac45c4844f3abc2c416d2c3006a1ecdcd99bd276bf758e",
+          "bytes": 22097
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "11a726b59c46a034b8ce97aa85e10661459ef7053fddf38f3627a4a1701c176d",
+          "bytes": 2061
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "11a726b59c46a034b8ce97aa85e10661459ef7053fddf38f3627a4a1701c176d",
+          "bytes": 2061
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "e0b7e9050e4ca7e77dbcc3c6c86e161f07a06522648f37ca590d6a60817995d0",
+          "bytes": 23460
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "35ff4ec1a813385d7d90b63178d1df652c71ab707572ccb96dbcae78373b758d",
+          "bytes": 22608
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "899bfa321649b4d9993d0dd01c1bf74f064b5a22dce4c11b49fd0334966b5614",
+          "bytes": 604737
+        }
+      ]
+    },
+    {
+      "case": "canvas",
+      "expected_status": "passed",
+      "observed_status": "passed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+      "request_sha256": "3af3cdd84a7a6f9cb7753275c47ed826c36921d317ae83ff0007a0cdeb600dac",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "e225cc9fd939a035ad718ad549c674a278bd1e1910aa36f9fb59064cd2353789"
+        },
+        "html_bytes": 16246,
+        "html_sha256": "c7296dd05ea5834f701cd82220d7fe74e82c2ba1329190af86ed120df1888f5d",
+        "spec_sha256": "f81271db7f499d71416f7a241ce1db150eae23b8b719405622e94d16b7870422"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "canvas",
+            "tag": "canvas",
+            "width": 640,
+            "height": 280,
+            "visible_canvases": 1,
+            "canvas_backing_valid": true,
+            "opacity_chain_visible": true,
+            "markup_elements": 0
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "assertions": 1,
+            "steps_completed": 5,
+            "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "canvas",
+            "tag": "canvas",
+            "width": 357.984375,
+            "height": 257.015625,
+            "visible_canvases": 1,
+            "canvas_backing_valid": true,
+            "opacity_chain_visible": true,
+            "markup_elements": 0
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "assertions": 1,
+            "steps_completed": 5,
+            "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/canvas",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "48cfc87de9b6c1fa11e130f739dba4bdacd5a4e3ae0628c53776ad2d88341cef",
+          "bytes": 24627
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "d935418a2105a07c6f3393011249927804d5482eab0fcf7a8d654071551c7f14",
+          "bytes": 2146
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "d935418a2105a07c6f3393011249927804d5482eab0fcf7a8d654071551c7f14",
+          "bytes": 2146
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "cfff102be864f81ec2f984f2975908abf1e37596a89ab58c863ce15864627177",
+          "bytes": 26231
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "3993f46e70e0d72c5b15b3986c4746d3cbce77bafcfe61b1873f18e9c796676e",
+          "bytes": 24602
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "decd2a06468430c6416d5d962df134f0a5d5d6ab94c0a3b37c3317f6f8b0f5bc",
+          "bytes": 501751
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "c4407e866ff356f281b822bd5d4439465f6917a065da61ff6bfc115dadc7aa3d",
+          "bytes": 22102
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "df29bcb0e28d5c453452f1df6b7d92be006da38f009ef46a830cbebbc0bde1fd",
+          "bytes": 2061
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "df29bcb0e28d5c453452f1df6b7d92be006da38f009ef46a830cbebbc0bde1fd",
+          "bytes": 2061
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "e0b7e9050e4ca7e77dbcc3c6c86e161f07a06522648f37ca590d6a60817995d0",
+          "bytes": 23460
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "35ff4ec1a813385d7d90b63178d1df652c71ab707572ccb96dbcae78373b758d",
+          "bytes": 22608
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "728eca8a1be2f56bee192794cfb8d864670c94c23b1034fd4b3e53015ca9e826",
+          "bytes": 603705
+        }
+      ]
+    },
+    {
+      "case": "delayed-physics-input",
+      "expected_status": "passed",
+      "observed_status": "passed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+      "request_sha256": "158c9e2157caa708aee672614b999a02c0399d8794913fecd11b10c743fe5c50",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "d6bb120d45910b17965a77baa2c72fa68913e32a77589b4a2a5f5be2f134979f"
+        },
+        "html_bytes": 16318,
+        "html_sha256": "fbe9e4f08aa9e87a667597323c844d08626c9c5799b32e2ab4154dfaed168772",
+        "spec_sha256": "f81271db7f499d71416f7a241ce1db150eae23b8b719405622e94d16b7870422"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "canvas",
+            "tag": "canvas",
+            "width": 640,
+            "height": 280,
+            "visible_canvases": 1,
+            "canvas_backing_valid": true,
+            "opacity_chain_visible": true,
+            "markup_elements": 0
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "assertions": 1,
+            "steps_completed": 5,
+            "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "canvas",
+            "tag": "canvas",
+            "width": 357.984375,
+            "height": 257.015625,
+            "visible_canvases": 1,
+            "canvas_backing_valid": true,
+            "opacity_chain_visible": true,
+            "markup_elements": 0
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 4,
+            "assertions": 1,
+            "steps_completed": 5,
+            "suite_sha256": "98347f5d2f7ead9a50deb686780e55511994f625bd3e91321d5b67999677738d",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/delayed-physics-input",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "8ed74fe753798cc953db4e51004859b5c138dbd3ea211153ba96a7b071924477",
+          "bytes": 24659
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "e88ca1c77f2017e12a0e002a774024dde2942ac21644c384b5766e007c0161dd",
+          "bytes": 2124
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "e88ca1c77f2017e12a0e002a774024dde2942ac21644c384b5766e007c0161dd",
+          "bytes": 2124
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "89b567abd24d080f1b6a89d3756f201cebcbddfc88de81ffcf36ac3e7efb4aa7",
+          "bytes": 26219
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "3993f46e70e0d72c5b15b3986c4746d3cbce77bafcfe61b1873f18e9c796676e",
+          "bytes": 24602
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "f8040142edb1ba227572cdecf568d25b2b24a5b20d11876af938175866d69c0a",
+          "bytes": 434924
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "1be6541af099a3cce65db7fb520db2abbd34dec99f93d2d50e65bbb1714f6f89",
+          "bytes": 22097
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "8ef898a6234fb71f96aa64d1624dfa81e6dc0267c13f07d51c9784a078205703",
+          "bytes": 2105
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "8ef898a6234fb71f96aa64d1624dfa81e6dc0267c13f07d51c9784a078205703",
+          "bytes": 2105
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "870bdb830d6a4f92a43ca6b9bd3002261c537a4ae96df77d03e969c741de186d",
+          "bytes": 23460
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "35ff4ec1a813385d7d90b63178d1df652c71ab707572ccb96dbcae78373b758d",
+          "bytes": 22608
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "04caf760a25e40d2aa0613b662b73a8920517b90508b542b4fde07bc69c38a66",
+          "bytes": 651721
+        }
+      ]
+    },
+    {
+      "case": "dom",
+      "expected_status": "passed",
+      "observed_status": "passed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+      "request_sha256": "127a4fc3083a4df6bf5d3e6b0437d4f2bf396ff7da5e4e2e71f0466a902828cd",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "77302f20dacf899f6f1a9c13fb5e3096b6d3a119c84859519dfbabf2c3c11187"
+        },
+        "html_bytes": 16551,
+        "html_sha256": "dc58f94d667a7fe03f060ed0e3740106914fa2cd5d2cb547465dc9dd60926b31",
+        "spec_sha256": "231994adfe86e7b1900f8cf86df93ae84ae81e7da1f02bf0a558652db2365bb0"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 1280,
+            "height": 720,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 390,
+            "height": 764,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/dom",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "039ec0b6bf393606a7b8d43c0e902bf5dd60a6755fa66034ac9e41537c83b67f",
+          "bytes": 25728
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "3d252c4e20feceffd3fd62a67bf5aec064c2f9c65a714bb65606258c319ef84e",
+          "bytes": 21454
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "81316d9ef49046dd27d4406045ef69e6faf7eed471e93d6702a6e805ae93a0a3",
+          "bytes": 21445
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "ec8f3091ef055d97ffe2b25a60fcc1c876f91fe59515801bc3f973d32752bb98",
+          "bytes": 25754
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "e07a7cd7b416f32f730557e93c4705ea6d884dc62e78f55546782b521b1bcd44",
+          "bytes": 443311
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "0eec0b67db78ac7b6ac1bb5196787a90481dcfb33d75f5ae3191ffb8c62b2b63",
+          "bytes": 24257
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "052f820589f8d21d6c7a534c9bcc23342c6dccf748306bf9b7dd68e729358d2c",
+          "bytes": 27825
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb",
+          "bytes": 24838
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "f28a9e9a093cdc17e71749c9a15be9c184862547cbfd007a1be310b2c3aa8c9e",
+          "bytes": 687501
+        }
+      ]
+    },
+    {
+      "case": "native-conformance",
+      "expected_status": "passed",
+      "observed_status": "passed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "native-conformance",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "e799799aead90a108e870063e19446fdb94c23326b5bf091197e21d77664fc01",
+      "request_sha256": "1d092c168e06367a3f4c231beccb0fd896abc45ab0a04c9dc8320719d6491bbe",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "77302f20dacf899f6f1a9c13fb5e3096b6d3a119c84859519dfbabf2c3c11187"
+        },
+        "html_bytes": 16543,
+        "html_sha256": "a4dd82bfc05c9b54c26646dc6e8800cca5cf6aced436ad3230e8488029864625",
+        "spec_sha256": "849a85f03ef9762424054b3fa828281ce8e2652dd6f03e22b1f81e0691a7c1a8"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 1280,
+            "height": 720,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "e799799aead90a108e870063e19446fdb94c23326b5bf091197e21d77664fc01",
+            "acceptance_source": "native-conformance"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 390,
+            "height": 764,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "e799799aead90a108e870063e19446fdb94c23326b5bf091197e21d77664fc01",
+            "acceptance_source": "native-conformance"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/native-conformance",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "039ec0b6bf393606a7b8d43c0e902bf5dd60a6755fa66034ac9e41537c83b67f",
+          "bytes": 25728
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "3d252c4e20feceffd3fd62a67bf5aec064c2f9c65a714bb65606258c319ef84e",
+          "bytes": 21454
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "81316d9ef49046dd27d4406045ef69e6faf7eed471e93d6702a6e805ae93a0a3",
+          "bytes": 21445
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "ec8f3091ef055d97ffe2b25a60fcc1c876f91fe59515801bc3f973d32752bb98",
+          "bytes": 25754
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "3b7e34e02b97d46313fcb4df4e128759743c385583f14658f3ed17e651e77bea",
+          "bytes": 442992
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "0eec0b67db78ac7b6ac1bb5196787a90481dcfb33d75f5ae3191ffb8c62b2b63",
+          "bytes": 24257
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "1525da45893059ff0b620d272dfe19723994ce11232080569b5c8ca74d98a779",
+          "bytes": 27831
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb",
+          "bytes": 24838
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "411cc106eba73dce292ff3cbe255ff8f103ed9d24f75c48649d760bc7e173320",
+          "bytes": 765125
+        }
+      ]
+    },
+    {
+      "case": "no-optional-capabilities",
+      "expected_status": "passed",
+      "observed_status": "passed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+      "request_sha256": "127a4fc3083a4df6bf5d3e6b0437d4f2bf396ff7da5e4e2e71f0466a902828cd",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "77302f20dacf899f6f1a9c13fb5e3096b6d3a119c84859519dfbabf2c3c11187"
+        },
+        "html_bytes": 16551,
+        "html_sha256": "dc58f94d667a7fe03f060ed0e3740106914fa2cd5d2cb547465dc9dd60926b31",
+        "spec_sha256": "231994adfe86e7b1900f8cf86df93ae84ae81e7da1f02bf0a558652db2365bb0"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 1280,
+            "height": 720,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 390,
+            "height": 764,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/no-optional-capabilities",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "039ec0b6bf393606a7b8d43c0e902bf5dd60a6755fa66034ac9e41537c83b67f",
+          "bytes": 25728
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "3d252c4e20feceffd3fd62a67bf5aec064c2f9c65a714bb65606258c319ef84e",
+          "bytes": 21454
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "81316d9ef49046dd27d4406045ef69e6faf7eed471e93d6702a6e805ae93a0a3",
+          "bytes": 21445
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "ec8f3091ef055d97ffe2b25a60fcc1c876f91fe59515801bc3f973d32752bb98",
+          "bytes": 25754
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "465898b328c0be18892a2acac7c47a4406c6fc7efdd15fbee624bb69eb25913e",
+          "bytes": 432268
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "0eec0b67db78ac7b6ac1bb5196787a90481dcfb33d75f5ae3191ffb8c62b2b63",
+          "bytes": 24257
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "7ce1a2f82f3983df5e10c4e56c20915e4f3c9700a504f8957723b43cef41f595",
+          "bytes": 27782
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb",
+          "bytes": 24838
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "f8515703549b8eaa85fcd2cec17947f1710d35dd4f637ed7f62101affa4cf625",
+          "bytes": 689867
+        }
+      ]
+    },
+    {
+      "case": "optional-capabilities",
+      "expected_status": "passed",
+      "observed_status": "passed",
+      "regression_passed": true,
+      "scope": {
+        "isolated": true,
+        "real_input": true,
+        "webview": false
+      },
+      "acceptance_source": "release-config",
+      "browser_version": "154.0.8037.92",
+      "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+      "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+      "request_sha256": "3bfa37bd42c793f04eb7a34064bb804981ec30aa4d89292f9165a301c12f16dd",
+      "harness_files_sha256": {
+        "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+        "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+        "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+        "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+        "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+        "release_runtime.mjs": "0d3c3bfb4b87204363ff80b8195f811f65cf5c38668226b376f8db90998d0d2d",
+        "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+        "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+        "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+        "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee"
+      },
+      "artifact": {
+        "files_sha256": {
+          "game.js": "77302f20dacf899f6f1a9c13fb5e3096b6d3a119c84859519dfbabf2c3c11187"
+        },
+        "html_bytes": 16569,
+        "html_sha256": "9d7e197218a53c1614372668fd9c6e21d676dbe3f4aac2b11d4066a0b36c4969",
+        "spec_sha256": "00656d6c6d5320a66d96c8d4aa178a2bbd27acbd962ab03f4d4cccda4d4d4e24"
+      },
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed",
+          "kind": "provenance",
+          "evidence": {}
+        },
+        {
+          "name": "module_paths",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed",
+          "kind": "static",
+          "evidence": {}
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed",
+          "kind": "syntax",
+          "evidence": {}
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 1280,
+              "height": 800
+            }
+          }
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 1280,
+            "height": 720,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": false,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "audio:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "created": 1,
+            "started": 1,
+            "runningStarts": 1
+          }
+        },
+        {
+          "name": "persistence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "bytes": 62,
+            "restored_equal": true,
+            "invalid_rejected": true,
+            "unchanged_on_rejection": true
+          }
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-1280.png",
+              "control-before-1280.png",
+              "control-after-1280.png",
+              "final-1280.png",
+              "restart-1280.png",
+              "console-1280.json",
+              "network-1280.json",
+              "trace-1280.zip"
+            ]
+          }
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "version": "runtime-v1.0.3",
+            "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+            "frozen": true,
+            "protected": true,
+            "immutable_identity_required": true
+          }
+        },
+        {
+          "name": "startup:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "viewport": {
+              "width": 390,
+              "height": 844
+            }
+          }
+        },
+        {
+          "name": "surface:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "presentation_mode": "dom",
+            "tag": "section",
+            "width": 390,
+            "height": 764,
+            "visible_canvases": 0,
+            "canvas_backing_valid": null,
+            "opacity_chain_visible": true,
+            "markup_elements": 8
+          }
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "state_stable": true,
+            "visible_stable": true,
+            "pixels": {
+              "stable": true,
+              "visible_changed": false,
+              "dimensions_match": true,
+              "changed_pixels": 0,
+              "channel_tolerance": 8,
+              "minimum_input_pixels": 16
+            }
+          }
+        },
+        {
+          "name": "input:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "state_changed": true,
+            "visible_changed": true,
+            "touch": true,
+            "clock_frozen_during_input": true,
+            "matched_timeline_control": true,
+            "causal_control": true
+          }
+        },
+        {
+          "name": "completion:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "path": "/phase",
+            "observed": "won",
+            "actual_input": true,
+            "native_oracle": true,
+            "visible_status": "Completed"
+          }
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed",
+          "kind": "scenario",
+          "evidence": {
+            "actual_input": true,
+            "events": 3,
+            "assertions": 1,
+            "steps_completed": 4,
+            "suite_sha256": "8b9917445750c808f44a392d3c9be1f49c40e95174aa67f8aa9cde8a84fbc960",
+            "acceptance_source": "release-config"
+          }
+        },
+        {
+          "name": "restart:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "actual_input": true,
+            "state_changed": true,
+            "visible_changed": true
+          }
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "viewport": 390,
+            "scroll": 390,
+            "height": 844,
+            "body": 390
+          }
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "equal": true
+          }
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "synthetic": true,
+            "paused": true
+          }
+        },
+        {
+          "name": "audio:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "created": 1,
+            "started": 1,
+            "runningStarts": 1
+          }
+        },
+        {
+          "name": "persistence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "bytes": 62,
+            "restored_equal": true,
+            "invalid_rejected": true,
+            "unchanged_on_rejection": true
+          }
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0
+          }
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "count": 0,
+            "network_disabled": true
+          }
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed",
+          "kind": "browser",
+          "evidence": {
+            "files": [
+              "start-390.png",
+              "control-before-390.png",
+              "control-after-390.png",
+              "final-390.png",
+              "restart-390.png",
+              "console-390.json",
+              "network-390.json",
+              "trace-390.zip"
+            ]
+          }
+        }
+      ],
+      "evidence_directory": "/tmp/prompt2play-isolated-browser-verified/optional-capabilities",
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "039ec0b6bf393606a7b8d43c0e902bf5dd60a6755fa66034ac9e41537c83b67f",
+          "bytes": 25728
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "3d252c4e20feceffd3fd62a67bf5aec064c2f9c65a714bb65606258c319ef84e",
+          "bytes": 21454
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "81316d9ef49046dd27d4406045ef69e6faf7eed471e93d6702a6e805ae93a0a3",
+          "bytes": 21445
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "ec8f3091ef055d97ffe2b25a60fcc1c876f91fe59515801bc3f973d32752bb98",
+          "bytes": 25754
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "33be3802c3028858abeac503f7704507763bd5b56a7752ca7d2f6459d766f573",
+          "bytes": 446398
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "0eec0b67db78ac7b6ac1bb5196787a90481dcfb33d75f5ae3191ffb8c62b2b63",
+          "bytes": 24257
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "7ce1a2f82f3983df5e10c4e56c20915e4f3c9700a504f8957723b43cef41f595",
+          "bytes": 27782
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb",
+          "bytes": 24838
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "a17f22f20e80ef6504c5fbe818c222695a0d3955640812dfaa9feaed40daf3be",
+          "bytes": 619918
+        }
+      ]
+    }
+  ],
+  "copied_screenshots": [
+    {
+      "path": "isolated-canvas-mobile.png",
+      "sha256": "e0b7e9050e4ca7e77dbcc3c6c86e161f07a06522648f37ca590d6a60817995d0",
+      "bytes": 23460
+    },
+    {
+      "path": "isolated-dom-desktop.png",
+      "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+      "bytes": 30534
+    }
+  ]
+}

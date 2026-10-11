@@ -1,0 +1,55 @@
+{
+  "job": "0ebc7f70-ab4e-4e05-918f-a31969763cc9",
+  "status": "failed",
+  "stage": "repair",
+  "attempts": 1,
+  "usage": {
+    "calls": 6,
+    "input_tokens": 92401,
+    "total_tokens": 98296,
+    "output_tokens": 5895,
+    "cached_input_tokens": 0
+  },
+  "result_version": "None",
+  "base_version": "None",
+  "error": "GenerationStopped: stage failed; inspect diagnostics",
+  "reported_utc": "2026-10-11 19:51:55.492842+00:00",
+  "validation": [
+    {
+      "candidate": "1ac1ec4c-ed7d-448c-8718-7c22ce0e0f6d",
+      "outcome": "failed",
+      "artifact": {
+        "html_bytes": 24668,
+        "html_sha256": "78233c9d027deb77422b0012388fbd493cd38a04963f1ce91dde8f5e327dfc55",
+        "spec_sha256": "06c3c0dc28bcfe85a2b2caf6edb9c69d1ab4653392bd58430f4b8a6683182ca7",
+        "files_sha256": {
+          "game.js": "5b3747b9e59edc9164bdc8f9c4201d338ba0b0e9c3c9a3362beca240acf5e4b5",
+          "style.css": "931c63e21a7f389e2b6140f5678784ff34d451fdb47ac6cb3736d871e461602c"
+        }
+      },
+      "evidence": [],
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "failed"
+        },
+        {
+          "name": "module_paths",
+          "status": "passed"
+        },
+        {
+          "name": "offline:game.js",
+          "status": "failed"
+        },
+        {
+          "name": "offline:style.css",
+          "status": "failed"
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,266 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27;; style-src &#x27;unsafe-inline&#x27;; img-src data: blob:; media-src data: blob:; font-src data:; connect-src &#x27;none&#x27;; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;"><title>Старшая карта</title><style>html,body{margin:0;min-height:100%;background:#101722;color:#e8eef8;font-family:system-ui,sans-serif}button{font:inherit;touch-action:manipulation;cursor:pointer;padding:.65rem 1rem;border:1px solid #7086a5;border-radius:.6rem;background:#223650;color:inherit}.p2p-toolbar{display:flex;gap:.6rem;align-items:center;padding:.8rem;flex-wrap:wrap}#p2p-surface{position:relative;min-height:calc(100dvh - 80px);outline:none;touch-action:none;box-sizing:border-box;padding:1rem}canvas{max-width:100%;display:block}*{box-sizing:border-box}
+
+.higher-card{box-sizing:border-box;width:100%;max-width:760px;margin:0 auto;padding:26px 22px;color:#f5f3df;background:radial-gradient(ellipse at 50% 25%,#22674f,#103f33 75%);border:1px solid #53806c;border-radius:20px;font:16px/1.5 system-ui,sans-serif;box-shadow:0 16px 48px #071e2626}.higher-card *{box-sizing:border-box}.higher-card header{text-align:center}.higher-card .eyebrow{font-size:11px;letter-spacing:3px;color:#dbcf96}.higher-card h1{font-size:clamp(28px,6vw,42px);line-height:1.15;margin:8px 0}.higher-card header p{margin:8px 0 22px;color:#c4d7cc}.higher-card h2{font-size:15px;margin:0 0 12px}.higher-card .scoreboard{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 18px;border:1px solid #668a71;border-radius:12px;background:#082d2580}.higher-card .scoreboard strong{font-size:30px;vertical-align:middle;margin:0 6px;color:#ffdf8d}.higher-card .round-label{font-size:13px;color:#d2ded5;text-align:center}.higher-card .message{text-align:center;font-weight:650;min-height:48px;margin:18px 0 6px;color:#ffe4a1}.higher-card .table{display:flex;justify-content:center;align-items:center;gap:30px;padding:4px 0 24px;border-bottom:1px solid #72947a55}.higher-card .seat{text-align:center}.higher-card .seat>span{display:block;font-size:13px;margin-bottom:8px;color:#d3e0d7}.higher-card .table-card{display:grid;place-items:center;width:96px;height:124px;background:#fff8e8;color:#173e33;border-radius:10px;font-size:56px;font-weight:750;box-shadow:0 6px 0 #072a2455}.higher-card .versus{font-size:12px;color:#c9d8ce}.higher-card .hand-section{text-align:center;padding-top:20px}.higher-card .hand{display:flex;justify-content:center;gap:14px}.higher-card .hand-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;width:112px;min-width:64px;height:148px;padding:10px 5px;border:2px solid #f7dda2;border-radius:11px;background:#fff9ec;color:#173c32;box-shadow:0 5px 0 #082c25;font:inherit;cursor:pointer;touch-action:manipulation}.higher-card .corner{position:absolute;top:6px;left:10px;font-size:15px;font-weight:700}.higher-card .number{font-size:56px;font-weight:800;line-height:1.25}.higher-card .card-state{font-size:11px;font-weight:650}.higher-card .hand-card:disabled{cursor:default;background:#d8dfcf;border-color:#b6c2ad;color:#506555}.higher-card .hand-card.used{background:#557967;color:#d5e0d4;border-color:#7a9781;box-shadow:none}.higher-card .hand-card:enabled:hover{background:#ffe7ae;transform:translateY(-3px)}.higher-card .hand-card:focus-visible{outline:3px solid #ffd470;outline-offset:5px}.higher-card .hint{font-size:12px;color:#bed1c4;margin:16px 0 22px}.higher-card .history-section{padding:16px;border-radius:12px;background:#062d2666}.higher-card .history{margin:0;padding-left:24px;font-size:14px}.higher-card .history li{padding:4px 0}.higher-card .empty-history{font-size:13px;color:#b6cdbf;margin:0}.higher-card .rules{margin-top:20px;color:#cfdbcf;font-size:13px}.higher-card .rules h2{color:#f2e4b8;margin-bottom:6px}.higher-card .rules p{margin:6px 0}.higher-card [hidden]{display:none}@media(max-width:400px){.higher-card{padding:20px 12px;border-radius:12px}.higher-card .table{gap:18px}.higher-card .table-card{width:80px;height:108px}.higher-card .hand{gap:10px}.higher-card .hand-card{width:calc((100% - 20px)/3);height:132px}.higher-card .scoreboard{padding:10px}.higher-card .scoreboard strong{margin:0 3px;font-size:26px}.higher-card .history{font-size:12px}}
+</style></head><body><main id="game-root"></main><script>/* Prompt2Play trusted runtime v1. Mechanics and rendering remain in game.js. */
+(() => {
+  "use strict";
+  const VERSION = "runtime-v1.0.3";
+  const copy = value => JSON.parse(JSON.stringify(value));
+  const rng = seed => {
+    let n = 2166136261;
+    for (const char of String(seed)) n = Math.imul(n ^ char.charCodeAt(0), 16777619);
+    return () => { n ^= n << 13; n ^= n >>> 17; n ^= n << 5; return (n >>> 0) / 4294967296; };
+  };
+  function install(factory, spec) {
+    const root = document.getElementById("game-root");
+    root.innerHTML = '<header class="p2p-toolbar"><button id="p2p-start" data-testid="start">Start</button><button id="p2p-restart" data-testid="restart">Restart</button><span id="p2p-status">Ready</span></header><section id="p2p-surface" tabindex="0"></section>';
+    const surface = root.querySelector("#p2p-surface");
+    const start = root.querySelector("#p2p-start");
+    const restart = root.querySelector("#p2p-restart");
+    const status = root.querySelector("#p2p-status");
+    let instance, session, started = false, hidden = false, disposed = false, seed = "default";
+    const capabilities = new Set(spec.capabilities || ["input", "lifecycle"]);
+    function syncStatus() {
+      if (!instance || !session || !session.alive) return;
+      const phase = instance.snapshot().phase;
+      status.textContent = phase === "won" ? "Completed" : phase === "lost" ? "Game over" : phase === "ready" ? "Ready" : "Playing";
+    }
+    function teardown() {
+      if (!session) return;
+      session.alive = false;
+      for (const dispose of session.cleanup.reverse()) { try { dispose(); } catch (_) {} }
+      session.cleanup.length = 0;
+      if (instance && instance.dispose) instance.dispose();
+      instance = undefined;
+      surface.replaceChildren();
+    }
+    function create(nextSeed = seed) {
+      if (disposed) throw new Error("Runtime has been disposed");
+      teardown(); seed = String(nextSeed); started = false;
+      session = {alive: true, cleanup: [], audio: null, clock: null, eventCount: 0};
+      const owned = session;
+      const active = () => owned.alive && session === owned;
+      const cleanup = callback => { if (!active()) throw new Error("Expired runtime session"); owned.cleanup.push(callback); return callback; };
+      const on = (target, type, callback, options = {}) => {
+        if (!active()) throw new Error("Expired runtime session");
+        if (!(target === surface || surface.contains(target) || target === document || target === window)) throw new Error("Input target is outside the game");
+        const wrapped = event => {
+          if (!active() || !started || hidden) return;
+          if (target === document && type.startsWith("key") && !root.contains(document.activeElement)) return;
+          owned.eventCount++; callback(event); syncStatus();
+        };
+        target.addEventListener(type, wrapped, options);
+        cleanup(() => target.removeEventListener(type, wrapped, options));
+        return () => target.removeEventListener(type, wrapped, options);
+      };
+      const context = {
+        root: surface, spec: copy(spec), random: rng(seed), seed,
+        cleanup, active,
+        input: {
+          on,
+          key(callback) { return on(document, "keydown", event => { if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault(); callback(event.key, event); }); },
+          pointer(target, callback) { return on(target, "pointerdown", event => { event.preventDefault(); surface.focus({preventScroll: true}); const box = target.getBoundingClientRect(); callback({x: event.clientX - box.left, y: event.clientY - box.top, width: box.width, height: box.height, pointerType: event.pointerType}, event); }); },
+        },
+        resize(callback) {
+          const observer = new ResizeObserver(() => { if (active()) callback(surface.clientWidth, surface.clientHeight, window.devicePixelRatio || 1); });
+          observer.observe(surface); cleanup(() => observer.disconnect());
+          callback(surface.clientWidth, surface.clientHeight, window.devicePixelRatio || 1);
+        },
+      };
+      if (capabilities.has("clock")) {
+        let frame = 0, last = 0, accumulator = 0, paused = true, manual = false, tick = 0, callback = null, step = 1 / 60;
+        const advance = count => { if (!active() || hidden || paused || !callback) return; for (let i = 0; i < Math.min(600, Math.max(0, count)); i++) { callback(step); tick++; } syncStatus(); };
+        const loop = now => {
+          if (!active()) return;
+          if (!paused && !manual && started && !hidden && callback) {
+            accumulator += last ? Math.min((now - last) / 1000, step * 8) : 0;
+            let catchup = 0;
+            while (accumulator >= step && catchup++ < 8) { advance(1); accumulator -= step; }
+          } else accumulator = 0;
+          last = now; frame = requestAnimationFrame(loop);
+        };
+        owned.clock = {
+          fixedStep(fn, seconds = 1 / 60) { if (!(seconds > 0 && seconds <= 0.1)) throw new Error("Invalid fixed step"); callback = fn; step = seconds; },
+          pause() { paused = true; last = 0; accumulator = 0; },
+          resume() { if (active()) { paused = false; last = 0; accumulator = 0; } },
+          setManualMode(enabled) { manual = Boolean(enabled); last = 0; accumulator = 0; },
+          advance, get tick() { return tick; },
+        };
+        context.clock = owned.clock;
+        frame = requestAnimationFrame(loop); cleanup(() => cancelAnimationFrame(frame));
+      }
+      if (capabilities.has("audio")) {
+        let audio = null, activation = 0;
+        owned.audio = {
+          async activate() {
+            const generation = ++activation;
+            if (!active()) return;
+            const Audio = window.AudioContext || window.webkitAudioContext;
+            if (!Audio) return;
+            if (!audio) audio = new Audio();
+            const selected = audio;
+            try { await selected.resume(); } catch (_) { return; }
+            if (!active()) { try { await selected.close(); } catch (_) {} }
+            // A later Start in the same live session owns this same context.
+            // An older activation must not close the newer valid activation.
+            if (generation !== activation) return;
+          },
+          tone(frequency = 440, duration = 0.08) {
+            if (!active() || !audio || audio.state !== "running") return;
+            const oscillator = audio.createOscillator(), gain = audio.createGain();
+            oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.08, audio.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
+            oscillator.connect(gain); gain.connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + duration);
+            oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+          },
+          get diagnostics() { return {state: audio ? audio.state : "locked"}; },
+        };
+        context.audio = owned.audio;
+        cleanup(() => { activation++; if (audio) audio.close().catch(() => {}); audio = null; });
+      }
+      if (capabilities.has("storage")) {
+        const namespace = "prompt2play:" + spec.title + ":v1";
+        context.storage = {
+          load() { try { const raw = localStorage.getItem(namespace); return raw ? JSON.parse(raw) : null; } catch (_) { return null; } },
+          save(data) { if (!active()) return false; try { const text = JSON.stringify(data); if (text.length > 64000) return false; localStorage.setItem(namespace, text); return true; } catch (_) { return false; } },
+          export(data) { return JSON.stringify(data); },
+          import(text) { if (typeof text !== "string" || text.length > 64000) throw new Error("Invalid save bytes"); return JSON.parse(text); },
+        };
+      }
+      instance = factory(context);
+      if (!instance || typeof instance.snapshot !== "function" || typeof instance.dispatch !== "function") throw new Error("Game factory must return snapshot() and dispatch(action)");
+      status.textContent = "Ready";
+    }
+    function begin() {
+      if (!session || !session.alive) return;
+      started = true; surface.focus({preventScroll: true}); status.textContent = "Playing";
+      if (session.audio) session.audio.activate();
+      if (session.clock) session.clock.resume();
+      instance.dispatch({type: "START"});
+      syncStatus();
+    }
+    start.addEventListener("click", begin);
+    const restartGame = () => { create(seed); begin(); };
+    restart.addEventListener("click", restartGame);
+    const visibility = () => { hidden = document.hidden; if (session && session.clock) { if (hidden) session.clock.pause(); else if (started) session.clock.resume(); } if (instance && instance.pause) instance.pause(hidden); };
+    document.addEventListener("visibilitychange", visibility);
+    create(seed);
+    const surfaceObserver = new MutationObserver(syncStatus);
+    surfaceObserver.observe(surface, {childList: true, characterData: true, attributes: true, subtree: true});
+    const bridge = Object.freeze({
+      version: 1,
+      identity: Object.freeze({version: VERSION, runtimeDigest: spec.runtime ? spec.runtime.sha256 : null}),
+      reset(nextSeed) { create(nextSeed === undefined ? "default" : nextSeed); begin(); return this.snapshot(); },
+      snapshot() { syncStatus(); return copy(instance.snapshot()); },
+      dispatch(action) { if (!started) begin(); instance.dispatch(copy(action)); syncStatus(); return this.snapshot(); },
+      getState() { return this.snapshot(); }, getViewState() { return this.snapshot(); },
+      advance(count) { if (session.clock) session.clock.advance(count); return this.snapshot(); },
+      setManualMode(enabled) { if (session.clock) session.clock.setManualMode(enabled); },
+      exportSave() { if (!capabilities.has("storage") || typeof instance.exportSave !== "function") throw new Error("Game save export unavailable"); return instance.exportSave(); },
+      importSave(text) { if (!capabilities.has("storage") || typeof instance.importSave !== "function") throw new Error("Game save import unavailable"); const result = instance.importSave(text); syncStatus(); return typeof result === "boolean" ? {ok: result} : result; },
+      diagnostics() { return {runtime: VERSION, started, hidden, disposed, input_events: session.eventCount, capabilities: [...capabilities], controls: spec.input_acceptance || null, audio: session.audio ? session.audio.diagnostics : null}; },
+      dispose() { if (disposed) return; teardown(); disposed = true; surfaceObserver.disconnect(); document.removeEventListener("visibilitychange", visibility); start.removeEventListener("click", begin); restart.removeEventListener("click", restartGame); },
+    });
+    Object.defineProperty(window, "__GAME_TEST__", {value: bridge, writable: false, configurable: false});
+    return bridge;
+  }
+  Object.defineProperty(window, "Prompt2PlayRuntime", {value: Object.freeze({version: VERSION, install}), writable: false, configurable: false});
+})();
+
+function createGame(ctx) {
+  const root = ctx.root;
+  let state;
+  const reset = () => {
+    state = { phase: 'ready', roundsPlayed: 0, playerRemaining: [1,2,3], botRemaining: [1,2,3], botOrder: [2,3,1], playerScore: 0, botScore: 0, history: [], result: 'none' };
+  };
+  root.innerHTML = `<main class="higher-card">
+    <header><span class="eyebrow">ТРИ КАРТЫ · ТРИ РАУНДА</span><h1>Старшая карта</h1><p>Выберите момент для своей сильной карты.</p></header>
+    <section class="scoreboard" aria-label="Счет"><div>Вы <strong class="player-score">0</strong></div><span class="round-label">Раунды: 0 / 3</span><div><strong class="bot-score">0</strong> Бот</div></section>
+    <p class="message" role="status" aria-live="polite"></p>
+    <section class="table" aria-label="Сыгранные карты"><div class="seat"><span>Вы</span><div class="table-card player-card">—</div></div><span class="versus">против</span><div class="seat"><span>Бот</span><div class="table-card bot-card">—</div></div></section>
+    <section class="hand-section" aria-label="Ваши карты"><h2>Ваша рука</h2><div class="hand"></div><p class="hint">Нажмите карту или клавишу 1, 2, 3.<br>Tab — выбор кнопки, Enter / Пробел — ход.</p></section>
+    <section class="history-section"><h2>История раундов</h2><ol class="history"></ol><p class="empty-history">Здесь появятся результаты ваших ходов.</p></section>
+    <section class="rules"><h2>Как играть</h2><p>У каждого по три карты: 1, 2 и 3. Каждая играется один раз. Старшая карта приносит очко; равные карты — без очков.</p><p>Бот всегда играет в порядке <b>2 → 3 → 1</b>, независимо от вашего выбора. После трех раундов сравнивается счет.</p><p>Начните кнопкой «Start» на панели. «Restart» сбрасывает партию; затем нажмите «Start» снова.</p></section>
+  </main>`;
+  const find = s => root.querySelector(s);
+  const buttons = [1,2,3].map(value => {
+    const button = root.ownerDocument.createElement('button');
+    button.type = 'button';
+    button.className = 'hand-card';
+    button.dataset.testid = 'card-' + value;
+    button.innerHTML = `<span class="corner">${value}</span><span class="number">${value}</span><span class="card-state"></span>`;
+    find('.hand').appendChild(button);
+    ctx.input.on(button, 'click', () => dispatch({ type: 'PLAY_CARD', value }));
+    ctx.input.on(button, 'keydown', event => {
+      if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
+    });
+    return button;
+  });
+  function render() {
+    find('.player-score').textContent = state.playerScore;
+    find('.bot-score').textContent = state.botScore;
+    find('.round-label').textContent = 'Раунды: ' + state.roundsPlayed + ' / 3';
+    const outcomes = { victory: 'Победа!', defeat: 'Поражение', draw: 'Ничья' };
+    find('.message').textContent = state.phase === 'ready' ? 'Готовы? Нажмите «Start», чтобы начать.' : state.phase === 'playing' ? 'Раунд ' + (state.roundsPlayed + 1) + ': выберите оставшуюся карту' : outcomes[state.result] + ' · Итоговый счет ' + state.playerScore + ':' + state.botScore;
+    const last = state.history[state.history.length - 1];
+    find('.player-card').textContent = last ? last.playerCard : '—';
+    find('.bot-card').textContent = last ? last.botCard : '—';
+    buttons.forEach((button, index) => {
+      const used = !state.playerRemaining.includes(index + 1);
+      button.disabled = used || state.phase !== 'playing';
+      button.classList.toggle('used', used);
+      const label = used ? 'Использована' : state.phase === 'ready' ? 'До начала' : 'Выбрать';
+      button.querySelector('.card-state').textContent = label;
+      button.setAttribute('aria-label', 'Карта ' + (index + 1) + '. ' + label);
+    });
+    find('.history').replaceChildren();
+    state.history.forEach(entry => {
+      const item = root.ownerDocument.createElement('li');
+      const result = entry.winner === 'player' ? 'Вам +1' : entry.winner === 'bot' ? 'Боту +1' : 'Ничья · без очков';
+      item.textContent = 'Вы ' + entry.playerCard + ' : ' + entry.botCard + ' Бот — ' + result;
+      find('.history').appendChild(item);
+    });
+    find('.empty-history').hidden = state.history.length > 0;
+  }
+  function dispatch(action) {
+    if (!action || typeof action !== 'object') return;
+    if (action.type === 'RESTART') {
+      reset();
+      render();
+      return;
+    }
+    if (action.type === 'START') {
+      if (state.phase !== 'ready') return;
+      state.phase = 'playing';
+      render();
+      return;
+    }
+    if (action.type !== 'PLAY_CARD' || state.phase !== 'playing') return;
+    const value = action.value;
+    if (!state.playerRemaining.includes(value)) return;
+    const botCard = state.botOrder[state.roundsPlayed];
+    const winner = value > botCard ? 'player' : value < botCard ? 'bot' : 'draw';
+    state.playerRemaining = state.playerRemaining.filter(card => card !== value);
+    state.botRemaining = state.botRemaining.filter(card => card !== botCard);
+    if (winner === 'player') state.playerScore++;
+    if (winner === 'bot') state.botScore++;
+    state.roundsPlayed++;
+    state.history.push({ round: state.roundsPlayed, playerCard: value, botCard, winner });
+    if (state.roundsPlayed === 3) {
+      state.result = state.playerScore > state.botScore ? 'victory' : state.playerScore < state.botScore ? 'defeat' : 'draw';
+      state.phase = state.result === 'defeat' ? 'lost' : 'won';
+    }
+    render();
+  }
+  ctx.input.key((key, event) => {
+    if (event.repeat) return;
+    if (key === '1' || key === '2' || key === '3') {
+      event.preventDefault();
+      dispatch({ type: 'PLAY_CARD', value: Number(key) });
+    }
+  });
+  reset();
+  render();
+  return { snapshot: () => JSON.parse(JSON.stringify(state)), dispatch };
+}
+
+window.Prompt2PlayRuntime.install(createGame, {"actions":[{"effect":"Из ready запускает партию с полными наборами карт, пустой историей, нулевым счетом и порядком бота [2,3,1]. В остальных фазах ничего не меняет.","type":"START"},{"effect":"Из любой фазы сбрасывает состояние и сразу запускает новую партию в playing.","type":"RESTART"},{"effect":"Принимает value=1, 2 или 3. Только в playing и при наличии карты разыгрывает ее против botOrder[roundsPlayed], удаляет обе карты из оставшихся, начисляет очко, добавляет историю и определяет итог после третьего раунда. Недопустимый или повторный выбор ничего не меняет.","type":"PLAY_CARD"}],"capabilities":["input","lifecycle"],"controls":["Кнопка платформы #p2p-start с data-testid=\"start\" начинает партию.","Клавиши 1, 2 и 3 выбирают соответствующую доступную карту во время партии.","Клик или касание большой карты с data-testid=\"card-1\", \"card-2\" или \"card-3\" выполняет тот же выбор.","Карты доступны через Tab и стандартную активацию кнопки клавишами Enter или Space.","Кнопка платформы #p2p-restart с data-testid=\"restart\" начинает новую партию с исходными картами и счетом."],"format":"runtime-v1","genre":"Пошаговая карточная игра","input_acceptance":{"desktop":{"completion":{"one_of":["lost"],"path":"/phase"},"steps":[{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"click","ms":0,"selector":"#p2p-start","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"1","kind":"key","ms":0,"selector":"","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"2","kind":"key","ms":0,"selector":"","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"3","kind":"key","ms":0,"selector":"","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0}]},"restart_selector":"#p2p-restart","start_selector":"#p2p-start","touch":{"completion":{"one_of":["won"],"path":"/phase"},"steps":[{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"#p2p-restart","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"[data-testid=\"card-2\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"[data-testid=\"card-3\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"[data-testid=\"card-1\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0}]}},"invariants":["Число записей history равно roundsPlayed.","У каждого участника ровно 3-roundsPlayed оставшихся карт; использованные карты не повторяются.","Карта бота в раунде с индексом i всегда равна botOrder[i], независимо от выбранной человеком карты и способа ввода.","playerScore и botScore точно равны числу выигранных соответствующим участником раундов в history.","Сумма очков равна числу раундов без ничьей.","won и lost возникают только после трех раундов; PLAY_CARD в этих фазах не изменяет состояние.","result=draw означает равный счет и phase=won; result=defeat означает phase=lost.","Клавиатура, мышь и touch выполняют один и тот же PLAY_CARD без специальных исходов."],"lose_condition":"После трех раундов счет человека меньше счета бота: phase=lost.","presentation_mode":"dom","rules":["В начале партии у человека и бота отдельные наборы карт 1, 2, 3. Каждая карта используется только один раз.","Бот заранее фиксирует порядок своих карт: 2, 3, 1. Этот порядок не зависит от действий человека; политика бота описана в видимых правилах.","В каждом раунде человек выбирает одну оставшуюся карту. После выбора на столе одновременно показываются обе сыгранные карты.","Владелец старшей карты получает одно очко. При равенстве карт никто не получает очков.","Выбор карты сразу завершает раунд. Если остались карты, следующий раунд доступен без задержек и дополнительных подтверждений.","После третьего раунда показываются итоговый счет и сообщение «Победа!», «Поражение» или «Ничья». Ничья считается завершенной партией с phase=won.","Использованные карты остаются видимыми, помечаются как использованные и больше не принимают ввод."],"runtime":{"sha256":"abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76","version":"runtime-v1.0.3"},"schema_version":1,"state_fields":[{"meaning":"ready до начала, playing во время партии, won при победе или ничьей, lost при поражении.","path":"/phase","type":"string"},{"meaning":"Количество завершенных раундов: от 0 до 3.","path":"/roundsPlayed","type":"integer"},{"meaning":"Массив еще не использованных карт человека.","path":"/playerRemaining","type":"array"},{"meaning":"Массив еще не использованных карт бота.","path":"/botRemaining","type":"array"},{"meaning":"Зафиксированный порядок карт бота [2,3,1].","path":"/botOrder","type":"array"},{"meaning":"Очки человека, от 0 до 3.","path":"/playerScore","type":"integer"},{"meaning":"Очки бота, от 0 до 3.","path":"/botScore","type":"integer"},{"meaning":"Раунды в порядке игры; каждый содержит round, playerCard, botCard и winner со значением player, bot или draw. Стол показывает последнюю запись.","path":"/history","type":"array"},{"meaning":"none до завершения, затем victory, defeat или draw.","path":"/result","type":"string"}],"summary":"Маленькая пошаговая DOM-игра на три раунда: выберите карту, сравните ее с картой бота и наберите больше очков.","title":"Старшая карта","win_condition":"После трех раундов счет человека больше или равен счету бота: phase=won. Текст результата различает победу и ничью."});</script></body></html>

@@ -1,0 +1,112 @@
+{
+  "status": "interrupted",
+  "reason": "Concrete real touch-scroll defect in runtime-v1.0.4; v3 is superseded and never a completed release",
+  "stopped_at": 1791751774.597516,
+  "launch_protocol_sha256": "f5a2d8daaffac6d10d2b9d9ec1b8bac793fde5af8ed83f323e5d59f8c185a712",
+  "receipts": [
+    {
+      "case_run": "single_author/runner/runner-1",
+      "invocation_key": "author:4f863929304d94b7141d5d40acefaff434fc3784763786d5cc221880ece4fa3d",
+      "request_sha256": "4f863929304d94b7141d5d40acefaff434fc3784763786d5cc221880ece4fa3d",
+      "role": "author",
+      "usage": {
+        "input_tokens": 18992,
+        "cached_input_tokens": 0,
+        "output_tokens": 278,
+        "total_tokens": 19270,
+        "calls": 1
+      },
+      "terminal_events_sha256": "cc3bb8a45bb7269faed052442f454f2990b1458e0a403814cfe7ee3dfe0c77d4",
+      "structured_output_sha256": "36a4de913bed4773cc72a85a6e68e1202212c130e02ff446c5ac5bdab347ee7e",
+      "state": "completed",
+      "scope": "Explicit reconciliation after pausing the caller; provider completed before run cancellation. No new provider request."
+    },
+    {
+      "case_run": "single_author/grid-puzzle/grid-puzzle-2",
+      "invocation_key": "plan:823b1a000cd7a87daa63ca4fcc6f1ec8592e5a11abcf5b338f58f0b098759602",
+      "request_sha256": "823b1a000cd7a87daa63ca4fcc6f1ec8592e5a11abcf5b338f58f0b098759602",
+      "role": "plan",
+      "usage": {
+        "input_tokens": 13975,
+        "cached_input_tokens": 0,
+        "output_tokens": 2992,
+        "total_tokens": 16967,
+        "calls": 1
+      },
+      "terminal_events_sha256": "117bd14c4fe0b24110a8ae8cd3e0902ce4bfbd7d75ebe30309e58586ff1fcfcb",
+      "structured_output_sha256": "5201684276c57fc365b8fd2286131ad9e02372397023b86d6133975e4ef1f8c3",
+      "state": "completed",
+      "scope": "Explicit reconciliation after pausing the caller; provider completed before run cancellation. No new provider request."
+    }
+  ],
+  "accounting": [
+    {
+      "path": "single_author/grid-puzzle/grid-puzzle-1/invocations.json",
+      "usage": {
+        "input_tokens": 46409,
+        "cached_input_tokens": 18432,
+        "output_tokens": 5885,
+        "total_tokens": 52294,
+        "calls": 3
+      },
+      "uncertain_tokens": 0,
+      "operations": {
+        "attempted_provider_operations": 3,
+        "known_reported_requests": 3,
+        "unknown_usage_operations": 0,
+        "dispatch_uncertain_reservations": 0,
+        "not_started_operations": 0,
+        "reused_response_reads": 0
+      },
+      "journal_sha256": "3300b110d6ca8b4657289269f016254856a752688799e095b614534ff8773c05"
+    },
+    {
+      "path": "single_author/grid-puzzle/grid-puzzle-2/invocations.json",
+      "usage": {
+        "input_tokens": 13975,
+        "cached_input_tokens": 0,
+        "output_tokens": 2992,
+        "total_tokens": 16967,
+        "calls": 1
+      },
+      "uncertain_tokens": 0,
+      "operations": {
+        "attempted_provider_operations": 1,
+        "known_reported_requests": 1,
+        "unknown_usage_operations": 0,
+        "dispatch_uncertain_reservations": 0,
+        "not_started_operations": 0,
+        "reused_response_reads": 0
+      },
+      "journal_sha256": "b5a056a3cd28260bd4e440ec041cc3d38e08cd88741ac14ce30467ffbe7ce84a"
+    },
+    {
+      "path": "single_author/runner/runner-1/invocations.json",
+      "usage": {
+        "input_tokens": 49237,
+        "cached_input_tokens": 12160,
+        "output_tokens": 7821,
+        "total_tokens": 57058,
+        "calls": 3
+      },
+      "uncertain_tokens": 0,
+      "operations": {
+        "attempted_provider_operations": 3,
+        "known_reported_requests": 3,
+        "unknown_usage_operations": 0,
+        "dispatch_uncertain_reservations": 0,
+        "not_started_operations": 0,
+        "reused_response_reads": 0
+      },
+      "journal_sha256": "28464f03fc49a0a857ea2261f66902e1a4b991fc24d5c7af848ead45b9779f0d"
+    }
+  ],
+  "known_provider_calls": 7,
+  "known_total_tokens": 126319,
+  "unknown_reserved_tokens": 0,
+  "completed_result_paths": [
+    "single_author/grid-puzzle/grid-puzzle-1/result.json"
+  ],
+  "next_release_directory": "chosen-native-release-v4",
+  "no_replay": true
+}

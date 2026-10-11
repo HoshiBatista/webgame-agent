@@ -21,7 +21,9 @@ out/
 .svelte-kit/
 coverage/
 htmlcov/
-artifacts/
+/artifacts/
+.prompt2play/
+*.sqlite3
 
 # Python
 __pycache__/

@@ -1,0 +1,38 @@
+{
+  "status": "passed",
+  "wheel_install": true,
+  "working_directory": "/private/tmp/prompt2play-clean-install",
+  "repository_imports": false,
+  "checks": [
+    {
+      "path": "/assets/index-KYJaO6RO.js",
+      "bytes": 341435,
+      "sha256": "86aa57447e1b26cd9ef0474e10a728fe1bd64973a4091e3d787cb0061a9c90a5"
+    },
+    {
+      "path": "/assets/index-Bbr8dxmS.css",
+      "bytes": 53118,
+      "sha256": "6160c20f85895b9bc1dc113d1277fbb0dbdc02fab0fb08cacff81ba063870d1d"
+    },
+    {
+      "path": "/api/health/",
+      "status": 200
+    },
+    {
+      "path": "/api/ready/",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/session/",
+      "status": 200
+    }
+  ],
+  "preview_api_status": 404,
+  "private_config_mode": "0o600",
+  "wheel_sha256": "c7bdd5adea52fe702b2c0ed7bc0777f40ba0103b4a074d75b3a698ba588e614b",
+  "installed_package": "prompt2play0.1.0",
+  "source_python_files_bundled": 98,
+  "literal_config_database_backup_and_studio": true,
+  "preview_token_access_log_redacted": true,
+  "owned_listeners_stopped": true
+}

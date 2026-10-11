@@ -1,19 +1,24 @@
 # ADR 0002: Bound the Generation Harness to One Candidate Attempt
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [ADR 0003](0003-hybrid-adoption.md) on 2026-10-11
 - **Date:** 2026-10-10
 - **Decision owners:** Prompt2Play maintainers
 
+The single-attempt, controlled-tools, candidate-commit, and release-validation
+boundaries below remain accepted. ADR 0003 changes the initial HTTP framework to
+Django/DRF and dispatch to database-backed polling. It makes PydanticAI optional
+and retains LangGraph only as a possible bounded attempt implementation.
+
 ## Context
 
-ADR 0001 selects a PostgreSQL-backed workflow, Celery execution, versioned game
-templates, immutable revisions, and layered validation. A generation harness is
-still needed to manage model turns and controlled file tools inside the
+The current architecture selects a PostgreSQL-backed workflow, polling workers,
+versioned runtime capabilities, immutable revisions, and layered validation. A
+generation harness manages model turns and controlled file tools inside the
 generation and repair stages.
 
 If that harness also owns retries, workflow transitions, artifact publication,
 or browser validation, Prompt2Play would have two competing orchestrators. A
-Celery redelivery could then run two model loops, stale workers could publish
+reclaimed stage could then run two model loops, stale workers could publish
 output after their leases expire, and quick model feedback could be mistaken
 for release validation. The boundary must make those outcomes impossible even
 when a worker or provider fails at an inconvenient point.
@@ -29,14 +34,14 @@ or a typed terminal outcome. It never decides to start another attempt.
 The PostgreSQL state machine remains the only owner of stage order, workflow
 retries, semantic repair count, replan and regeneration policy, cancellation,
 and terminal run status. Model turns and tool calls are audit events within a
-`GenerationAttempt`; they are not Celery stages.
+`GenerationAttempt`; they are not separate workflow stages.
 
 ### 2. Keep infrastructure outside the harness
 
 The harness depends on application ports for model calls, a controlled draft
 workspace, quick static feedback, budget accounting, cancellation, and audit
-events. It has no knowledge of Celery, Redis, FastAPI, SQL, Playwright, provider
-SDKs, or host paths.
+events. It has no knowledge of Django, DRF, task brokers, SQL, Playwright,
+provider SDKs, or host paths.
 
 PydanticAI may implement typed model and tool adapters behind `ModelGateway`,
 but it does not own the application workflow or repair policy.
@@ -97,7 +102,7 @@ snapshots, create or patch game files, delete generated files, inspect a
 manifest, inspect immutable prepared assets, run quick checks, and submit once.
 It cannot run a shell, install packages, access arbitrary paths or networks,
 edit the trusted runtime, connect to a database, dispatch or wait for nested
-Celery jobs, or drive the release browser.
+workflow jobs, or drive the release browser.
 
 Asset requirements are planned and materialized by the application before the
 harness starts. If an essential unplanned asset is discovered, the harness
@@ -160,9 +165,9 @@ implementations and overfitting.
 
 ## Rejected alternatives
 
-- **Let the harness own the whole workflow:** duplicates PostgreSQL/Celery
+- **Let the harness own the whole workflow:** duplicates the persisted application
   orchestration and makes recovery opaque.
-- **Make every model turn a Celery task:** increases latency and persistence
+- **Make every model turn a workflow task:** increases latency and persistence
   complexity without creating a useful business boundary.
 - **Let the model run shell and browser tools:** expands the attack surface and
   makes resource use difficult to bound.

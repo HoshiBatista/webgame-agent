@@ -1,0 +1,1124 @@
+{
+  "schema_version": 1,
+  "version": "modest-five-mechanics-v2-public-interface",
+  "scope": "Same five small mechanics with a frozen public input interface, equal provider budgets and validator-owned acceptance; drag held out from runtime examples. Interface IDs identify visible playable controls, never prewritten mechanics.",
+  "cases": [
+    {
+      "id": "runner",
+      "prompt": "Создай маленькую законченную Canvas-игру «Прыжок курьера». Герой автоматически бежит по одному короткому экрану, нужно перепрыгнуть три препятствия и дойти до финиша. Space/ArrowUp и большая touch-кнопка прыжка. Столкновение проигрывает, финиш побеждает. Начало, краткие правила, видимый прогресс, перезапуск. Физика с фиксированным шагом; движение останавливается при скрытии страницы. Без звука и сохранения. Никаких скрытых команд победы. Короткая игровая сессия, которую можно завершить реальным управлением.\nПубличный интерфейс для независимой проверки (часть задания): snapshot должен иметь поле phase со значениями ready, playing, won или lost; won/lost — завершенная партия. Видимые кнопки начала и перезапуска имеют data-testid=\"start\" и data-testid=\"restart\" (в native runtime они уже предоставлены платформой). Не добавляй тестовых команд мгновенной победы: проверка использует настоящие клавиши, клики и touch и наблюдает состояние плюс изображение. Touch-кнопка реального прыжка имеет data-testid=\"jump\". Партия обязательно завершается за 8 секунд обычного времени: финишем при удачной игре либо столкновением. Сохраняй кнопку прыжка видимой; после исхода она может ничего не делать.",
+      "revision": "Улучши контраст героя и препятствий и выразительность прыжка. Сохрани физику, число препятствий, исходы и управление; изменяй только представление, не правила.",
+      "rubric": [
+        "Real jump changes position",
+        "Collision loses and legal play can finish",
+        "Canvas remains visible at390px",
+        "Hidden time does not advance physics",
+        "Visual revision preserves rules"
+      ],
+      "acceptance": {
+        "start_selector": "[data-testid=\"start\"]",
+        "restart_selector": "[data-testid=\"restart\"]",
+        "desktop": {
+          "steps": [
+            {
+              "kind": "key",
+              "key": "Space",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        },
+        "touch": {
+          "steps": [
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"jump\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "wait",
+              "key": "",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 1000,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "grid-puzzle",
+      "prompt": "Создай маленькую пошаговую DOM-головоломку «Три маяка». Три выключенных маяка; нажатие на маяк меняет только его состояние. Надо включить все три. Клавиши1/2/3 и большие кнопки для touch. Покажи число включенных маяков и число ходов, короткие правила, победу и перезапуск. После победы ходы больше не меняют результат. Время не меняет состояние. Без звука и сохранения.\nПубличный интерфейс для независимой проверки (часть задания): snapshot должен иметь поле phase со значениями ready, playing, won или lost; won/lost — завершенная партия. Видимые кнопки начала и перезапуска имеют data-testid=\"start\" и data-testid=\"restart\" (в native runtime они уже предоставлены платформой). Не добавляй тестовых команд мгновенной победы: проверка использует настоящие клавиши, клики и touch и наблюдает состояние плюс изображение. Три видимых маяка имеют data-testid=\"beacon-1\", \"beacon-2\", \"beacon-3\". При добавлении четвертого в доработке используй \"beacon-4\".",
+      "revision": "Добавь четвертый маяк и управление клавишей4, обнови условие победы, счетчик и touch-интерфейс. Сохрани правило переключения выбранного маяка и запрет ходов после победы.",
+      "rubric": [
+        "Only selected beacon toggles",
+        "Three ordinary inputs win",
+        "No time-driven state",
+        "Terminal inputs cannot change progress",
+        "Shared mechanic revision updates all four controls"
+      ],
+      "acceptance": {
+        "start_selector": "[data-testid=\"start\"]",
+        "restart_selector": "[data-testid=\"restart\"]",
+        "desktop": {
+          "steps": [
+            {
+              "kind": "key",
+              "key": "1",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "2",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "3",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        },
+        "touch": {
+          "steps": [
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-1\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-2\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-3\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        }
+      },
+      "revision_acceptance": {
+        "start_selector": "[data-testid=\"start\"]",
+        "restart_selector": "[data-testid=\"restart\"]",
+        "desktop": {
+          "steps": [
+            {
+              "kind": "key",
+              "key": "1",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "2",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "3",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "4",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        },
+        "touch": {
+          "steps": [
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-1\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-2\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-3\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"beacon-4\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "shooter",
+      "prompt": "Создай короткую Canvas-игру «Мишени»: три видимые мишени движутся горизонтально медленно; игрок стреляет по ним кликом или touch по самой мишени. Попадание убирает ровно одну мишень и увеличивает счет, три попадания побеждают; три промаха проигрывают. Для клавиатуры клавиши1/2/3 стреляют в соответствующую живую мишень. Счет и оставшиеся попытки видимы, есть правила, начало и перезапуск. Фиксированное обновление и пауза при скрытии. Добавь короткий оригинальный Web Audio звук попадания, запускаемый после Start. Без сохранения и внешних ресурсов.\nПубличный интерфейс для независимой проверки (часть задания): snapshot должен иметь поле phase со значениями ready, playing, won или lost; won/lost — завершенная партия. Видимые кнопки начала и перезапуска имеют data-testid=\"start\" и data-testid=\"restart\" (в native runtime они уже предоставлены платформой). Не добавляй тестовых команд мгновенной победы: проверка использует настоящие клавиши, клики и touch и наблюдает состояние плюс изображение. Три видимых интерактивных области мишеней имеют data-testid=\"target-1\", \"target-2\", \"target-3\". Разрешены DOM-области поверх Canvas, совпадающие с отрисованными мишенями и перемещающиеся вместе с ними. Клик/касание центра видимой области должен запускать обычную механику попадания, как прицеливание по Canvas; не делай отдельного тестового пути.",
+      "revision": "Сделай попадание визуально заметнее и добавь разные оттенки трем мишеням. Сохрани попадания, промахи, счет, управление и звук.",
+      "rubric": [
+        "Actual aiming inputs hit visible targets",
+        "Damage counted once",
+        "Three misses lose",
+        "Audio begins after real gesture and stops on restart",
+        "Revision preserves economy"
+      ],
+      "acceptance": {
+        "start_selector": "[data-testid=\"start\"]",
+        "restart_selector": "[data-testid=\"restart\"]",
+        "desktop": {
+          "steps": [
+            {
+              "kind": "key",
+              "key": "1",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "2",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "3",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        },
+        "touch": {
+          "steps": [
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"target-1\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"target-2\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"target-3\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "card-game",
+      "prompt": "Создай маленькую пошаговую DOM-карточную игру «Старшая карта». Три раунда: у человека открытые карты1,2,3, у бота собственные карты1,2,3. Каждый раунд человек выбирает еще не использованную карту; бот выбирает из своих оставшихся карт без доступа к будущему выбору человека. Старшая карта дает очко, ничья без очка. После трех раундов честный итог победы/поражения/ничьей (ничья отображается как завершенная победа). Клавиши1/2/3 и большие touch-карты, видимый стол, счет, использованные карты, правила, начало и новая партия. Игра без таймеров, звука и сохранения.\nПубличный интерфейс для независимой проверки (часть задания): snapshot должен иметь поле phase со значениями ready, playing, won или lost; won/lost — завершенная партия. Видимые кнопки начала и перезапуска имеют data-testid=\"start\" и data-testid=\"restart\" (в native runtime они уже предоставлены платформой). Не добавляй тестовых команд мгновенной победы: проверка использует настоящие клавиши, клики и touch и наблюдает состояние плюс изображение. Три карты в руке человека имеют data-testid=\"card-1\", \"card-2\", \"card-3\". Нажатие соответствует обычному выбору карты; никогда не делай специальный исход для тестового ввода.",
+      "revision": "Улучши читабельность стола: крупнее номиналы карт, яснее отдели руку человека, открытые карты бота и счет. Не меняй правила и политику бота.",
+      "rubric": [
+        "Each card played once",
+        "Bot sees only its own hand and public state",
+        "Human chooses current legal card",
+        "Three rounds reach meaningful terminal score",
+        "Touch and keyboard agree"
+      ],
+      "acceptance": {
+        "start_selector": "[data-testid=\"start\"]",
+        "restart_selector": "[data-testid=\"restart\"]",
+        "desktop": {
+          "steps": [
+            {
+              "kind": "key",
+              "key": "1",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "2",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "key",
+              "key": "3",
+              "selector": "",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        },
+        "touch": {
+          "steps": [
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"card-1\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"card-2\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "tap",
+              "key": "",
+              "selector": "[data-testid=\"card-3\"]",
+              "from_selector": "",
+              "to_selector": "",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "held-out-drag",
+      "prompt": "Создай небольшую DOM/Canvas игру «Сортировщик посылок». Три цветные посылки надо перетащить в три корзины соответствующего цвета. Настоящее drag на desktop и pointer/touch drag на телефоне; клавиатурная альтернатива:1/2/3 выбирает посылку, R/G/B выбирает корзину. Неверная корзина возвращает посылку и не дает очко; каждая правильная доставка учитывается один раз; три доставки побеждают. Видимый счет, краткие правила, начало, перезапуск, без времени и звука. Сохраняй только лучший счет через необязательный runtime storage, показывай честный статус, если запись недоступна. Не подменяй drag кнопкой мгновенной победы.\nПубличный интерфейс для независимой проверки (часть задания): snapshot должен иметь поле phase со значениями ready, playing, won или lost; won/lost — завершенная партия. Видимые кнопки начала и перезапуска имеют data-testid=\"start\" и data-testid=\"restart\" (в native runtime они уже предоставлены платформой). Не добавляй тестовых команд мгновенной победы: проверка использует настоящие клавиши, клики и touch и наблюдает состояние плюс изображение. Посылки красного, зеленого и синего цвета имеют data-testid=\"parcel-1\", \"parcel-2\", \"parcel-3\"; соответствующие корзины data-testid=\"basket-1\", \"basket-2\", \"basket-3\". Посылку реально перетаскивают от центра к центру корзины. Запрещены засчитывающие доставку клики вместо настоящего drag; клавиатура — отдельная доступная альтернатива.",
+      "revision": "Улучши обратную связь ошибочной доставки: кратко выдели неверную корзину и верни посылку. Сохрани правила доставки, счет, drag, клавиатуру и формат сохранения.",
+      "rubric": [
+        "Real pointer drag delivers matching parcel",
+        "Wrong drop does not award progress",
+        "Delivery counted once",
+        "Touch has real drag",
+        "Denied storage never claims saved"
+      ],
+      "acceptance": {
+        "start_selector": "[data-testid=\"start\"]",
+        "restart_selector": "[data-testid=\"restart\"]",
+        "desktop": {
+          "steps": [
+            {
+              "kind": "drag",
+              "key": "",
+              "selector": "",
+              "from_selector": "[data-testid=\"parcel-1\"]",
+              "to_selector": "[data-testid=\"basket-1\"]",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "drag",
+              "key": "",
+              "selector": "",
+              "from_selector": "[data-testid=\"parcel-2\"]",
+              "to_selector": "[data-testid=\"basket-2\"]",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "drag",
+              "key": "",
+              "selector": "",
+              "from_selector": "[data-testid=\"parcel-3\"]",
+              "to_selector": "[data-testid=\"basket-3\"]",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        },
+        "touch": {
+          "steps": [
+            {
+              "kind": "drag",
+              "key": "",
+              "selector": "",
+              "from_selector": "[data-testid=\"parcel-1\"]",
+              "to_selector": "[data-testid=\"basket-1\"]",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "drag",
+              "key": "",
+              "selector": "",
+              "from_selector": "[data-testid=\"parcel-2\"]",
+              "to_selector": "[data-testid=\"basket-2\"]",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            },
+            {
+              "kind": "drag",
+              "key": "",
+              "selector": "",
+              "from_selector": "[data-testid=\"parcel-3\"]",
+              "to_selector": "[data-testid=\"basket-3\"]",
+              "x": 0,
+              "y": 0,
+              "ms": 0,
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 0,
+                "y": 0
+              }
+            }
+          ],
+          "completion": {
+            "path": "/phase",
+            "one_of": [
+              "won",
+              "lost"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "source_suite_version": "modest-five-mechanics-v1"
+}

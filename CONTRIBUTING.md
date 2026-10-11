@@ -1,8 +1,8 @@
 # Contributing to Prompt2Play
 
-Thank you for helping build Prompt2Play. The project is currently at the
-bootstrap stage, so changes should favor a small working product over broad
-scaffolding.
+Prompt2Play includes an integrated studio, generation workers and isolated game
+validation. Keep changes focused on a complete user flow and preserve the
+artifact identity, evidence and recovery guarantees described in the architecture.
 
 ## Before you start
 

@@ -19,8 +19,9 @@ works.
 1. Inspect the repository before proposing a stack or changing architecture.
    Read the README, manifests, relevant source files, tests, and local
    `AGENTS.md` files.
-2. Preserve existing choices. The target layout in the architecture document is
-   guidance, not a request to reorganize working code.
+2. Follow [ADR 0003](docs/adr/0003-hybrid-adoption.md) and the phase dependencies in
+   [the development plan](docs/development-plan.md). The target layout is guidance,
+   not a request to reorganize working code or recreate superseded stack choices.
 3. For architectural or multi-file changes, provide a concise plan that names
    the intended files and verification steps.
 4. Ask only questions that block safe implementation. Otherwise, use a
@@ -44,6 +45,10 @@ works.
 - Make generated games touch-friendly and self-contained by default.
 - Keep behavior-critical prompts, templates, schemas, and fixtures under version
   control.
+- Preserve evidence boundaries during adoption: recorded source is not a fresh
+  model result, static-only validation cannot deliver a ready game, and historical
+  passes cannot validate changed code. Keep failed candidates and prior playable
+  revisions separate.
 
 ## Tool discipline
 
@@ -98,7 +103,8 @@ Prioritize improvements in this order:
 1. repair a broken end-to-end flow;
 2. add evidence and observability for pipeline stages and browser behavior;
 3. strengthen structured specifications, validation, and targeted repair;
-4. expand mechanics and themes through proven reusable templates; and
+4. expand mechanics and themes through reviewed shared infrastructure and freshly
+   generated rules, rather than a fixed catalog of genre templates; and
 5. optimize latency, model usage, and interface polish.
 
 Measure changes against a compact golden-prompt set, such as a tap-to-jump

@@ -1,0 +1,1220 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T21:31:22.091367+00:00",
+  "scope": "Separate bounded container-only capability supplement on the exact existing reviewed optional-capabilities fixture. No new generation call; excluded from final15 qualification count and v4 freshness denominator. No original source, runtime, fixture, release report or example was edited.",
+  "exact_fixture": {
+    "report_path": "/tmp/prompt2play-browser-release-final/optional-capabilities-report.json",
+    "report_sha256": "a5e3361782983acf80006cf69c6c92a0f53cc44b4632b8b5da0a8b7b58c48e56",
+    "artifact": {
+      "files_sha256": {
+        "game.js": "77302f20dacf899f6f1a9c13fb5e3096b6d3a119c84859519dfbabf2c3c11187"
+      },
+      "html_bytes": 16816,
+      "html_sha256": "bb6dd25ee42f3b4a8c74551edfbafebfc19eac79aeb99ccf452d848d44c128ff",
+      "spec_sha256": "66b876f4786dc7bd25f272ced2ea5b492d9ee3befcb7c66e7ebcb5631803bba6"
+    },
+    "runtime": {
+      "version": "runtime-v1.0.5",
+      "sha256": "7b7c35ca879d11b6c2063240e4f2e9db2edb1da2594ace64518d57467f2dca8d"
+    },
+    "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+    "browser_version": "154.0.8037.92",
+    "source": {
+      "path": "src/prompt2play/resources/runtime/examples/dom/game.js",
+      "sha256": "77302f20dacf899f6f1a9c13fb5e3096b6d3a119c84859519dfbabf2c3c11187"
+    }
+  },
+  "isolation": {
+    "network": "none",
+    "input": "read-only exact HTML",
+    "evidence": "separate writable mount",
+    "uid": 10001,
+    "root_filesystem": "read-only",
+    "capabilities": "all dropped",
+    "no_new_privileges": true,
+    "cpus": 1,
+    "memory_bytes": 805306368,
+    "pids_limit": 256,
+    "timeout_seconds": 90
+  },
+  "result": {
+    "passed": true,
+    "checks": 42,
+    "contexts": 6,
+    "widths": [
+      1280,
+      390
+    ],
+    "conditions": [
+      "injected Storage access denial",
+      "injected Storage quota failure",
+      "actual allow-scripts opaque-origin iframe"
+    ],
+    "evidence_files": 30,
+    "evidence_bytes": 1327494
+  },
+  "final_experiment": {
+    "report_path": "/tmp/p2p-fixture-storage-denial-v2/report.json",
+    "report_sha256": "4d928cf910ef2c7f7ed7e7cbf2ebc1dd04969b2396e83ffa4265d37065d1eb70",
+    "report": {
+      "schema_version": 1,
+      "scope": "One supplemental experiment on unchanged reviewed optional-capabilities fixture; zero model calls, outside final15 qualification count and v4 freshness denominator.",
+      "passed": true,
+      "html_sha256": "bb6dd25ee42f3b4a8c74551edfbafebfc19eac79aeb99ccf452d848d44c128ff",
+      "script_sha256": "77ab830bfc54a07746b698a5dba69b617081780d3338cd0b6a8032cd415327bb",
+      "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+      "browser_version": "154.0.8037.92",
+      "runtime": {
+        "version": "runtime-v1.0.5",
+        "sha256": "7b7c35ca879d11b6c2063240e4f2e9db2edb1da2594ace64518d57467f2dca8d"
+      },
+      "original_fixture_report_sha256": "a5e3361782983acf80006cf69c6c92a0f53cc44b4632b8b5da0a8b7b58c48e56",
+      "instrumentation": "Trusted install observer captures original context load/save functions without changing their arguments or results; direct Storage fault probe for denied/quota, actual allow-scripts opaque-origin iframe for browser SecurityError.",
+      "limitations": [
+        "Existing reviewed fixture, not a fresh successfully generated storage game.",
+        "Denied/quota faults are synthetic and labelled; opaque-origin SecurityError is actual browser behavior.",
+        "Fixture has no save-status UI; absence of a false saved label does not demonstrate a complete denial-notification UX.",
+        "Chromium emulation, not actual contest WebView."
+      ],
+      "observations": [
+        {
+          "tag": "denied-1280",
+          "origin": {
+            "origin": "http://game.invalid",
+            "denied": true,
+            "error": "SecurityError"
+          },
+          "result": {
+            "load": null,
+            "save": false
+          },
+          "won": {
+            "phase": "won",
+            "cells": [
+              true,
+              true,
+              true
+            ],
+            "moves": 3
+          },
+          "restarted": {
+            "phase": "playing",
+            "cells": [
+              false,
+              false,
+              false
+            ],
+            "moves": 0
+          },
+          "probe": {
+            "available": true,
+            "mode": "denied",
+            "read_attempts": 0,
+            "write_attempts": 0,
+            "remove_attempts": 0,
+            "clear_attempts": 0,
+            "successful_writes": 0,
+            "write_failures": 0,
+            "blocked_reads": 0,
+            "blocked_writes": 0,
+            "blocked_removals": 0,
+            "denied_accesses": 6,
+            "unavailable_reason": ""
+          }
+        },
+        {
+          "tag": "denied-390",
+          "origin": {
+            "origin": "http://game.invalid",
+            "denied": true,
+            "error": "SecurityError"
+          },
+          "result": {
+            "load": null,
+            "save": false
+          },
+          "won": {
+            "phase": "won",
+            "cells": [
+              true,
+              true,
+              true
+            ],
+            "moves": 3
+          },
+          "restarted": {
+            "phase": "playing",
+            "cells": [
+              false,
+              false,
+              false
+            ],
+            "moves": 0
+          },
+          "probe": {
+            "available": true,
+            "mode": "denied",
+            "read_attempts": 0,
+            "write_attempts": 0,
+            "remove_attempts": 0,
+            "clear_attempts": 0,
+            "successful_writes": 0,
+            "write_failures": 0,
+            "blocked_reads": 0,
+            "blocked_writes": 0,
+            "blocked_removals": 0,
+            "denied_accesses": 6,
+            "unavailable_reason": ""
+          }
+        },
+        {
+          "tag": "quota-1280",
+          "origin": {
+            "origin": "http://game.invalid",
+            "denied": false,
+            "key": null
+          },
+          "result": {
+            "load": null,
+            "save": false
+          },
+          "won": {
+            "phase": "won",
+            "cells": [
+              true,
+              true,
+              true
+            ],
+            "moves": 3
+          },
+          "restarted": {
+            "phase": "playing",
+            "cells": [
+              false,
+              false,
+              false
+            ],
+            "moves": 0
+          },
+          "probe": {
+            "available": true,
+            "mode": "quota",
+            "read_attempts": 2,
+            "write_attempts": 4,
+            "remove_attempts": 0,
+            "clear_attempts": 0,
+            "successful_writes": 0,
+            "write_failures": 4,
+            "blocked_reads": 0,
+            "blocked_writes": 4,
+            "blocked_removals": 0,
+            "denied_accesses": 0,
+            "unavailable_reason": ""
+          }
+        },
+        {
+          "tag": "quota-390",
+          "origin": {
+            "origin": "http://game.invalid",
+            "denied": false,
+            "key": null
+          },
+          "result": {
+            "load": null,
+            "save": false
+          },
+          "won": {
+            "phase": "won",
+            "cells": [
+              true,
+              true,
+              true
+            ],
+            "moves": 3
+          },
+          "restarted": {
+            "phase": "playing",
+            "cells": [
+              false,
+              false,
+              false
+            ],
+            "moves": 0
+          },
+          "probe": {
+            "available": true,
+            "mode": "quota",
+            "read_attempts": 2,
+            "write_attempts": 4,
+            "remove_attempts": 0,
+            "clear_attempts": 0,
+            "successful_writes": 0,
+            "write_failures": 4,
+            "blocked_reads": 0,
+            "blocked_writes": 4,
+            "blocked_removals": 0,
+            "denied_accesses": 0,
+            "unavailable_reason": ""
+          }
+        },
+        {
+          "tag": "opaque-1280",
+          "origin": {
+            "origin": "null",
+            "denied": true,
+            "error": "SecurityError"
+          },
+          "result": {
+            "load": null,
+            "save": false
+          },
+          "won": {
+            "phase": "won",
+            "cells": [
+              true,
+              true,
+              true
+            ],
+            "moves": 3
+          },
+          "restarted": {
+            "phase": "playing",
+            "cells": [
+              false,
+              false,
+              false
+            ],
+            "moves": 0
+          },
+          "probe": null
+        },
+        {
+          "tag": "opaque-390",
+          "origin": {
+            "origin": "null",
+            "denied": true,
+            "error": "SecurityError"
+          },
+          "result": {
+            "load": null,
+            "save": false
+          },
+          "won": {
+            "phase": "won",
+            "cells": [
+              true,
+              true,
+              true
+            ],
+            "moves": 3
+          },
+          "restarted": {
+            "phase": "playing",
+            "cells": [
+              false,
+              false,
+              false
+            ],
+            "moves": 0
+          },
+          "probe": null
+        }
+      ],
+      "checks": [
+        {
+          "name": "runtime-denial-return:denied-1280",
+          "passed": true,
+          "evidence": {
+            "actual_context_api": true,
+            "result": {
+              "load": null,
+              "save": false
+            },
+            "origin": {
+              "origin": "http://game.invalid",
+              "denied": true,
+              "error": "SecurityError"
+            },
+            "mode": "denied",
+            "fault_injected": true
+          }
+        },
+        {
+          "name": "ordinary-gameplay-despite-denial:denied-1280",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "before": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            },
+            "won": {
+              "phase": "won",
+              "cells": [
+                true,
+                true,
+                true
+              ],
+              "moves": 3
+            },
+            "touch": false,
+            "clicks": []
+          }
+        },
+        {
+          "name": "no-false-save-success-label:denied-1280",
+          "passed": true,
+          "evidence": {
+            "text": "Start\nRestart\nCompleted\nBeacon Grid\n\nLight every beacon. Click or tap a beacon, or press 1, 2, 3.\n\nBeacon 1: ONBeacon 2: ONBeacon 3: ON\n\nAll lit in 3 moves! Restart to play again.",
+            "scope": "Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred."
+          }
+        },
+        {
+          "name": "ordinary-restart-despite-denial:denied-1280",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "restarted": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            }
+          }
+        },
+        {
+          "name": "real-storage-fault-observed:denied-1280",
+          "passed": true,
+          "evidence": {
+            "probe": {
+              "available": true,
+              "mode": "denied",
+              "read_attempts": 0,
+              "write_attempts": 0,
+              "remove_attempts": 0,
+              "clear_attempts": 0,
+              "successful_writes": 0,
+              "write_failures": 0,
+              "blocked_reads": 0,
+              "blocked_writes": 0,
+              "blocked_removals": 0,
+              "denied_accesses": 6,
+              "unavailable_reason": ""
+            },
+            "synthetic_fault": true
+          }
+        },
+        {
+          "name": "uncaught-errors:denied-1280",
+          "passed": true,
+          "evidence": {
+            "errors": []
+          }
+        },
+        {
+          "name": "offline-network:denied-1280",
+          "passed": true,
+          "evidence": {
+            "network": []
+          }
+        },
+        {
+          "name": "runtime-denial-return:denied-390",
+          "passed": true,
+          "evidence": {
+            "actual_context_api": true,
+            "result": {
+              "load": null,
+              "save": false
+            },
+            "origin": {
+              "origin": "http://game.invalid",
+              "denied": true,
+              "error": "SecurityError"
+            },
+            "mode": "denied",
+            "fault_injected": true
+          }
+        },
+        {
+          "name": "ordinary-gameplay-despite-denial:denied-390",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "before": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            },
+            "won": {
+              "phase": "won",
+              "cells": [
+                true,
+                true,
+                true
+              ],
+              "moves": 3
+            },
+            "touch": true,
+            "clicks": [
+              {
+                "selector": "#p2p-start",
+                "swipes": []
+              },
+              {
+                "selector": "#move-0",
+                "swipes": []
+              },
+              {
+                "selector": "#move-1",
+                "swipes": []
+              },
+              {
+                "selector": "#move-2",
+                "swipes": []
+              },
+              {
+                "selector": "#p2p-restart",
+                "swipes": []
+              }
+            ]
+          }
+        },
+        {
+          "name": "no-false-save-success-label:denied-390",
+          "passed": true,
+          "evidence": {
+            "text": "Start\nRestart\nCompleted\nBeacon Grid\n\nLight every beacon. Click or tap a beacon, or press 1, 2, 3.\n\nBeacon 1: ONBeacon 2: ONBeacon 3: ON\n\nAll lit in 3 moves! Restart to play again.",
+            "scope": "Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred."
+          }
+        },
+        {
+          "name": "ordinary-restart-despite-denial:denied-390",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "restarted": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            }
+          }
+        },
+        {
+          "name": "real-storage-fault-observed:denied-390",
+          "passed": true,
+          "evidence": {
+            "probe": {
+              "available": true,
+              "mode": "denied",
+              "read_attempts": 0,
+              "write_attempts": 0,
+              "remove_attempts": 0,
+              "clear_attempts": 0,
+              "successful_writes": 0,
+              "write_failures": 0,
+              "blocked_reads": 0,
+              "blocked_writes": 0,
+              "blocked_removals": 0,
+              "denied_accesses": 6,
+              "unavailable_reason": ""
+            },
+            "synthetic_fault": true
+          }
+        },
+        {
+          "name": "uncaught-errors:denied-390",
+          "passed": true,
+          "evidence": {
+            "errors": []
+          }
+        },
+        {
+          "name": "offline-network:denied-390",
+          "passed": true,
+          "evidence": {
+            "network": []
+          }
+        },
+        {
+          "name": "runtime-denial-return:quota-1280",
+          "passed": true,
+          "evidence": {
+            "actual_context_api": true,
+            "result": {
+              "load": null,
+              "save": false
+            },
+            "origin": {
+              "origin": "http://game.invalid",
+              "denied": false,
+              "key": null
+            },
+            "mode": "quota",
+            "fault_injected": true
+          }
+        },
+        {
+          "name": "ordinary-gameplay-despite-denial:quota-1280",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "before": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            },
+            "won": {
+              "phase": "won",
+              "cells": [
+                true,
+                true,
+                true
+              ],
+              "moves": 3
+            },
+            "touch": false,
+            "clicks": []
+          }
+        },
+        {
+          "name": "no-false-save-success-label:quota-1280",
+          "passed": true,
+          "evidence": {
+            "text": "Start\nRestart\nCompleted\nBeacon Grid\n\nLight every beacon. Click or tap a beacon, or press 1, 2, 3.\n\nBeacon 1: ONBeacon 2: ONBeacon 3: ON\n\nAll lit in 3 moves! Restart to play again.",
+            "scope": "Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred."
+          }
+        },
+        {
+          "name": "ordinary-restart-despite-denial:quota-1280",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "restarted": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            }
+          }
+        },
+        {
+          "name": "real-storage-fault-observed:quota-1280",
+          "passed": true,
+          "evidence": {
+            "probe": {
+              "available": true,
+              "mode": "quota",
+              "read_attempts": 2,
+              "write_attempts": 4,
+              "remove_attempts": 0,
+              "clear_attempts": 0,
+              "successful_writes": 0,
+              "write_failures": 4,
+              "blocked_reads": 0,
+              "blocked_writes": 4,
+              "blocked_removals": 0,
+              "denied_accesses": 0,
+              "unavailable_reason": ""
+            },
+            "synthetic_fault": true
+          }
+        },
+        {
+          "name": "uncaught-errors:quota-1280",
+          "passed": true,
+          "evidence": {
+            "errors": []
+          }
+        },
+        {
+          "name": "offline-network:quota-1280",
+          "passed": true,
+          "evidence": {
+            "network": []
+          }
+        },
+        {
+          "name": "runtime-denial-return:quota-390",
+          "passed": true,
+          "evidence": {
+            "actual_context_api": true,
+            "result": {
+              "load": null,
+              "save": false
+            },
+            "origin": {
+              "origin": "http://game.invalid",
+              "denied": false,
+              "key": null
+            },
+            "mode": "quota",
+            "fault_injected": true
+          }
+        },
+        {
+          "name": "ordinary-gameplay-despite-denial:quota-390",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "before": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            },
+            "won": {
+              "phase": "won",
+              "cells": [
+                true,
+                true,
+                true
+              ],
+              "moves": 3
+            },
+            "touch": true,
+            "clicks": [
+              {
+                "selector": "#p2p-start",
+                "swipes": []
+              },
+              {
+                "selector": "#move-0",
+                "swipes": []
+              },
+              {
+                "selector": "#move-1",
+                "swipes": []
+              },
+              {
+                "selector": "#move-2",
+                "swipes": []
+              },
+              {
+                "selector": "#p2p-restart",
+                "swipes": []
+              }
+            ]
+          }
+        },
+        {
+          "name": "no-false-save-success-label:quota-390",
+          "passed": true,
+          "evidence": {
+            "text": "Start\nRestart\nCompleted\nBeacon Grid\n\nLight every beacon. Click or tap a beacon, or press 1, 2, 3.\n\nBeacon 1: ONBeacon 2: ONBeacon 3: ON\n\nAll lit in 3 moves! Restart to play again.",
+            "scope": "Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred."
+          }
+        },
+        {
+          "name": "ordinary-restart-despite-denial:quota-390",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "restarted": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            }
+          }
+        },
+        {
+          "name": "real-storage-fault-observed:quota-390",
+          "passed": true,
+          "evidence": {
+            "probe": {
+              "available": true,
+              "mode": "quota",
+              "read_attempts": 2,
+              "write_attempts": 4,
+              "remove_attempts": 0,
+              "clear_attempts": 0,
+              "successful_writes": 0,
+              "write_failures": 4,
+              "blocked_reads": 0,
+              "blocked_writes": 4,
+              "blocked_removals": 0,
+              "denied_accesses": 0,
+              "unavailable_reason": ""
+            },
+            "synthetic_fault": true
+          }
+        },
+        {
+          "name": "uncaught-errors:quota-390",
+          "passed": true,
+          "evidence": {
+            "errors": []
+          }
+        },
+        {
+          "name": "offline-network:quota-390",
+          "passed": true,
+          "evidence": {
+            "network": []
+          }
+        },
+        {
+          "name": "runtime-denial-return:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "actual_context_api": true,
+            "result": {
+              "load": null,
+              "save": false
+            },
+            "origin": {
+              "origin": "null",
+              "denied": true,
+              "error": "SecurityError"
+            },
+            "mode": "opaque",
+            "fault_injected": false
+          }
+        },
+        {
+          "name": "browser-opaque-denial:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "origin": "null",
+            "denied": true,
+            "error": "SecurityError"
+          }
+        },
+        {
+          "name": "ordinary-gameplay-despite-denial:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "before": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            },
+            "won": {
+              "phase": "won",
+              "cells": [
+                true,
+                true,
+                true
+              ],
+              "moves": 3
+            },
+            "touch": false,
+            "clicks": []
+          }
+        },
+        {
+          "name": "no-false-save-success-label:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "text": "Start\nRestart\nCompleted\nBeacon Grid\n\nLight every beacon. Click or tap a beacon, or press 1, 2, 3.\n\nBeacon 1: ONBeacon 2: ONBeacon 3: ON\n\nAll lit in 3 moves! Restart to play again.",
+            "scope": "Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred."
+          }
+        },
+        {
+          "name": "ordinary-restart-despite-denial:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "restarted": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            }
+          }
+        },
+        {
+          "name": "uncaught-errors:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "errors": []
+          }
+        },
+        {
+          "name": "offline-network:opaque-1280",
+          "passed": true,
+          "evidence": {
+            "network": []
+          }
+        },
+        {
+          "name": "runtime-denial-return:opaque-390",
+          "passed": true,
+          "evidence": {
+            "actual_context_api": true,
+            "result": {
+              "load": null,
+              "save": false
+            },
+            "origin": {
+              "origin": "null",
+              "denied": true,
+              "error": "SecurityError"
+            },
+            "mode": "opaque",
+            "fault_injected": false
+          }
+        },
+        {
+          "name": "browser-opaque-denial:opaque-390",
+          "passed": true,
+          "evidence": {
+            "origin": "null",
+            "denied": true,
+            "error": "SecurityError"
+          }
+        },
+        {
+          "name": "ordinary-gameplay-despite-denial:opaque-390",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "before": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            },
+            "won": {
+              "phase": "won",
+              "cells": [
+                true,
+                true,
+                true
+              ],
+              "moves": 3
+            },
+            "touch": true,
+            "clicks": [
+              {
+                "selector": "#p2p-start",
+                "swipes": []
+              },
+              {
+                "selector": "#move-0",
+                "swipes": []
+              },
+              {
+                "selector": "#move-1",
+                "swipes": []
+              },
+              {
+                "selector": "#move-2",
+                "swipes": []
+              },
+              {
+                "selector": "#p2p-restart",
+                "swipes": []
+              }
+            ]
+          }
+        },
+        {
+          "name": "no-false-save-success-label:opaque-390",
+          "passed": true,
+          "evidence": {
+            "text": "Start\nRestart\nCompleted\nBeacon Grid\n\nLight every beacon. Click or tap a beacon, or press 1, 2, 3.\n\nBeacon 1: ONBeacon 2: ONBeacon 3: ON\n\nAll lit in 3 moves! Restart to play again.",
+            "scope": "Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred."
+          }
+        },
+        {
+          "name": "ordinary-restart-despite-denial:opaque-390",
+          "passed": true,
+          "evidence": {
+            "actual_input": true,
+            "restarted": {
+              "phase": "playing",
+              "cells": [
+                false,
+                false,
+                false
+              ],
+              "moves": 0
+            }
+          }
+        },
+        {
+          "name": "uncaught-errors:opaque-390",
+          "passed": true,
+          "evidence": {
+            "errors": []
+          }
+        },
+        {
+          "name": "offline-network:opaque-390",
+          "passed": true,
+          "evidence": {
+            "network": []
+          }
+        }
+      ],
+      "evidence_files": [
+        {
+          "path": "completed-denied-1280.png",
+          "bytes": 30831,
+          "sha256": "cce88cd1edae548d802489c9d0271e5a50223af89a91f88d201645d40cb1a388"
+        },
+        {
+          "path": "restart-denied-1280.png",
+          "bytes": 26041,
+          "sha256": "699e697a232452f8d223d08c1618eab8fcd2660e257fa416a85db54f62181f1d"
+        },
+        {
+          "path": "console-denied-1280.json",
+          "bytes": 23,
+          "sha256": "a7be2235edf3e5b6b7862d72972a976deb5bc478deb751e3198f9194d2c6b535"
+        },
+        {
+          "path": "network-denied-1280.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-denied-1280.zip",
+          "bytes": 95202,
+          "sha256": "61cd3b932a152074e212c7d9eda675adb0dee2d0edfdb056e1694d1339dd0c50"
+        },
+        {
+          "path": "completed-denied-390.png",
+          "bytes": 27674,
+          "sha256": "6c0e375bc0ce6689a363e7d29cd9388ec64a887fd60c5d5c8f05c15aa52fbc67"
+        },
+        {
+          "path": "restart-denied-390.png",
+          "bytes": 24838,
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb"
+        },
+        {
+          "path": "console-denied-390.json",
+          "bytes": 23,
+          "sha256": "a7be2235edf3e5b6b7862d72972a976deb5bc478deb751e3198f9194d2c6b535"
+        },
+        {
+          "path": "network-denied-390.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-denied-390.zip",
+          "bytes": 261817,
+          "sha256": "f3b1049b8cc7973eaebdd902717afb6b6e9f266e5cd57e3a96ebea41a88e47cb"
+        },
+        {
+          "path": "completed-quota-1280.png",
+          "bytes": 30828,
+          "sha256": "ec2d5e0abce209f674a1273340a15c3c9549279d5e6d67bf6ce7037f6feffdeb"
+        },
+        {
+          "path": "restart-quota-1280.png",
+          "bytes": 26041,
+          "sha256": "699e697a232452f8d223d08c1618eab8fcd2660e257fa416a85db54f62181f1d"
+        },
+        {
+          "path": "console-quota-1280.json",
+          "bytes": 23,
+          "sha256": "a7be2235edf3e5b6b7862d72972a976deb5bc478deb751e3198f9194d2c6b535"
+        },
+        {
+          "path": "network-quota-1280.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-quota-1280.zip",
+          "bytes": 118045,
+          "sha256": "ca47e9f16fbdecfe80b814d1f19cd210ee0d08f27fe5a43f048b1197cbfa4a54"
+        },
+        {
+          "path": "completed-quota-390.png",
+          "bytes": 27758,
+          "sha256": "f2641366bf74d2dbd322dee902461ea23da7934d29e9a53e9fa12ccb63603405"
+        },
+        {
+          "path": "restart-quota-390.png",
+          "bytes": 24838,
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb"
+        },
+        {
+          "path": "console-quota-390.json",
+          "bytes": 23,
+          "sha256": "a7be2235edf3e5b6b7862d72972a976deb5bc478deb751e3198f9194d2c6b535"
+        },
+        {
+          "path": "network-quota-390.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-quota-390.zip",
+          "bytes": 274882,
+          "sha256": "193328e94f63b98e4f7f2b4e0cc7c4bf346298cd00e8896dea16d48ca9d76da2"
+        },
+        {
+          "path": "completed-opaque-1280.png",
+          "bytes": 30821,
+          "sha256": "44088b89e6bea06ace002acae7c6b6165c09d94922d33d60f1c5d29201abca72"
+        },
+        {
+          "path": "restart-opaque-1280.png",
+          "bytes": 5003,
+          "sha256": "6bf49bd761f34a0ffae0ead51845f5a6d09fec924248ff2d2f60736bdd62573b"
+        },
+        {
+          "path": "console-opaque-1280.json",
+          "bytes": 23,
+          "sha256": "a7be2235edf3e5b6b7862d72972a976deb5bc478deb751e3198f9194d2c6b535"
+        },
+        {
+          "path": "network-opaque-1280.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-opaque-1280.zip",
+          "bytes": 110854,
+          "sha256": "ae41034e8a0b15ac40fed88ec5f3c70afdfdb69e522b8395d885a24782d731da"
+        },
+        {
+          "path": "completed-opaque-390.png",
+          "bytes": 27749,
+          "sha256": "a91811fca2320454866b80bbbcb948d8e4bcbd2790ad7ba18401a45d3a31ff69"
+        },
+        {
+          "path": "restart-opaque-390.png",
+          "bytes": 24281,
+          "sha256": "289af30dffad1b88db47ccae26a7001b50a4409a91193690c491e79a0cd21c12"
+        },
+        {
+          "path": "console-opaque-390.json",
+          "bytes": 23,
+          "sha256": "a7be2235edf3e5b6b7862d72972a976deb5bc478deb751e3198f9194d2c6b535"
+        },
+        {
+          "path": "network-opaque-390.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-opaque-390.zip",
+          "bytes": 159841,
+          "sha256": "bb2759fb9dc9eac5a63b5977caa30cb3bf5ac9c3f8bd4b73d597263b4b27eed3"
+        }
+      ]
+    },
+    "script_sha256": "77ab830bfc54a07746b698a5dba69b617081780d3338cd0b6a8032cd415327bb",
+    "script_source": "// Supplemental trusted fixture observation; exact game HTML/source are untouched.\nimport fs from 'node:fs';import crypto from 'node:crypto';\nimport {chromium} from '/validator/node_modules/playwright/index.mjs';\nimport {installStorageProbe} from '/validator/storage_probe.mjs';\nimport {tapReachable} from '/validator/touch_scroll_probe.mjs';\nconst hash=b=>crypto.createHash('sha256').update(b).digest('hex');\nconst html=fs.readFileSync('/input/game.html','utf8'),config=JSON.parse(fs.readFileSync('/input/config.json','utf8'));\nconst checks=[],observations=[],files=[];const record=(name,passed,evidence)=>checks.push({name,passed,evidence});\nconst save=(name,data)=>{fs.writeFileSync('/evidence/'+name,data);files.push({path:name,bytes:Buffer.byteLength(data),sha256:hash(data)});};\nconst browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE||undefined,args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-networking']});\n// Observe the real context functions when the original install invokes its factory.\n// No callback, state, return value or source byte is rewritten. Faults come solely\n// from the separately labelled Storage probe or the browser's opaque origin.\nfunction observeContext(){const define=Object.defineProperty;Object.defineProperty=function(target,name,descriptor){if(target===window&&name==='Prompt2PlayRuntime'){const runtime=descriptor.value;descriptor={...descriptor,value:Object.freeze({version:runtime.version,install(factory,spec){return runtime.install(ctx=>{define(window,'__STORAGE_REVIEW_CONTEXT__',{value:ctx.storage,configurable:true});return factory(ctx);},spec);}})};Object.defineProperty=define;}return define(target,name,descriptor);};}\nfor(const mode of ['denied','quota','opaque'])for(const width of [1280,390]){\n const tag=mode+'-'+width,touch=width===390,context=await browser.newContext({viewport:{width,height:844},isMobile:touch,hasTouch:touch,serviceWorkers:'block',acceptDownloads:false});\n await context.addInitScript(observeContext);if(mode!=='opaque')await context.addInitScript(installStorageProbe);\n await context.tracing.start({screenshots:true,snapshots:true,sources:false});const page=await context.newPage(),errors=[],logs=[],network=[];page.setDefaultTimeout(5000);page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>logs.push({type:m.type(),text:m.text().slice(0,1000)}));\n await context.route('**/*',async route=>{const url=route.request().url();if(url==='http://studio.invalid/')return route.fulfill({contentType:'text/html',body:'<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head><style>html,body,iframe{margin:0;width:100%;height:100%;border:0}body{height:100vh}</style><iframe sandbox=\"allow-scripts\" referrerpolicy=\"no-referrer\" src=\"http://game.invalid/index.html\"></iframe></html>'});if(url==='http://game.invalid/index.html')return route.fulfill({contentType:'text/html',body:html});network.push(url);return route.abort();});\n try{\n  await page.goto(mode==='opaque'?'http://studio.invalid/':'http://game.invalid/index.html');const frame=mode==='opaque'?page.frames().find(f=>f.url()==='http://game.invalid/index.html'):page.mainFrame();if(!frame)throw new Error('Game frame unavailable');\n  const transport={evaluate:(...args)=>frame.evaluate(...args),locator:(...args)=>frame.locator(...args),viewportSize:()=>page.viewportSize(),touchscreen:page.touchscreen,context:()=>({newCDPSession:()=>context.newCDPSession(page)}),waitForTimeout:ms=>page.waitForTimeout(ms)};\n  const clicks=[];const click=async selector=>{if(touch)clicks.push({selector,swipes:await tapReachable(transport,selector)});else await frame.locator(selector).click();};\n  if(mode!=='opaque')await frame.evaluate(mode=>window.__FORGE_STORAGE_PROBE__.setMode(mode),mode);\n  const origin=await frame.evaluate(()=>{try{return{origin:self.origin,denied:false,key:localStorage.getItem('storage-review-origin')}}catch(e){return{origin:self.origin,denied:true,error:e.name}}});\n  const result=await frame.evaluate(async()=>{const api=window.__STORAGE_REVIEW_CONTEXT__;return{load:await api.load(),save:await api.save({independentProbe:true})}});\n  record('runtime-denial-return:'+tag,result.load===null&&result.save===false,{actual_context_api:true,result,origin,mode,fault_injected:mode!=='opaque'});\n  if(mode==='opaque')record('browser-opaque-denial:'+tag,origin.origin==='null'&&origin.denied&&origin.error==='SecurityError',origin);\n  await click('#p2p-start');const before=await frame.evaluate(()=>window.__GAME_TEST__.snapshot());\n  for(let index=0;index<3;index++){if(touch)await click('#move-'+index);else await page.keyboard.press(String(index+1));}\n  const won=await frame.evaluate(()=>window.__GAME_TEST__.snapshot()),text=await frame.locator('body').innerText();\n  record('ordinary-gameplay-despite-denial:'+tag,before.phase==='playing'&&won.phase==='won'&&won.moves===3&&won.cells.every(Boolean),{actual_input:true,before,won,touch,clicks});\n  record('no-false-save-success-label:'+tag,!/saved|сохран[её]н/i.test(text),{text,scope:'Reviewed fixture has no save-status presentation; it does not claim successful persistence. No denial-notification UI contract is inferred.'});\n  save('completed-'+tag+'.png',await page.screenshot({fullPage:true}));await click('#p2p-restart');const restarted=await frame.evaluate(()=>window.__GAME_TEST__.snapshot());record('ordinary-restart-despite-denial:'+tag,restarted.phase==='playing'&&restarted.moves===0&&restarted.cells.every(v=>v===false),{actual_input:true,restarted});\n  const probe=mode==='opaque'?null:await frame.evaluate(()=>window.__FORGE_STORAGE_PROBE__.snapshot());if(probe)record('real-storage-fault-observed:'+tag,probe.available&&probe.mode===mode&&probe.successful_writes===0&&(mode==='denied'?probe.denied_accesses>=4:probe.blocked_writes>=4&&probe.write_failures>=4),{probe,synthetic_fault:true});\n  observations.push({tag,origin,result,won,restarted,probe});save('restart-'+tag+'.png',await page.screenshot({fullPage:true}));\n }catch(error){record('supplemental-error:'+tag,false,{message:error.message});save('failure-'+tag+'.png',await page.screenshot({fullPage:true}));}\n finally{record('uncaught-errors:'+tag,errors.length===0,{errors});record('offline-network:'+tag,network.length===0,{network});save('console-'+tag+'.json',JSON.stringify({errors,logs}));save('network-'+tag+'.json',JSON.stringify(network));await context.tracing.stop({path:'/evidence/trace-'+tag+'.zip'});const data=fs.readFileSync('/evidence/trace-'+tag+'.zip');files.push({path:'trace-'+tag+'.zip',bytes:data.length,sha256:hash(data)});await context.close();}\n}\nprocess.stdout.write(JSON.stringify({schema_version:1,scope:'One supplemental experiment on unchanged reviewed optional-capabilities fixture; zero model calls, outside final15 qualification count and v4 freshness denominator.',passed:checks.every(c=>c.passed),html_sha256:hash(Buffer.from(html)),script_sha256:hash(fs.readFileSync('/review/challenge.mjs')),validator_image_sha256:config.image,browser_version:browser.version(),runtime:config.runtime,original_fixture_report_sha256:config.original_report_sha256,instrumentation:'Trusted install observer captures original context load/save functions without changing their arguments or results; direct Storage fault probe for denied/quota, actual allow-scripts opaque-origin iframe for browser SecurityError.',limitations:['Existing reviewed fixture, not a fresh successfully generated storage game.','Denied/quota faults are synthetic and labelled; opaque-origin SecurityError is actual browser behavior.','Fixture has no save-status UI; absence of a false saved label does not demonstrate a complete denial-notification UX.','Chromium emulation, not actual contest WebView.'],observations,checks,evidence_files:files}));await browser.close();\n",
+    "evidence_directory": "/tmp/p2p-fixture-storage-denial-v2/evidence"
+  },
+  "preserved_initial_attempt": {
+    "report_path": "/tmp/p2p-fixture-storage-denial/report.json",
+    "report_sha256": "0f9959f74bbe09606828ca20d7363905b9aebded7b64bb5d11a277906617f64d",
+    "passed": false,
+    "evidence_directory": "/tmp/p2p-fixture-storage-denial/evidence",
+    "reason": "The first external experiment assertion counted blocked Storage methods while access denial actually threw earlier at the localStorage getter. Its trusted iframe host also omitted viewport metadata, so mobile child geometry was980px. Only the external probe assertion and trusted host metadata were corrected; fixture/runtime/image bytes remained exact.",
+    "failed_checks": [
+      {
+        "name": "real-storage-fault-observed:denied-1280",
+        "passed": false,
+        "evidence": {
+          "probe": {
+            "available": true,
+            "mode": "denied",
+            "read_attempts": 0,
+            "write_attempts": 0,
+            "remove_attempts": 0,
+            "clear_attempts": 0,
+            "successful_writes": 0,
+            "write_failures": 0,
+            "blocked_reads": 0,
+            "blocked_writes": 0,
+            "blocked_removals": 0,
+            "denied_accesses": 6,
+            "unavailable_reason": ""
+          },
+          "synthetic_fault": true
+        }
+      },
+      {
+        "name": "real-storage-fault-observed:denied-390",
+        "passed": false,
+        "evidence": {
+          "probe": {
+            "available": true,
+            "mode": "denied",
+            "read_attempts": 0,
+            "write_attempts": 0,
+            "remove_attempts": 0,
+            "clear_attempts": 0,
+            "successful_writes": 0,
+            "write_failures": 0,
+            "blocked_reads": 0,
+            "blocked_writes": 0,
+            "blocked_removals": 0,
+            "denied_accesses": 6,
+            "unavailable_reason": ""
+          },
+          "synthetic_fault": true
+        }
+      },
+      {
+        "name": "supplemental-error:opaque-390",
+        "passed": false,
+        "evidence": {
+          "message": "Touch target is outside the horizontal viewport"
+        }
+      }
+    ]
+  },
+  "conclusions": [
+    "The actual captured native context returns load=null/save=false for denied, quota-write-failed and opaque-origin storage; its ordinary real-key/touch win and restart remain viable.",
+    "The opaque iframe produces actual origin=null and SecurityError on direct localStorage access. Denied/quota modes are explicitly labelled synthetic fault injection.",
+    "The reviewed fixture has no save-status presentation and never shows a false saved label. This does not establish a complete denial-notification UI or a fresh successfully generated storage game."
+  ],
+  "limitations": [
+    "Existing reviewed fixture, not a fresh successfully generated storage game.",
+    "Denied/quota faults are synthetic and labelled; opaque-origin SecurityError is actual browser behavior.",
+    "Fixture has no save-status UI; absence of a false saved label does not demonstrate a complete denial-notification UX.",
+    "Chromium emulation, not actual contest WebView."
+  ]
+}

@@ -1,0 +1,292 @@
+{
+  "kind": "recorded-legal-public-actions",
+  "seed": "embers",
+  "classId": "mage",
+  "generator": "qa/campaign_bot.cjs",
+  "gameplay_actions": 84,
+  "steps": [
+    {
+      "op": "act",
+      "action": {
+        "type": "cast",
+        "skill": "bolt",
+        "x": 20,
+        "y": 20
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "wait"
+      },
+      "repeat": 3
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": 1
+      },
+      "repeat": 3
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": -1,
+        "dy": 0
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": -1
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 1,
+        "dy": 0
+      },
+      "repeat": 2
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": -1
+      },
+      "repeat": 5
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 1,
+        "dy": 0
+      },
+      "repeat": 7
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": -1,
+        "dy": 0
+      },
+      "repeat": 2
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": -1
+      },
+      "repeat": 9
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 1,
+        "dy": 0
+      },
+      "repeat": 2
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": -1
+      },
+      "repeat": 2
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": -1,
+        "dy": 0
+      },
+      "repeat": 10
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": 1
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": -1,
+        "dy": 0
+      },
+      "repeat": 3
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": 1
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": -1,
+        "dy": 0
+      },
+      "repeat": 4
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": -1
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "cast",
+        "skill": "bolt",
+        "x": 15,
+        "y": 10
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "wait"
+      },
+      "repeat": 2
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 1,
+        "dy": 0
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": 1
+      },
+      "repeat": 9
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 1,
+        "dy": 0
+      },
+      "repeat": 2
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": 1
+      }
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 1,
+        "dy": 0
+      },
+      "repeat": 6
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "move",
+        "dx": 0,
+        "dy": 1
+      },
+      "repeat": 3
+    },
+    {
+      "op": "act",
+      "action": {
+        "type": "return"
+      }
+    }
+  ],
+  "final": {
+    "mode": "camp",
+    "bank": {
+      "gold": 44,
+      "wood": 4,
+      "ore": 2,
+      "herb": 4,
+      "crystal": 0
+    },
+    "quest": {
+      "id": "watch_1",
+      "npc": "warden",
+      "name": "Огонь у ворот",
+      "description": "Победи двух обитателей подземелья. Дозор даст первый допуск к восстановлению очага.",
+      "status": "ready",
+      "progress": 2,
+      "target": 2,
+      "objectiveText": "Победить врагов",
+      "reward": {
+        "gold": 20,
+        "wood": 2,
+        "ore": 0,
+        "herb": 0,
+        "crystal": 0
+      },
+      "unlockText": "Очаг дозора: уровень 1",
+      "nextPrerequisiteText": "Доступно с начала."
+    },
+    "lastRun": {
+      "outcome": "return",
+      "seed": "embers",
+      "floor": 1,
+      "level": 1,
+      "kills": 2,
+      "earned": {
+        "gold": 44,
+        "wood": 4,
+        "ore": 2,
+        "herb": 4,
+        "crystal": 0
+      },
+      "lost": {
+        "gold": 0,
+        "wood": 0,
+        "ore": 0,
+        "herb": 0,
+        "crystal": 0
+      }
+    }
+  },
+  "limitations": [
+    "Planner sees complete map; this is not human balance evaluation",
+    "Every recorded operation uses the actual campaign public action API; no injected resources, HP or positions"
+  ]
+}

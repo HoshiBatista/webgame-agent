@@ -1,0 +1,260 @@
+{
+  "job": "8a9c31f3-160f-4096-a1be-a7b8f6b058a3",
+  "status": "completed",
+  "stage": "done",
+  "attempts": 1,
+  "usage": {
+    "calls": 3,
+    "input_tokens": 46864,
+    "total_tokens": 50344,
+    "output_tokens": 3480,
+    "cached_input_tokens": 0
+  },
+  "result_version": "93858642-84b1-40f0-a13c-51c229a0c5dc",
+  "base_version": "bcb02768-1ec3-4e39-b1b4-747412c0895a",
+  "error": "",
+  "reported_utc": "2026-10-11 20:00:21.724069+00:00",
+  "validation": [
+    {
+      "candidate": "c7c8a665-c97c-4b5f-93ee-326be349f0da",
+      "outcome": "passed",
+      "artifact": {
+        "html_bytes": 23996,
+        "html_sha256": "990c401ba7aa476618a08126538ddbf8a092f442b5c775dcdc1ffa171c5c4a53",
+        "spec_sha256": "884b385674bb7dc12d21e32b3844bf9fd89da60353b4990579205375235a5064",
+        "files_sha256": {
+          "game.js": "dc6009563df5df84f064bc9e352d1de4ccf9e5b1ade57bf65e9cf4d5561f2672",
+          "style.css": "df23f2751aa0a211e0b2930104788f0ec48cf65cb27e22bbed867c2876eac6f8"
+        }
+      },
+      "evidence": [
+        {
+          "path": "start-1280.png",
+          "bytes": 49197,
+          "sha256": "b4b683e1c7b53c37d3fcac954366b6390e0b95ac9eef2ae516f0c50b8fe68f77",
+          "object_key": "b4b683e1c7b53c37d3fcac954366b6390e0b95ac9eef2ae516f0c50b8fe68f77"
+        },
+        {
+          "path": "control-before-1280.png",
+          "bytes": 45011,
+          "sha256": "a80fe755391cb4d090a6c1a11e78940c838619042869f758fa54579c7e50398b",
+          "object_key": "a80fe755391cb4d090a6c1a11e78940c838619042869f758fa54579c7e50398b"
+        },
+        {
+          "path": "control-after-1280.png",
+          "bytes": 45011,
+          "sha256": "a80fe755391cb4d090a6c1a11e78940c838619042869f758fa54579c7e50398b",
+          "object_key": "a80fe755391cb4d090a6c1a11e78940c838619042869f758fa54579c7e50398b"
+        },
+        {
+          "path": "final-1280.png",
+          "bytes": 65243,
+          "sha256": "a24e7b2bf5ece7d89884c8b0806b2079ed4154c71f8ce28d5278437ea1f5c4b8",
+          "object_key": "a24e7b2bf5ece7d89884c8b0806b2079ed4154c71f8ce28d5278437ea1f5c4b8"
+        },
+        {
+          "path": "restart-1280.png",
+          "bytes": 49197,
+          "sha256": "b4b683e1c7b53c37d3fcac954366b6390e0b95ac9eef2ae516f0c50b8fe68f77",
+          "object_key": "b4b683e1c7b53c37d3fcac954366b6390e0b95ac9eef2ae516f0c50b8fe68f77"
+        },
+        {
+          "path": "console-1280.json",
+          "bytes": 35,
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "object_key": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1"
+        },
+        {
+          "path": "network-1280.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "object_key": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-1280.zip",
+          "bytes": 1303552,
+          "sha256": "444748231ce1f2120014abf429f73e339c0a7a7444c143c1f7214e8fc6385c91",
+          "object_key": "444748231ce1f2120014abf429f73e339c0a7a7444c143c1f7214e8fc6385c91"
+        },
+        {
+          "path": "start-390.png",
+          "bytes": 40451,
+          "sha256": "b201b9e9300e96ad5887995d754dadee9ec2c5f33b4e3c704c2081908a26fa9d",
+          "object_key": "b201b9e9300e96ad5887995d754dadee9ec2c5f33b4e3c704c2081908a26fa9d"
+        },
+        {
+          "path": "control-before-390.png",
+          "bytes": 36679,
+          "sha256": "b97fbfff0373177cc3ff3fdd2ff0cb0645c5de02c6694a2b8a204f96672f57fe",
+          "object_key": "b97fbfff0373177cc3ff3fdd2ff0cb0645c5de02c6694a2b8a204f96672f57fe"
+        },
+        {
+          "path": "control-after-390.png",
+          "bytes": 36679,
+          "sha256": "b97fbfff0373177cc3ff3fdd2ff0cb0645c5de02c6694a2b8a204f96672f57fe",
+          "object_key": "b97fbfff0373177cc3ff3fdd2ff0cb0645c5de02c6694a2b8a204f96672f57fe"
+        },
+        {
+          "path": "final-390.png",
+          "bytes": 52455,
+          "sha256": "c5f8d91b253881378049242644f33c557eda1dfc281a54f6886f8e3f0181d781",
+          "object_key": "c5f8d91b253881378049242644f33c557eda1dfc281a54f6886f8e3f0181d781"
+        },
+        {
+          "path": "restart-390.png",
+          "bytes": 41007,
+          "sha256": "09697640ec64360ebbf2e47d42f328d0c6672917bb6b15d6d6de82c93a0ce5aa",
+          "object_key": "09697640ec64360ebbf2e47d42f328d0c6672917bb6b15d6d6de82c93a0ce5aa"
+        },
+        {
+          "path": "console-390.json",
+          "bytes": 35,
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "object_key": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1"
+        },
+        {
+          "path": "network-390.json",
+          "bytes": 2,
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "object_key": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "path": "trace-390.zip",
+          "bytes": 1785395,
+          "sha256": "f912cb10167f85ef02ab8dbde798acc720310ecaf50f66f44914e74bd81cebf5",
+          "object_key": "f912cb10167f85ef02ab8dbde798acc720310ecaf50f66f44914e74bd81cebf5"
+        }
+      ],
+      "checks": [
+        {
+          "name": "artifact_assembly",
+          "status": "passed"
+        },
+        {
+          "name": "module_paths",
+          "status": "passed"
+        },
+        {
+          "name": "offline:game.js",
+          "status": "passed"
+        },
+        {
+          "name": "offline:style.css",
+          "status": "passed"
+        },
+        {
+          "name": "javascript_syntax:game.js",
+          "status": "passed"
+        },
+        {
+          "name": "runtime_identity:1280",
+          "status": "passed"
+        },
+        {
+          "name": "startup:1280",
+          "status": "passed"
+        },
+        {
+          "name": "surface:1280",
+          "status": "passed"
+        },
+        {
+          "name": "controlled_clock:1280",
+          "status": "passed"
+        },
+        {
+          "name": "input:1280",
+          "status": "passed"
+        },
+        {
+          "name": "completion:1280",
+          "status": "passed"
+        },
+        {
+          "name": "independent_acceptance:1280",
+          "status": "passed"
+        },
+        {
+          "name": "restart:1280",
+          "status": "passed"
+        },
+        {
+          "name": "deterministic_reset:1280",
+          "status": "passed"
+        },
+        {
+          "name": "lifecycle:1280",
+          "status": "passed"
+        },
+        {
+          "name": "javascript_errors:1280",
+          "status": "passed"
+        },
+        {
+          "name": "external_requests:1280",
+          "status": "passed"
+        },
+        {
+          "name": "evidence:1280",
+          "status": "passed"
+        },
+        {
+          "name": "runtime_identity:390",
+          "status": "passed"
+        },
+        {
+          "name": "startup:390",
+          "status": "passed"
+        },
+        {
+          "name": "surface:390",
+          "status": "passed"
+        },
+        {
+          "name": "controlled_clock:390",
+          "status": "passed"
+        },
+        {
+          "name": "input:390",
+          "status": "passed"
+        },
+        {
+          "name": "completion:390",
+          "status": "passed"
+        },
+        {
+          "name": "independent_acceptance:390",
+          "status": "passed"
+        },
+        {
+          "name": "restart:390",
+          "status": "passed"
+        },
+        {
+          "name": "mobile_layout:390",
+          "status": "passed"
+        },
+        {
+          "name": "deterministic_reset:390",
+          "status": "passed"
+        },
+        {
+          "name": "lifecycle:390",
+          "status": "passed"
+        },
+        {
+          "name": "javascript_errors:390",
+          "status": "passed"
+        },
+        {
+          "name": "external_requests:390",
+          "status": "passed"
+        },
+        {
+          "name": "evidence:390",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-11T20:51:38.584366+00:00",
+  "reviewer": "Independent AI code/visual reviewer; no human participant",
+  "scope": "Supplemental actual touchscreen reachability review correcting the earlier screenshot/locator-tap mobile assessment. Original frozen artifact and validation reports are unchanged.",
+  "artifact": {
+    "files_sha256": {
+      "game.js": "3d81f3b7df9f2063bf67b8eea09dbb33973a78d35ec5b91d8a660f0ecbabb981",
+      "style.css": "2c672b2c995403a0b6a3294315d3d6b1bd41b7dc5e7b9210189095986662d4d3"
+    },
+    "html_bytes": 29931,
+    "html_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+    "spec_sha256": "a4f5aefc23b4c58e227bb515855c5c13de2c40a18fcfad24c2768fc15c7c106b"
+  },
+  "runtime": {
+    "sha256": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+    "version": "runtime-v1.0.3"
+  },
+  "validator_image_sha256": "sha256:bfd6f62615ea63bc8b2ddbfb3f04fbbf38d175036aced496e0f8ddb987233b35",
+  "observation": {
+    "scope": "Supplemental actual Chromium touchscreen scroll gestures; original exact saved card game, no release reports changed",
+    "result": [
+      {
+        "gesture": "inside-game",
+        "before": {
+          "scroll": 0,
+          "height": 1170,
+          "viewport": 844,
+          "root_touch_action": "none"
+        },
+        "after": {
+          "scroll": 0,
+          "height": 1170
+        }
+      },
+      {
+        "gesture": "toolbar-control",
+        "before": {
+          "scroll": 0,
+          "height": 1170,
+          "viewport": 844,
+          "root_touch_action": "none"
+        },
+        "after": {
+          "scroll": 0,
+          "height": 1170
+        }
+      },
+      {
+        "gesture": "counterfactual-pan-y",
+        "before": {
+          "scroll": 0,
+          "height": 1170,
+          "viewport": 844,
+          "root_touch_action": "pan-y"
+        },
+        "after": {
+          "scroll": 326,
+          "height": 1170
+        }
+      }
+    ]
+  },
+  "result": "material_mobile_layout_gap",
+  "reason": "The 1170 px document exceeds the 844 px viewport. An ordinary finger swipe inside the game stays at scrollY=0 under root touch-action:none. The in-container pan-y control permits the identical gesture to scroll 326 px. Locator tap auto-scroll previously revealed offscreen elements and masked this ordinary-user reachability gap.",
+  "counterfactual_only": "The pan-y control was a temporary in-container diagnostic override, not a source fix or new validated artifact. No game HTML was rewritten.",
+  "superseding_layout_score": 1,
+  "original_historical_layout_score": 2,
+  "raw_report_path": "/tmp/p2p-real-touch-scroll-review/report-with-screenshots.json",
+  "raw_report_sha256": "d47a7e41891430860145144993c2ab3d72527580e97be052c8f605cf2d10ae7e",
+  "script_sha256": "4573f19a4b049139e736d59582dbcc8895156930d1a758cf09fe6bffcc1fb65f",
+  "script_source": "import fs from 'node:fs';import {chromium} from '/validator/node_modules/playwright/index.mjs';\nconst html=fs.readFileSync('/input/game.html','utf8'),browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']});\nconst context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});await context.tracing.start({screenshots:true,snapshots:true});const page=await context.newPage();await context.route('**/*',route=>route.request().url()==='http://game.invalid/'?route.fulfill({contentType:'text/html',body:html}):route.abort());await page.goto('http://game.invalid/');await page.locator('[data-testid=start]').tap();const session=await context.newCDPSession(page);\nconst result=[];for(const gesture of [{name:'inside-game',x:300,y:730,toY:210},{name:'toolbar-control',x:370,y:60,toY:5},{name:'counterfactual-pan-y',x:300,y:730,toY:210}]){if(gesture.name==='counterfactual-pan-y')await page.evaluate(()=>document.querySelector('#p2p-surface').style.touchAction='pan-y');await page.evaluate(()=>scrollTo(0,0));await page.waitForTimeout(200);const before=await page.evaluate(()=>({scroll:scrollY,height:document.documentElement.scrollHeight,viewport:innerHeight,root_touch_action:getComputedStyle(document.querySelector('#p2p-surface')).touchAction}));await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:gesture.x,y:gesture.y}]});for(let i=1;i<=10;i++){await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:gesture.x,y:gesture.y+(gesture.toY-gesture.y)*i/10}]});await page.waitForTimeout(20);}await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.waitForTimeout(500);result.push({gesture:gesture.name,before,after:await page.evaluate(()=>({scroll:scrollY,height:document.documentElement.scrollHeight}))});fs.writeFileSync('/evidence/touch-scroll-'+gesture.name+'.png',await page.screenshot());}\nfs.writeFileSync('/evidence/touch-scroll.png',await page.screenshot());await context.tracing.stop({path:'/evidence/touch-scroll.zip'});process.stdout.write(JSON.stringify({scope:'Supplemental actual Chromium touchscreen scroll gestures; original exact saved card game, no release reports changed',result}));await browser.close();\n",
+  "evidence": [
+    {
+      "path": "/tmp/p2p-real-touch-scroll-review/evidence/touch-scroll-counterfactual-pan-y.png",
+      "sha256": "1fbe3856a9a67a6fbb07dee49bc15ef1ef94a1189c0086e4427f953e34eb6908",
+      "bytes": 157203
+    },
+    {
+      "path": "/tmp/p2p-real-touch-scroll-review/evidence/touch-scroll-inside-game.png",
+      "sha256": "a18eb8d13b181e828820e6a16b0613fba33af702b9d02bdd0f66b860855a7a42",
+      "bytes": 149843
+    },
+    {
+      "path": "/tmp/p2p-real-touch-scroll-review/evidence/touch-scroll-toolbar-control.png",
+      "sha256": "a18eb8d13b181e828820e6a16b0613fba33af702b9d02bdd0f66b860855a7a42",
+      "bytes": 149843
+    },
+    {
+      "path": "/tmp/p2p-real-touch-scroll-review/evidence/touch-scroll.png",
+      "sha256": "1fbe3856a9a67a6fbb07dee49bc15ef1ef94a1189c0086e4427f953e34eb6908",
+      "bytes": 157203
+    },
+    {
+      "path": "/tmp/p2p-real-touch-scroll-review/evidence/touch-scroll.zip",
+      "sha256": "9a27235ab032692ea77a1294c526244e80e4325ac4d74a59d56e887bbc8a4637",
+      "bytes": 625230
+    }
+  ],
+  "limits": [
+    "Desktop Chromium touchscreen emulation; target WebView unknown.",
+    "Mechanic/input state outcomes from original tests remain real; ordinary finger access to long content was not established by locator auto-scroll.",
+    "This known runtime0.3/0.4 gap requires a new runtime release and fresh current examples; old saved card remains historical."
+  ]
+}

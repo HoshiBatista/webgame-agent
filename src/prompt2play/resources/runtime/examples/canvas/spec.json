@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "title": "Orbit Courier",
+  "summary": "Reviewed runtime regression fixture, not fresh generation",
+  "genre": "arcade",
+  "presentation_mode": "canvas",
+  "rules": [
+    "Reach the visible goal using real inputs"
+  ],
+  "controls": [
+    "ArrowRight or tap track"
+  ],
+  "win_condition": "All goals reached",
+  "lose_condition": "",
+  "capabilities": [
+    "input",
+    "lifecycle",
+    "clock"
+  ],
+  "state_fields": [
+    {
+      "path": "/phase",
+      "meaning": "Current playable lifecycle phase",
+      "type": "string"
+    }
+  ],
+  "actions": [
+    {
+      "type": "MOVE",
+      "effect": "Advance one goal"
+    },
+    {
+      "type": "START",
+      "effect": "Begin play"
+    }
+  ],
+  "invariants": [
+    "No progress after terminal state"
+  ]
+}

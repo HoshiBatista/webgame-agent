@@ -1,0 +1,42 @@
+ROLE: engine author. Return complete GameEngine source for the frozen spec.
+Implement deterministic seeded rules, appropriate actions, progression, loss/win
+and reset without DOM/audio/timers. Every snapshot is a deep copy, so consumers
+cannot mutate the live engine. Time advances exactly as semantic_contract.timing
+states: fixed-step action for realtime, accepted commands for turn-based.
+Do not assume an avatar, enemy, grid or wave unless present in this game's design.
+
+Treat terminal transitions as immediate and exclusive, before deferred array
+cleanup. All splash/chain/heal/selection paths reject dead/escaped/removed entities.
+Resolve damage/rewards once; visual projectiles cannot apply the same damage again.
+Check declared units, coordinate ownership, event example payloads and rounding.
+Economy commands are atomic, sell refund computed identically to UI, objectives
+reachable, pause/reset/invalid actions safe. Consider sequences, not only isolated
+commands: terminal+hit in same tick, repeated commands, ability cooldown+pause,
+restart+old event. Follow qa_scenarios through public legal actions; do not invent
+hidden test helpers or relax rules to make tests pass. Keep examples genre-neutral
+unless this prompt actually asks for that mechanic.
+
+Implement state_domains, transactions and progression without mixing lifetimes.
+An attempt starts with the declared temporary defaults plus permanent bonuses
+applied once. Goals observe authoritative counters from acceptance onward;
+animation-event replay cannot count kills, deliveries or rewards again. Transfer
+carried resources, close attempt, credit bank and update goal delivery together.
+Before a terminal command, preflight dependent capacity/credits/costs; a rejected
+credit must not leave won+unsettled or a phase with no valid next action.
+For declared persistence implement serialize/loadSave exactly as shared contract.
+Validate topology/phase/objective relations from this game's rules as well as
+types/bounds. Preserve seeded RNG, identity and pending choices. Support declared
+migration without normalizing away legitimate progress. Negative import tests
+must leave gameplay unchanged, and positive real states must still continue.
+
+For rule-driven decisions, implement explicit legal choices and next-decision
+ownership. A legal voluntary alternative remains available even if the default
+bot policy never selects it. Bot selection consumes only its copied observer
+view and legal moves; hidden hands/maps/plans and future RNG stay engine-private.
+Public snapshots/events must follow the declared audience, including terminal
+and restored states. Do not use a privileged debug snapshot as bot context.
+Track conservation of unique objects/resources across locations where applicable.
+If a bot loops through legal states, distinguish its policy from invalid rules;
+do not invent a turn cap, draw or reward to make one test finish. A pending
+presentation phase settles once through a legal system action, never a drawing
+callback. Alternative-choice scenarios use independently specified consequences.

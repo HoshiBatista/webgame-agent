@@ -1,0 +1,9 @@
+{
+  "name": "game-forge-camp-corpus-qa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development-only trusted recorded camp UI regression; never shipped inside generated HTML",
+  "scripts": {"test": "node qa/run_ui.cjs"},
+  "engines": {"node": ">=22.12.0"},
+  "devDependencies": {"@napi-rs/canvas": "0.1.100", "linkedom": "0.18.12"}
+}

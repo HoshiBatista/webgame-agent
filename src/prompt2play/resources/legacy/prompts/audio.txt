@@ -1,0 +1,30 @@
+ROLE: audio composer. Return complete GameAudio source, original procedural music
+suited to this game: melody, harmony, bass/rhythm, contrasting sections and outcome
+cues. Cached samples, bounded total/per-bus voices, one tick-driven scheduler.
+
+Follow semantic event examples exactly; own notes and effects, not game rules or
+AudioContext. Distinct effects for documented attacks, damage, purchases, progress
+and outcomes as applicable. setState merges partial updates, idempotently applying
+last requested state. Music volume=.55 is music only, sfxVolume=.7 effects only;
+enabled gates both, musicEnabled gates music. Zero music cannot mute effects.
+
+Deduplicate bounded recent event ids. Consume muted/suspended events without queue
+or backlog replay; unknown events harmless. Dispose/mute stop the correct voices.
+Pause/resume gaps never create catch-up bursts or duplicated scheduling. Inspect
+rapid setting sequences and pending Promises; disposal fences late callbacks. A
+silent moment in a melody is valid, but buses must play new applicable events when
+allowed. No automatic sound, external audio or fake engine events.
+
+Repeated identical setState calls (e.g. 600 render frames) must not schedule 600
+gain automations or duplicate outcome fades. Compare target values/modes before
+starting an external effect. A 200/450/600/1100 ms clock stall skips elapsed notes
+on the existing beat grid; never start a source in the past or burst all missed
+beats. Parameter-automation/voice traces are separate from subjective listening.
+
+Own complete voice records, including source and gain/filter chain. Suspending
+the context alone freezes short effects; mute/hide must stop and disconnect them
+so an old cue cannot finish after resume. Only a running context may receive new
+one-shots. While unlock is pending/rejected, consume events without scheduling.
+UI owns context reconciliation: both resume and suspend completions may be late.
+The audio class follows current desired settings without duplicating the UI's
+context owner; a disposed instance cannot restart nodes through any callback.

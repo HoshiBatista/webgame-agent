@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "case_id": "shooter",
+  "run": "shooter-1",
+  "provider": "codex",
+  "model": "gpt-6-astra",
+  "mode": "single_author",
+  "runtime": {
+    "sha256": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+    "version": "runtime-v1.0.3"
+  },
+  "generation_result": ".prompt2play/evaluations/live-comparison-v2/single_author/shooter/shooter-1/result.json",
+  "generation_result_sha256": "b91fd82d5f6d91b6486ab295ff9b7225554acd7069f5c999811084abc4890a3c",
+  "artifact_key": "42708cfae552b5bd50bc9a203eb23fa9fd12deeb2daf4f809dbae8d213531ea4",
+  "artifact": {
+    "files_sha256": {
+      "game.js": "dc62b3c68c1aaf2e64d27d6663e088b7343038c5c72eb4d0a88c3a16509607c2",
+      "style.css": "31cab9b1fdfdf4d7139e1ef74dfc6e85e32a8c6fd16ab30e4f316659e25d1307"
+    },
+    "html_bytes": 30940,
+    "html_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+    "spec_sha256": "24d59539456e9afc5891b55f0b1b694c26a321d11c60690e3f55bc7b84824c1c"
+  },
+  "validation_report_sha256": "7880c86455e7286a2b32a0a2525371bb42a96ae7d07e45dde244fb02ff9c17c3",
+  "validator_image_sha256": "sha256:3278d96584d7371a56a78da8e26b415df1952f500f0f9dd280b2a5378dd98e16",
+  "browser_version": "154.0.8037.92",
+  "validation_suite_sha256": "6535eff1ac97bebbc6e287589b17b73b767ecc53ac709ca59e499e4695157a03",
+  "acceptance_source": "release-config",
+  "evidence_directory": ".prompt2play/evaluations/live-comparison-v2/single_author/shooter/shooter-1/attempt-1/browser-a63ad40336c045c78307649bbfa215a7",
+  "evidence_files": [
+    {
+      "bytes": 69765,
+      "path": "start-1280.png",
+      "sha256": "bdb0c0d8b4e619b8b6441e4b083829d7928cab7fc6ad0370ad81e6f9942327f3"
+    },
+    {
+      "bytes": 68997,
+      "path": "control-before-1280.png",
+      "sha256": "dcb5a3c15246712cb5ca16d5e59b0c21652761baf951b2ed28e57a6e94ae367e"
+    },
+    {
+      "bytes": 68997,
+      "path": "control-after-1280.png",
+      "sha256": "dcb5a3c15246712cb5ca16d5e59b0c21652761baf951b2ed28e57a6e94ae367e"
+    },
+    {
+      "bytes": 46371,
+      "path": "final-1280.png",
+      "sha256": "bfd3146d32e5e8d293f729e072e2157b677d058679115410ea99838d49ec06d2"
+    },
+    {
+      "bytes": 69624,
+      "path": "restart-1280.png",
+      "sha256": "ba5c430e073cc9d768c7699f2a76bf7dbe6703296f3521e8cba60033fb34cbe1"
+    },
+    {
+      "bytes": 35,
+      "path": "console-1280.json",
+      "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1"
+    },
+    {
+      "bytes": 2,
+      "path": "network-1280.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 1628302,
+      "path": "trace-1280.zip",
+      "sha256": "19a85972a1c3f512ce02e8fa7d8a7eedc4436f160b30d59788d7a09be1442132"
+    },
+    {
+      "bytes": 58881,
+      "path": "start-390.png",
+      "sha256": "6b0d83b431acab951cfd275043a32621322125724a8e23db50b9ba3eb35ff4cf"
+    },
+    {
+      "bytes": 54983,
+      "path": "control-before-390.png",
+      "sha256": "97e256dbd31b20856e55160b300d7dc678c6b523170c6ffef58465d137f7f86c"
+    },
+    {
+      "bytes": 54983,
+      "path": "control-after-390.png",
+      "sha256": "97e256dbd31b20856e55160b300d7dc678c6b523170c6ffef58465d137f7f86c"
+    },
+    {
+      "bytes": 42978,
+      "path": "final-390.png",
+      "sha256": "a4479f8ff69cce6af8492d98c16f8a2f6cd6e7f59136e524e5254b1c2cadbdcd"
+    },
+    {
+      "bytes": 59587,
+      "path": "restart-390.png",
+      "sha256": "0f6b69382a774fafefbc3925d0b83a9560d5ab18e33e1d840e530ca02c870327"
+    },
+    {
+      "bytes": 35,
+      "path": "console-390.json",
+      "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1"
+    },
+    {
+      "bytes": 2,
+      "path": "network-390.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 2333403,
+      "path": "trace-390.zip",
+      "sha256": "64ea370c702d8fe99add11ea9cca4990a276015ac4e6dc189b6dc3acc7cd1ec6"
+    }
+  ],
+  "saved_files": {
+    "game.html": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+    "spec.json": "24d59539456e9afc5891b55f0b1b694c26a321d11c60690e3f55bc7b84824c1c",
+    "validation.json": "7880c86455e7286a2b32a0a2525371bb42a96ae7d07e45dde244fb02ff9c17c3"
+  },
+  "independent_review": {
+    "reviewer": "Independent AI code/visual review; no human participant",
+    "path": "docs/evidence/human-review.json",
+    "mechanics_challenge_reports": [
+      {
+        "sha256": "cdd7d7e33ae9f540c51a952a47c7f9d16b44df399a8f742f35cc080763f40b8d",
+        "html_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e"
+      }
+    ]
+  },
+  "scope": [
+    "Saved exact live generation from immutable CAS; copying or replaying this file is not a fresh generation call.",
+    "Required static and isolated real-input gates passed for these exact bytes.",
+    "Desktop Chromium and Chromium touch emulation only; contest WebView host remains unknown.",
+    "Human participant assessment, entertainment quality and actual-device/audio perception are pending.",
+    "Examples are outside provider knowledge/runtime examples and were not injected into the frozen benchmark context."
+  ]
+}

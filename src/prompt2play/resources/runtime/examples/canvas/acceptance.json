@@ -1,0 +1,168 @@
+{
+  "start_selector": "#p2p-start",
+  "restart_selector": "#p2p-restart",
+  "desktop": {
+    "steps": [
+      {
+        "kind": "key",
+        "key": "ArrowRight",
+        "selector": "",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      },
+      {
+        "kind": "key",
+        "key": "ArrowRight",
+        "selector": "",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      },
+      {
+        "kind": "key",
+        "key": "ArrowRight",
+        "selector": "",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      },
+      {
+        "kind": "key",
+        "key": "ArrowRight",
+        "selector": "",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      }
+    ],
+    "completion": {
+      "path": "/phase",
+      "one_of": [
+        "won"
+      ]
+    }
+  },
+  "touch": {
+    "steps": [
+      {
+        "kind": "tap",
+        "key": "",
+        "selector": "#track",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      },
+      {
+        "kind": "tap",
+        "key": "",
+        "selector": "#track",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      },
+      {
+        "kind": "tap",
+        "key": "",
+        "selector": "#track",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      },
+      {
+        "kind": "tap",
+        "key": "",
+        "selector": "#track",
+        "x": 0,
+        "y": 0,
+        "ms": 0,
+        "from": {
+          "x": 0,
+          "y": 0
+        },
+        "to": {
+          "x": 0,
+          "y": 0
+        },
+        "from_selector": "",
+        "to_selector": ""
+      }
+    ],
+    "completion": {
+      "path": "/phase",
+      "one_of": [
+        "won"
+      ]
+    }
+  }
+}

@@ -1,0 +1,80 @@
+ROLE: UI/integration author. Return complete mountGame(root), including all styles,
+responsive HUD, planned canvas/DOM/hybrid surface, instructions, start, play,
+results, restart and settings. DOM/hybrid marks its real HTMLElement with
+data-testid='game-surface'; do not create a hidden canvas to satisfy validation.
+Use the fixed interfaces and frozen semantic data, with keyboard and touch support.
+Do not force an avatar/joystick into TD, board game or puzzle; explain actual goals.
+
+One owner for RAF, fixed-step accumulator, engine/render/audio lifecycle, input,
+modals and saving. Read semantic_contract.timing: for realtime dispatch its exact
+step_action per fixed step, cap catch-up, discard hidden time; turn-based actions
+advance rules only on meaningful commands. Render from snapshots, never update
+rules in renderer. __GAME_TEST__ must use the same dispatch/restart/step functions.
+Implement manual-clock/advance bridge fully; QA actions cannot bypass rules. A
+seeded reset restores the declared initial state via the real restart path.
+An initial menu/preparation is allowed; scenarios use real start as needed.
+
+Read actual event fields (e.g. goldReward versus waveNumber); do not invent payload
+interpretations. Share rounding with engine. Keep focused controls/nodes across
+HUD and value changes, and reserve native form/Enter/Space behavior. Other game
+hotkeys work after button clicks. A pointer gesture belongs to one pointerId;
+second contact cannot replace it. Handle cancel/lostcapture/pause/reset consistently.
+Use common ancestor for fullscreen app/modal/toasts. Modal closes restore focus.
+Selection, keyboard focus and the first modal opener are separate identities.
+An intermediate dialog cannot replace the original return target. If selected
+item A differs from focused control B, native Enter/Space acts on B; a global
+shortcut cannot unexpectedly commit A. Preserve/refocus keyed controls after
+Escape, target selection and necessary DOM replacements.
+
+Master sound plus independent music/effects settings survive reset/hide. Expose
+the visible master control as data-testid='sound' with actual aria-pressed for a
+button, or checked on a native checkbox. Tests observe state and click only when
+off; do not add a separate sound-enable test path. One
+AudioContext is created only by a gesture; dispose old audio on reset and fence
+its late promises by session identity. Latest async audio state must win. Accepted
+real action events go through handleEvents, including bridge actions, with no old
+backlog on resume. Denied audio keeps game playable with truthful feedback.
+Track desired audio state separately from AudioContext.state. After BOTH resume
+and suspend promises settle, reconcile current preferences, visibility, manual
+pause and context/session identity. A late suspend after enable needs correction
+just as a late resume after mute does. Do not schedule events while suspended or
+unlock is pending. Stop one-shots before suspension; page show restores only new
+audio activity, not old sound cues. Avoid retry loops on a rejected activation.
+
+If persistence is present, version/validate/atomically restore it. Show saved only
+after success; distinguish memory-only checkpoint after storage denial. Confirm
+replacing existing progress through your own modal. Dispose object URLs as well as
+timers. Clean pagehide/visibility/resize/input resources idempotently. No source
+from outside the owned app should enter an optional downloadable HTML export.
+
+Separate a new attempt from resetting persistent progress. Always show the
+actual resource stock, cost/shortage and unlock requirement for disabled actions.
+Use one authoritative catalogue/views; do not duplicate NPC names or prices.
+Read-only render/modal/result functions cannot call save or award anything.
+An action owns commit/save; reflect durable or memory-only result truthfully.
+Before EVERY ordinary write, including bot actions, compare actual durable data
+to its previously observed envelope/identity. Equal revision numbers or a new
+run starting at zero do not make two branches equal. A detected divergence stays
+local with a visible conflict until explicit replacement/load; storage deletion
+is also a change. Reread current storage on events and page return, never trust a
+possibly delayed event payload as authority. Do not resave old state merely on
+pagehide/dispose. Keep read failure distinct from absent data after recovery.
+For async file import capture session ticket, revision AND observed durable
+baseline before reading; check them again before replacing. A late storage event
+cannot authorize overwriting a newer version. Conflicts preserve both the local
+session and durable version, with explicit load/export/replace choices.
+Clear held keyboard/pointer actions on modal, blur, hide and restart so returning
+does not perform unintended moves. A notice has a defined lifetime: show the
+latest rejected action's reason, not an old successful action's message.
+Expose the conditional exportSave/importSave bridge through these same paths.
+Do not claim durable success merely because a save was generated in memory.
+
+A deferred bot/system task captures session, revision and an independent task
+ticket. Cancellation advances the ticket even at unchanged gameplay state; test
+it BEFORE touching the currently stored timer handle. Human, bot and bridge
+commands share pause/hidden/modal gating, not just timer cancellation. A genuine
+dispose/reinitialize clears temporary pause, selection, dialogs, focus, previous
+render references and save messages, then validates the actual current save.
+If lifecycle scenarios require remount, expose the real dispose/reinitialize
+path as optional __GAME_TEST__.remount()->{ok:true}; ready must also be exposed
+after page reload/restoration before Start. Restart/reset alone is not remount.

@@ -1,0 +1,300 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27;; style-src &#x27;unsafe-inline&#x27;; img-src data: blob:; media-src data: blob:; font-src data:; connect-src &#x27;none&#x27;; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;"><title>Мишени</title><style>html,body{margin:0;min-height:100%;background:#101722;color:#e8eef8;font-family:system-ui,sans-serif}button{font:inherit;touch-action:manipulation;cursor:pointer;padding:.65rem 1rem;border:1px solid #7086a5;border-radius:.6rem;background:#223650;color:inherit}.p2p-toolbar{display:flex;gap:.6rem;align-items:center;padding:.8rem;flex-wrap:wrap}#p2p-surface{position:relative;min-height:calc(100dvh - 80px);outline:none;touch-action:pan-y;box-sizing:border-box;padding:1rem}#p2p-surface canvas{max-width:100%;display:block;touch-action:none}*{box-sizing:border-box}
+
+.targets-game{box-sizing:border-box;max-width:480px;margin:0 auto;padding:22px 20px 18px;color:#ffedcf;font-family:system-ui,-apple-system,sans-serif;background:#0b1728;border:1px solid #293a50;border-radius:20px}.targets-game *{box-sizing:border-box}.targets-game .eyebrow{font-size:10px;font-weight:700;letter-spacing:3px;color:#f78070}.targets-game h1{margin:7px 0 3px;font-size:38px;line-height:1.1;letter-spacing:-1.4px}.targets-game .subtitle{margin:0;color:#a5b2c3;font-size:14px}.targets-game .scoreboard{display:flex;justify-content:space-between;gap:16px;margin:21px 0 13px}.targets-game .scoreboard>div{font-size:10px;letter-spacing:1.5px;color:#a5b2c3}.targets-game strong{display:block;margin-top:3px;font-size:25px;font-weight:650;letter-spacing:0;color:#ffedcf}.targets-game .field{position:relative;width:100%;aspect-ratio:360/420;overflow:hidden;border:1px solid #33435a;border-radius:12px;background:#101f34}.targets-game canvas{display:block;width:100%;height:100%;touch-action:none}.targets-game .target-layer{position:absolute;inset:0;pointer-events:none}.targets-game .target-area{position:absolute;pointer-events:auto;touch-action:none;cursor:crosshair}.targets-game .result{min-height:40px;margin:14px 0 4px;font-size:14px;font-weight:600;line-height:1.4;color:#ffedcf}.targets-game .result[data-phase=won]{color:#8de0be}.targets-game .result[data-phase=lost]{color:#f78070}.targets-game .instructions{font-size:12px;line-height:1.8;color:#b3bfce;margin:0}.targets-game kbd{display:inline-block;min-width:20px;text-align:center;line-height:20px;border:1px solid #45546a;border-radius:4px;color:#ffedcf;font:inherit}.targets-game footer{margin-top:17px;padding-top:13px;border-top:1px solid #293a50;font-size:9px;letter-spacing:2px;color:#75879e}@media(max-width:400px){.targets-game{padding:16px 12px;border-radius:12px}.targets-game h1{font-size:32px}.targets-game .scoreboard{margin-top:15px}}
+</style></head><body><main id="game-root"></main><script>/* Prompt2Play trusted runtime v1. Mechanics and rendering remain in game.js. */
+(() => {
+  "use strict";
+  const VERSION = "runtime-v1.0.5";
+  const copy = value => JSON.parse(JSON.stringify(value));
+  const rng = seed => {
+    let n = 2166136261;
+    for (const char of String(seed)) n = Math.imul(n ^ char.charCodeAt(0), 16777619);
+    return () => { n ^= n << 13; n ^= n >>> 17; n ^= n << 5; return (n >>> 0) / 4294967296; };
+  };
+  function install(factory, spec) {
+    const root = document.getElementById("game-root");
+    root.innerHTML = '<header class="p2p-toolbar"><button id="p2p-start" data-testid="start">Start</button><button id="p2p-restart" data-testid="restart">Restart</button><span id="p2p-status">Ready</span></header><section id="p2p-surface" tabindex="0"></section>';
+    const surface = root.querySelector("#p2p-surface");
+    const start = root.querySelector("#p2p-start");
+    const restart = root.querySelector("#p2p-restart");
+    const status = root.querySelector("#p2p-status");
+    let instance, session, started = false, hidden = false, disposed = false, seed = "default";
+    const capabilities = new Set(spec.capabilities || ["input", "lifecycle"]);
+    function syncStatus() {
+      if (!instance || !session || !session.alive) return;
+      const phase = instance.snapshot().phase;
+      status.textContent = phase === "won" ? "Completed" : phase === "lost" ? "Game over" : phase === "ready" ? "Ready" : "Playing";
+    }
+    function teardown() {
+      if (!session) return;
+      session.alive = false;
+      for (const dispose of session.cleanup.reverse()) { try { dispose(); } catch (_) {} }
+      session.cleanup.length = 0;
+      if (instance && instance.dispose) instance.dispose();
+      instance = undefined;
+      surface.replaceChildren();
+    }
+    function create(nextSeed = seed) {
+      if (disposed) throw new Error("Runtime has been disposed");
+      teardown(); seed = String(nextSeed); started = false;
+      session = {alive: true, cleanup: [], audio: null, clock: null, eventCount: 0};
+      const owned = session;
+      const active = () => owned.alive && session === owned;
+      const cleanup = callback => { if (!active()) throw new Error("Expired runtime session"); owned.cleanup.push(callback); return callback; };
+      const on = (target, type, callback, options = {}) => {
+        if (!active()) throw new Error("Expired runtime session");
+        const globalTarget = target === document || target === window;
+        const localElement = target instanceof Element && target.ownerDocument === document;
+        if (!globalTarget && (!localElement || (target.isConnected && !surface.contains(target)))) throw new Error("Input target is outside the game");
+        const wrapped = event => {
+          if (!active() || !started || hidden) return;
+          if (!globalTarget && !surface.contains(target)) return;
+          if (globalTarget && type.startsWith("key") && !root.contains(document.activeElement)) return;
+          owned.eventCount++; callback(event); syncStatus();
+        };
+        target.addEventListener(type, wrapped, options);
+        cleanup(() => target.removeEventListener(type, wrapped, options));
+        return () => target.removeEventListener(type, wrapped, options);
+      };
+      const context = {
+        root: surface, spec: copy(spec), random: rng(seed), seed,
+        cleanup, active,
+        input: {
+          on,
+          key(callback) { return on(document, "keydown", event => { if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault(); callback(event.key, event); }); },
+          pointer(target, callback) { return on(target, "pointerdown", event => { event.preventDefault(); surface.focus({preventScroll: true}); const box = target.getBoundingClientRect(); callback({x: event.clientX - box.left, y: event.clientY - box.top, width: box.width, height: box.height, pointerType: event.pointerType}, event); }); },
+        },
+        resize(callback) {
+          const observer = new ResizeObserver(() => { if (active()) callback(surface.clientWidth, surface.clientHeight, window.devicePixelRatio || 1); });
+          observer.observe(surface); cleanup(() => observer.disconnect());
+          callback(surface.clientWidth, surface.clientHeight, window.devicePixelRatio || 1);
+        },
+      };
+      if (capabilities.has("clock")) {
+        let frame = 0, last = 0, accumulator = 0, paused = true, manual = false, tick = 0, callback = null, step = 1 / 60;
+        const advance = count => { if (!active() || hidden || paused || !callback) return; for (let i = 0; i < Math.min(600, Math.max(0, count)); i++) { callback(step); tick++; } syncStatus(); };
+        const loop = now => {
+          if (!active()) return;
+          if (!paused && !manual && started && !hidden && callback) {
+            accumulator += last ? Math.min((now - last) / 1000, step * 8) : 0;
+            let catchup = 0;
+            while (accumulator >= step && catchup++ < 8) { advance(1); accumulator -= step; }
+          } else accumulator = 0;
+          last = now; frame = requestAnimationFrame(loop);
+        };
+        owned.clock = {
+          fixedStep(fn, seconds = 1 / 60) { if (!(seconds > 0 && seconds <= 0.1)) throw new Error("Invalid fixed step"); callback = fn; step = seconds; },
+          pause() { paused = true; last = 0; accumulator = 0; },
+          resume() { if (active()) { paused = false; last = 0; accumulator = 0; } },
+          setManualMode(enabled) { manual = Boolean(enabled); last = 0; accumulator = 0; },
+          advance, get tick() { return tick; },
+        };
+        context.clock = owned.clock;
+        frame = requestAnimationFrame(loop); cleanup(() => cancelAnimationFrame(frame));
+      }
+      if (capabilities.has("audio")) {
+        let audio = null, activation = 0;
+        owned.audio = {
+          async activate() {
+            const generation = ++activation;
+            if (!active()) return;
+            const Audio = window.AudioContext || window.webkitAudioContext;
+            if (!Audio) return;
+            if (!audio) audio = new Audio();
+            const selected = audio;
+            try { await selected.resume(); } catch (_) { return; }
+            if (!active()) { try { await selected.close(); } catch (_) {} }
+            // A later Start in the same live session owns this same context.
+            // An older activation must not close the newer valid activation.
+            if (generation !== activation) return;
+          },
+          tone(frequency = 440, duration = 0.08) {
+            if (!active() || !audio || audio.state !== "running") return;
+            const oscillator = audio.createOscillator(), gain = audio.createGain();
+            oscillator.frequency.value = frequency; gain.gain.setValueAtTime(0.08, audio.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
+            oscillator.connect(gain); gain.connect(audio.destination); oscillator.start(); oscillator.stop(audio.currentTime + duration);
+            oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+          },
+          get diagnostics() { return {state: audio ? audio.state : "locked"}; },
+        };
+        context.audio = owned.audio;
+        cleanup(() => { activation++; if (audio) audio.close().catch(() => {}); audio = null; });
+      }
+      if (capabilities.has("storage")) {
+        const namespace = "prompt2play:" + spec.title + ":v1";
+        context.storage = {
+          load() { try { const raw = localStorage.getItem(namespace); return raw ? JSON.parse(raw) : null; } catch (_) { return null; } },
+          save(data) { if (!active()) return false; try { const text = JSON.stringify(data); if (text.length > 64000) return false; localStorage.setItem(namespace, text); return true; } catch (_) { return false; } },
+          export(data) { return JSON.stringify(data); },
+          import(text) { if (typeof text !== "string" || text.length > 64000) throw new Error("Invalid save bytes"); return JSON.parse(text); },
+        };
+      }
+      instance = factory(context);
+      if (!instance || typeof instance.snapshot !== "function" || typeof instance.dispatch !== "function") throw new Error("Game factory must return snapshot() and dispatch(action)");
+      status.textContent = "Ready";
+    }
+    function begin() {
+      if (!session || !session.alive) return;
+      started = true; surface.focus({preventScroll: true}); status.textContent = "Playing";
+      if (session.audio) session.audio.activate();
+      if (session.clock) session.clock.resume();
+      instance.dispatch({type: "START"});
+      syncStatus();
+    }
+    start.addEventListener("click", begin);
+    const restartGame = () => { create(seed); begin(); };
+    restart.addEventListener("click", restartGame);
+    const visibility = () => { hidden = document.hidden; if (session && session.clock) { if (hidden) session.clock.pause(); else if (started) session.clock.resume(); } if (instance && instance.pause) instance.pause(hidden); };
+    document.addEventListener("visibilitychange", visibility);
+    create(seed);
+    const surfaceObserver = new MutationObserver(syncStatus);
+    surfaceObserver.observe(surface, {childList: true, characterData: true, attributes: true, subtree: true});
+    const bridge = Object.freeze({
+      version: 1,
+      identity: Object.freeze({version: VERSION, runtimeDigest: spec.runtime ? spec.runtime.sha256 : null}),
+      reset(nextSeed) { create(nextSeed === undefined ? "default" : nextSeed); begin(); return this.snapshot(); },
+      snapshot() { syncStatus(); return copy(instance.snapshot()); },
+      dispatch(action) { if (!started) begin(); instance.dispatch(copy(action)); syncStatus(); return this.snapshot(); },
+      getState() { return this.snapshot(); }, getViewState() { return this.snapshot(); },
+      advance(count) { if (session.clock) session.clock.advance(count); return this.snapshot(); },
+      setManualMode(enabled) { if (session.clock) session.clock.setManualMode(enabled); },
+      exportSave() { if (!capabilities.has("storage") || typeof instance.exportSave !== "function") throw new Error("Game save export unavailable"); return instance.exportSave(); },
+      importSave(text) { if (!capabilities.has("storage") || typeof instance.importSave !== "function") throw new Error("Game save import unavailable"); const result = instance.importSave(text); syncStatus(); return typeof result === "boolean" ? {ok: result} : result; },
+      diagnostics() { return {runtime: VERSION, started, hidden, disposed, input_events: session.eventCount, capabilities: [...capabilities], controls: spec.input_acceptance || null, audio: session.audio ? session.audio.diagnostics : null}; },
+      dispose() { if (disposed) return; teardown(); disposed = true; surfaceObserver.disconnect(); document.removeEventListener("visibilitychange", visibility); start.removeEventListener("click", begin); restart.removeEventListener("click", restartGame); },
+    });
+    Object.defineProperty(window, "__GAME_TEST__", {value: bridge, writable: false, configurable: false});
+    return bridge;
+  }
+  Object.defineProperty(window, "Prompt2PlayRuntime", {value: Object.freeze({version: VERSION, install}), writable: false, configurable: false});
+})();
+
+function createGame(ctx) {
+  const root = ctx.root;
+  root.innerHTML = '<section class="targets-game"><header><div class="eyebrow">ТОЧНОСТЬ · 01</div><h1>Мишени</h1><p class="subtitle">Три цели. Три права на ошибку.</p></header><div class="scoreboard" role="status" aria-live="polite" aria-atomic="true"><div>ПОПАДАНИЯ<strong class="score">0 / 3</strong></div><div>ПОПЫТКИ<strong class="attempts">3 / 3</strong></div></div><div class="field"><canvas aria-label="Три движущиеся мишени на отдельных дорожках"></canvas><div class="target-layer"></div></div><p class="result" role="status" aria-live="polite"></p><p class="instructions">Нажмите Start. Стреляйте кликом или касанием по кругу.<br>Клавиши <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> — прицельный выстрел. Три промаха — конец игры.</p><footer>ПОРАЗИТЕ ВСЕ ТРИ МИШЕНИ</footer></section>';
+  const field = root.querySelector('.field');
+  const canvas = root.querySelector('canvas');
+  const layer = root.querySelector('.target-layer');
+  const scoreText = root.querySelector('.score');
+  const attemptsText = root.querySelector('.attempts');
+  const result = root.querySelector('.result');
+  const g = canvas.getContext('2d');
+  let phase = 'ready', misses = 0, score = 0, paused = false, simulationTicks = 0;
+  let disposed = false;
+  let targets;
+  const areas = new Map();
+  function reset() {
+    phase = 'ready'; misses = 0; score = 0; simulationTicks = 0;
+    targets = [80, 180, 280].map((x, i) => ({ id: i + 1, x, y: 90 + 120 * i, radius: 32, vx: i === 1 ? -18 : 18, alive: true }));
+  }
+  function paint() {
+    if (disposed) return;
+    scoreText.textContent = score + ' / 3';
+    attemptsText.textContent = (3 - misses) + ' / 3';
+    const message = phase === 'won' ? 'Победа! Все три мишени поражены.' : phase === 'lost' ? 'Игра окончена. Попробуйте еще раз — Restart.' : phase === 'ready' ? 'Готовы? Нажмите Start.' : paused ? 'Пауза' : 'Цельтесь в круги. Попадания не расходуют попытки.';
+    if (result.textContent !== message) result.textContent = message;
+    result.dataset.phase = phase;
+    g.setTransform(canvas.width / 360, 0, 0, canvas.height / 420, 0, 0);
+    g.fillStyle = '#101f34'; g.fillRect(0, 0, 360, 420);
+    for (let i = 0; i < 3; i++) {
+      const y = 90 + i * 120;
+      g.fillStyle = i % 2 ? '#14263e' : '#122239'; g.fillRect(0, y - 49, 360, 98);
+      g.strokeStyle = '#30435a'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(18, y); g.lineTo(342, y); g.stroke();
+      g.fillStyle = '#718398'; g.font = '10px sans-serif'; g.textAlign = 'left';
+      g.fillText('0' + (i + 1), 17, y - 34);
+    }
+    targets.forEach(t => {
+      let area = areas.get(t.id);
+      if (!t.alive) { if (area) { area.remove(); areas.delete(t.id); } return; }
+      if (!area) {
+        area = document.createElement('div');
+        area.className = 'target-area';
+        area.dataset.testid = 'target-' + t.id;
+        area.setAttribute('aria-label', 'Мишень ' + t.id + ', клавиша ' + t.id);
+        layer.appendChild(area); areas.set(t.id, area);
+      }
+      area.style.left = ((t.x - t.radius) / 360 * 100) + '%';
+      area.style.top = ((t.y - t.radius) / 420 * 100) + '%';
+      area.style.width = (64 / 360 * 100) + '%';
+      area.style.height = (64 / 420 * 100) + '%';
+      g.shadowColor = '#0006'; g.shadowBlur = 10; g.shadowOffsetY = 4;
+      g.fillStyle = '#f78070'; g.beginPath(); g.arc(t.x, t.y, 32, 0, Math.PI * 2); g.fill();
+      g.shadowBlur = 0; g.shadowOffsetY = 0;
+      g.strokeStyle = '#ffedcf'; g.lineWidth = 3;
+      g.beginPath(); g.arc(t.x, t.y, 24, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = '#ffedcf'; g.beginPath(); g.arc(t.x, t.y, 16, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#16243a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = 'bold 21px sans-serif';
+      g.fillText(String(t.id), t.x, t.y + 1); g.textBaseline = 'alphabetic';
+    });
+  }
+  function shoot(x, y) {
+    if (phase !== 'playing' || paused || !Number.isFinite(x) || !Number.isFinite(y)) return;
+    const target = targets.find(t => t.alive && (t.x-x)*(t.x-x)+(t.y-y)*(t.y-y) <= t.radius*t.radius);
+    if (target) {
+      target.alive = false; score++;
+      if (ctx.audio) { try { const played = ctx.audio.tone(880, 0.12); if (played && played.catch) played.catch(() => {}); } catch (_) {} }
+    } else misses++;
+    if (score === 3) phase = 'won';
+    else if (misses === 3) phase = 'lost';
+  }
+  function dispatch(action) {
+    if (disposed || !action) return;
+    switch (action.type) {
+      case 'START': if (phase === 'ready') phase = 'playing'; break;
+      case 'RESTART': reset(); break;
+      case 'SET_HIDDEN': paused = !!action.hidden; break;
+      case 'SHOOT': shoot(action.x, action.y); break;
+      case 'SHOOT_TARGET': {
+        const t = targets.find(t => t.id === Number(action.id) && t.alive);
+        if (t) shoot(t.x, t.y);
+        break;
+      }
+      case 'STEP':
+      case 'FIXED_STEP':
+        if (phase === 'playing' && !paused) {
+          targets.forEach(t => {
+            if (!t.alive) return;
+            t.x += t.vx / 60;
+            if (t.x > 320) { t.x = 640 - t.x; t.vx = -Math.abs(t.vx); }
+            if (t.x < 40) { t.x = 80 - t.x; t.vx = Math.abs(t.vx); }
+          });
+          simulationTicks++;
+        }
+        break;
+    }
+    paint();
+  }
+  function pointer(event) {
+    if (event.isPrimary === false || event.button !== 0) return;
+    event.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    dispatch({ type: 'SHOOT', x: (event.clientX - rect.left) * 360 / rect.width, y: (event.clientY - rect.top) * 420 / rect.height });
+  }
+  ctx.input.on(field, 'pointerdown', pointer);
+  ctx.input.key((key, event) => {
+    if (event.repeat || !/^[123]$/.test(key)) return;
+    event.preventDefault();
+    dispatch({ type: 'SHOOT_TARGET', id: Number(key) });
+  });
+  reset();
+  canvas.width = 720; canvas.height = 840;
+  ctx.resize((width, height, dpr) => {
+    const rect = canvas.getBoundingClientRect();
+    const ratio = Number.isFinite(dpr) && dpr > 0 ? dpr : 1;
+    canvas.width = Math.max(1, Math.round(rect.width * ratio));
+    canvas.height = Math.max(1, Math.round(rect.height * ratio));
+    paint();
+  });
+  if (ctx.clock) ctx.clock.fixedStep(() => dispatch({ type: 'FIXED_STEP' }), 1 / 60);
+  paint();
+  return {
+    snapshot() { return { phase, score, misses, attemptsLeft: 3 - misses, paused, targets: targets.map(t => ({ ...t })), simulationTicks }; },
+    dispatch,
+    pause(hidden) { dispatch({ type: 'SET_HIDDEN', hidden }); },
+    dispose() { disposed = true; }
+  };
+}
+
+window.Prompt2PlayRuntime.install(createGame, {"actions":[{"effect":"Из ready создает исходную партию и переводит phase в playing; пользовательский жест разрешает звуковой контекст. В других фазах не изменяет партию.","type":"START"},{"effect":"Сбрасывает счет, промахи, позиции, направления, живые мишени и счетчик шагов; переводит phase в playing и очищает накопитель времени.","type":"RESTART"},{"effect":"При playing и отсутствии паузы принимает логические x/y. Удаляет одну живую мишень, содержащую точку, либо регистрирует один промах; сразу проверяет окончание партии.","type":"SHOOT"},{"effect":"Для id 1–3 направляет SHOOT в текущий центр соответствующей живой мишени. Отсутствующая или уже пораженная мишень не меняет состояние.","type":"SHOOT_TARGET"},{"effect":"При playing без паузы сдвигает живые мишени на vx/60, отражает движение с учетом остаточного смещения и увеличивает simulationTicks на 1.","type":"FIXED_STEP"},{"effect":"Устанавливает paused по видимости страницы и очищает накопитель времени и временную базу, предотвращая догоняющее обновление.","type":"SET_HIDDEN"}],"capabilities":["input","lifecycle","clock","audio"],"controls":["Start — видимая нативная кнопка #p2p-start с data-testid=\"start\".","Клик мышью или одиночное касание непосредственно мишени — выстрел; клик или касание пустого места поля — промах.","Клавиши 1/2/3 — выстрел в соответствующую живую мишень с видимым номером.","Restart — видимая нативная кнопка #p2p-restart с data-testid=\"restart\".","Над Canvas расположены перемещающиеся вместе с мишенями интерактивные DOM-области с data-testid=\"target-1\", \"target-2\" и \"target-3\". Их события используют координаты указателя и обычную проверку попадания."],"format":"runtime-v1","genre":"Аркадная стрельба по мишеням","input_acceptance":{"desktop":{"completion":{"one_of":["won"],"path":"/phase"},"steps":[{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"click","ms":0,"selector":"#p2p-start","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"1","kind":"key","ms":0,"selector":"","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"click","ms":0,"selector":"[data-testid=\"target-2\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"3","kind":"key","ms":0,"selector":"","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0}]},"restart_selector":"#p2p-restart","start_selector":"#p2p-start","touch":{"completion":{"one_of":["won"],"path":"/phase"},"steps":[{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"#p2p-start","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"[data-testid=\"target-1\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"[data-testid=\"target-2\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0},{"from":{"x":0,"y":0},"from_selector":"","key":"","kind":"tap","ms":0,"selector":"[data-testid=\"target-3\"]","to":{"x":0,"y":0},"to_selector":"","x":0,"y":0}]}},"invariants":["score равен количеству мишеней с alive=false; score + количество живых мишеней всегда равно 3.","attemptsLeft всегда равен 3 − misses и находится в диапазоне 0–3.","Мишени на разных дорожках не пересекаются; один выстрел не может поразить две мишени.","Центр каждой мишени остается в пределах x=40–320; y, radius и id не изменяются.","won эквивалентно score=3; lost эквивалентно misses=3. Эти состояния взаимоисключающие.","В ready, won, lost и при paused выстрелы не меняют счет или число промахов.","Canvas и DOM-области используют одни координаты состояния; пораженные мишени больше не имеют активных DOM-областей.","Один физический жест указателя вызывает не более одного SHOOT; синтетический click после touch не создает дополнительный выстрел."],"lose_condition":"Число промахов достигает 3 при счете меньше 3; /phase становится lost.","presentation_mode":"hybrid","rules":["Перед началом видны правила, счет 0/3, три оставшиеся попытки и три мишени. Движение и стрельба начинаются после Start.","Игровое поле имеет логический размер 360×420. Мишени радиусом 32 расположены на отдельных дорожках y=90, 210 и 330; начальные x равны 80, 180 и 280.","Мишени 1 и 3 движутся вправо, мишень 2 — влево со скоростью 18 логических пикселей в секунду. Центры отражаются от границ x=40 и x=320.","Один клик или касание игрового поля дает один выстрел. Координаты преобразуются в логические координаты Canvas; попаданием считается расстояние до центра живой мишени не больше ее радиуса.","Попадание убирает ровно одну мишень и увеличивает счет на 1. Промах увеличивает число промахов на 1; попадания не расходуют оставшиеся попытки.","Клавиши 1, 2 и 3 стреляют в текущий центр соответствующей живой мишени через ту же механику попадания. Клавиша уже убранной мишени ничего не делает. Автоповтор клавиш игнорируется.","Три попадания завершают игру победой; третий промах завершает игру поражением. После завершения движение и выстрелы прекращаются.","Симуляция использует фиксированный шаг 1/60 секунды. При скрытии страницы игра приостанавливается; после возвращения пропущенное время не догоняется.","Restart начинает новую партию с исходными позициями, всеми живыми мишенями, нулевым счетом и тремя попытками."],"runtime":{"sha256":"7b7c35ca879d11b6c2063240e4f2e9db2edb1da2594ace64518d57467f2dca8d","version":"runtime-v1.0.5"},"schema_version":1,"state_fields":[{"meaning":"Состояние партии: ready, playing, won или lost.","path":"/phase","type":"string"},{"meaning":"Количество пораженных мишеней, от 0 до 3.","path":"/score","type":"integer"},{"meaning":"Количество промахов, от 0 до 3.","path":"/misses","type":"integer"},{"meaning":"Оставшиеся допустимые промахи: 3 − misses.","path":"/attemptsLeft","type":"integer"},{"meaning":"Признак приостановки вследствие скрытия страницы.","path":"/paused","type":"boolean"},{"meaning":"Массив трех объектов с постоянными id 1–3 и полями x, y, radius, vx, alive; координаты заданы в логическом пространстве Canvas.","path":"/targets","type":"array"},{"meaning":"Количество выполненных фиксированных шагов текущей партии; при паузе и вне playing не увеличивается.","path":"/simulationTicks","type":"integer"}],"summary":"Короткая Canvas-игра: поразите три медленно движущиеся мишени раньше, чем допустите три промаха.","title":"Мишени","win_condition":"Счет достигает 3: все три мишени поражены, /phase становится won."});</script></body></html>

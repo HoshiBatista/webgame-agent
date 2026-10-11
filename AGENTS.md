@@ -30,11 +30,14 @@ open it, understand the controls, play it, and restart it.
 
 Work in this order:
 
-1. Complete the prompt-to-playable-preview path.
-2. Make validation and bounded repair reliable and observable.
-3. Ensure responsive rendering and touch controls.
-4. Add repeatable examples and regression coverage.
-5. Improve visual quality, genre coverage, latency, and cost.
+1. Reproduce and measure the donor baseline, preserving failures as evidence.
+2. Adopt a complete prompt-to-preview path with mandatory browser validation.
+3. Extract optional trusted runtime capabilities across different mechanics.
+4. Improve bounded editing and repair using controlled live comparisons.
+5. Verify the chosen release in the target WebView and prepare the demonstration.
+
+Follow the dependencies and exit gates in [docs/development-plan.md](docs/development-plan.md).
+Do not infer that a documented target or donor feature is implemented here.
 
 For a hackathon build, prefer one convincing end-to-end demo over several
 unfinished features.
@@ -56,6 +59,18 @@ Prefer a single orchestrator with explicit state and focused components. Add
 agents, queues, databases, or large frameworks only when a demonstrated need
 justifies their operational cost.
 
+[ADR 0003](docs/adr/0003-hybrid-adoption.md) is the current architecture decision.
+Adopt Django/DRF, PostgreSQL, React/Vite, and local Codex/API workers selectively.
+Keep database-backed polling initially; do not introduce FastAPI, Celery/Redis,
+or PydanticAI solely to follow superseded documents. Application code owns stage
+transitions, validation, repair policy, and promotion. A generation harness
+produces at most one candidate per invocation; LangGraph, if retained, stays
+inside that attempt and must not own a second repair loop.
+
+Preserve donor provenance, relevant regression tests, and lesson applicability.
+Do not import donor secrets, environments, agent instructions, or complete
+historical archives wholesale. Imported code must work without sibling folders.
+
 Keep these boundaries clear:
 
 - contracts and schemas;
@@ -73,6 +88,9 @@ when it contains a working part of the product.
 
 - Produce a complete game, not pseudocode, a tutorial, or a partial scaffold.
 - Prefer vanilla HTML5 Canvas and JavaScript for small arcade-style games.
+- Support DOM/SVG and hybrid presentation where appropriate. Use a small trusted
+  runtime with optional capabilities; leave mechanics generated. Do not impose
+  audio, persistence, or a real-time clock on games that do not need them.
 - Avoid runtime CDN dependencies, remote fonts, analytics, and remote assets by
   default.
 - Use relative paths and make `index.html` the bundle entry point.
@@ -119,6 +137,12 @@ A generated artifact is **validated** only when all applicable checks pass:
 If automation cannot establish a criterion, mark it **unverified**. Preserve
 browser logs, screenshots, validation reports, and repair history when
 practical.
+
+A required skipped check prevents successful delivery, normal preview, and
+publication. Commit each submitted candidate immutably, validate the exact
+delivered bytes, and preserve the last playable revision after a failed edit.
+Recorded-provider replay is regression evidence, not live generation; a mobile
+viewport is not evidence of compatibility with an actual WebView host.
 
 ## Engineering standards
 

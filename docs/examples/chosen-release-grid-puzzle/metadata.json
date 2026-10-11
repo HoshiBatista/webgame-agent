@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "case_id": "grid-puzzle",
+  "run": "grid-puzzle-1",
+  "provider": "codex",
+  "model": "gpt-6-astra",
+  "mode": "single_author",
+  "runtime": {
+    "sha256": "7b7c35ca879d11b6c2063240e4f2e9db2edb1da2594ace64518d57467f2dca8d",
+    "version": "runtime-v1.0.5"
+  },
+  "release_protocol": {
+    "path": ".prompt2play/evaluations/chosen-native-release-v4/launch-protocol.json",
+    "sha256": "21494499cb30997feddb823e2cbcfd7e2505a75d7b14f034aad8489cc31d0ef0"
+  },
+  "generation_result": ".prompt2play/evaluations/chosen-native-release-v4/single_author/grid-puzzle/grid-puzzle-1/result.json",
+  "generation_result_sha256": "d64da4cc08755ce1fe184820879ebb6326902772ef2dd5f4bf8723b67280ddbd",
+  "artifact_key": "5865112a15c94ca71f2989d3a9361465eadb94b2dc241a92d57181c355524f97",
+  "artifact": {
+    "files_sha256": {
+      "game.js": "032f1376f43d18bc4fb1bd5901712bde8a3ca20ab4340c9fd736f1b01ea20ba0",
+      "style.css": "3a7cfa8c0c0db8b3b091a895ede36f3d381a3022ab84362f608776faf9daab7e"
+    },
+    "html_bytes": 27237,
+    "html_sha256": "beb6cbc0cb425a4564eac2cf48c07d64ed000077fc29adbde0b6b82dc6605c0b",
+    "spec_sha256": "a64bcb53f10eebd9728d4e4abcf46a21913c7761ab182a570f12f711c4f17f0b"
+  },
+  "validation_report_sha256": "71023c6bb72874ce22a6f59fed7449b7e6767cee6ec577a0a594dcf08868e322",
+  "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+  "browser_version": "154.0.8037.92",
+  "validation_suite_sha256": "48fc688f976977884753074837e45c68e136ad71d6636feb96ced83ca1c04b90",
+  "acceptance_source": "release-config",
+  "evidence_directory": ".prompt2play/evaluations/chosen-native-release-v4/single_author/grid-puzzle/grid-puzzle-1/attempt-1/browser-ecf2821f2173473dbafb4c923c79ffad",
+  "evidence_files": [
+    {
+      "bytes": 124806,
+      "path": "start-1280.png",
+      "sha256": "beb6991ee248c868d539908ed6fd66ad68789979c6e83912d0dd51c877995f16"
+    },
+    {
+      "bytes": 120701,
+      "path": "control-before-1280.png",
+      "sha256": "b9b6a8ebc08c880289f958a380f623f31cfa017fe02d9481c885c5ce68b3eef1"
+    },
+    {
+      "bytes": 120701,
+      "path": "control-after-1280.png",
+      "sha256": "b9b6a8ebc08c880289f958a380f623f31cfa017fe02d9481c885c5ce68b3eef1"
+    },
+    {
+      "bytes": 134142,
+      "path": "final-1280.png",
+      "sha256": "39530b7c156f6da030194e49e380ab8da81edcb51e351f0a12f9f2a7a164f046"
+    },
+    {
+      "bytes": 124922,
+      "path": "restart-1280.png",
+      "sha256": "7de4d1528a510868152f184f32684fef7606023eff0cb9a7adedfc42cc85de3a"
+    },
+    {
+      "bytes": 35,
+      "path": "console-1280.json",
+      "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1"
+    },
+    {
+      "bytes": 2,
+      "path": "network-1280.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 1205583,
+      "path": "trace-1280.zip",
+      "sha256": "f731daf0958c5d659d84d4dacefc4af576ab7ef812934e22f5b43fb6adf0f6fe"
+    },
+    {
+      "bytes": 52098,
+      "path": "start-390.png",
+      "sha256": "93562a83cc6112d76bc9d03492ed75e725b8c6a12cbf57f8e59bc201f5dcb0db"
+    },
+    {
+      "bytes": 71321,
+      "path": "control-before-390.png",
+      "sha256": "b0a497f96fe43e605738985b6dba81e570d085a1beab318eb49dd871fc0989d4"
+    },
+    {
+      "bytes": 71321,
+      "path": "control-after-390.png",
+      "sha256": "b0a497f96fe43e605738985b6dba81e570d085a1beab318eb49dd871fc0989d4"
+    },
+    {
+      "bytes": 57631,
+      "path": "final-390.png",
+      "sha256": "39acd18d362f419cd986d9d7fafec2daeafe2e47294d43f01162fad87c4e3a4a"
+    },
+    {
+      "bytes": 52063,
+      "path": "restart-390.png",
+      "sha256": "1ebef176cf67794b444968e01ff5516ff7002e1180492d559aa1e3c2ff09fb23"
+    },
+    {
+      "bytes": 51528,
+      "path": "touch-scroll-before-390.png",
+      "sha256": "e784e9126c71d4601710db9c7067b7d682eaf13f65397bd2c833ad773a3b5a7e"
+    },
+    {
+      "bytes": 42169,
+      "path": "touch-scroll-after-390.png",
+      "sha256": "6bbb587a12a900d20d8244d59e8323beb8cb12c3da005e7af8c055b2c9160908"
+    },
+    {
+      "bytes": 35,
+      "path": "console-390.json",
+      "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1"
+    },
+    {
+      "bytes": 2,
+      "path": "network-390.json",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 1877922,
+      "path": "trace-390.zip",
+      "sha256": "89bd0c7e89cdb383c3cfc8474411a5a6daf1371a8b6799686f0b726efa999a65"
+    }
+  ],
+  "saved_files": {
+    "game.html": "beb6cbc0cb425a4564eac2cf48c07d64ed000077fc29adbde0b6b82dc6605c0b",
+    "spec.json": "a64bcb53f10eebd9728d4e4abcf46a21913c7761ab182a570f12f711c4f17f0b",
+    "validation.json": "71023c6bb72874ce22a6f59fed7449b7e6767cee6ec577a0a594dcf08868e322"
+  },
+  "independent_review": {
+    "reviewer": "Independent AI code/visual review; no human participant",
+    "path": "docs/evidence/chosen-release-human-review.json",
+    "mechanics_challenge_reports": [
+      {
+        "sha256": "6669bf2920f76d90f87f111b8fb4ebbbafeb82476e1f1c8cbbdfeb0f4b6dac08",
+        "html_sha256": "beb6cbc0cb425a4564eac2cf48c07d64ed000077fc29adbde0b6b82dc6605c0b"
+      }
+    ]
+  },
+  "scope": [
+    "Saved exact chosen native v4 live generation with runtime0.5 from immutable CAS; copying or replaying this file is not a fresh generation call.",
+    "Required static and isolated real-input gates including raw mobile scroll/reachability passed for these exact bytes.",
+    "Desktop Chromium and Chromium touch emulation only; contest WebView host remains unknown.",
+    "Human participant assessment, entertainment quality and actual-device/audio perception are pending.",
+    "Examples are outside provider knowledge/runtime examples and were not injected into the frozen benchmark context."
+  ]
+}

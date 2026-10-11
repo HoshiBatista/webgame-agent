@@ -1,8 +1,14 @@
 # ADR 0001: Target Architecture for Prompt2Play
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR 0003](0003-hybrid-adoption.md) on 2026-10-11
 - **Date:** 2026-10-10
 - **Decision owners:** Prompt2Play maintainers
+
+This document preserves the original decision for history. Use
+[the current architecture](../architecture.md) and
+[development plan](../development-plan.md) for implementation. In particular,
+FastAPI, Celery/Redis, PydanticAI, and initial Canvas-only routing below are not
+the current stack requirements. ADR 0003 identifies the retained principles.
 
 ## Context
 

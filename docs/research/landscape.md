@@ -10,6 +10,14 @@ implementation evidence.
 
 Reviewed on 2026-10-10.
 
+**Historical research:** the infrastructure discussion and synthesis below
+informed the original plan. They do not prescribe the current stack.
+[ADR 0003](../adr/0003-hybrid-adoption.md) adopts Django/DRF and existing polling
+workers, with Celery/Redis and PydanticAI optional. Use the
+[development plan](../development-plan.md) for current implementation priorities.
+External claims in this review were not re-verified during that local architecture
+update.
+
 ## Product systems
 
 ### Rosebud AI

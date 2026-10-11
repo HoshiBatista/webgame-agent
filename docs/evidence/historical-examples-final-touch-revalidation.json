@@ -1,0 +1,3085 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-11T21:03:16.590866+00:00",
+  "scope": "Exact historical frozen v2 outputs revalidated with final controls/atomic-causality/actual-touch-scroll harness. Zero model calls; original HTML/source/spec/runtime/report/metadata unchanged. Earlier controls-only passing evidence is preserved separately.",
+  "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+  "browser_version": "154.0.8037.92",
+  "summary": {
+    "grid-puzzle": "passed",
+    "shooter": "passed",
+    "card-game": "failed: real swipe cannot reach offscreen control under historical runtime1.0.3"
+  },
+  "limits": [
+    "Chromium desktop and touch emulation only; target WebView unknown.",
+    "Independent AI review, no human playtest participant.",
+    "Card remains historical; this result supersedes mobile usability claims without rewriting its original frozen comparison evidence."
+  ],
+  "examples": [
+    {
+      "case_id": "grid-puzzle",
+      "example": "docs/examples/single_author-grid-puzzle",
+      "preserved_runtime": {
+        "sha256": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+        "version": "runtime-v1.0.3"
+      },
+      "original_metadata_sha256": "4e24fd683a930a5a94a10e8fc9a52aa2e0040ca5452af576436338c6a507646a",
+      "original_report_sha256": "452678fb7401f5721c633d82278fbf8910e62deeffff4f30e2f4f0ec85e0c41e",
+      "revalidation_report_sha256": "784239f6817a484f6f98d949142064303f326abfb233fedc6b92a5bf65cc7cd9",
+      "revalidation_raw_report_path": "/tmp/p2p-historical-release-final/grid-puzzle-report.json",
+      "evidence_directory": "/tmp/p2p-historical-release-final/grid-puzzle",
+      "report": {
+        "schema_version": 2,
+        "browser_contract_version": 3,
+        "artifact": {
+          "files_sha256": {
+            "game.js": "e2a34ff9b9f3b83720897e2b0564f2540191c52b3bcc7e64cf7ba644e6783fb5",
+            "style.css": "6628b74cd13aa410ab268a2b0132852ddeecba942d95aa62940596848d9b4278"
+          },
+          "html_bytes": 27149,
+          "html_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+          "spec_sha256": "204d175fd4cfbd7b329b1d309312043a7bc612e9af4da890c76ec313ab01fb29"
+        },
+        "request_sha256": "821ca2dcc8b5471fe94e891526d43024ba9fe73170815e066626cab2215e26b0",
+        "harness_files_sha256": {
+          "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+          "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+          "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+          "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+          "native_controls_probe.mjs": "bc578269c47bf175047fbc44d4b670df906c2e9652758deac3a27ae3be439773",
+          "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+          "release_runtime.mjs": "0128a1c16fa62208f35701994c7725a4c2f061d464750b7ea1ef405e476da657",
+          "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+          "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+          "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+          "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee",
+          "touch_scroll_probe.mjs": "2f27e2f383083603427443358bf85646435789a8d0dcf55343b14bc1f14680d5"
+        },
+        "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+        "suite_sha256": "48fc688f976977884753074837e45c68e136ad71d6636feb96ced83ca1c04b90",
+        "acceptance_source": "release-config",
+        "browser_version": "154.0.8037.92",
+        "checks": [
+          {
+            "name": "artifact_assembly",
+            "status": "passed",
+            "message": "Native delivery matches trusted runtime and source bytes",
+            "check_kind": "provenance",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "module_paths",
+            "status": "passed",
+            "message": "Native source paths and byte limits",
+            "check_kind": "static",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "offline:game.js",
+            "status": "passed",
+            "message": "game.js: local source policy",
+            "check_kind": "static",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "offline:style.css",
+            "status": "passed",
+            "message": "style.css: local source policy",
+            "check_kind": "static",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "javascript_syntax:game.js",
+            "status": "passed",
+            "message": "game.js: syntax parses without executing generated code",
+            "check_kind": "syntax",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "runtime_identity:1280",
+            "status": "passed",
+            "message": "Exact trusted runtime source binding and supported bridge identity checked",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "version": "runtime-v1.0.3",
+              "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+              "frozen": true,
+              "protected": true,
+              "immutable_identity_required": true
+            }
+          },
+          {
+            "name": "startup:1280",
+            "status": "passed",
+            "message": "The exact document loaded and its rendered start action succeeded",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 49.671875,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Ready"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "surface:1280",
+            "status": "passed",
+            "message": "Visible game surface has positive geometry",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "presentation_mode": "dom",
+              "tag": "section",
+              "width": 1280,
+              "height": 783.578125,
+              "visible_canvases": 0,
+              "canvas_backing_valid": null,
+              "opacity_chain_visible": true,
+              "markup_elements": 54
+            }
+          },
+          {
+            "name": "controlled_clock:1280",
+            "status": "passed",
+            "message": "A no-input control under the frozen clock has stable state and game rendering",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "state_stable": true,
+              "visible_stable": true,
+              "pixels": {
+                "stable": true,
+                "visible_changed": false,
+                "dimensions_match": true,
+                "changed_pixels": 0,
+                "channel_tolerance": 8,
+                "minimum_input_pixels": 16
+              }
+            }
+          },
+          {
+            "name": "input:1280",
+            "status": "passed",
+            "message": "Real user input must change both state and visible rendering beyond its no-input control timeline",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "state_changed": true,
+              "visible_changed": true,
+              "touch": false,
+              "clock_frozen_during_input": true,
+              "matched_timeline_control": true,
+              "causal_control": true,
+              "causal_trials": []
+            }
+          },
+          {
+            "name": "completion:1280",
+            "status": "passed",
+            "message": "The real input sequence reached the declared game outcome from a nonterminal start",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "path": "/phase",
+              "observed": "won",
+              "actual_input": true,
+              "native_oracle": true,
+              "visible_status": "Completed",
+              "controls": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "independent_acceptance:1280",
+            "status": "passed",
+            "message": "Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary",
+            "check_kind": "scenario",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "assertions": 1,
+              "steps_completed": 4,
+              "suite_sha256": "48fc688f976977884753074837e45c68e136ad71d6636feb96ced83ca1c04b90",
+              "acceptance_source": "release-config"
+            },
+            "scenario_id": "release"
+          },
+          {
+            "name": "restart:1280",
+            "status": "passed",
+            "message": "Visible restart action leaves the completed state and redraws the game",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "state_changed": true,
+              "visible_changed": true,
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "deterministic_reset:1280",
+            "status": "passed",
+            "message": "Equal seeds recreate the same immediate gameplay snapshot",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "equal": true
+            }
+          },
+          {
+            "name": "lifecycle:1280",
+            "status": "passed",
+            "message": "Synthetic visibility event pauses gameplay until resumed",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "synthetic": true,
+              "paused": true
+            }
+          },
+          {
+            "name": "javascript_errors:1280",
+            "status": "passed",
+            "message": "No uncaught errors or blocking dialogs",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0
+            }
+          },
+          {
+            "name": "external_requests:1280",
+            "status": "passed",
+            "message": "No external request attempts observed",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0,
+              "network_disabled": true
+            }
+          },
+          {
+            "name": "evidence:1280",
+            "status": "passed",
+            "message": "Actual screenshots, console, network and Playwright trace persisted",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "files": [
+                "start-1280.png",
+                "control-before-1280.png",
+                "control-after-1280.png",
+                "final-1280.png",
+                "restart-1280.png",
+                "console-1280.json",
+                "network-1280.json",
+                "trace-1280.zip"
+              ]
+            }
+          },
+          {
+            "name": "runtime_identity:390",
+            "status": "passed",
+            "message": "Exact trusted runtime source binding and supported bridge identity checked",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "version": "runtime-v1.0.3",
+              "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+              "frozen": true,
+              "protected": true,
+              "immutable_identity_required": true
+            }
+          },
+          {
+            "name": "startup:390",
+            "status": "passed",
+            "message": "The exact document loaded and its rendered start action succeeded",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 49.671875,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Ready"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "surface:390",
+            "status": "passed",
+            "message": "Visible game surface has positive geometry",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "presentation_mode": "dom",
+              "tag": "section",
+              "width": 390,
+              "height": 764,
+              "visible_canvases": 0,
+              "canvas_backing_valid": null,
+              "opacity_chain_visible": true,
+              "markup_elements": 54
+            }
+          },
+          {
+            "name": "controlled_clock:390",
+            "status": "passed",
+            "message": "A no-input control under the frozen clock has stable state and game rendering",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "state_stable": true,
+              "visible_stable": true,
+              "pixels": {
+                "stable": true,
+                "visible_changed": false,
+                "dimensions_match": true,
+                "changed_pixels": 0,
+                "channel_tolerance": 8,
+                "minimum_input_pixels": 16
+              }
+            }
+          },
+          {
+            "name": "input:390",
+            "status": "passed",
+            "message": "Real user input must change both state and visible rendering beyond its no-input control timeline",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "state_changed": true,
+              "visible_changed": true,
+              "touch": true,
+              "clock_frozen_during_input": true,
+              "matched_timeline_control": true,
+              "causal_control": true,
+              "causal_trials": []
+            }
+          },
+          {
+            "name": "completion:390",
+            "status": "passed",
+            "message": "The real input sequence reached the declared game outcome from a nonterminal start",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "path": "/phase",
+              "observed": "won",
+              "actual_input": true,
+              "native_oracle": true,
+              "visible_status": "Completed",
+              "controls": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "independent_acceptance:390",
+            "status": "passed",
+            "message": "Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary",
+            "check_kind": "scenario",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "assertions": 1,
+              "steps_completed": 4,
+              "suite_sha256": "48fc688f976977884753074837e45c68e136ad71d6636feb96ced83ca1c04b90",
+              "acceptance_source": "release-config"
+            },
+            "scenario_id": "release"
+          },
+          {
+            "name": "restart:390",
+            "status": "passed",
+            "message": "Visible restart action leaves the completed state and redraws the game",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "state_changed": true,
+              "visible_changed": true,
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "mobile_layout:390",
+            "status": "passed",
+            "message": "Touch viewport has no horizontal overflow; a long document must scroll through a real finger gesture",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "viewport": 390,
+              "scroll": 390,
+              "height": 844,
+              "document_height": 844,
+              "body": 390,
+              "position": 0,
+              "real_scroll_required": false,
+              "scroll_probe": null
+            }
+          },
+          {
+            "name": "deterministic_reset:390",
+            "status": "passed",
+            "message": "Equal seeds recreate the same immediate gameplay snapshot",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "equal": true
+            }
+          },
+          {
+            "name": "lifecycle:390",
+            "status": "passed",
+            "message": "Synthetic visibility event pauses gameplay until resumed",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "synthetic": true,
+              "paused": true
+            }
+          },
+          {
+            "name": "javascript_errors:390",
+            "status": "passed",
+            "message": "No uncaught errors or blocking dialogs",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0
+            }
+          },
+          {
+            "name": "external_requests:390",
+            "status": "passed",
+            "message": "No external request attempts observed",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0,
+              "network_disabled": true
+            }
+          },
+          {
+            "name": "evidence:390",
+            "status": "passed",
+            "message": "Actual screenshots, console, network and Playwright trace persisted",
+            "check_kind": "browser",
+            "artifact_sha256": "08c6c9848494f4c25fb4bd9b37ce22cbd1c426efc0f6063be26e172c7b16b568",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "files": [
+                "start-390.png",
+                "control-before-390.png",
+                "control-after-390.png",
+                "final-390.png",
+                "restart-390.png",
+                "console-390.json",
+                "network-390.json",
+                "trace-390.zip"
+              ]
+            }
+          }
+        ],
+        "errors": [],
+        "warnings": [
+          "Static checks do not execute the game",
+          "Native game and bridge share a browser realm: observations are not proof against deliberately falsified game state; human mechanics review remains required.",
+          "Chromium desktop and touch emulation establish only the recorded scenarios; actual Android/iOS WebView and human quality review remain separate."
+        ],
+        "evidence_files": [
+          {
+            "path": "start-1280.png",
+            "sha256": "6542287a0d2de930e48a509aba92eca11e87b6259c642f941203f621f194de95",
+            "bytes": 294780
+          },
+          {
+            "path": "control-before-1280.png",
+            "sha256": "8afcaa48978acfdb8c387208fbdf5c897874dde8f645070d2f3c364395557179",
+            "bytes": 293764
+          },
+          {
+            "path": "control-after-1280.png",
+            "sha256": "8afcaa48978acfdb8c387208fbdf5c897874dde8f645070d2f3c364395557179",
+            "bytes": 293764
+          },
+          {
+            "path": "final-1280.png",
+            "sha256": "2f7acaf5d56925a2f8eddf53f5fb5951a524101cc876f7413c10cc223738a2bf",
+            "bytes": 304969
+          },
+          {
+            "path": "restart-1280.png",
+            "sha256": "6542287a0d2de930e48a509aba92eca11e87b6259c642f941203f621f194de95",
+            "bytes": 294780
+          },
+          {
+            "path": "console-1280.json",
+            "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+            "bytes": 35
+          },
+          {
+            "path": "network-1280.json",
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "bytes": 2
+          },
+          {
+            "path": "trace-1280.zip",
+            "sha256": "b868492fca59ab139651af07d29232ec5ba801db99b833a3cbe7f9a40f99b32c",
+            "bytes": 979778
+          },
+          {
+            "path": "start-390.png",
+            "sha256": "6eb307eeb57368ae09f9763776af5c69d0f5cbcfcc1c470bbae92c2ff4917086",
+            "bytes": 105504
+          },
+          {
+            "path": "control-before-390.png",
+            "sha256": "b6916b5419d841a5536d8c3f2724b72c6ca10aca76c053c5b7dff4035b4db152",
+            "bytes": 101110
+          },
+          {
+            "path": "control-after-390.png",
+            "sha256": "b6916b5419d841a5536d8c3f2724b72c6ca10aca76c053c5b7dff4035b4db152",
+            "bytes": 101110
+          },
+          {
+            "path": "final-390.png",
+            "sha256": "99d44886d431f64b7dbc532f1b8f796d58202db76dda323b59bd445106bb4497",
+            "bytes": 114025
+          },
+          {
+            "path": "restart-390.png",
+            "sha256": "b424479ed5967926acafb8312f5528f8d9c97ee1bf71f4381b504bac6575cb94",
+            "bytes": 106098
+          },
+          {
+            "path": "console-390.json",
+            "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+            "bytes": 35
+          },
+          {
+            "path": "network-390.json",
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "bytes": 2
+          },
+          {
+            "path": "trace-390.zip",
+            "sha256": "018dd18369850b27817d1feccca92ddce7542ae102df6ee57937a9bcf172bc80",
+            "bytes": 1328010
+          }
+        ],
+        "status": "passed",
+        "scope": {
+          "isolated": true,
+          "real_input": true,
+          "webview": false
+        }
+      }
+    },
+    {
+      "case_id": "shooter",
+      "example": "docs/examples/single_author-shooter",
+      "preserved_runtime": {
+        "sha256": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+        "version": "runtime-v1.0.3"
+      },
+      "original_metadata_sha256": "c680934bef1e80d9025d5519d708ea782c7419aec2fe9467c87e23fc59d844f0",
+      "original_report_sha256": "7880c86455e7286a2b32a0a2525371bb42a96ae7d07e45dde244fb02ff9c17c3",
+      "revalidation_report_sha256": "5f6dcc6ae21e9a3cac029fa28a7be3368566e4ab761ca62e0506c411d8b56c06",
+      "revalidation_raw_report_path": "/tmp/p2p-historical-release-final/shooter-report.json",
+      "evidence_directory": "/tmp/p2p-historical-release-final/shooter",
+      "report": {
+        "schema_version": 2,
+        "browser_contract_version": 3,
+        "artifact": {
+          "files_sha256": {
+            "game.js": "dc62b3c68c1aaf2e64d27d6663e088b7343038c5c72eb4d0a88c3a16509607c2",
+            "style.css": "31cab9b1fdfdf4d7139e1ef74dfc6e85e32a8c6fd16ab30e4f316659e25d1307"
+          },
+          "html_bytes": 30940,
+          "html_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+          "spec_sha256": "24d59539456e9afc5891b55f0b1b694c26a321d11c60690e3f55bc7b84824c1c"
+        },
+        "request_sha256": "3124bff85b8b2ba8eddfc9bb98c3fc1b1cdc222e0c10132e0ca96f8b1494fe02",
+        "harness_files_sha256": {
+          "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+          "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+          "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+          "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+          "native_controls_probe.mjs": "bc578269c47bf175047fbc44d4b670df906c2e9652758deac3a27ae3be439773",
+          "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+          "release_runtime.mjs": "0128a1c16fa62208f35701994c7725a4c2f061d464750b7ea1ef405e476da657",
+          "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+          "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+          "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+          "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee",
+          "touch_scroll_probe.mjs": "2f27e2f383083603427443358bf85646435789a8d0dcf55343b14bc1f14680d5"
+        },
+        "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+        "suite_sha256": "d88d7688dda08a1e59729a3b9f2bbe0a7f6b68ab3b00b02e53e93f77d69a0fd9",
+        "acceptance_source": "release-config",
+        "browser_version": "154.0.8037.92",
+        "checks": [
+          {
+            "name": "artifact_assembly",
+            "status": "passed",
+            "message": "Native delivery matches trusted runtime and source bytes",
+            "check_kind": "provenance",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "module_paths",
+            "status": "passed",
+            "message": "Native source paths and byte limits",
+            "check_kind": "static",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "offline:game.js",
+            "status": "passed",
+            "message": "game.js: local source policy",
+            "check_kind": "static",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "offline:style.css",
+            "status": "passed",
+            "message": "style.css: local source policy",
+            "check_kind": "static",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "javascript_syntax:game.js",
+            "status": "passed",
+            "message": "game.js: syntax parses without executing generated code",
+            "check_kind": "syntax",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "runtime_identity:1280",
+            "status": "passed",
+            "message": "Exact trusted runtime source binding and supported bridge identity checked",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "version": "runtime-v1.0.3",
+              "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+              "frozen": true,
+              "protected": true,
+              "immutable_identity_required": true
+            }
+          },
+          {
+            "name": "startup:1280",
+            "status": "passed",
+            "message": "The exact document loaded and its rendered start action succeeded",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 49.671875,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Ready"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "surface:1280",
+            "status": "passed",
+            "message": "Visible game surface has positive geometry",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "presentation_mode": "hybrid",
+              "tag": "section",
+              "width": 1280,
+              "height": 802.359375,
+              "visible_canvases": 1,
+              "canvas_backing_valid": null,
+              "opacity_chain_visible": true,
+              "markup_elements": 20
+            }
+          },
+          {
+            "name": "controlled_clock:1280",
+            "status": "passed",
+            "message": "A no-input control under the frozen clock has stable state and game rendering",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "state_stable": true,
+              "visible_stable": true,
+              "pixels": {
+                "stable": true,
+                "visible_changed": false,
+                "dimensions_match": true,
+                "changed_pixels": 0,
+                "channel_tolerance": 8,
+                "minimum_input_pixels": 16
+              }
+            }
+          },
+          {
+            "name": "input:1280",
+            "status": "passed",
+            "message": "Real user input must change both state and visible rendering beyond its no-input control timeline",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "state_changed": true,
+              "visible_changed": true,
+              "touch": false,
+              "clock_frozen_during_input": true,
+              "matched_timeline_control": true,
+              "causal_control": true,
+              "causal_trials": [
+                {
+                  "event": "key",
+                  "state_different": true,
+                  "pixels": {
+                    "stable": false,
+                    "visible_changed": true,
+                    "dimensions_match": true,
+                    "changed_pixels": 5847,
+                    "channel_tolerance": 8,
+                    "minimum_input_pixels": 16
+                  },
+                  "actual_snapshot": "{\"phase\":\"playing\",\"score\":1,\"misses\":0,\"attemptsRemaining\":3,\"targets\":[{\"id\":1,\"alive\":false,\"x\":80,\"y\":70,\"radius\":26,\"vx\":18},{\"id\":2,\"alive\":true,\"x\":177.79999999999995,\"y\":180,\"radius\":26,\"vx\":-22},{\"id\":3,\"alive\":true,\"x\":281.5999999999999,\"y\":290,\"radius\":26,\"vx\":16}],\"paused\":false,\"simulationTick\":6}",
+                  "no_input_snapshot": "{\"phase\":\"playing\",\"score\":0,\"misses\":0,\"attemptsRemaining\":3,\"targets\":[{\"id\":1,\"alive\":true,\"x\":81.79999999999998,\"y\":70,\"radius\":26,\"vx\":18},{\"id\":2,\"alive\":true,\"x\":177.79999999999995,\"y\":180,\"radius\":26,\"vx\":-22},{\"id\":3,\"alive\":true,\"x\":281.5999999999999,\"y\":290,\"radius\":26,\"vx\":16}],\"paused\":false,\"simulationTick\":6}"
+                }
+              ]
+            }
+          },
+          {
+            "name": "completion:1280",
+            "status": "passed",
+            "message": "The real input sequence reached the declared game outcome from a nonterminal start",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "path": "/phase",
+              "observed": "won",
+              "actual_input": true,
+              "native_oracle": true,
+              "visible_status": "Completed",
+              "controls": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "independent_acceptance:1280",
+            "status": "passed",
+            "message": "Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary",
+            "check_kind": "scenario",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "assertions": 1,
+              "steps_completed": 4,
+              "suite_sha256": "d88d7688dda08a1e59729a3b9f2bbe0a7f6b68ab3b00b02e53e93f77d69a0fd9",
+              "acceptance_source": "release-config"
+            },
+            "scenario_id": "release"
+          },
+          {
+            "name": "restart:1280",
+            "status": "passed",
+            "message": "Visible restart action leaves the completed state and redraws the game",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "state_changed": true,
+              "visible_changed": true,
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "deterministic_reset:1280",
+            "status": "passed",
+            "message": "Equal seeds recreate the same immediate gameplay snapshot",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "equal": true
+            }
+          },
+          {
+            "name": "lifecycle:1280",
+            "status": "passed",
+            "message": "Synthetic visibility event pauses gameplay until resumed",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "synthetic": true,
+              "paused": true
+            }
+          },
+          {
+            "name": "audio:1280",
+            "status": "passed",
+            "message": "Requested audio produced scheduled running sources after a real gesture",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "created": 4,
+              "started": 4,
+              "runningStarts": 3
+            }
+          },
+          {
+            "name": "javascript_errors:1280",
+            "status": "passed",
+            "message": "No uncaught errors or blocking dialogs",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0
+            }
+          },
+          {
+            "name": "external_requests:1280",
+            "status": "passed",
+            "message": "No external request attempts observed",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0,
+              "network_disabled": true
+            }
+          },
+          {
+            "name": "evidence:1280",
+            "status": "passed",
+            "message": "Actual screenshots, console, network and Playwright trace persisted",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "files": [
+                "start-1280.png",
+                "control-before-1280.png",
+                "control-after-1280.png",
+                "final-1280.png",
+                "restart-1280.png",
+                "console-1280.json",
+                "network-1280.json",
+                "trace-1280.zip"
+              ]
+            }
+          },
+          {
+            "name": "runtime_identity:390",
+            "status": "passed",
+            "message": "Exact trusted runtime source binding and supported bridge identity checked",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "version": "runtime-v1.0.3",
+              "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+              "frozen": true,
+              "protected": true,
+              "immutable_identity_required": true
+            }
+          },
+          {
+            "name": "startup:390",
+            "status": "passed",
+            "message": "The exact document loaded and its rendered start action succeeded",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 49.671875,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Ready"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "surface:390",
+            "status": "passed",
+            "message": "Visible game surface has positive geometry",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "presentation_mode": "hybrid",
+              "tag": "section",
+              "width": 390,
+              "height": 764,
+              "visible_canvases": 1,
+              "canvas_backing_valid": null,
+              "opacity_chain_visible": true,
+              "markup_elements": 20
+            }
+          },
+          {
+            "name": "controlled_clock:390",
+            "status": "passed",
+            "message": "A no-input control under the frozen clock has stable state and game rendering",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "state_stable": true,
+              "visible_stable": true,
+              "pixels": {
+                "stable": true,
+                "visible_changed": false,
+                "dimensions_match": true,
+                "changed_pixels": 0,
+                "channel_tolerance": 8,
+                "minimum_input_pixels": 16
+              }
+            }
+          },
+          {
+            "name": "input:390",
+            "status": "passed",
+            "message": "Real user input must change both state and visible rendering beyond its no-input control timeline",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "state_changed": true,
+              "visible_changed": true,
+              "touch": true,
+              "clock_frozen_during_input": true,
+              "matched_timeline_control": true,
+              "causal_control": true,
+              "causal_trials": [
+                {
+                  "event": "tap",
+                  "state_different": true,
+                  "pixels": {
+                    "stable": false,
+                    "visible_changed": true,
+                    "dimensions_match": true,
+                    "changed_pixels": 3770,
+                    "channel_tolerance": 8,
+                    "minimum_input_pixels": 16
+                  },
+                  "actual_snapshot": "{\"phase\":\"playing\",\"score\":1,\"misses\":0,\"attemptsRemaining\":3,\"targets\":[{\"id\":1,\"alive\":false,\"x\":80,\"y\":70,\"radius\":26,\"vx\":18},{\"id\":2,\"alive\":true,\"x\":177.79999999999995,\"y\":180,\"radius\":26,\"vx\":-22},{\"id\":3,\"alive\":true,\"x\":281.5999999999999,\"y\":290,\"radius\":26,\"vx\":16}],\"paused\":false,\"simulationTick\":6}",
+                  "no_input_snapshot": "{\"phase\":\"playing\",\"score\":0,\"misses\":0,\"attemptsRemaining\":3,\"targets\":[{\"id\":1,\"alive\":true,\"x\":81.79999999999998,\"y\":70,\"radius\":26,\"vx\":18},{\"id\":2,\"alive\":true,\"x\":177.79999999999995,\"y\":180,\"radius\":26,\"vx\":-22},{\"id\":3,\"alive\":true,\"x\":281.5999999999999,\"y\":290,\"radius\":26,\"vx\":16}],\"paused\":false,\"simulationTick\":6}"
+                }
+              ]
+            }
+          },
+          {
+            "name": "completion:390",
+            "status": "passed",
+            "message": "The real input sequence reached the declared game outcome from a nonterminal start",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "path": "/phase",
+              "observed": "won",
+              "actual_input": true,
+              "native_oracle": true,
+              "visible_status": "Completed",
+              "controls": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "independent_acceptance:390",
+            "status": "passed",
+            "message": "Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary",
+            "check_kind": "scenario",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "assertions": 1,
+              "steps_completed": 4,
+              "suite_sha256": "d88d7688dda08a1e59729a3b9f2bbe0a7f6b68ab3b00b02e53e93f77d69a0fd9",
+              "acceptance_source": "release-config"
+            },
+            "scenario_id": "release"
+          },
+          {
+            "name": "restart:390",
+            "status": "passed",
+            "message": "Visible restart action leaves the completed state and redraws the game",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "state_changed": true,
+              "visible_changed": true,
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 87.265625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Completed"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "mobile_layout:390",
+            "status": "passed",
+            "message": "Touch viewport has no horizontal overflow; a long document must scroll through a real finger gesture",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "viewport": 390,
+              "scroll": 390,
+              "height": 844,
+              "document_height": 844,
+              "body": 390,
+              "position": 0,
+              "real_scroll_required": false,
+              "scroll_probe": null
+            }
+          },
+          {
+            "name": "deterministic_reset:390",
+            "status": "passed",
+            "message": "Equal seeds recreate the same immediate gameplay snapshot",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "equal": true
+            }
+          },
+          {
+            "name": "lifecycle:390",
+            "status": "passed",
+            "message": "Synthetic visibility event pauses gameplay until resumed",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "synthetic": true,
+              "paused": true
+            }
+          },
+          {
+            "name": "audio:390",
+            "status": "passed",
+            "message": "Requested audio produced scheduled running sources after a real gesture",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "created": 4,
+              "started": 4,
+              "runningStarts": 3
+            }
+          },
+          {
+            "name": "javascript_errors:390",
+            "status": "passed",
+            "message": "No uncaught errors or blocking dialogs",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0
+            }
+          },
+          {
+            "name": "external_requests:390",
+            "status": "passed",
+            "message": "No external request attempts observed",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0,
+              "network_disabled": true
+            }
+          },
+          {
+            "name": "evidence:390",
+            "status": "passed",
+            "message": "Actual screenshots, console, network and Playwright trace persisted",
+            "check_kind": "browser",
+            "artifact_sha256": "28c6aaeb85f5a2706e89774182366f96e6203edf6fbb78928d00e6dd9884006e",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "files": [
+                "start-390.png",
+                "control-before-390.png",
+                "control-after-390.png",
+                "final-390.png",
+                "restart-390.png",
+                "console-390.json",
+                "network-390.json",
+                "trace-390.zip"
+              ]
+            }
+          }
+        ],
+        "errors": [],
+        "warnings": [
+          "Static checks do not execute the game",
+          "Native game and bridge share a browser realm: observations are not proof against deliberately falsified game state; human mechanics review remains required.",
+          "Chromium desktop and touch emulation establish only the recorded scenarios; actual Android/iOS WebView and human quality review remain separate."
+        ],
+        "evidence_files": [
+          {
+            "path": "start-1280.png",
+            "sha256": "3607056da192cd7596355d8b0b0271a9db56b80ecc108a3cd3d7f7528fff394a",
+            "bytes": 69597
+          },
+          {
+            "path": "control-before-1280.png",
+            "sha256": "67500422cc0f795ab371bbc53596d95dc8c2224f052e1ce8a8ebaf6fcf3c8550",
+            "bytes": 68759
+          },
+          {
+            "path": "control-after-1280.png",
+            "sha256": "67500422cc0f795ab371bbc53596d95dc8c2224f052e1ce8a8ebaf6fcf3c8550",
+            "bytes": 68759
+          },
+          {
+            "path": "final-1280.png",
+            "sha256": "bfd3146d32e5e8d293f729e072e2157b677d058679115410ea99838d49ec06d2",
+            "bytes": 46371
+          },
+          {
+            "path": "restart-1280.png",
+            "sha256": "90445cdfa8c8ab175b364dd7678b73ab18d5c4ac1ffc5bbb6eef93fd4811a5dd",
+            "bytes": 69631
+          },
+          {
+            "path": "console-1280.json",
+            "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+            "bytes": 35
+          },
+          {
+            "path": "network-1280.json",
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "bytes": 2
+          },
+          {
+            "path": "trace-1280.zip",
+            "sha256": "6c44cb9905a03626fd3cb211b7939539e695bf59df393a11857e700470259fa9",
+            "bytes": 1449125
+          },
+          {
+            "path": "start-390.png",
+            "sha256": "e83a85031d12a1031b745b291b816c45fcaa9f8f6410b6ce182f17a6f887c6b9",
+            "bytes": 59495
+          },
+          {
+            "path": "control-before-390.png",
+            "sha256": "4559bf3f4293085f6dc23c442c9d3a740a9078d25832ce2143883cf2fa6eece5",
+            "bytes": 54971
+          },
+          {
+            "path": "control-after-390.png",
+            "sha256": "4559bf3f4293085f6dc23c442c9d3a740a9078d25832ce2143883cf2fa6eece5",
+            "bytes": 54971
+          },
+          {
+            "path": "final-390.png",
+            "sha256": "a4479f8ff69cce6af8492d98c16f8a2f6cd6e7f59136e524e5254b1c2cadbdcd",
+            "bytes": 42978
+          },
+          {
+            "path": "restart-390.png",
+            "sha256": "96d5ae0fefcc3c6ed69b74f9198d61c3ad8b67fdde4abe3430cdf8df41cef5a9",
+            "bytes": 59477
+          },
+          {
+            "path": "console-390.json",
+            "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+            "bytes": 35
+          },
+          {
+            "path": "network-390.json",
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "bytes": 2
+          },
+          {
+            "path": "trace-390.zip",
+            "sha256": "467be82a377c534820941bcd6697a54221652ea1d18c84d320ea5b09193adebc",
+            "bytes": 1658237
+          }
+        ],
+        "status": "passed",
+        "scope": {
+          "isolated": true,
+          "real_input": true,
+          "webview": false
+        }
+      }
+    },
+    {
+      "case_id": "card-game",
+      "example": "docs/examples/single_author-card-game",
+      "preserved_runtime": {
+        "sha256": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+        "version": "runtime-v1.0.3"
+      },
+      "original_metadata_sha256": "d32b9e4c39585b16ea5ab6a5d99b8c4d29773806d11a6c9be5d17b9b1be1b2dc",
+      "original_report_sha256": "3a47bb123c268149d06c6b09affc933b9d52474b94ced4401da6c1eed89f6e3e",
+      "revalidation_report_sha256": "265b016a1e95d1b828690e8f9d0f626c5668c7b909c25207f4b21a065ca6b86b",
+      "revalidation_raw_report_path": "/tmp/p2p-historical-release-final/card-game-report.json",
+      "evidence_directory": "/tmp/p2p-historical-release-final/card-game",
+      "report": {
+        "schema_version": 2,
+        "browser_contract_version": 3,
+        "artifact": {
+          "files_sha256": {
+            "game.js": "3d81f3b7df9f2063bf67b8eea09dbb33973a78d35ec5b91d8a660f0ecbabb981",
+            "style.css": "2c672b2c995403a0b6a3294315d3d6b1bd41b7dc5e7b9210189095986662d4d3"
+          },
+          "html_bytes": 29931,
+          "html_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+          "spec_sha256": "a4f5aefc23b4c58e227bb515855c5c13de2c40a18fcfad24c2768fc15c7c106b"
+        },
+        "request_sha256": "bd7043268c5d494cc47bb8391a1e30898faf366d0daa1b37a9ad9b9732087165",
+        "harness_files_sha256": {
+          "audio_activation.mjs": "03ffbadda907018f69fc547e13adc7970095b379708d854aa3a4eba313495f7f",
+          "audio_probe.mjs": "64fbeb875e1e1d0509c1c796263cdf6cf0b6d44cad57b16ac4ab014b91ed0d97",
+          "bridge_adapter.mjs": "5e4a69bcb3adb6895b7f3faac762e1eae1ba55a3a9760e4cee1b2268f48c3986",
+          "lifecycle_probe.mjs": "066832613518cd5db53a2252ae07f7747c10d472101f64ba776be8fbbcde4a43",
+          "native_controls_probe.mjs": "bc578269c47bf175047fbc44d4b670df906c2e9652758deac3a27ae3be439773",
+          "pixel_probe.mjs": "fdde47692c6b0e84821b25d4d8fbb1dc70237751c57b2d7b97b0a8c05d4c1c52",
+          "release_runtime.mjs": "0128a1c16fa62208f35701994c7725a4c2f061d464750b7ea1ef405e476da657",
+          "runtime.mjs": "8eafe2960bb29bab4f89672ddf5d4ae915b39029442bb8fd29fd92f8bc0acc94",
+          "scenario_runner.mjs": "af646401e201b3ae41bc84127773fc65a6332026a31960ec5fde261eb3be9039",
+          "storage_probe.mjs": "bcc5bdc3bf64e78759a942c6e22c2afe9c0eb4055f64a0afa97d947e085f1bbe",
+          "surface_probe.mjs": "be0d8e5dce71072afe64c3fed32601a87e1230ce6b41c4914ae8c430ff9ddaee",
+          "touch_scroll_probe.mjs": "2f27e2f383083603427443358bf85646435789a8d0dcf55343b14bc1f14680d5"
+        },
+        "validator_image_sha256": "sha256:fef049f5c9f47265d14e09ef56809872e30fd71ea340b20e2d611d01e96c14c1",
+        "suite_sha256": "76074d1b59e41777a8e9de468727ae206deb00696f74abbb93e8aae1e2217d3d",
+        "acceptance_source": "release-config",
+        "browser_version": "154.0.8037.92",
+        "checks": [
+          {
+            "name": "artifact_assembly",
+            "status": "passed",
+            "message": "Native delivery matches trusted runtime and source bytes",
+            "check_kind": "provenance",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "module_paths",
+            "status": "passed",
+            "message": "Native source paths and byte limits",
+            "check_kind": "static",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "offline:game.js",
+            "status": "passed",
+            "message": "game.js: local source policy",
+            "check_kind": "static",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "offline:style.css",
+            "status": "passed",
+            "message": "style.css: local source policy",
+            "check_kind": "static",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "javascript_syntax:game.js",
+            "status": "passed",
+            "message": "game.js: syntax parses without executing generated code",
+            "check_kind": "syntax",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [],
+            "evidence": {}
+          },
+          {
+            "name": "runtime_identity:1280",
+            "status": "passed",
+            "message": "Exact trusted runtime source binding and supported bridge identity checked",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "version": "runtime-v1.0.3",
+              "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+              "frozen": true,
+              "protected": true,
+              "immutable_identity_required": true
+            }
+          },
+          {
+            "name": "startup:1280",
+            "status": "passed",
+            "message": "The exact document loaded and its rendered start action succeeded",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 49.671875,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Ready"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "surface:1280",
+            "status": "passed",
+            "message": "Visible game surface has positive geometry",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "presentation_mode": "dom",
+              "tag": "section",
+              "width": 1280,
+              "height": 1070.296875,
+              "visible_canvases": 0,
+              "canvas_backing_valid": null,
+              "opacity_chain_visible": true,
+              "markup_elements": 47
+            }
+          },
+          {
+            "name": "controlled_clock:1280",
+            "status": "passed",
+            "message": "A no-input control under the frozen clock has stable state and game rendering",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "state_stable": true,
+              "visible_stable": true,
+              "pixels": {
+                "stable": true,
+                "visible_changed": false,
+                "dimensions_match": true,
+                "changed_pixels": 0,
+                "channel_tolerance": 8,
+                "minimum_input_pixels": 16
+              }
+            }
+          },
+          {
+            "name": "input:1280",
+            "status": "passed",
+            "message": "Real user input must change both state and visible rendering beyond its no-input control timeline",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "state_changed": true,
+              "visible_changed": true,
+              "touch": false,
+              "clock_frozen_during_input": true,
+              "matched_timeline_control": true,
+              "causal_control": true,
+              "causal_trials": []
+            }
+          },
+          {
+            "name": "completion:1280",
+            "status": "passed",
+            "message": "The real input sequence reached the declared game outcome from a nonterminal start",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "path": "/phase",
+              "observed": "lost",
+              "actual_input": true,
+              "native_oracle": true,
+              "visible_status": "Game over",
+              "controls": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 88.40625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Game over"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "independent_acceptance:1280",
+            "status": "passed",
+            "message": "Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary",
+            "check_kind": "scenario",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "assertions": 1,
+              "steps_completed": 4,
+              "suite_sha256": "76074d1b59e41777a8e9de468727ae206deb00696f74abbb93e8aae1e2217d3d",
+              "acceptance_source": "release-config"
+            },
+            "scenario_id": "release"
+          },
+          {
+            "name": "restart:1280",
+            "status": "passed",
+            "message": "Visible restart action leaves the completed state and redraws the game",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "state_changed": true,
+              "visible_changed": true,
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 88.40625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Game over"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "deterministic_reset:1280",
+            "status": "passed",
+            "message": "Equal seeds recreate the same immediate gameplay snapshot",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "equal": true
+            }
+          },
+          {
+            "name": "lifecycle:1280",
+            "status": "passed",
+            "message": "Synthetic visibility event pauses gameplay until resumed",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "synthetic": true,
+              "paused": true
+            }
+          },
+          {
+            "name": "javascript_errors:1280",
+            "status": "passed",
+            "message": "No uncaught errors or blocking dialogs",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0
+            }
+          },
+          {
+            "name": "external_requests:1280",
+            "status": "passed",
+            "message": "No external request attempts observed",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0,
+              "network_disabled": true
+            }
+          },
+          {
+            "name": "evidence:1280",
+            "status": "passed",
+            "message": "Actual screenshots, console, network and Playwright trace persisted",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "files": [
+                "start-1280.png",
+                "control-before-1280.png",
+                "control-after-1280.png",
+                "final-1280.png",
+                "restart-1280.png",
+                "console-1280.json",
+                "network-1280.json",
+                "trace-1280.zip"
+              ]
+            }
+          },
+          {
+            "name": "runtime_identity:390",
+            "status": "passed",
+            "message": "Exact trusted runtime source binding and supported bridge identity checked",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "version": "runtime-v1.0.3",
+              "digest": "abb32dee191d8631c4f327bc9fbe67f92b0d5b85a18d4a41edb1f9de1dd9ec76",
+              "frozen": true,
+              "protected": true,
+              "immutable_identity_required": true
+            }
+          },
+          {
+            "name": "startup:390",
+            "status": "passed",
+            "message": "The exact document loaded and its rendered start action succeeded",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls_before": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 49.671875,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Ready"
+                  }
+                ]
+              },
+              "controls_after": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 58.109375,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Playing"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "surface:390",
+            "status": "passed",
+            "message": "Visible game surface has positive geometry",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "presentation_mode": "dom",
+              "tag": "section",
+              "width": 390,
+              "height": 1102.1875,
+              "visible_canvases": 0,
+              "canvas_backing_valid": null,
+              "opacity_chain_visible": true,
+              "markup_elements": 47
+            }
+          },
+          {
+            "name": "controlled_clock:390",
+            "status": "passed",
+            "message": "A no-input control under the frozen clock has stable state and game rendering",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "state_stable": true,
+              "visible_stable": true,
+              "pixels": {
+                "stable": true,
+                "visible_changed": false,
+                "dimensions_match": true,
+                "changed_pixels": 0,
+                "channel_tolerance": 8,
+                "minimum_input_pixels": 16
+              }
+            }
+          },
+          {
+            "name": "input:390",
+            "status": "passed",
+            "message": "Real user input must change both state and visible rendering beyond its no-input control timeline",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "state_changed": true,
+              "visible_changed": true,
+              "touch": true,
+              "clock_frozen_during_input": true,
+              "matched_timeline_control": true,
+              "causal_control": true,
+              "causal_trials": []
+            }
+          },
+          {
+            "name": "completion:390",
+            "status": "passed",
+            "message": "The real input sequence reached the declared game outcome from a nonterminal start",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "path": "/phase",
+              "observed": "lost",
+              "actual_input": true,
+              "native_oracle": true,
+              "visible_status": "Game over",
+              "controls": {
+                "rendered": true,
+                "controls": [
+                  {
+                    "selector": "#p2p-start",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 73.09375,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Start"
+                  },
+                  {
+                    "selector": "#p2p-restart",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 91.515625,
+                      "height": 41.78125
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Restart"
+                  },
+                  {
+                    "selector": "#p2p-status",
+                    "rendered": true,
+                    "geometry": {
+                      "width": 88.40625,
+                      "height": 19
+                    },
+                    "effective_opacity": 1,
+                    "hidden_ancestor": false,
+                    "text": "Game over"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "independent_acceptance:390",
+            "status": "passed",
+            "message": "Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary",
+            "check_kind": "scenario",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "actual_input": true,
+              "events": 3,
+              "assertions": 1,
+              "steps_completed": 4,
+              "suite_sha256": "76074d1b59e41777a8e9de468727ae206deb00696f74abbb93e8aae1e2217d3d",
+              "acceptance_source": "release-config"
+            },
+            "scenario_id": "release"
+          },
+          {
+            "name": "runtime_harness:390",
+            "status": "failed",
+            "message": "A real swipe could not reach the offscreen touch control",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "touch_reachability": {
+                "selector": "[data-testid=\"restart\"]",
+                "swipes": [
+                  {
+                    "actual_touch": true,
+                    "point": {
+                      "x": 195,
+                      "y": 464.20000000000005,
+                      "to_y": 814,
+                      "vertical_pan_permitted": false,
+                      "element": "section",
+                      "button_fallback": false
+                    },
+                    "before": {
+                      "position": 67,
+                      "height": 1228,
+                      "viewport": 844
+                    },
+                    "after": {
+                      "position": 67,
+                      "height": 1228,
+                      "viewport": 844
+                    },
+                    "scroll_changed": false
+                  }
+                ],
+                "real_touch_attempted": true
+              }
+            }
+          },
+          {
+            "name": "javascript_errors:390",
+            "status": "passed",
+            "message": "No uncaught errors or blocking dialogs",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0
+            }
+          },
+          {
+            "name": "external_requests:390",
+            "status": "passed",
+            "message": "No external request attempts observed",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "count": 0,
+              "network_disabled": true
+            }
+          },
+          {
+            "name": "evidence:390",
+            "status": "passed",
+            "message": "Actual screenshots, console, network and Playwright trace persisted",
+            "check_kind": "browser",
+            "artifact_sha256": "17b1a1969a3d50761bd92870dde86d311fe50e57623138677f79fbe04edb1e02",
+            "limitations": [
+              "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+            ],
+            "evidence": {
+              "files": [
+                "start-390.png",
+                "control-before-390.png",
+                "control-after-390.png",
+                "final-390.png",
+                "failure-390.png",
+                "console-390.json",
+                "network-390.json",
+                "trace-390.zip"
+              ]
+            }
+          }
+        ],
+        "errors": [
+          "A real swipe could not reach the offscreen touch control"
+        ],
+        "warnings": [
+          "Static checks do not execute the game",
+          "Native game and bridge share a browser realm: observations are not proof against deliberately falsified game state; human mechanics review remains required.",
+          "Chromium desktop and touch emulation establish only the recorded scenarios; actual Android/iOS WebView and human quality review remain separate."
+        ],
+        "evidence_files": [
+          {
+            "path": "start-1280.png",
+            "sha256": "ed110e9a2b1ad9ec44c0b2de55e10e8206ba50983dd047a8b878683133d75feb",
+            "bytes": 290889
+          },
+          {
+            "path": "control-before-1280.png",
+            "sha256": "2b1423a591978ce926b51b34dca2877fdad6701755833d28e2431afeb1791f41",
+            "bytes": 399355
+          },
+          {
+            "path": "control-after-1280.png",
+            "sha256": "2b1423a591978ce926b51b34dca2877fdad6701755833d28e2431afeb1791f41",
+            "bytes": 399355
+          },
+          {
+            "path": "final-1280.png",
+            "sha256": "64f93fa76e044ebdc3f0685ec0f045f6240528332d714167c231b2df817afb9d",
+            "bytes": 313747
+          },
+          {
+            "path": "restart-1280.png",
+            "sha256": "ed110e9a2b1ad9ec44c0b2de55e10e8206ba50983dd047a8b878683133d75feb",
+            "bytes": 290889
+          },
+          {
+            "path": "console-1280.json",
+            "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+            "bytes": 35
+          },
+          {
+            "path": "network-1280.json",
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "bytes": 2
+          },
+          {
+            "path": "trace-1280.zip",
+            "sha256": "86d3244c2c4aa6ef28e0e448ec0c7facc35aaa4ea0c3bf4d0765eb98bb06822a",
+            "bytes": 1273554
+          },
+          {
+            "path": "start-390.png",
+            "sha256": "a18eb8d13b181e828820e6a16b0613fba33af702b9d02bdd0f66b860855a7a42",
+            "bytes": 149843
+          },
+          {
+            "path": "control-before-390.png",
+            "sha256": "377a369ff7cd18afaf7830a463a970744ea778724a392ec459baf2a55d67f68c",
+            "bytes": 214658
+          },
+          {
+            "path": "control-after-390.png",
+            "sha256": "377a369ff7cd18afaf7830a463a970744ea778724a392ec459baf2a55d67f68c",
+            "bytes": 214658
+          },
+          {
+            "path": "final-390.png",
+            "sha256": "c5d64111d288541a754f79fecf83a89758baa0094c53fcada4b88395ca96450a",
+            "bytes": 157963
+          },
+          {
+            "path": "failure-390.png",
+            "sha256": "c5d64111d288541a754f79fecf83a89758baa0094c53fcada4b88395ca96450a",
+            "bytes": 157963
+          },
+          {
+            "path": "console-390.json",
+            "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+            "bytes": 35
+          },
+          {
+            "path": "network-390.json",
+            "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "bytes": 2
+          },
+          {
+            "path": "trace-390.zip",
+            "sha256": "065d6aea55b10e68550f9e7e7f707d73696ba2399dd340b5255d443bc43879c6",
+            "bytes": 1330856
+          }
+        ],
+        "status": "failed",
+        "scope": {
+          "isolated": true,
+          "real_input": true,
+          "webview": false
+        }
+      }
+    }
+  ]
+}

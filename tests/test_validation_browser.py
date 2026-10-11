@@ -1,0 +1,346 @@
+"""Opt-in real Docker acceptance and regressions; never host-executes games."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import subprocess
+import threading
+import uuid
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from prompt2play.generation.runtime import (
+    RUNTIME_VERSION,
+    assemble_runtime,
+    capture_runtime_identity,
+    runtime_digest,
+)
+from prompt2play.paths import RESOURCE_ROOT
+from prompt2play.validation import IsolatedValidator
+
+pytestmark = pytest.mark.skipif(
+    os.environ.get("P2P_RUN_ISOLATED_BROWSER") != "1",
+    reason="Requires explicitly built Docker validator; no host execution fallback",
+)
+
+
+def fixture(name: str) -> tuple[dict[str, str], dict[str, Any], dict[str, Any]]:
+    base = RESOURCE_ROOT / "runtime" / "examples" / name
+    files = {"game.js": (base / "game.js").read_text()}
+    spec: dict[str, Any] = json.loads((base / "spec.json").read_text())
+    acceptance: dict[str, Any] = json.loads((base / "acceptance.json").read_text())
+    spec.update(
+        format="runtime-v1",
+        runtime={"version": RUNTIME_VERSION, "sha256": runtime_digest()},
+        input_acceptance=acceptance,
+    )
+    return files, spec, acceptance
+
+
+def execute(
+    name: str, files: dict[str, str], spec: dict[str, Any], acceptance: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    root = Path(os.environ.get("P2P_BROWSER_EVIDENCE", "/tmp/prompt2play-browser-regressions"))
+    directory = root / name
+    report = IsolatedValidator(
+        image=os.environ.get("P2P_VALIDATOR_IMAGE", "prompt2play-validator:local")
+    ).validate(
+        files,
+        assemble_runtime(files, spec),
+        spec,
+        threading.Event(),
+        directory,
+        release_scenarios=acceptance,
+    )
+    root.mkdir(parents=True, exist_ok=True)
+    (root / f"{name}-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
+    return report
+
+
+@pytest.mark.parametrize("name", ["canvas", "dom"])
+def test_reviewed_games_real_desktop_and_touch(name: str) -> None:
+    files, spec, acceptance = fixture(name)
+    report = execute(name, files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    assert report["scope"] == {"isolated": True, "real_input": True, "webview": False}
+    assert len(report["evidence_files"]) >= 12
+
+
+def test_generic_native_profile_does_not_trust_a_model_terminal_oracle() -> None:
+    files, spec, _ = fixture("dom")
+    # A declared always-true model oracle is ignored by independent native conformance.
+    spec["input_acceptance"]["desktop"]["completion"] = {"path": "/moves", "one_of": [0]}
+    spec["input_acceptance"]["touch"]["completion"] = {"path": "/moves", "one_of": [0]}
+    report = execute("native-conformance", files, spec)
+    assert report["status"] == "passed", report["errors"]
+    completion = next(check for check in report["checks"] if check["name"] == "completion:1280")
+    assert completion["evidence"]["path"] == "/phase"
+    assert completion["evidence"]["observed"] == "won"
+
+
+def test_animated_game_with_broken_keyboard_cannot_pass_input() -> None:
+    files, spec, acceptance = fixture("canvas")
+    files["game.js"] = files["game.js"].replace(
+        'if (key === "ArrowRight" || key === " ") dispatch({type: "MOVE"});',
+        'if (false) dispatch({type: "MOVE"});',
+    )
+    report = execute("broken-input", files, spec, acceptance)
+    assert report["status"] == "failed"
+    observed = next(check for check in report["checks"] if check["name"] == "input:1280")
+    assert observed["status"] == "failed", "Idle animation is not caused by the keyboard input"
+
+
+def test_requested_audio_and_game_owned_storage() -> None:
+    files, spec, acceptance = fixture("dom")
+    spec["capabilities"] += ["audio", "storage"]
+    report = execute("optional-capabilities", files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    for kind in ("audio", "persistence"):
+        assert all(
+            check["status"] == "passed"
+            for check in report["checks"]
+            if check["name"].startswith(kind + ":")
+        )
+
+
+def test_no_audio_no_storage_has_no_invented_obligations() -> None:
+    files, spec, acceptance = fixture("dom")
+    report = execute("no-optional-capabilities", files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    assert not any(
+        check["name"].startswith(("audio:", "persistence:")) for check in report["checks"]
+    )
+
+
+def test_csp_blocked_network_attempt_is_preserved_as_failure() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["game.js"] = files["game.js"].replace(
+        "function createGame(ctx) {",
+        'function createGame(ctx) { const image = new Image(); image.src = "ht" + "tps://network.invalid/egress.png";',
+    )
+    report = execute("blocked-egress", files, spec, acceptance)
+    assert report["status"] == "failed"
+    check = next(check for check in report["checks"] if check["name"] == "external_requests:1280")
+    assert check["status"] == "failed"
+
+
+def test_physics_input_can_move_after_a_controlled_tick() -> None:
+    files, spec, acceptance = fixture("canvas")
+    files["game.js"] = (
+        files["game.js"]
+        .replace(
+            'let phase = "ready", position = 0, elapsed = 0;',
+            'let phase = "ready", position = 0, elapsed = 0, pending = false;',
+        )
+        .replace(
+            'if (action.type === "MOVE" && phase === "playing") { position++; if (position >= 4) phase = "won"; }',
+            'if (action.type === "MOVE" && phase === "playing") pending = true;',
+        )
+        .replace(
+            "elapsed += dt; render();",
+            'elapsed += dt; if (pending) { pending = false; position++; if (position >= 4) phase = "won"; } render();',
+        )
+        .replace(
+            "({phase, position, elapsed:",
+            "({phase, position, pending, elapsed:",
+        )
+    )
+    report = execute("delayed-physics-input", files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    check = next(check for check in report["checks"] if check["name"] == "input:1280")
+    assert check["evidence"]["matched_timeline_control"] is True
+
+
+@pytest.mark.parametrize("independent", [False, True])
+def test_transparent_platform_toolbar_is_not_playable(independent: bool) -> None:
+    files, spec, acceptance = fixture("dom")
+    files["style.css"] = ".p2p-toolbar {opacity:0}"
+    report = execute(
+        f"transparent-toolbar-{independent}", files, spec, acceptance if independent else None
+    )
+    assert report["status"] == "failed"
+    for width in (1280, 390):
+        check = next(item for item in report["checks"] if item["name"] == f"startup:{width}")
+        assert check["status"] == "failed"
+        assert check["evidence"]["controls"]["rendered"] is False
+
+
+def test_platform_controls_cannot_disappear_at_completion() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["game.js"] = files["game.js"].replace(
+        "function render() {", "function render() { progress.dataset.phase = phase;"
+    )
+    files["style.css"] = 'body:has([data-phase="won"]) .p2p-toolbar {opacity:0}'
+    report = execute("transparent-terminal-toolbar", files, spec, acceptance)
+    assert report["status"] == "failed"
+    for width in (1280, 390):
+        for kind in ("completion", "restart"):
+            check = next(item for item in report["checks"] if item["name"] == f"{kind}:{width}")
+            assert check["status"] == "failed"
+
+
+def test_below_fold_controls_require_real_swipes_before_touch_input() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["game.js"] = files["game.js"].replace(
+        '<div id="beacons">',
+        '<p style="min-height:1100px">Swipe upwards to reach the controls below.</p><div id="beacons">',
+    )
+    report = execute("long-dom-real-scroll", files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    check = next(item for item in report["checks"] if item["name"] == "mobile_layout:390")
+    assert check["evidence"]["real_scroll_required"] is True
+    assert check["evidence"]["scroll_probe"]["actual_touch"] is True
+    assert check["evidence"]["scroll_probe"]["scroll_changed"] is True
+    assert any(item["path"] == "touch-scroll-after-390.png" for item in report["evidence_files"])
+
+
+def test_blocked_finger_scrolling_is_a_mobile_layout_failure() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["game.js"] = files["game.js"].replace(
+        '<p id="progress"></p>',
+        '<p id="progress"></p><p style="min-height:1100px">Scroll-only content below the controls.</p>',
+    )
+    files["style.css"] = "#p2p-surface {touch-action:none}"
+    report = execute("blocked-touch-scroll", files, spec, acceptance)
+    assert report["status"] == "failed"
+    layout = next((item for item in report["checks"] if item["name"] == "mobile_layout:390"), None)
+    if layout is not None:
+        assert layout["status"] == "failed"
+        assert layout["evidence"]["scroll_probe"]["actual_touch"] is True
+        assert layout["evidence"]["scroll_probe"]["scroll_changed"] is False
+    else:
+        # Element screenshot normalization may move the viewport earlier;
+        # the same blocked gesture must reject reaching the control itself.
+        failure = next(item for item in report["checks"] if item["name"] == "runtime_harness:390")
+        assert failure["status"] == "failed"
+        reachability = failure["evidence"]["touch_reachability"]
+        assert reachability["real_touch_attempted"] is True
+        assert all(swipe["scroll_changed"] is False for swipe in reachability["swipes"])
+
+
+def test_dense_buttons_can_pan_without_locator_auto_scrolling() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["style.css"] = (
+        "#beacons{display:flex;flex-direction:column}"
+        "#beacons button{width:100%;margin:0!important;min-height:210px!important}"
+    )
+    report = execute("dense-buttons-real-scroll", files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    layout = next(item for item in report["checks"] if item["name"] == "mobile_layout:390")
+    assert layout["evidence"]["scroll_probe"]["point"]["button_fallback"] is True
+    assert layout["evidence"]["scroll_probe"]["actual_touch"] is True
+    assert layout["evidence"]["scroll_probe"]["scroll_changed"] is True
+
+
+def test_runtime_detached_scoped_input_lifecycle_cleanup() -> None:
+    """Qualify platform event ownership with real input and explicit API negatives."""
+    fixtures = Path(__file__).parent / "browser_fixtures"
+    root = Path(os.environ.get("P2P_BROWSER_EVIDENCE", "/tmp/prompt2play-browser-regressions"))
+    directory = root / "runtime-input-scope"
+    inputs, evidence = directory / "input", directory / "evidence"
+    inputs.mkdir(parents=True, exist_ok=True)
+    evidence.mkdir(parents=True, exist_ok=True)
+    inputs.chmod(0o755)
+    evidence.chmod(0o777)
+    source = (fixtures / "runtime_scope_game.js").read_text()
+    spec = {
+        "title": "Scoped input API qualification",
+        "capabilities": ["input", "lifecycle"],
+        "runtime": capture_runtime_identity(),
+    }
+    html = assemble_runtime(
+        {
+            "game.js": source,
+            "style.css": "button{display:block;min-height:48px;margin:8px;padding:8px}main{padding:12px}",
+        },
+        spec,
+    )
+    image = os.environ.get("P2P_VALIDATOR_IMAGE", "prompt2play-validator:local")
+    inspected = subprocess.run(
+        ["docker", "image", "inspect", "--format", "{{.Id}}", image],
+        text=True,
+        capture_output=True,
+        timeout=15,
+        check=True,
+    )
+    image_id = inspected.stdout.strip()
+    assert image_id.startswith("sha256:")
+    harness_files = {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(IsolatedValidator().runtime_path.parent.glob("*.mjs"))
+    }
+    (inputs / "game.html").write_text(html)
+    (inputs / "config.json").write_text(
+        json.dumps(
+            {
+                "image": image_id,
+                "runtime": spec["runtime"],
+                "harness_files_sha256": harness_files,
+            }
+        )
+    )
+    name = "p2p-input-scope-" + uuid.uuid4().hex
+    command = [
+        "docker",
+        "run",
+        "--rm",
+        "--name",
+        name,
+        "--pull=never",
+        "--network",
+        "none",
+        "--read-only",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges:true",
+        "--cpus",
+        "1",
+        "--memory",
+        "768m",
+        "--memory-swap",
+        "768m",
+        "--pids-limit",
+        "256",
+        "--user",
+        "10001:10001",
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,size=192m",
+        "--shm-size",
+        "128m",
+        "--mount",
+        f"type=bind,src={inputs.resolve()},dst=/input,readonly",
+        "--mount",
+        f"type=bind,src={evidence.resolve()},dst=/evidence",
+        "--mount",
+        f"type=bind,src={(fixtures / 'runtime_scope.mjs').resolve()},dst=/review/challenge.mjs,readonly",
+        image_id,
+        "node",
+        "/review/challenge.mjs",
+    ]
+    try:
+        completed = subprocess.run(command, text=True, capture_output=True, timeout=90, check=True)
+    finally:
+        subprocess.run(
+            ["docker", "rm", "--force", name], capture_output=True, timeout=15, check=False
+        )
+    report = json.loads(completed.stdout)
+    (root / "runtime-input-scope-report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2)
+    )
+    assert report["passed"] is True, [check for check in report["checks"] if not check["passed"]]
+    assert report["html_sha256"] == hashlib.sha256(html.encode()).hexdigest()
+    assert (
+        report["script_sha256"]
+        == hashlib.sha256((fixtures / "runtime_scope.mjs").read_bytes()).hexdigest()
+    )
+    assert report["runtime"] == spec["runtime"] and report["validator_image_sha256"] == image_id
+    assert report["harness_files_sha256"] == harness_files
+    for item in report["evidence_files"]:
+        path = evidence / item["path"]
+        assert path.is_file() and not path.is_symlink() and path.stat().st_size == item["bytes"]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]
