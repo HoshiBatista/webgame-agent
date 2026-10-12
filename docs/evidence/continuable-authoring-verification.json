@@ -23,12 +23,12 @@
     "ruff_lint": "passed",
     "mypy": "133 files passed",
     "pytest": {
-      "passed": 252,
+      "passed": 254,
       "skipped": 23,
-      "branch_coverage_percent": 90.2
+      "branch_coverage_percent": 89.99
     },
     "postgres_workflow_and_worker": {
-      "passed": 55,
+      "passed": 56,
       "database": "separate test database"
     },
     "worker_capability_regression": {
@@ -47,7 +47,9 @@
     "cancellation and exhausted money stop continuation",
     "stale draft write refused",
     "old worker cannot reclaim snapshot",
-    "first-attempt legacy limit recovery reuses source receipts"
+    "first-attempt legacy limit recovery reuses source receipts",
+    "drafts over the 100 KB planning envelope remain resumable",
+    "claim rollback when a checkpoint cannot be loaded"
   ],
   "saved_live_draft_reconstruction": {
     "provider_calls": 0,
@@ -59,6 +61,7 @@
     },
     "source_reviews": 1,
     "next_phase": "author",
-    "budget_usd": "10.00"
+    "budget_usd": "10.00",
+    "snapshot_bytes_after_recovery_feedback": 152972
   }
 }

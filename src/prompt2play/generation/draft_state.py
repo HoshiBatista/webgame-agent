@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import jsonschema
+
 from prompt2play.contracts import BuildPlan, GameSpec
-from prompt2play.contracts.models import digest, obj, validate
+from prompt2play.contracts.models import digest, obj, stable
 
 from .visual_quality import validate_source_review
 from .workspace import WorkspaceLimits, normalized_path
@@ -33,7 +35,14 @@ DRAFT_SCHEMA = obj(
 
 
 def validate_draft_state(state: dict[str, Any]) -> None:
-    validate(state, DRAFT_SCHEMA, "Authoring checkpoint")
+    # Plans have a separate 100 KB contract bound. A draft includes source,
+    # feedback and history and uses the same 12 MiB envelope as its endpoint.
+    if len(stable(state).encode()) > 12 * 1024 * 1024:
+        raise ValueError("Authoring checkpoint exceeds its byte envelope")
+    try:
+        jsonschema.validate(state, DRAFT_SCHEMA)
+    except jsonschema.ValidationError:
+        raise ValueError("Invalid authoring checkpoint structure") from None
     GameSpec(state["spec"])
     BuildPlan(state["plan"])
     limits = WorkspaceLimits()

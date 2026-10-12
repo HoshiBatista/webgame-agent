@@ -668,3 +668,34 @@ def test_restored_ready_draft_must_have_review_for_exact_source() -> None:
         GenerationHarness().attempt(
             replace(request, resume_state=saved), ScriptedGateway([]), GenerationControl.bounded()
         )
+
+
+def test_draft_snapshot_larger_than_plan_envelope_survives_restart() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    source += "\n/* " + "authored source padding " * 5000 + " */"
+    assert 100_000 < len(source.encode()) < WorkspaceLimits().max_file_bytes
+    states: list[dict[str, Any]] = []
+    request = GenerationRequest("Large draft")
+    GenerationHarness(on_checkpoint=states.append).attempt(
+        request,
+        ScriptedGateway(
+            [
+                plan,
+                {
+                    "operations": [
+                        operation("create", "game.js", content=source),
+                        operation("submit"),
+                    ],
+                    "summary": "Large fixture",
+                },
+            ]
+        ),
+        GenerationControl.bounded(),
+    )
+    resumed = ScriptedGateway([])
+    candidate = GenerationHarness().attempt(
+        replace(request, resume_state=states[-1]), resumed, GenerationControl.bounded()
+    )
+    assert candidate.files["game.js"] == source and not resumed.roles

@@ -850,3 +850,28 @@ def test_legacy_operation_limit_recovers_completed_draft_without_replaying_autho
     assert provider.calls == 5 and ModelInvocation.objects.filter(operation="plan").count() == 1
     assert Candidate.objects.get().committed
     transport.close()
+
+
+def test_claim_failure_loading_snapshot_does_not_orphan_a_lease(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _, transport, claim = prepared
+    Job.objects.filter(pk=claim["job"]["id"]).update(
+        lease_expires_at=timezone.now() - timedelta(seconds=1)
+    )
+    before = Job.objects.get(pk=claim["job"]["id"])
+
+    def unreadable(_job: Any) -> dict[str, Any]:
+        raise ValueError("Authored unreadable checkpoint")
+
+    monkeypatch.setattr("prompt2play.adapters.django.forge.drafts.load_draft", unreadable)
+    with pytest.raises(ValueError, match="unreadable"):
+        transport.post(
+            "api/worker/claim/",
+            {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        )
+    after = Job.objects.get(pk=before.pk)
+    assert after.stage_fence == before.stage_fence and after.lease_hash == before.lease_hash
+    assert after.lease_expires_at == before.lease_expires_at
+    transport.close()

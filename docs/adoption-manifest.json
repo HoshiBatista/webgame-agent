@@ -215,7 +215,7 @@
       "source": "backend/forge/views.py",
       "destination": "src/prompt2play/adapters/django/forge/views.py",
       "source_sha256": "e2311c7540a26fcf54bb81aef2a9f6b3c0e1d0c8cc1932449bcf9e5c5fb68f31",
-      "destination_sha256": "ce71e6a13b504e25705626d9dae5d95a4abd351182b0cc719b4f120ab4fa8491",
+      "destination_sha256": "a072b3a6c1fc071a38824ae51a138ff87f4bca244500eccbcce128f3e8b46d84",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },

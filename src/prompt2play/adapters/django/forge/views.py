@@ -329,6 +329,7 @@ class WorkerView(APIView):
 
 
 class ClaimView(WorkerView):
+    @transaction.atomic
     def post(self, request):
         values = validated(ClaimSerializer, request.data)
         job, lease = services.claim_job(request.user, **values)
