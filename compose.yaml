@@ -1,20 +1,31 @@
 name: prompt2play
 
-x-app: &app
-  build: .
-  env_file: .env
-  environment:
-    P2P_DATABASE_URL: postgresql+psycopg://prompt2play:prompt2play@postgres:5432/prompt2play
-    P2P_REDIS_URL: redis://redis:6379/0
-    P2P_ARTIFACT_ROOT: /data/artifacts
-  volumes:
-    - artifacts:/data/artifacts
-  depends_on:
-    postgres:
-      condition: service_healthy
-    redis:
-      condition: service_healthy
+x-runtime-environment: &runtime-environment
+  P2P_DATABASE_URL: postgresql+psycopg://prompt2play:${P2P_POSTGRES_PASSWORD:-prompt2play}@postgres:5432/prompt2play
+  P2P_REDIS_URL: redis://redis:6379/0
+  P2P_ARTIFACT_ROOT: /data/artifacts
+  P2P_PUBLIC_BASE_URL: ${P2P_PUBLIC_BASE_URL:-http://localhost:5173}
+  P2P_CORS_ORIGINS: ${P2P_CORS_ORIGINS:-http://localhost:5173}
+
+x-runtime-service: &runtime-service
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=128m
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  networks:
+    - backend
   restart: unless-stopped
+  stop_grace_period: 30s
+
+x-worker-healthcheck: &worker-healthcheck
+  interval: 15s
+  timeout: 8s
+  retries: 8
+  start_period: 20s
 
 services:
   postgres:
@@ -22,79 +33,228 @@ services:
     environment:
       POSTGRES_DB: prompt2play
       POSTGRES_USER: prompt2play
-      POSTGRES_PASSWORD: prompt2play
+      POSTGRES_PASSWORD: ${P2P_POSTGRES_PASSWORD:-prompt2play}
     volumes:
       - postgres:/var/lib/postgresql/data
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U prompt2play"]
       interval: 5s
       timeout: 3s
       retries: 20
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 256
     restart: unless-stopped
 
   redis:
     image: redis:8-alpine
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--maxmemory-policy",
+        "noeviction",
+      ]
     volumes:
       - redis:/data
+    networks:
+      - backend
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
     restart: unless-stopped
 
   migrate:
-    <<: *app
-    command: ["alembic", "upgrade", "head"]
+    <<: *runtime-service
+    build:
+      context: .
+      target: migration
+    environment: *runtime-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: "no"
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
 
   api:
-    <<: *app
-    ports:
-      - "8000:8000"
+    <<: *runtime-service
+    build:
+      context: .
+      target: api
+    environment: *runtime-environment
+    expose:
+      - "8000"
+    volumes:
+      - artifacts:/data/artifacts:ro
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 256
 
   worker-models:
-    <<: *app
-    command:
-      ["celery", "-A", "prompt2play.tasks:celery_app", "worker", "-Q", "models,workflow", "--concurrency=4", "--loglevel=INFO"]
+    <<: *runtime-service
+    build:
+      context: .
+      target: model-worker
+    environment:
+      <<: *runtime-environment
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY in .env}
+      P2P_OPENAI_MODEL: ${P2P_OPENAI_MODEL:-gpt-6-luna}
+      P2P_OPENAI_REASONING_EFFORT: ${P2P_OPENAI_REASONING_EFFORT:-medium}
+      P2P_OPENAI_TIMEOUT_SECONDS: ${P2P_OPENAI_TIMEOUT_SECONDS:-120}
+    volumes:
+      - artifacts:/data/artifacts
+    networks:
+      - backend
+      - model-egress
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *worker-healthcheck
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A prompt2play.tasks:celery_app inspect ping --destination models@$$HOSTNAME --timeout 5 | grep -q pong",
+        ]
+    mem_limit: 2g
+    cpus: 2.0
+    pids_limit: 256
+
+  worker-workflow:
+    <<: *runtime-service
+    build:
+      context: .
+      target: workflow-worker
+    environment: *runtime-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *worker-healthcheck
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A prompt2play.tasks:celery_app inspect ping --destination workflow@$$HOSTNAME --timeout 5 | grep -q pong",
+        ]
+    mem_limit: 768m
+    cpus: 0.75
+    pids_limit: 192
 
   worker-validation:
-    <<: *app
-    command:
-      ["celery", "-A", "prompt2play.tasks:celery_app", "worker", "-Q", "validation", "--concurrency=2", "--loglevel=INFO"]
+    <<: *runtime-service
+    build:
+      context: .
+      target: validation-worker
+    environment:
+      <<: *runtime-environment
+      P2P_BROWSER_VALIDATION: "true"
+    volumes:
+      - artifacts:/data/artifacts:ro
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m
+      - /home/prompt2play/.cache:rw,noexec,nosuid,size=256m
+    shm_size: 512m
     depends_on:
       migrate:
         condition: service_completed_successfully
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *worker-healthcheck
+      test:
+        [
+          "CMD-SHELL",
+          "celery -A prompt2play.tasks:celery_app inspect ping --destination validation@$$HOSTNAME --timeout 5 | grep -q pong",
+        ]
+    mem_limit: 2g
+    cpus: 2.0
+    pids_limit: 512
 
   beat:
-    <<: *app
-    command: ["celery", "-A", "prompt2play.tasks:celery_app", "beat", "--loglevel=INFO"]
+    <<: *runtime-service
+    build:
+      context: .
+      target: beat
+    environment: *runtime-environment
     depends_on:
       migrate:
         condition: service_completed_successfully
+      worker-workflow:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from redis import Redis; assert Redis.from_url('redis://redis:6379/0').ping()",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
 
   web:
-    build: ./web
-    environment:
-      VITE_API_URL: http://localhost:8000
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: ""
     ports:
-      - "5173:8080"
+      - "${P2P_WEB_PORT:-5173}:8080"
+    networks:
+      - edge
+      - backend
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+      - /var/cache/nginx:rw,noexec,nosuid,size=32m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+      start_period: 15s
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 128
     restart: unless-stopped
 
 volumes:
   artifacts:
   postgres:
   redis:
+
+networks:
+  edge:
+  backend:
+    internal: true
+  model-egress:

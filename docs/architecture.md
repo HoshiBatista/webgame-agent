@@ -21,6 +21,8 @@ systems and research behind them. [The MVP capacity plan](capacity.md) derives
 resource, quota, metric, and load-test requirements for 10 simultaneous active
 generation runs. [ADR 0003](adr/0003-openai-luna-mvp.md) selects OpenAI GPT-6
 Luna for the hackathon's first provider adapter.
+[ADR 0004](adr/0004-container-trust-boundaries.md) records the role-specific
+container, network, credential and nginx edge boundaries.
 
 ## Architectural thesis
 
@@ -77,6 +79,36 @@ Prompt2Play therefore follows these rules:
 
 The control plane may share a codebase and deployment at first. The execution
 plane and preview origin must never share its privileges.
+
+### Implemented container topology
+
+The modular monolith is split into process containers without introducing an
+internal model HTTP microservice. nginx is the only published port and serves
+the React bundle plus same-origin reverse proxy routes for FastAPI, SSE,
+previews and shared games. FastAPI is reachable only on the internal backend
+network.
+
+The Python Dockerfile has independent final targets for API, migrations, model
+work, durable outbox dispatch, Beat and browser validation. Only the validation
+target installs Chromium. Only `worker-models` receives a project-scoped OpenAI
+credential and joins an egress-capable network. The API, workflow, Beat and
+validation roles receive no provider credential; validation joins only the
+internal network and sees artifacts read-only. A separate workflow worker keeps
+outbox recovery independent of provider access.
+
+All application runtime roles use a non-root UID, read-only root filesystem,
+dropped Linux capabilities, `no-new-privileges`, tmpfs scratch space and
+explicit CPU, memory and PID ceilings. nginx applies same-origin security
+headers, request-body limits, generation/API rate limits, immutable asset
+caching and unbuffered long-lived SSE proxying. Production TLS terminates at
+the platform ingress or load balancer, which forwards HTTPS provenance to nginx
+for HSTS.
+
+This process isolation is a deployment boundary, not a microservice split: the
+roles share the same typed Python package and PostgreSQL state machine. A model
+HTTP service remains intentionally rejected until another product needs the
+gateway or independent ownership/deployment makes the network boundary worth
+its authentication, availability and versioning cost.
 
 ## Planes and trust boundaries
 
@@ -475,14 +507,14 @@ write access to the trusted runtime. Tool results are bounded structured data.
 `ContextCompiler` preserves trust levels instead of concatenating everything
 into an undifferentiated prompt:
 
-| Input | Trust | Treatment |
-| --- | --- | --- |
-| System, safety, and tool policy | Trusted | Fixed instructions |
-| Template and bridge contract | Trusted | Immutable versioned instructions |
-| `GameSpec` and `BuildPlan` | Validated data | Structured data, never executable instructions |
-| Findings and evidence summaries | Validated data | Schema checked and size bounded |
-| User request | Untrusted | Delimited content |
-| Generated source and asset metadata | Untrusted | Delimited content, lazily loaded |
+| Input                               | Trust          | Treatment                                      |
+| ----------------------------------- | -------------- | ---------------------------------------------- |
+| System, safety, and tool policy     | Trusted        | Fixed instructions                             |
+| Template and bridge contract        | Trusted        | Immutable versioned instructions               |
+| `GameSpec` and `BuildPlan`          | Validated data | Structured data, never executable instructions |
+| Findings and evidence summaries     | Validated data | Schema checked and size bounded                |
+| User request                        | Untrusted      | Delimited content                              |
+| Generated source and asset metadata | Untrusted      | Delimited content, lazily loaded               |
 
 The stable contract, acceptance rubrics, unresolved findings, and remaining
 budget are present on every model turn. Source files and skills are loaded only
@@ -694,18 +726,18 @@ return through the persisted state machine.
 
 Baseline Celery policy:
 
-| Setting or rule | Baseline |
-| --- | --- |
-| Task and result serialization | JSON only; never accept pickle |
-| Long-task acknowledgement | `acks_late` with idempotent side effects |
-| Worker loss | Reject and redeliver after the visibility lease |
-| Long-task prefetch | One task per available worker process |
-| Task duration | Per-queue soft and hard limits |
-| Redis visibility timeout | Greater than the largest hard task limit |
-| Result retention | Short TTL; results are operational, not canonical |
-| Broker payload | IDs, stage, attempt, expected state, trace context |
-| Concurrent redelivery | Lease plus monotonic execution fence on every commit |
-| Scheduled recovery | One Celery Beat scheduler plus idempotent jobs |
+| Setting or rule               | Baseline                                             |
+| ----------------------------- | ---------------------------------------------------- |
+| Task and result serialization | JSON only; never accept pickle                       |
+| Long-task acknowledgement     | `acks_late` with idempotent side effects             |
+| Worker loss                   | Reject and redeliver after the visibility lease      |
+| Long-task prefetch            | One task per available worker process                |
+| Task duration                 | Per-queue soft and hard limits                       |
+| Redis visibility timeout      | Greater than the largest hard task limit             |
+| Result retention              | Short TTL; results are operational, not canonical    |
+| Broker payload                | IDs, stage, attempt, expected state, trace context   |
+| Concurrent redelivery         | Lease plus monotonic execution fence on every commit |
+| Scheduled recovery            | One Celery Beat scheduler plus idempotent jobs       |
 
 ## MVP capacity baseline
 

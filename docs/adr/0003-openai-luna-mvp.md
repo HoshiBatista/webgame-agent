@@ -18,10 +18,14 @@ Both specification and game generation use SDK-native Pydantic Structured
 Outputs. Requests have a configured timeout and bounded SDK retries; application
 repair remains limited to two semantic attempts and is not delegated to the SDK.
 
-The API key is read only by model workers from `OPENAI_API_KEY`. It is never
-passed to generated games, validation evidence, Redis payloads, browser workers,
-or creator responses. Model name, response ID, token use, and latency are stored
-as provenance, while raw prompts and source are not written to telemetry.
+The API key is read only by model workers from `OPENAI_API_KEY`. Compose injects
+it only into `worker-models`, the sole application role on an egress-capable
+network. Prefer an OpenAI project service account and a key restricted to
+`api.responses.write`. The credential is never passed to API, workflow,
+migrations, Beat, generated games, validation evidence, Redis payloads, browser
+workers, or creator responses. Model name, response ID, token use, and latency
+are stored as provenance, while raw prompts and source are not written to
+telemetry.
 
 ## Consequences
 

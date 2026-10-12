@@ -3,7 +3,17 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173 },
+  server: {
+    port: 5173,
+    proxy: {
+      "/v1": "http://localhost:8000",
+      "/play": "http://localhost:8000",
+      "/healthz": "http://localhost:8000",
+      "/readyz": "http://localhost:8000",
+      "/docs": "http://localhost:8000",
+      "/openapi.json": "http://localhost:8000",
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",

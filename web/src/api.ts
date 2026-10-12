@@ -1,7 +1,6 @@
 import type { Project, Run } from "./types";
 
-export const API_URL: string =
-  import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL: string = import.meta.env.VITE_API_URL ?? "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {

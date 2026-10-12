@@ -301,21 +301,22 @@ jobs:
           cp .env.example .env
           printf '\nOPENAI_API_KEY=ci-placeholder\n' >> .env
           docker compose config --quiet
+          docker compose config --format json | python -c 'import json, sys; services=json.load(sys.stdin)["services"]; holders=sorted(name for name, service in services.items() if "OPENAI_API_KEY" in service.get("environment", {})); assert holders == ["worker-models"], holders'
 
-      - name: Build API and web images
+      - name: Build every role-specific image
         run: |
           docker build --check .
           docker build --check web
-          docker compose build api web
+          docker compose build
 
-      - name: Start production-like control plane
-        run: docker compose up --detach postgres redis migrate api web
+      - name: Start the production-like isolated stack
+        run: docker compose up --detach
 
-      - name: Wait for API and web health
+      - name: Wait for the nginx gateway and internal API
         shell: bash
         run: |
           for attempt in {1..60}; do
-            if curl --fail --silent http://localhost:8000/readyz >/dev/null && curl --fail --silent http://localhost:5173/ >/dev/null; then
+            if curl --fail --silent http://localhost:5173/readyz >/dev/null && curl --fail --silent http://localhost:5173/ >/dev/null; then
               exit 0
             fi
             sleep 2
@@ -323,10 +324,32 @@ jobs:
           docker compose ps
           exit 1
 
-      - name: Verify API schema and hardened preview headers
+      - name: Verify gateway routing, headers and rate limiting
+        shell: bash
         run: |
-          curl --fail --silent http://localhost:8000/openapi.json | grep --quiet 'Prompt2Play'
+          curl --fail --silent http://localhost:5173/openapi.json | grep --quiet 'Prompt2Play'
           curl --fail --silent --head http://localhost:5173/ | grep --ignore-case --quiet 'x-content-type-options: nosniff'
+          curl --fail --silent --head http://localhost:5173/ | grep --ignore-case --quiet 'content-security-policy:'
+          if curl --fail --silent --max-time 2 http://localhost:8000/healthz >/dev/null; then
+            echo "FastAPI must not be published directly on the host."
+            exit 1
+          fi
+          seq 1 25 | xargs -P25 -I{} curl --silent --output /dev/null --write-out '%{http_code}\n' -X POST -H 'Content-Type: application/json' --data '{}' http://localhost:5173/v1/projects > "${RUNNER_TEMP}/rate-statuses"
+          grep --quiet '^429$' "${RUNNER_TEMP}/rate-statuses"
+
+      - name: Verify runtime secret, filesystem and egress boundaries
+        shell: bash
+        run: |
+          for service in api worker-workflow worker-validation beat; do
+            docker compose exec -T "${service}" python -c 'import os; assert "OPENAI_API_KEY" not in os.environ'
+          done
+          docker compose exec -T worker-models python -c 'import os; assert os.environ["OPENAI_API_KEY"] == "ci-placeholder"'
+          docker compose exec -T api python -c 'import os; assert not os.access("/app", os.W_OK); assert not os.access("/data/artifacts", os.W_OK)'
+          docker compose exec -T worker-models python -c 'import os; assert os.access("/data/artifacts", os.W_OK)'
+          if docker compose exec -T worker-validation python -c 'import urllib.request; urllib.request.urlopen("https://example.com", timeout=3)' >/dev/null 2>&1; then
+            echo "Validation worker unexpectedly reached the public internet."
+            exit 1
+          fi
 
       - name: Preserve failure logs
         if: failure()

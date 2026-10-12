@@ -9,16 +9,16 @@ quality regressions in GPT-6 Luna on a controlled schedule.
 Protect `main` and `develop` and require `CI / required gate` plus both CodeQL
 matrix jobs. The aggregate CI gate succeeds only when every lane succeeds:
 
-| Lane | Evidence |
-| --- | --- |
-| Backend quality | locked dependency graph, Ruff format/lint, strict Mypy including eval scripts, offline Alembic SQL, sdist/wheel checks, isolated wheel import |
-| Backend unit | deterministic tests on Python 3.11, 3.12, 3.13 and 3.14 |
-| Frontend | Prettier, type-aware ESLint, Vitest coverage thresholds, npm audit and production Vite build |
-| Integration | real PostgreSQL 17 and Redis 8, migration up/down/up, API-to-artifact vertical slice, 65% combined backend coverage |
-| Browser | real Playwright Chromium at the mobile validation viewport, including input, state change and reset |
-| AI contracts | schema, adversarial prompt and golden-rubric scoring without credentials or network calls |
-| Security | Bandit, `pip-audit`, npm audit, Trivy vulnerability/misconfiguration/secret scan, credential-pattern guard, zizmor workflow audit and CodeQL for Python/TypeScript |
-| Delivery | Dockerfile build checks, production images, migrations, API readiness, OpenAPI, nginx security header and Compose teardown |
+| Lane            | Evidence                                                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Backend quality | locked dependency graph, Ruff format/lint, strict Mypy including eval scripts, offline Alembic SQL, sdist/wheel checks, isolated wheel import                      |
+| Backend unit    | deterministic tests on Python 3.11, 3.12, 3.13 and 3.14                                                                                                            |
+| Frontend        | Prettier, type-aware ESLint, Vitest coverage thresholds, npm audit and production Vite build                                                                       |
+| Integration     | real PostgreSQL 17 and Redis 8, migration up/down/up, API-to-artifact vertical slice, 65% combined backend coverage                                                |
+| Browser         | real Playwright Chromium at the mobile validation viewport, including input, state change and reset                                                                |
+| AI contracts    | schema, adversarial prompt and golden-rubric scoring without credentials or network calls                                                                          |
+| Security        | Bandit, `pip-audit`, npm audit, Trivy vulnerability/misconfiguration/secret scan, credential-pattern guard, zizmor workflow audit and CodeQL for Python/TypeScript |
+| Delivery        | role-specific Docker targets, full Compose stack, secret/egress/read-only boundaries, migrations, API readiness through nginx, rate limiting, OpenAPI and teardown |
 
 Coverage reports and the frontend bundle are retained as workflow artifacts for
 14 days. Dependency updates are grouped weekly for uv/Python, npm, Docker base
@@ -61,16 +61,21 @@ The full delivery smoke test is equivalent to:
 
 ```bash
 cp .env.example .env
+sed -i 's/^OPENAI_API_KEY=$/OPENAI_API_KEY=ci-placeholder/' .env
 docker compose config --quiet
-docker compose build api web
-docker compose up --detach postgres redis migrate api web
-curl --fail http://localhost:8000/readyz
+docker compose build
+docker compose up --detach
+curl --fail http://localhost:5173/readyz
 curl --fail http://localhost:5173/
 docker compose down --volumes --remove-orphans
 ```
 
-Use only a non-production placeholder API key for this smoke test. It does not
-start model workers and makes no model request.
+Use only a non-production placeholder API key for this smoke test. The model
+worker starts so its health and secret boundary can be checked, but no generation
+task is submitted and no OpenAI request is made. CI also proves that port 8000
+is not published, only `worker-models` receives the key and egress network, API
+and validation mounts are read-only, validation has no public network path, and
+nginx returns 429 under a generation burst.
 
 ## Live GPT-6 Luna evaluation
 

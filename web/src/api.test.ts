@@ -18,7 +18,8 @@ describe("API client", () => {
       project_id: "project",
       run_id: "run",
     });
-    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/v1/projects");
     expect(init.method).toBe("POST");
     expect(init.headers).toMatchObject({
       "Idempotency-Key": expect.any(String),

@@ -37,6 +37,13 @@ misleading validation results.
   Content Security Policy, network, and resource settings.
 - Separate generation and validation workers from application secrets and
   privileged internal services.
+- Give only the model worker an OpenAI project service-account credential and
+  public egress; scope that credential to response creation where supported.
+- Publish only the nginx gateway. Keep FastAPI, PostgreSQL, Redis and workers on
+  an internal network, and terminate public TLS at the deployment ingress.
+- Run runtime containers as non-root with a read-only root filesystem, dropped
+  capabilities, `no-new-privileges`, bounded processes/CPU/memory and the
+  narrowest artifact mount mode needed by the role.
 - Bound generation size, execution time, repair attempts, browser resources,
   and retained artifacts.
 - Redact secrets and sensitive prompt content from logs and diagnostics.

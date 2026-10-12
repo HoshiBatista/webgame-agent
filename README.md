@@ -53,7 +53,9 @@ See [docs/architecture.md](docs/architecture.md) for the target system,
 generation workflow, trust boundaries, artifact contract, and delivery plan.
 The decisions are recorded in
 [ADR 0001](docs/adr/0001-target-architecture.md) and
-[ADR 0002](docs/adr/0002-generation-harness.md), with supporting evidence in
+[ADR 0002](docs/adr/0002-generation-harness.md). The implemented container
+trust boundaries are recorded in
+[ADR 0004](docs/adr/0004-container-trust-boundaries.md), with supporting evidence in
 the [landscape review](docs/research/landscape.md). Resource and provider-quota
 requirements are calculated in the
 [MVP capacity plan](docs/capacity.md).
@@ -61,13 +63,15 @@ requirements are calculated in the
 ## Implemented product flow
 
 ```text
-React/Vite → FastAPI → PostgreSQL outbox → Redis/Celery
-                                           ├─ models: specify/generate/repair → GPT-6 Luna
-                                           └─ validation: static rules + Playwright Chromium
-                                                               ↓
-                                               immutable SHA-256 HTML artifact
-                                                               ↓
-                                             sandboxed iframe + CSP + gallery/share
+Browser → nginx :5173 ┬→ React static UI
+                      └→ internal FastAPI → PostgreSQL outbox → Redis/Celery
+                                                               ├─ model worker → GPT-6 Luna
+                                                               ├─ workflow worker
+                                                               └─ validation worker → Chromium
+                                                                          ↓
+                                                        immutable SHA-256 artifact
+                                                                          ↓
+                                                       sandboxed iframe + CSP/share
 ```
 
 Games are schema-planned before code generation. A candidate is not exposed as
@@ -91,7 +95,7 @@ fed into future specifications. See
 ├── alembic/                  # PostgreSQL schema migration
 ├── tests/                    # Unit and contract tests
 ├── compose.yaml              # Full local MVP stack
-├── Dockerfile                # API/model/validation worker image
+├── Dockerfile                # Separate API/model/workflow/validation build targets
 ├── AGENTS.md                 # Repository-wide engineering guide
 ├── CONTRIBUTING.md           # Contribution workflow
 ├── pyproject.toml            # Python metadata and tools
@@ -122,17 +126,29 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open `http://localhost:5173`. The API and OpenAPI UI are available at
-`http://localhost:8000` and `http://localhost:8000/docs`. The first image build
-installs Playwright Chromium and can take several minutes.
+Open `http://localhost:5173`. nginx is the only published service: the API and
+OpenAPI UI are available through the same origin at
+`http://localhost:5173/v1/...` and `http://localhost:5173/docs`. Port 8000 is
+internal and is not published. The first validation-worker image build installs
+Playwright Chromium and can take several minutes; the API and model images do
+not contain a browser.
 
 The services are intentionally separate:
 
 - `api` accepts prompts and streams persisted progress;
-- `worker-models` is the only worker that calls OpenAI;
-- `worker-validation` opens untrusted games in Chromium;
+- `worker-models` is the only service with OpenAI credentials and public egress;
+- `worker-workflow` dispatches durable outbox commands without provider secrets;
+- `worker-validation` opens untrusted games in Chromium on an internal-only
+  network with read-only artifacts;
 - `beat` recovers unsent PostgreSQL outbox commands;
-- `postgres` owns product state; Redis is delivery infrastructure only.
+- `postgres` owns product state; Redis is delivery infrastructure only;
+- `web` serves React and reverse-proxies API, SSE, previews and public games.
+
+Runtime containers are non-root, capability-free, read-only and resource
+bounded. In production, terminate TLS at the platform ingress/load balancer and
+forward `X-Forwarded-Proto: https`; nginx then emits HSTS. Use a dedicated
+OpenAI project service account with the narrow `api.responses.write` permission,
+and inject its key only into `worker-models`.
 
 Host-only quality checks do not require credentials or infrastructure:
 
