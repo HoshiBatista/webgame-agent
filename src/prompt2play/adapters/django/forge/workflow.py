@@ -511,6 +511,10 @@ def validate_candidate(job_id, runner, values):
         candidate = Candidate.objects.get(pk=job.active_candidate_id)
         payload = candidate_payload(candidate)
         report = deepcopy(values["report"])
+        # Only the user's job setting can relax completion. A model/runner
+        # cannot silently mark a required playthrough optional.
+        if job.playthrough_mode == "auto" and report.get("completion_required", True) is not True:
+            raise ValidationError("The user requested automatic playthrough validation.")
         try:
             require_report_binding(payload["files"], payload["html"], payload["spec"], report)
         except (ValueError, TypeError, KeyError, UnicodeError, AttributeError) as exc:

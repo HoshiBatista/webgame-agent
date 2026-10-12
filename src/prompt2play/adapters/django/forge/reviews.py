@@ -129,6 +129,11 @@ def insights(job):
         "provenance": provenance,
         "author_steps": author_steps,
         "validation": report,
+        "draft_diagnostic": workflow.store().read_json(job.checkpoint["browser_diagnostic"])[
+            "report"
+        ]
+        if job.checkpoint.get("browser_diagnostic")
+        else None,
         "feedback": job.review.get("feedback", []),
         "approval": job.stage.removeprefix("review_") if job.status == "waiting" else None,
         "version_id": str(job.result_version_id) if job.result_version_id else None,

@@ -24,6 +24,17 @@ def decide(report: Mapping[str, object], attempt: int, max_repairs: int) -> Deci
         if isinstance(raw_checks, list)
         else []
     )
+    # Only completion may be explicitly optional. Every other skipped check
+    # still blocks release; manual playthrough is never presented as passed.
+    if report.get("completion_required", True) is False:
+        checks = [
+            check
+            for check in checks
+            if not (
+                check.get("name") in {"completion:1280", "completion:390"}
+                and check.get("status") == "skipped"
+            )
+        ]
     if report.get("errors") or any(check.get("status") == "failed" for check in checks):
         action: Action = "repair" if attempt <= max_repairs else "stop"
         return Decision("failed", action, "Validation found blocking defects.")
@@ -49,6 +60,8 @@ def decide(report: Mapping[str, object], attempt: int, max_repairs: int) -> Deci
             "independent_acceptance",
         )
     } | {"mobile_layout:390"}
+    if report.get("completion_required", True) is False:
+        required -= {"completion:1280", "completion:390"}
     if not required.issubset(names):
         return Decision(
             "unverified", "stop", "Independent playability criteria have not all passed."

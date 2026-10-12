@@ -244,3 +244,33 @@ def test_native_static_policy_rejects_direct_test_bridge_and_runtime_controls() 
             check["name"] == "offline:game.js" and check["status"] == "failed"
             for check in report["checks"]
         )
+
+
+def test_native_smoke_scenario_is_rejected_without_rewriting_it(tmp_path: Path) -> None:
+    from prompt2play.validation.runner import validate_native_acceptance
+
+    scenario = acceptance()
+    scenario.update(start_selector="#p2p-start", restart_selector="#p2p-restart")
+    for device in ("desktop", "touch"):
+        scenario[device]["completion"] = {"path": "/lastCommand/type", "one_of": ["TRAIN"]}
+    original = copy.deepcopy(scenario)
+    with pytest.raises(ValueError, match="smoke test"):
+        validate_native_acceptance(scenario)
+    report = IsolatedValidator().validate(
+        {"game.js": "// no execution"},
+        "x",
+        {"input_acceptance": scenario},
+        threading.Event(),
+        tmp_path,
+    )
+    assert report["status"] == "unverified" and "set_test_scenario" in report["warnings"][0]
+    assert scenario == original
+
+
+def test_long_strategy_simulation_waits_have_a_separate_work_quota() -> None:
+    scenario = acceptance()
+    scenario["desktop"]["steps"].append({"kind": "wait", "ms": 600000})
+    assert validate_acceptance(scenario)["desktop"]["steps"][-1]["ms"] == 600000
+    scenario["desktop"]["steps"] += [{"kind": "wait", "ms": 600000}] * 3
+    with pytest.raises(ValueError, match="thirty simulated"):
+        validate_acceptance(scenario)

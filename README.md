@@ -41,7 +41,7 @@ The studio supports this complete workflow:
 6. expose a preview and download of the exact artifact that passed mandatory checks.
 
 A generated game is successful only if it renders, responds to input, and
-supports an appropriate completion, failure, or restart flow.
+supports a working restart flow. Full victory/failure playthrough and balance are reviewed by a person by default; automatic end-to-end playthrough is an optional launch setting.
 Required skipped checks, including unavailable browser validation, mean
 **unverified**, not successful delivery. A failed edit preserves the last
 playable revision.
@@ -128,6 +128,8 @@ Setup asks for the administrator password and creates a private local
 The `--slim` validator build uses a system Chromium image when the larger official
 Playwright image is impractical; reports record the actual image and browser.
 
+Studio settings default to **manual playthrough**: automatic launch, input, rendering, restart, mobile layout and error checks remain required. The report explicitly says that victory, defeat and balance need human review. Select automatic playthrough for a reliable game-specific scenario; its failure then blocks delivery. Existing jobs retain their old choice unless explicitly changed when extending the budget.
+
 New Studio runs use a **USD API-equivalent budget** (default $10, editable
 from $0.01 to $1,000), including Codex subscription runs. Fresh input, cached
 input, and output use different Standard rates. The server fixes the explicit
@@ -153,6 +155,15 @@ output cost without assuming a cache hit. An in-flight response can exceed the
 reservation (Codex exposes no portable hard output cap); record the overrun and
 stop subsequent calls. Unreported usage retains its reservation even after
 cancellation or restart. Repeated receipts never charge twice.
+
+After a budget stop, the job monitor offers **Increase limit and continue**.
+Enter the new **total** USD limit (or token total for legacy runs). The same job
+continues from its saved draft with its original model, tariff, paid receipts,
+uncertain reservations and repair history. The change is recorded and fenced
+against double clicks, cancellation and a concurrently started successor.
+Increasing a budget never silently launches a new game or resets its usage.
+Already-paid author responses are saved even when their final receipt exceeds
+the admission estimate; only subsequent paid requests are stopped.
 
 `budget_usd` is a decimal API field; send it without `budget_tokens`. Legacy API
 clients omitting `budget_usd`, existing jobs, and the offline evaluation CLI
@@ -237,6 +248,23 @@ feedback instead of failing the entire job. Malformed structured author/review
 responses are durably recorded, charged once and corrected in a fresh budgeted
 request; network failures with uncertain results still require reconciliation.
 Explicit operation/check/turn bounds remain available only to offline experiments.
+
+The author has separate `check()` (source/syntax only) and `browser_check()`
+(isolated desktop/touch execution) operations. Browser diagnostics preserve
+exact source bytes, screenshots, trace and per-step state observations. They are
+visible under Plan and stages, but never grant preview/publication eligibility;
+the validator role still checks the committed candidate independently.
+Unchanged diagnostics are reused, and submission requires a passing diagnostic
+when the studio browser callback is available.
+
+`set_test_scenario(content)` corrects declarative gameplay actions separately from
+the approved mechanics/design. Optional automatic native playthroughs must explicitly reach `/phase`
+`won` or `lost` through normal controls. In that automatic mode, a test of an intermediate command, such
+as ordering a worker, is reported as an unsuitable scenario instead of silently
+relabelled as a whole-game completion test. Clock games support up to ten simulated
+minutes per wait, thirty per scenario, advanced in batches that respect the trusted
+runtime's 600-tick call bound. These sandbox work quotas do not limit generation
+time or author operations. No instant-win test commands are allowed.
 
 The worker saves immutable draft snapshots between author/review steps. A restart
 uses the saved files, plan, current step and feedback without rewriting completed

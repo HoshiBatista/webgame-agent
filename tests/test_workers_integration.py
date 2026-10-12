@@ -70,6 +70,31 @@ def coordinator(token: str) -> worker.Coordinator:
     return worker.Coordinator("http://localhost", token, client=client)
 
 
+@pytest.fixture(autouse=True)
+def browser_transport_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Authored transport result only; real isolated execution is tested separately.
+    from prompt2play.validation.runner import artifact_manifest
+
+    def validate(
+        _self: Any,
+        files: dict[str, str],
+        html: str,
+        spec: dict[str, Any],
+        *_args: Any,
+        **_kwargs: Any,
+    ) -> dict[str, Any]:
+        return {
+            "schema_version": 2,
+            "artifact": artifact_manifest(files, html, spec),
+            "status": "passed",
+            "checks": [],
+            "warnings": ["Authored transport fixture"],
+            "evidence_files": [],
+        }
+
+    monkeypatch.setattr("prompt2play.workers.runner.IsolatedValidator.validate", validate)
+
+
 @pytest.fixture
 def prepared(settings: Any, tmp_path: Path) -> tuple[Any, worker.Coordinator, dict[str, Any]]:
     settings.ARTIFACT_ROOT = tmp_path / "artifacts"
@@ -137,7 +162,13 @@ class ScriptedProvider:
 
 def arguments() -> argparse.Namespace:
     return argparse.Namespace(
-        deadline=30, model="fixture", call_timeout=10, codex="fixture", mode="single_author"
+        deadline=30,
+        model="fixture",
+        call_timeout=10,
+        codex="fixture",
+        mode="single_author",
+        image="fixture",
+        validation_timeout=30,
     )
 
 

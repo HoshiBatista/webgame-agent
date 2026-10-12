@@ -42,12 +42,12 @@ export function validationState(value?: Validation | null): 'passed' | 'partial'
   // A skipped browser run cannot hide a mismatched check or review. Missing
   // bindings remain explicit uncertainty; a known different hash is a failure.
   if (value.checks.some(check => checkState(check, value) === 'stale') || value.review && (value.review.artifact_sha256 !== hash || !value.review.approved)) return 'failed';
-  if (!value.checks?.length || value.checks.some(check => ['skipped', 'unbound'].includes(checkState(check, value)))) return value.browser_contract_version === 3 ? 'unverified' : 'partial';
+  if (!value.checks?.length || value.checks.some(check => ['skipped', 'unbound'].includes(checkState(check, value)) && !(value.completion_required === false && /^completion:(1280|390)$/.test(check.name) && checkState(check, value) === 'skipped'))) return value.browser_contract_version === 3 ? 'unverified' : 'partial';
   if (value.status === 'unverified') return 'unverified';
   if (value.browser_contract_version === 3) {
     const mandatory = ['startup', 'surface', 'input', 'completion', 'restart', 'javascript_errors', 'external_requests', 'evidence', 'independent_acceptance'];
     if (!/^sha256:[a-f0-9]{64}$/.test(value.validator_image_sha256 || '') || !isHash(value.suite_sha256)) return 'unverified';
-    if (mandatory.some(name => [1280, 390].some(width => !value.checks.some(check => check.name === `${name}:${width}` && check.status === 'passed'))) || !value.checks.some(check => check.name === 'mobile_layout:390' && check.status === 'passed')) return 'unverified';
+    if (mandatory.filter(name => name !== 'completion' || value.completion_required !== false).some(name => [1280, 390].some(width => !value.checks.some(check => check.name === `${name}:${width}` && check.status === 'passed'))) || !value.checks.some(check => check.name === 'mobile_layout:390' && check.status === 'passed')) return 'unverified';
     return value.status;
   }
   if (!value.review) return 'failed';

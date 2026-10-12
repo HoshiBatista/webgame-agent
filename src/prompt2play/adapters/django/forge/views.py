@@ -195,6 +195,17 @@ class JobCancelView(TeamView):
         return Response(job_data(services.cancel_job(pk)))
 
 
+class JobBudgetView(TeamView):
+    def post(self, request, pk):
+        from .budgets import extend_budget
+        from .serializers import BudgetExtensionSerializer
+
+        get_object_or_404(Job, pk=pk)
+        return Response(
+            job_data(extend_budget(pk, validated(BudgetExtensionSerializer, request.data)))
+        )
+
+
 class JobCandidatesView(TeamView):
     def get(self, request, pk):
         job = get_object_or_404(Job, pk=pk)
@@ -503,3 +514,13 @@ class DraftSaveView(WorkerView):
         from .serializers import DraftSerializer
 
         return Response(record_draft(pk, request.user, validated(DraftSerializer, request.data)))
+
+
+class DraftDiagnosticView(WorkerView):
+    def post(self, request, pk):
+        from .diagnostics import record_diagnostic
+        from .serializers import DiagnosticSerializer
+
+        return Response(
+            record_diagnostic(pk, request.user, validated(DiagnosticSerializer, request.data))
+        )

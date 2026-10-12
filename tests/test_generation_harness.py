@@ -699,3 +699,96 @@ def test_draft_snapshot_larger_than_plan_envelope_survives_restart() -> None:
         replace(request, resume_state=states[-1]), resumed, GenerationControl.bounded()
     )
     assert candidate.files["game.js"] == source and not resumed.roles
+
+
+def test_author_corrects_scenario_gets_real_diagnostics_and_resumes_without_losing_it() -> None:
+    import copy
+
+    plan, source = fixture()
+    original_scenario = copy.deepcopy(plan["build_plan"]["input_acceptance"])
+    for device in ("desktop", "touch"):
+        plan["build_plan"]["input_acceptance"][device]["completion"] = {
+            "path": "/lastCommand/type",
+            "one_of": ["TRAIN"],
+        }
+    snapshots: list[dict[str, Any]] = []
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Smoke scenario",
+            },
+            {
+                "operations": [
+                    operation("set_test_scenario", content=json.dumps(original_scenario)),
+                    operation("browser_check"),
+                ],
+                "summary": "Real scenario",
+            },
+        ]
+    )
+    diagnostics: list[dict[str, Any]] = []
+
+    def browser(files: dict[str, str], spec: dict[str, Any]) -> dict[str, Any]:
+        diagnostics.append(copy.deepcopy(spec))
+        assert files["game.js"] == source
+        return {"status": "passed", "release_eligible": False}
+
+    with pytest.raises(GenerationStopped, match="explicit turn"):
+        GenerationHarness(
+            limits=WorkspaceLimits(max_turns=2),
+            on_checkpoint=snapshots.append,
+            on_browser_check=browser,
+        ).attempt(GenerationRequest("Fixture"), gateway, GenerationControl.bounded())
+    assert "smoke test" in gateway.prompts[-1]
+    assert len(diagnostics) == 1
+    resumed = ScriptedGateway([{"operations": [operation("submit")], "summary": "Continue"}])
+    result = GenerationHarness(on_browser_check=browser).attempt(
+        GenerationRequest("Fixture", resume_state=snapshots[-1]),
+        resumed,
+        GenerationControl.bounded(),
+    )
+    assert len(diagnostics) == 1, "Unchanged passed diagnostic is reused across resume"
+    assert result.spec["input_acceptance"]["desktop"]["completion"]["path"] == "/phase"
+    assert result.plan == plan["build_plan"], (
+        "Approved design is unchanged; test actions are separate"
+    )
+    assert result.provenance["browser_diagnostics"]["result"]["release_eligible"] is False
+
+
+def test_completed_response_is_saved_when_its_cost_exceeds_budget() -> None:
+    plan, source = fixture()
+    snapshots: list[dict[str, Any]] = []
+    control = GenerationControl.bounded(cost_limit_nano=10)
+
+    class OverrunGateway(ScriptedGateway):
+        def generate(
+            self,
+            prompt: str,
+            schema: dict[str, Any],
+            role: str,
+            control: GenerationControl,
+            *,
+            max_output: int = 16000,
+        ) -> GatewayReply:
+            reply = super().generate(prompt, schema, role, control, max_output=max_output)
+            if role == "author":
+                control.spent_nano = 11
+            return reply
+
+    gateway = OverrunGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("check")],
+                "summary": "Paid answer",
+            },
+        ]
+    )
+    with pytest.raises(GenerationStopped, match="бюджет"):
+        GenerationHarness(on_checkpoint=snapshots.append).attempt(
+            GenerationRequest("Fixture"), gateway, control
+        )
+    assert snapshots[-1]["files"]["game.js"] == source
+    assert snapshots[-1]["turn"] == 1

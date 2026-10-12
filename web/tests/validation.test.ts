@@ -152,3 +152,14 @@ test('native browser evidence needs the full mandatory gate and no model approva
   assert.equal(validationState({...report, validator_image_sha256: undefined}), 'unverified');
   assert.equal(validationState({...report, status: 'unverified'}), 'unverified');
 });
+
+test('manual playthrough skips only completion without claiming it passed', () => {
+  const checks: ValidationCheck[] = ['startup', 'surface', 'input', 'completion', 'restart', 'javascript_errors', 'external_requests', 'evidence', 'independent_acceptance'].flatMap(name => [1280, 390].map(width => check({name:`${name}:${width}`, status: name === 'completion' ? 'skipped' : 'passed'})));
+  checks.push(check({name:'mobile_layout:390'}));
+  const value = report({checks, completion_required: false, browser_contract_version:3, validator_image_sha256:`sha256:${hash}`, suite_sha256:hash});
+  assert.equal(validationState(value), 'passed');
+  assert.equal(checkState(checks.find(c => c.name === 'completion:1280')!, value), 'skipped');
+  assert.equal(validationState({...value, completion_required:true}), 'unverified');
+  checks.find(c => c.name === 'input:390')!.status = 'skipped';
+  assert.equal(validationState(value), 'unverified');
+});

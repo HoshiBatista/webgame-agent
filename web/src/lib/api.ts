@@ -114,6 +114,7 @@ export const api = {
   review: (jobId: string, stage_fence: number, action: 'approve' | 'revise', feedback = '') => checked(post<Job>(`/api/jobs/${id(jobId)}/review/`, {stage_fence, action, feedback}), job, true),
   events: (jobId: string, after = 0, signal?: AbortSignal) => checked(requestJson<JobEvent[]>(`/api/jobs/${id(jobId)}/events/?after=${after}`, { signal }), listOf(value => record(value) && Number.isSafeInteger(value.id) && strings(value, ['job_id', 'message', 'stage', 'level', 'created_at']))),
   cancelJob: (jobId: string) => checked(post<Job>(`/api/jobs/${id(jobId)}/cancel/`), job, true),
+  extendBudget: (jobId: string, stage_fence: number, budget: ({budget_usd: string} | {budget_tokens: number}) & {playthrough_mode?: 'manual' | 'auto'}) => checked(post<Job>(`/api/jobs/${id(jobId)}/budget/`, {stage_fence, ...budget}), job, true),
   runners: (signal?: AbortSignal) => checked(requestJson<Runner[]>('/api/runners/', { signal }), listOf(runner)),
   createRunner: (name: string, role: RunnerRole = 'generator') => checked(post<{ runner: Runner; token: string }>('/api/runners/', { name, role }), value => record(value) && runner(value.runner) && typeof value.token === 'string', true),
   revokeRunner: (runnerId: string) => checked(post<Runner>(`/api/runners/${id(runnerId)}/revoke/`), runner, true),

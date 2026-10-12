@@ -32,6 +32,10 @@ DRAFT_SCHEMA = obj(
         "review_feedback": {"type": "array", "items": {"type": "object"}},
     }
 )
+# Optional additions preserve immutable v1 checkpoints from earlier workers.
+DRAFT_SCHEMA["properties"].update(
+    test_scenario={"type": "object"}, browser_result={"type": "object"}
+)
 
 
 def validate_draft_state(state: dict[str, Any]) -> None:
@@ -45,6 +49,10 @@ def validate_draft_state(state: dict[str, Any]) -> None:
         raise ValueError("Invalid authoring checkpoint structure") from None
     GameSpec(state["spec"])
     BuildPlan(state["plan"])
+    if state.get("test_scenario"):
+        from prompt2play.validation.runner import validate_acceptance
+
+        validate_acceptance(state["test_scenario"])
     limits = WorkspaceLimits()
     files = state["files"]
     if (

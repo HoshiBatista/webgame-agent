@@ -16,6 +16,7 @@ const requestBytes = fs.readFileSync('/input/request.json');
 const request = JSON.parse(requestBytes);
 const html = fs.readFileSync('/input/game.html', 'utf8');
 const manifest = request.artifact;
+const requireCompletion = request.completion_required !== false;
 const harnessFiles = Object.fromEntries(fs.readdirSync('/validator').filter(name => name.endsWith('.mjs')).sort().map(name => [name, hash(fs.readFileSync(`/validator/${name}`))]));
 const checks = [], errors = [], warnings = [], evidenceFiles = [];
 const url = 'http://game.invalid/index.html';
@@ -169,9 +170,18 @@ try {
       }, seed);
       if (manualSupported) await resetFrozen();
       const history = [];
+      const observations = [];
       const causalTrials = [];
       const runStep = async step => {
-        if (step.kind === 'wait' && nativeClock) await bridge.advance(Math.max(1, Math.ceil(step.ms / (1000 * stepSeconds))));
+        if (step.kind === 'wait' && nativeClock) {
+          // The trusted runtime advances at most 600 ticks per call. Preserve
+          // long strategy waits without silently truncating simulated time.
+          let remaining = Math.ceil(step.ms / (1000 * stepSeconds));
+          while (remaining > 0) {
+            const batch = Math.min(600, remaining);
+            await bridge.advance(batch); remaining -= batch;
+          }
+        }
         else {
           await input(page, step, touch);
           if (nativeClock) await bridge.advance(6);
@@ -189,6 +199,7 @@ try {
           const beforeImage = await surface.locator.screenshot({animations: 'disabled'});
           await runStep(step);
           const after = await bridge.snapshot();
+          observations.push({step: history.length + 1, action: step, phase: after.phase, snapshot: canonical(after).slice(0, 2048)});
           const afterImage = await surface.locator.screenshot({animations: 'disabled'});
           if (step.kind !== 'wait') {
             events++;
@@ -202,7 +213,7 @@ try {
                 const noInput = await bridge.snapshot();
                 const noInputImage = await surface.locator.screenshot({animations: 'disabled'});
                 timelineControl = canonical(noInput) !== canonical(after) && compareImages(noInputImage, afterImage).visible_changed;
-                if (causalTrials.length < 4) causalTrials.push({event: step.kind, state_different: canonical(noInput) !== canonical(after), pixels: compareImages(noInputImage, afterImage), actual_snapshot: canonical(after).slice(0, 4096), no_input_snapshot: canonical(noInput).slice(0, 4096)});
+                if (causalTrials.length < 4) causalTrials.push({event: step.kind, state_different: canonical(noInput) !== canonical(after), pixels: compareImages(noInputImage, afterImage), actual_snapshot: canonical(after).slice(0, 2048), no_input_snapshot: canonical(noInput).slice(0, 4096)});
                 await replay([...history, step]);
               }
               if (timelineControl) {observedInput = true; observedVisible = true;}
@@ -217,9 +228,11 @@ try {
       const terminalStatus = await page.locator('#p2p-status').count() ? await page.locator('#p2p-status').textContent() : '';
       const controlsAtOutcome = native ? await inspectNativeControls(page) : null;
       const nativeOracle = !native || (controlsAtOutcome.rendered && ['won', 'lost'].includes(final.phase) && ['Completed', 'Game over'].includes(terminalStatus));
-      const outcome = nativeOracle && completed(final, scenario.completion) && !completed(initial, scenario.completion);
-      record(`completion:${width}`, outcome, 'The real input sequence reached the declared game outcome from a nonterminal start', {path: scenario.completion.path, observed: pointer(final, scenario.completion.path), actual_input: true, native_oracle: nativeOracle, visible_status: terminalStatus, ...(native ? {controls: controlsAtOutcome} : {})});
-      record(`independent_acceptance:${width}`, outcome && causalControl && observedInput, 'Independent harness checks real controls, visible progress, outcome and restart; candidate-plan conditions remain supplementary', {actual_input: true, events, assertions: 1, steps_completed: scenario.steps.length + 1, suite_sha256: request.suite_sha256, acceptance_source: request.acceptance_source}, 'scenario');
+      const outcome = requireCompletion && nativeOracle && completed(final, scenario.completion) && !completed(initial, scenario.completion);
+      save(`scenario-${width}.json`, Buffer.from(JSON.stringify({steps: scenario.steps, observations, final}, null, 2)));
+      if (requireCompletion) record(`completion:${width}`, outcome, outcome ? 'Real gameplay reached the declared outcome' : 'The scenario ended before the declared outcome. Inspect its actions, waits and observed state before changing mechanics.', {path: scenario.completion.path, expected: scenario.completion.one_of, observed: pointer(final, scenario.completion.path), steps: scenario.steps.slice(-8), total_steps: scenario.steps.length, recent_observations: observations.slice(-2), actual_input: true, native_oracle: nativeOracle, visible_status: terminalStatus, ...(native ? {controls: controlsAtOutcome} : {})});
+      else checks.push({name: `completion:${width}`, status: 'skipped', required: false, message: 'Прохождение, победа, поражение и баланс оставлены для ручной проверки.', check_kind: 'browser', artifact_sha256: manifest.html_sha256, limitations: ['Human playthrough not performed'], evidence: {observed_phase: final.phase, completion_required: false}});
+      record(`independent_acceptance:${width}`, (!requireCompletion || outcome) && causalControl && observedInput, requireCompletion ? 'Independent harness checks real controls, visible progress, outcome and restart' : 'Automatic launch, real input and visible progress checks; complete playthrough requires human review', {actual_input: true, events, assertions: 1, steps_completed: scenario.steps.length + 1, suite_sha256: request.suite_sha256, acceptance_source: request.acceptance_source}, 'scenario');
       const requestedCapabilities = request.spec.capabilities || {};
       const requestedStorage = requestedCapabilities.persistence === true || Array.isArray(requestedCapabilities) && requestedCapabilities.includes('storage') || request.spec.persistence_required === true;
       const completionSave = requestedStorage ? await bridge.exportSave() : null;
@@ -231,8 +244,8 @@ try {
       const restarted = await bridge.snapshot();
       const restartImage = await page.screenshot(); save(`restart-${width}.png`, restartImage);
       const controlsAfterRestart = native ? await inspectNativeControls(page) : null;
-      const reset = (!native || controlsAtOutcome.rendered && controlsAfterRestart.rendered) && canonical(final) !== canonical(restarted) && !completed(restarted, scenario.completion) && compareImages(finalImage, restartImage).visible_changed;
-      record(`restart:${width}`, reset, 'Visible restart action leaves the completed state and redraws the game', {actual_input: true, state_changed: canonical(final) !== canonical(restarted), visible_changed: compareImages(finalImage, restartImage).visible_changed, ...(native ? {controls_before: controlsAtOutcome, controls_after: controlsAfterRestart} : {})});
+      const reset = (!native || controlsAtOutcome.rendered && controlsAfterRestart.rendered) && canonical(final) !== canonical(restarted) && (!requireCompletion || !completed(restarted, scenario.completion)) && compareImages(finalImage, restartImage).visible_changed;
+      record(`restart:${width}`, reset, 'Visible restart action resets the exercised gameplay and redraws the game', {actual_input: true, state_changed: canonical(final) !== canonical(restarted), visible_changed: compareImages(finalImage, restartImage).visible_changed, ...(native ? {controls_before: controlsAtOutcome, controls_after: controlsAfterRestart} : {})});
       if (touch) {
         const layout = await page.evaluate(() => ({viewport: innerWidth, scroll: document.documentElement.scrollWidth, height: innerHeight, document_height: document.documentElement.scrollHeight, body: document.body.getBoundingClientRect().width, position: scrollY}));
         const needsScroll = layout.document_height > layout.height + 2;
@@ -299,6 +312,6 @@ try {
 finally {if (browser) await browser.close();}
 warnings.push('Native game and bridge share a browser realm: observations are not proof against deliberately falsified game state; human mechanics review remains required.');
 warnings.push('Chromium desktop and touch emulation establish only the recorded scenarios; actual Android/iOS WebView and human quality review remain separate.');
-process.stdout.write(JSON.stringify({schema_version: 2, browser_contract_version: 3, artifact: manifest,
+process.stdout.write(JSON.stringify({schema_version: 2, browser_contract_version: 3, completion_required: requireCompletion, playthrough: requireCompletion ? "automatic" : "human_review_required", artifact: manifest,
   request_sha256: hash(requestBytes), harness_files_sha256: harnessFiles, validator_image_sha256: request.validator_image_sha256,
   suite_sha256: request.suite_sha256, acceptance_source: request.acceptance_source, browser_version: browser?.version(), checks, errors, warnings, evidence_files: evidenceFiles}));

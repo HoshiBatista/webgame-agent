@@ -1011,3 +1011,165 @@ def test_postgresql_double_approval_releases_only_once(team: Team) -> None:
         assert sorted(pool.map(approve, [1, 2])) == ["accepted", "stale"]
     job.refresh_from_db()
     assert job.status == "queued" and job.stage_fence == 2
+
+
+def test_budget_extension_resumes_same_job_keeps_ledger_and_fences_duplicate_click(
+    team: Team,
+) -> None:
+    from decimal import Decimal
+
+    job, _ = job_for(team, model="gpt-6.1-sol", budget_usd=Decimal("10.00"))
+    Job.objects.filter(pk=job.pk).update(
+        status="failed",
+        error="BudgetExhausted: next request",
+        cost_nano=6000000000,
+        cost_upper_nano=8000000000,
+    )
+    ModelInvocation.objects.create(
+        job=job,
+        generator=team[2],
+        invocation_key="old-unknown",
+        operation="author",
+        prompt_sha256="a" * 64,
+        stage_fence=1,
+        reserved_tokens=100,
+        reserved_cost_nano=300000000,
+        state="ambiguous",
+    )
+    ModelInvocation.objects.create(
+        job=job,
+        generator=team[2],
+        invocation_key="last-completed",
+        operation="author",
+        prompt_sha256="b" * 64,
+        stage_fence=1,
+        reserved_tokens=100,
+        state="completed",
+        actual_usage={"total_tokens": 100},
+    )
+    client = Client()
+    client.force_login(team[0])
+    path = f"/api/jobs/{job.pk}/budget/"
+    values = {"stage_fence": job.stage_fence, "budget_usd": "20.00"}
+    response = client.post(path, values, content_type="application/json")
+    assert response.status_code == 200, response.content
+    data = response.json()
+    assert data["id"] == str(job.pk) and data["status"] == "queued" and data["resume_count"] == 1
+    assert (
+        data["cost"]["upper_usd"] == "8.000000000" and data["cost"]["reserved_usd"] == "0.300000000"
+    )
+    assert data["budget_usd"] == "20.00" and data["budget_tokens"] == job.budget_tokens
+    assert client.post(path, values, content_type="application/json").status_code == 409
+    job.refresh_from_db()
+    assert job.invocations.count() == 2 and job.cost_nano == 6000000000
+    assert Job.objects.filter(project=team[1]).count() == 1
+
+
+@pytest.mark.parametrize(
+    "state,error",
+    [("cancelled", "BudgetExhausted: x"), ("completed", ""), ("failed", "ProviderError: unknown")],
+)
+def test_budget_extension_cannot_revive_unrelated_or_cancelled_jobs(
+    team: Team, state: str, error: str
+) -> None:
+    job, _ = job_for(team)
+    Job.objects.filter(pk=job.pk).update(status=state, error=error)
+    client = Client()
+    client.force_login(team[0])
+    response = client.post(
+        f"/api/jobs/{job.pk}/budget/",
+        {"stage_fence": job.stage_fence, "budget_tokens": 800000},
+        content_type="application/json",
+    )
+    assert response.status_code == 409
+    job.refresh_from_db()
+    assert job.status == state
+
+
+def test_budget_extension_requires_larger_same_unit_and_no_active_successor(team: Team) -> None:
+    from decimal import Decimal
+
+    job, _ = job_for(team, model="gpt-6.1-sol", budget_usd=Decimal("10.00"))
+    Job.objects.filter(pk=job.pk).update(status="failed", error="BudgetExhausted: next request")
+    client = Client()
+    client.force_login(team[0])
+    path = f"/api/jobs/{job.pk}/budget/"
+    for amount in ("10.00", "9.00"):
+        assert (
+            client.post(
+                path,
+                {"stage_fence": job.stage_fence, "budget_usd": amount},
+                content_type="application/json",
+            ).status_code
+            == 409
+        )
+    assert (
+        client.post(
+            path,
+            {"stage_fence": job.stage_fence, "budget_tokens": 800000},
+            content_type="application/json",
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            path,
+            {"stage_fence": job.stage_fence, "budget_usd": "NaN"},
+            content_type="application/json",
+        ).status_code
+        == 400
+    )
+    services.create_job(
+        team[1], team[0], {"kind": "generate", "prompt": "successor", "provider": "codex"}
+    )
+    assert (
+        client.post(
+            path,
+            {"stage_fence": job.stage_fence, "budget_usd": "20.00"},
+            content_type="application/json",
+        ).status_code
+        == 409
+    )
+
+
+def test_budget_extension_refuses_unknown_last_call_and_requires_session(team: Team) -> None:
+    job, _ = job_for(team)
+    Job.objects.filter(pk=job.pk).update(
+        status="failed", error="GenerationStopped: Run token budget exceeded"
+    )
+    path = f"/api/jobs/{job.pk}/budget/"
+    values = {"stage_fence": job.stage_fence, "budget_tokens": 800000}
+    assert Client().post(path, values, content_type="application/json").status_code in (401, 403)
+    ModelInvocation.objects.create(
+        job=job,
+        invocation_key="unknown",
+        operation="author",
+        prompt_sha256="a" * 64,
+        stage_fence=1,
+        reserved_tokens=100,
+        state="ambiguous",
+    )
+    client = Client()
+    client.force_login(team[0])
+    assert client.post(path, values, content_type="application/json").status_code == 409
+
+
+def test_worker_cannot_downgrade_user_requested_automatic_playthrough(team: Team) -> None:
+    job, lease = job_for(team, playthrough_mode="auto")
+    candidate = submit(job, lease, team[2])
+    claimed, validation_lease = services.claim_job(team[3], CAPABILITIES)
+    report, evidence = fixture_report(candidate)
+    report["completion_required"] = False
+    with pytest.raises(ValidationError, match="automatic playthrough"):
+        workflow.validate_candidate(
+            job.pk,
+            team[3],
+            {
+                "lease_token": validation_lease,
+                "stage_fence": claimed.stage_fence,
+                "candidate_id": candidate.pk,
+                "report": report,
+                "evidence_files": evidence,
+            },
+        )
+    assert not Version.objects.filter(candidate=candidate).exists()

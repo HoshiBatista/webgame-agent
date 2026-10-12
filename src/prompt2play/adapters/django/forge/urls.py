@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path("worker/jobs/<uuid:pk>/draft/", views.DraftSaveView.as_view()),
+    path("worker/jobs/<uuid:pk>/diagnostics/", views.DraftDiagnosticView.as_view()),
     path("jobs/<uuid:pk>/insights/", views.JobInsightsView.as_view()),
     path("jobs/<uuid:pk>/review/", views.JobReviewView.as_view()),
     path("worker/jobs/<uuid:pk>/plan/", views.PlanProposalView.as_view()),
@@ -19,6 +20,7 @@ urlpatterns = [
     path("jobs/<uuid:pk>/", views.JobView.as_view()),
     path("jobs/<uuid:pk>/events/", views.JobEventsView.as_view()),
     path("jobs/<uuid:pk>/cancel/", views.JobCancelView.as_view()),
+    path("jobs/<uuid:pk>/budget/", views.JobBudgetView.as_view()),
     path("jobs/<uuid:pk>/candidates/", views.JobCandidatesView.as_view()),
     path("candidates/<uuid:pk>/", views.CandidateView.as_view()),
     path("versions/<uuid:pk>/", views.VersionView.as_view()),

@@ -239,7 +239,7 @@ class ProviderGateway:
             control.settle(key, usage)
             if self.journal:
                 self.journal.settle(key, data=reply.data, usage=usage, status="completed")
-            control.guard()
+            control.guard(check_budget=False)
             with self.lock:
                 self.records.append(
                     {

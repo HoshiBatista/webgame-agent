@@ -60,3 +60,27 @@ def test_failure_attempt_budget_and_unverified_stops() -> None:
     assert (
         decide({"status": "passed", "checks": [{"status": "passed"}]}, 1, 2).outcome == "unverified"
     )
+
+
+def test_optional_completion_never_relaxes_other_required_checks() -> None:
+    from typing import Any
+
+    from prompt2play.validation import REQUIRED_CHECKS
+
+    report: dict[str, Any] = {
+        "status": "passed",
+        "completion_required": False,
+        "checks": [
+            {"name": name, "status": "skipped" if name.startswith("completion:") else "passed"}
+            for name in REQUIRED_CHECKS
+        ],
+        "scope": {"isolated": True, "real_input": True},
+        "suite_sha256": "x",
+        "validator_image_sha256": "y",
+    }
+    assert decide(report, 1, 2).action == "promote"
+    report["completion_required"] = True
+    assert decide(report, 1, 2).outcome == "unverified"
+    report["completion_required"] = False
+    next(c for c in report["checks"] if c["name"] == "input:1280")["status"] = "skipped"
+    assert decide(report, 1, 2).outcome == "unverified"

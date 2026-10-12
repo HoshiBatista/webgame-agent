@@ -123,6 +123,9 @@ class Job(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     error = models.TextField(blank=True, max_length=4000)
     max_repairs = models.PositiveSmallIntegerField(default=2)
+    playthrough_mode = models.CharField(
+        max_length=10, choices=[("manual", "manual"), ("auto", "auto")], default="manual"
+    )
     budget_tokens = models.PositiveIntegerField(default=400000)
     budget_usd = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     pricing = models.JSONField(default=dict)

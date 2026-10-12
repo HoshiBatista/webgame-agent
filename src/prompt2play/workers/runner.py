@@ -25,7 +25,7 @@ from prompt2play.generation import (
     ProviderGateway,
 )
 from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT, is_rejected_response
-from prompt2play.generation.workspace import GenerationStopped
+from prompt2play.generation.workspace import BudgetExhausted, GenerationStopped
 from prompt2play.validation import IsolatedValidator
 from prompt2play.workers.diagnostics import emit, exception_details, safe_message
 from prompt2play.workers.model_catalog import CodexModelCatalog
@@ -62,7 +62,7 @@ class Coordinator:
                 detail = response.json()
                 code = detail.get("code") if isinstance(detail, dict) else None
                 if code == "budget_exhausted":
-                    raise GenerationStopped(
+                    raise BudgetExhausted(
                         "Недостаточно бюджета для следующего запроса. Учтены незавершённые вызовы."
                     )
                 if code == "pricing_required":
@@ -327,9 +327,47 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
     def save_draft(state: dict[str, Any]) -> None:
         lease.write("draft", draft=state)
 
-    candidate = GenerationHarness(on_plan=plan_ready, on_checkpoint=save_draft).attempt(
-        generation_request(lease.claim, args.mode), gateway, control
-    )
+    def browser_check(files: dict[str, str], spec: dict[str, Any]) -> dict[str, Any]:
+        from prompt2play.generation.runtime import assemble_runtime
+
+        html = assemble_runtime(files, spec, expected_runtime_digest=spec["runtime"]["sha256"])
+        with tempfile.TemporaryDirectory(prefix="p2p-draft-browser-") as temporary:
+            directory = Path(temporary) / "evidence"
+            report = IsolatedValidator(
+                args.image, lease.remaining(args.validation_timeout)
+            ).validate(
+                files,
+                html,
+                spec,
+                lease.cancel,
+                directory,
+                require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
+            )
+            saved = lease.write(
+                "diagnostics",
+                files=files,
+                html=html,
+                spec=spec,
+                report=report,
+                evidence_files=evidence_payload(report, directory),
+            )
+        return {
+            "status": report["status"],
+            "scope": "infrastructure" if report["status"] == "unverified" else "browser",
+            "diagnostic_key": saved["key"],
+            "artifact": report["artifact"],
+            "release_eligible": False,
+            "passed_checks": [c["name"] for c in report["checks"] if c["status"] == "passed"],
+            "findings": [c for c in report["checks"] if c["status"] != "passed"],
+            "warnings": report.get("warnings", []),
+        }
+
+    candidate = GenerationHarness(
+        on_plan=plan_ready,
+        on_checkpoint=save_draft,
+        on_browser_check=browser_check,
+        require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
+    ).attempt(generation_request(lease.claim, args.mode), gateway, control)
     data = candidate.as_dict()
     identity = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
     lease.write("candidates", idempotency_key=identity, **data)
@@ -364,6 +402,7 @@ def validate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             lease.cancel,
             directory,
             release_scenarios=acceptance,
+            require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
         )
         lease.write(
             "validate",

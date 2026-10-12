@@ -23,6 +23,10 @@ class GenerationStopped(RuntimeError):
     """Cancellation, fence expiry, deadline, or a hard budget stops the attempt."""
 
 
+class BudgetExhausted(GenerationStopped):
+    """A resumable admission stop; completed work and receipts must be saved."""
+
+
 @dataclass(frozen=True)
 class WorkspaceLimits:
     max_files: int = 16
@@ -62,19 +66,21 @@ class GenerationControl:
             deadline=time.monotonic() + seconds if seconds is not None else float("inf"), **kwargs
         )
 
-    def guard(self) -> None:
+    def guard(self, *, check_budget: bool = True) -> None:
         if self.cancel.is_set():
             raise GenerationStopped("Generation cancelled or lease lost")
         if time.monotonic() >= self.deadline:
             raise GenerationStopped("Run deadline exceeded")
         if not self.fence_check():
             raise GenerationStopped("Current execution fence is no longer owned")
+        if not check_budget:
+            return
         with self.lock:
             if self.cost_limit_nano is not None:
                 if self.spent_nano + self.uncertain_cost_nano > self.cost_limit_nano:
-                    raise GenerationStopped("Расчётный долларовый бюджет исчерпан")
+                    raise BudgetExhausted("Расчётный долларовый бюджет исчерпан")
             elif self.usage["total_tokens"] + self.uncertain_tokens > self.token_limit:
-                raise GenerationStopped("Run token budget exceeded")
+                raise BudgetExhausted("Run token budget exceeded")
 
     def reserve(self, key: str, amount: int) -> None:
         self.guard()
@@ -83,7 +89,7 @@ class GenerationControl:
                 raise GenerationStopped("Invocation already reserved")
             committed, limit = self._budget()
             if committed + sum(self.reservations.values()) + amount > limit:
-                raise GenerationStopped(
+                raise BudgetExhausted(
                     "Следующий запрос не помещается в оставшийся долларовый бюджет"
                     if self.cost_limit_nano is not None
                     else f"Cannot reserve {amount} tokens within remaining run budget"
@@ -204,7 +210,9 @@ class DraftWorkspace:
         self.history = []
 
     def _guard(self, path: str | None = None) -> str | None:
-        self.control.guard()
+        # Applying an already-paid response must survive a reported cost overrun.
+        # Cancellation, lease fencing, deadlines and source quotas still apply.
+        self.control.guard(check_budget=False)
         if self.closed:
             raise GenerationStopped("Draft was already submitted")
         self.operations += 1
@@ -290,7 +298,7 @@ def quick_check(files: dict[str, str], control: GenerationControl) -> list[dict[
     node = shutil.which("node")
     with tempfile.TemporaryDirectory(prefix="p2p-parse-") as directory:
         for name, source in files.items():
-            control.guard()
+            control.guard(check_budget=False)
             for violation in source_findings(
                 source, javascript=name.endswith(".js"), runtime_managed=True
             ):
@@ -335,7 +343,7 @@ def quick_check(files: dict[str, str], control: GenerationControl) -> list[dict[
                         }
                     )
                     continue
-                control.guard()
+                control.guard(check_budget=False)
                 if result.returncode:
                     findings.append(
                         {

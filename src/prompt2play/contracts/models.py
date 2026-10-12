@@ -88,7 +88,7 @@ STEP_SCHEMA = obj(
         "to_selector": {"type": "string"},
         "x": {"type": "number"},
         "y": {"type": "number"},
-        "ms": {"type": "integer", "minimum": 0, "maximum": 1000},
+        "ms": {"type": "integer", "minimum": 0, "maximum": 600000},
         "from": obj(
             {
                 "x": {"type": "number", "minimum": 0, "maximum": 4096},

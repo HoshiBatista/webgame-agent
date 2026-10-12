@@ -82,6 +82,7 @@ class JobCreateSerializer(serializers.Serializer):
     model = serializers.CharField(max_length=120, allow_blank=True, default="")
     base_version_id = serializers.UUIDField(allow_null=True, required=False)
     max_repairs = serializers.IntegerField(min_value=0, max_value=2, default=2)
+    playthrough_mode = serializers.ChoiceField(choices=["manual", "auto"], default="manual")
     budget_tokens = serializers.IntegerField(min_value=1000, max_value=2000000, default=400000)
     budget_usd = serializers.DecimalField(
         max_digits=6,
@@ -105,6 +106,24 @@ class JobCreateSerializer(serializers.Serializer):
 class RunnerCreateSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=["generator", "validator"], default="generator")
     name = serializers.CharField(max_length=120)
+
+
+class BudgetExtensionSerializer(serializers.Serializer):
+    stage_fence = serializers.IntegerField(min_value=0)
+    playthrough_mode = serializers.ChoiceField(choices=["manual", "auto"], required=False)
+    budget_usd = serializers.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        max_value=Decimal("1000.00"),
+        required=False,
+    )
+    budget_tokens = serializers.IntegerField(min_value=1000, max_value=1000000000, required=False)
+
+    def validate(self, attrs):
+        if ("budget_usd" in attrs) == ("budget_tokens" in attrs):
+            raise serializers.ValidationError("Укажите один новый общий лимит.")
+        return attrs
 
 
 class ClaimSerializer(serializers.Serializer):
@@ -504,3 +523,16 @@ class DraftSerializer(FencedSerializer):
 
     def validate_draft(self, value):
         return bounded_object(value, 12 * MIB, "draft")
+
+
+class DiagnosticSerializer(FencedSerializer):
+    files = serializers.JSONField()
+    html = serializers.CharField(trim_whitespace=False, max_length=8 * MIB)
+    spec = serializers.JSONField()
+    report = serializers.JSONField()
+    evidence_files = serializers.JSONField(default=dict)
+    validate_files = CandidateSerializer.validate_files
+    validate_html = CompleteSerializer.validate_html
+    validate_spec = CandidateSerializer.validate_spec
+    validate_report = CandidateValidationSerializer.validate_report
+    validate_evidence_files = CandidateValidationSerializer.validate_evidence_files

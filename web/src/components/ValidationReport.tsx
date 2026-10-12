@@ -15,7 +15,7 @@ export default function ValidationReport({ validation, spec = {}, plan, provenan
   const legacy = validation.schema_version !== 2 || validation.binding_status === 'legacy';
   const review = validation.review, manifest = validation.artifact;
   return <div className="validation-report">
-    <div className="report-heading"><div><h3>Отчёт проверки</h3><p>Результаты, область проверки и история этой сборки</p></div><ValidationBadge value={validation}/></div>
+    {validation.completion_required === false && <div className="notice amber">Прохождение не проверено. Победу, поражение, сложность и баланс нужно оценить вручную. Автоматический отчёт проверяет техническую работоспособность.</div>}<div className="report-heading"><div><h3>Отчёт проверки</h3><p>Результаты, область проверки и история этой сборки</p></div><ValidationBadge value={validation}/></div>
     <p className="report-explanation">Каждый результат подтверждает только указанную проверку. Ревью модели — анализ исходников. Качество графики, музыки, удобство и интерес игры оцениваются отдельно.</p>
     <VisualDesign plan={plan} provenance={provenance}/>
     {legacy && <div className="notice amber"><AlertTriangle size={19}/><div><strong>Исторический отчёт без привязки к файлам</strong><p>В нём нет сопоставимых хешей HTML, исходников и спецификации. Этот отчёт не подтверждает точное соответствие сохранённой сборке.</p></div></div>}

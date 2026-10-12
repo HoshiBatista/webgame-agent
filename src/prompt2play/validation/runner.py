@@ -136,8 +136,8 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
                     allowed.update({"from", "to"})
             else:
                 ms = step.get("ms")
-                if type(ms) is not int or not 0 <= ms <= 1000 or repeat != 1:
-                    raise ValueError("Wait must be at most one second")
+                if type(ms) is not int or not 0 <= ms <= 600000 or repeat != 1:
+                    raise ValueError("Wait must be at most ten simulated minutes")
                 item["ms"] = ms
                 allowed.add("ms")
             defaults = {
@@ -158,6 +158,8 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
             normalized.append(item)
         if not 1 <= actual_inputs <= 128:
             raise ValueError("Acceptance requires one to 128 actual input events")
+        if sum(step.get("ms", 0) for step in normalized) > 1800000:
+            raise ValueError("Scenario exceeds thirty simulated minutes")
         completion = scenario["completion"]
         if not isinstance(completion, dict) or set(completion) != {"path", "one_of"}:
             raise ValueError("Completion requires a JSON pointer and accepted outcome values")
@@ -178,6 +180,22 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
         if len(canonical_json(outcomes).encode()) > 1000:
             raise ValueError("Completion outcome values are oversized")
         result[device] = {"steps": normalized, "completion": completion}
+    return result
+
+
+def validate_native_acceptance(value: Any) -> dict[str, Any]:
+    """Reject a smoke test as a playthrough; never silently replace its oracle."""
+    result = validate_acceptance(value)
+    if result["start_selector"] != "#p2p-start" or result["restart_selector"] != "#p2p-restart":
+        raise ValueError("Native scenarios must use the platform start/restart controls")
+    for device in ("desktop", "touch"):
+        completion = result[device]["completion"]
+        if completion["path"] != "/phase" or not set(completion["one_of"]) <= {"won", "lost"}:
+            raise ValueError(
+                f"{device}: this is a smoke test, not a complete playthrough. Use set_test_scenario "
+                "with real gameplay actions and simulated waits reaching /phase won or lost. "
+                "Do not change the game rules to finish after an intermediate action."
+            )
     return result
 
 
@@ -248,11 +266,16 @@ class IsolatedValidator:
         evidence_dir: Path,
         *,
         release_scenarios: dict[str, Any] | None = None,
+        require_completion: bool = True,
     ) -> dict[str, Any]:
         check_cancel(cancel)
         manifest: dict[str, Any] = artifact_manifest(files, html, spec)
         try:
-            acceptance = validate_acceptance(
+            acceptance = (
+                validate_native_acceptance
+                if "game.js" in files and require_completion
+                else validate_acceptance
+            )(
                 release_scenarios
                 or spec.get("independent_acceptance")
                 or spec.get("input_acceptance")
@@ -264,10 +287,6 @@ class IsolatedValidator:
         acceptance_source = "release-config" if release_scenarios is not None else "candidate-plan"
         if release_scenarios is None and "game.js" in files:
             acceptance_source = "native-conformance"
-            acceptance["start_selector"] = "#p2p-start"
-            acceptance["restart_selector"] = "#p2p-restart"
-            for device in ("desktop", "touch"):
-                acceptance[device]["completion"] = {"path": "/phase", "one_of": ["won", "lost"]}
         static = self._static(files, html, spec, cancel)
         if static["errors"]:
             return static
@@ -312,6 +331,7 @@ class IsolatedValidator:
                 {
                     "version": BROWSER_CONTRACT_VERSION,
                     "acceptance": acceptance,
+                    "completion_required": require_completion,
                     "harness_files_sha256": harness_files,
                 }
             ).encode()
@@ -322,6 +342,7 @@ class IsolatedValidator:
             "artifact": manifest,
             "spec": spec,
             "acceptance": acceptance,
+            "completion_required": require_completion,
             "acceptance_source": acceptance_source,
             "suite_sha256": suite,
             "validator_image_sha256": image_id,
@@ -412,6 +433,7 @@ class IsolatedValidator:
                             image_id,
                             evidence_dir,
                             expected_harness=harness_files,
+                            require_completion=require_completion,
                         )
                     except (ValueError, TypeError, KeyError, OSError, RecursionError):
                         return _failure(
@@ -421,7 +443,7 @@ class IsolatedValidator:
                     value["checks"] = static["checks"] + value["checks"]
                     value["warnings"] = static["warnings"] + value["warnings"]
                     if (
-                        any(check["status"] == "skipped" for check in value["checks"])
+                        any(check["status"] == "skipped" for check in static["checks"])
                         and value["status"] == "passed"
                     ):
                         value["status"] = "unverified"
@@ -566,6 +588,7 @@ class IsolatedValidator:
         evidence_dir: Path,
         *,
         expected_harness: dict[str, str] | None = None,
+        require_completion: bool = True,
     ) -> dict[str, Any]:
         if (
             not isinstance(value, dict)
@@ -575,6 +598,7 @@ class IsolatedValidator:
             or value.get("request_sha256") != request_hash
             or value.get("suite_sha256") != suite
             or value.get("validator_image_sha256") != image_id
+            or value.get("completion_required", True) is not require_completion
         ):
             raise ValueError("Runtime identity mismatch")
         if expected_harness is not None and value.get("harness_files_sha256") != expected_harness:
@@ -651,7 +675,13 @@ class IsolatedValidator:
             )
         }
         failed = any(check["status"] == "failed" for check in checks) or bool(value["errors"])
-        skipped = any(check["status"] == "skipped" for check in checks)
+        skipped = any(
+            check["status"] == "skipped"
+            and not (
+                not require_completion and check["name"] in {"completion:1280", "completion:390"}
+            )
+            for check in checks
+        )
         if not failed and (
             not REQUIRED_CHECKS.issubset(names) or not expected_evidence.issubset(evidence_names)
         ):

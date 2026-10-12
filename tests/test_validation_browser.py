@@ -42,7 +42,12 @@ def fixture(name: str) -> tuple[dict[str, str], dict[str, Any], dict[str, Any]]:
 
 
 def execute(
-    name: str, files: dict[str, str], spec: dict[str, Any], acceptance: dict[str, Any] | None = None
+    name: str,
+    files: dict[str, str],
+    spec: dict[str, Any],
+    acceptance: dict[str, Any] | None = None,
+    *,
+    require_completion: bool = True,
 ) -> dict[str, Any]:
     root = Path(os.environ.get("P2P_BROWSER_EVIDENCE", "/tmp/prompt2play-browser-regressions"))
     directory = root / name
@@ -55,6 +60,7 @@ def execute(
         threading.Event(),
         directory,
         release_scenarios=acceptance,
+        require_completion=require_completion,
     )
     root.mkdir(parents=True, exist_ok=True)
     (root / f"{name}-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
@@ -70,16 +76,15 @@ def test_reviewed_games_real_desktop_and_touch(name: str) -> None:
     assert len(report["evidence_files"]) >= 12
 
 
-def test_generic_native_profile_does_not_trust_a_model_terminal_oracle() -> None:
+def test_native_profile_rejects_smoke_oracle_instead_of_rewriting_it() -> None:
     files, spec, _ = fixture("dom")
-    # A declared always-true model oracle is ignored by independent native conformance.
+    # A smoke oracle must be corrected; never silently reinterpret its input as a playthrough.
     spec["input_acceptance"]["desktop"]["completion"] = {"path": "/moves", "one_of": [0]}
     spec["input_acceptance"]["touch"]["completion"] = {"path": "/moves", "one_of": [0]}
     report = execute("native-conformance", files, spec)
-    assert report["status"] == "passed", report["errors"]
-    completion = next(check for check in report["checks"] if check["name"] == "completion:1280")
-    assert completion["evidence"]["path"] == "/phase"
-    assert completion["evidence"]["observed"] == "won"
+    assert report["status"] == "unverified"
+    assert "smoke test" in report["warnings"][0]
+    assert report["scope"]["real_input"] is False
 
 
 def test_animated_game_with_broken_keyboard_cannot_pass_input() -> None:
@@ -344,3 +349,66 @@ def test_runtime_detached_scoped_input_lifecycle_cleanup() -> None:
         path = evidence / item["path"]
         assert path.is_file() and not path.is_symlink() and path.stat().st_size == item["bytes"]
         assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]
+
+
+def test_strategy_wait_advances_all_ticks_and_preserves_step_observations() -> None:
+    files, spec, acceptance = fixture("canvas")
+    files["game.js"] = files["game.js"].replace('if (position >= 4) phase = "won";', "")
+    files["game.js"] = files["game.js"].replace(
+        "elapsed += dt; render();",
+        'elapsed += dt; if (position >= 4 && elapsed >= 20) phase = "won"; render();',
+    )
+    for device in ("desktop", "touch"):
+        acceptance[device]["steps"].append({"kind": "wait", "ms": 21000})
+    report = execute("strategy-long-wait", files, spec, acceptance)
+    assert report["status"] == "passed", report["errors"]
+    for width in (1280, 390):
+        completion = next(c for c in report["checks"] if c["name"] == f"completion:{width}")
+        assert completion["evidence"]["observed"] == "won"
+        assert completion["evidence"]["recent_observations"][-1]["action"]["ms"] == 21000
+        assert any(f["path"] == f"scenario-{width}.json" for f in report["evidence_files"])
+
+
+def test_incomplete_gameplay_does_not_get_automatic_terminal_success() -> None:
+    files, spec, acceptance = fixture("dom")
+    for device in ("desktop", "touch"):
+        acceptance[device]["steps"] = acceptance[device]["steps"][:1]
+    report = execute("incomplete-playthrough", files, spec, acceptance)
+    assert report["status"] == "failed"
+    for width in (1280, 390):
+        completion = next(c for c in report["checks"] if c["name"] == f"completion:{width}")
+        assert completion["status"] == "failed"
+        assert completion["evidence"]["observed"] == "playing"
+        assert len(completion["evidence"]["steps"]) == 1
+
+
+def test_manual_playthrough_runs_controls_restart_and_never_claims_victory() -> None:
+    files, spec, acceptance = fixture("dom")
+    for device in ("desktop", "touch"):
+        acceptance[device]["steps"] = acceptance[device]["steps"][:1]
+        acceptance[device]["completion"] = {"path": "/moves", "one_of": [1]}
+    report = execute("manual-playthrough", files, spec, acceptance, require_completion=False)
+    assert report["status"] == "passed", report["errors"]
+    assert (
+        report["completion_required"] is False and report["playthrough"] == "human_review_required"
+    )
+    for width in (1280, 390):
+        complete = next(c for c in report["checks"] if c["name"] == f"completion:{width}")
+        assert (
+            complete["status"] == "skipped" and complete["evidence"]["observed_phase"] == "playing"
+        )
+        assert (
+            next(c for c in report["checks"] if c["name"] == f"restart:{width}")["status"]
+            == "passed"
+        )
+
+
+def test_manual_playthrough_still_rejects_broken_keyboard() -> None:
+    files, spec, acceptance = fixture("canvas")
+    files["game.js"] = files["game.js"].replace(
+        'if (key === "ArrowRight" || key === " ") dispatch({type: "MOVE"});',
+        'if (false) dispatch({type: "MOVE"});',
+    )
+    report = execute("manual-broken-input", files, spec, acceptance, require_completion=False)
+    assert report["status"] == "failed"
+    assert next(c for c in report["checks"] if c["name"] == "input:1280")["status"] == "failed"

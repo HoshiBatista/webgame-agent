@@ -17,7 +17,7 @@ export function StatusBadge({ status }: { status: JobStatus }) { return <span cl
 export function ValidationBadge({ value }: { value?: Validation | null }) {
   const state = validationState(value);
   if (state === 'missing') return <span className="badge muted">Без отчёта</span>;
-  return <span className={`badge validation-${state}`}>{state === 'passed' ? <Check size={12} /> : <AlertCircle size={12} />}{state === 'passed' ? 'Проверки пройдены' : state === 'unverified' ? 'Не проверена' : state === 'partial' ? 'Частичная проверка' : 'Проверки не пройдены'}</span>;
+  return <span className={`badge validation-${state}`}>{state === 'passed' ? <Check size={12} /> : <AlertCircle size={12} />}{state === 'passed' ? value?.completion_required === false ? 'Автопроверки пройдены · прохождение вручную' : 'Проверки пройдены' : state === 'unverified' ? 'Не проверена' : state === 'partial' ? 'Частичная проверка' : 'Проверки не пройдены'}</span>;
 }
 export function ErrorBanner({ children, retry }: { children: ReactNode; retry?: () => void }) {
   return <div className="error-banner" role="alert"><AlertCircle size={17}/><span>{children}</span>{retry && <button type="button" className="text-button" onClick={retry}>Повторить</button>}</div>;
