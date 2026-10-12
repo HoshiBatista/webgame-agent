@@ -44,7 +44,7 @@ function pointer(snapshot, path) {
 function completed(snapshot, condition) {
   return condition.one_of.some(value => canonical(value) === canonical(pointer(snapshot, condition.path)));
 }
-async function input(page, step, touch) {
+async function input(page, step, touch, advanceTime = ms => page.waitForTimeout(ms)) {
   if (step.kind === 'wait') return page.waitForTimeout(step.ms);
   if (step.kind === 'key') return page.keyboard.press(step.key);
   if (step.kind === 'key_down') return page.keyboard.down(step.key);
@@ -69,12 +69,13 @@ async function input(page, step, touch) {
       const session = await page.context().newCDPSession(page);
       const point = (name, x, y) => session.send('Input.dispatchTouchEvent', {type: name, touchPoints: name === 'touchEnd' ? [] : [{x, y}]});
       await point('touchStart', step.from.x, step.from.y);
-      for (let i = 1; i <= 5; i++) await point('touchMove', step.from.x + (step.to.x-step.from.x)*i/5, step.from.y+(step.to.y-step.from.y)*i/5);
+      for (let i = 1; i <= 5; i++) { await point('touchMove', step.from.x + (step.to.x-step.from.x)*i/5, step.from.y+(step.to.y-step.from.y)*i/5); if (step.ms) await advanceTime(step.ms / 5); }
       await point('touchEnd', 0, 0);
       await session.detach();
     } else {
       await page.mouse.move(step.from.x, step.from.y); await page.mouse.down();
-      await page.mouse.move(step.to.x, step.to.y, {steps: 5}); await page.mouse.up();
+      for (let i = 1; i <= 5; i++) { await page.mouse.move(step.from.x + (step.to.x-step.from.x)*i/5, step.from.y+(step.to.y-step.from.y)*i/5); if (step.ms) await advanceTime(step.ms / 5); }
+      await page.mouse.up();
     }
     return;
   }
@@ -177,21 +178,24 @@ try {
       const history = [];
       const observations = [];
       const causalTrials = [];
-      const runStep = async step => {
-        if (step.kind === 'wait' && nativeClock) {
+      const advanceTime = async ms => {
+        if (nativeClock) {
           // The trusted runtime advances at most 600 ticks per call. Preserve
           // long strategy waits without silently truncating simulated time.
-          let remaining = Math.ceil(step.ms / (1000 * stepSeconds));
+          let remaining = Math.ceil(ms / (1000 * stepSeconds));
           while (remaining > 0) {
             const batch = Math.min(600, remaining);
             await bridge.advance(batch); remaining -= batch;
           }
-        }
+        } else await page.waitForTimeout(ms);
+      };
+      const runStep = async step => {
+        if (step.kind === 'wait') await advanceTime(step.ms);
         else if (step.kind === 'key' && nativeClock) {
           await page.keyboard.down(step.key); await bridge.advance(6); await page.keyboard.up(step.key);
         }
         else {
-          await input(page, step, touch);
+          await input(page, step, touch, advanceTime);
           if (nativeClock) await bridge.advance(6);
           else await page.waitForTimeout(20);
         }

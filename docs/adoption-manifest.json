@@ -111,9 +111,9 @@
       "source": "backend/forge/models.py",
       "destination": "src/prompt2play/adapters/django/forge/models.py",
       "source_sha256": "c5d5a0d9d6c2dc6fc5aaa27f3e442d8c2121b2768f382361a48738f0cdffec8d",
-      "destination_sha256": "bee833dbba636a0c5ccee0a0e0905b0a4e06c24091f1f1368a8a8ab76019739e",
+      "destination_sha256": "be28827c4454c3e3c69a86a47e5aa1226479528e98dd7317c56355be6e6fb245",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/forge/parsers.py",
@@ -127,33 +127,33 @@
       "source": "backend/forge/queries.py",
       "destination": "src/prompt2play/adapters/django/forge/queries.py",
       "source_sha256": "2c9495c75345742beb93c8f50e3dc6ab5fa8c0729d7141774e4ac144498d64f3",
-      "destination_sha256": "43f1c06a7c487f2d539bfeed81848228e433ebb9f9e95d5b516d52d027d11a97",
+      "destination_sha256": "2d3aff55e02c89784ce2e4091b481caee82fe18d333f6784d99f1f69a677da37",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "ac6e4023b0cd78afd442c5e7faeb3a894a5b5e7c72c562cd73895f9edadd716d",
+      "destination_sha256": "f4095e5e0f8f5f06a55e5d5f509e78d72b81e2059a798e4df3353e2973dd13bd",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/forge/serializers.py",
       "destination": "src/prompt2play/adapters/django/forge/serializers.py",
       "source_sha256": "8d8a07894f9b5e4acc3caf49a18f57000e5241b53ac82816401aab15535f3824",
-      "destination_sha256": "75086914cc860cc640c0e2b7ed5b76b74cfcd7b3a8d2119468f0395ad7df68b0",
+      "destination_sha256": "40894d387de1d0f98377fab902e5e60d8ec45e5a5cd4d2e82c6bb0374957abad",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/forge/services.py",
       "destination": "src/prompt2play/adapters/django/forge/services.py",
       "source_sha256": "6a81de265c7c23a6060405d1797703e2cd8b2fd1a2c5226fcef73708f5610568",
-      "destination_sha256": "18c2253deff4b802023c8ef859a7599ef2e78c2a8eec13a96ec9f5bd4eb86b13",
+      "destination_sha256": "d2b178b8337e050445c0be203165e5cfb46ca14081c64dc58f4ddb6d63266489",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/forge/tests/__init__.py",
@@ -207,17 +207,17 @@
       "source": "backend/forge/urls.py",
       "destination": "src/prompt2play/adapters/django/forge/urls.py",
       "source_sha256": "91d876887830ae6f77c9910b7891578ade6a74fc6392d2c91a2e3ba5c24acc41",
-      "destination_sha256": "d648eb32e416ce446ecf770ea3fd20bfc5ecaf037d6620209f5cf80625c3030d",
+      "destination_sha256": "8d51016613d7bcc390261ef39ed17c9826595e7f4a97c39a6f906f76f7ebe49e",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/forge/views.py",
       "destination": "src/prompt2play/adapters/django/forge/views.py",
       "source_sha256": "e2311c7540a26fcf54bb81aef2a9f6b3c0e1d0c8cc1932449bcf9e5c5fb68f31",
-      "destination_sha256": "24d857ac8a1da2ac2124a9f7881554875e0f4ac78c5e9870a33aeb2781ddf8bd",
+      "destination_sha256": "254e431cb2d0d1da07f5ec35888e2eca072841bc8c1ce9812d94e6aea26e155c",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "backend/config/__init__.py",
@@ -1255,9 +1255,9 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "b42293c0b3bd6371c055fc4139ebb3b781172e6f56f4b4609123a5eae40fd63c",
+      "destination_sha256": "f79ff20168fd3668be035c39d1c141b06aa5f069176407dfdadeff10df7c43b9",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/src/components/JobSettings.tsx",
@@ -1311,17 +1311,17 @@
       "source": "frontend/src/lib/api.ts",
       "destination": "web/src/lib/api.ts",
       "source_sha256": "3b054504e03ab25c193fa7d766be43f60c01735067a35de3c0ed18a19236d32b",
-      "destination_sha256": "c1aa5fa71e120adbd4d68c42693adbd223d690fb2d759805c65c932eb38ab222",
+      "destination_sha256": "2ac551c8612c20f98c295c60db26bd6de5990cd7035bebb72dd22d02a29df39f",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/src/lib/format.ts",
       "destination": "web/src/lib/format.ts",
       "source_sha256": "92b75dce945e753f038d600d1d2cae92476c3249dc75502fdaaeda1e67e91923",
-      "destination_sha256": "9f626666221a770776db8aa2ea11364b31c38bdec2a91ea2237f692f3963bf2a",
+      "destination_sha256": "59cd1e0e9e2b60aa0a077475ab8d12416d38f8e8616ad82ff6e6167c1538ca6c",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/src/lib/preview.ts",
@@ -1391,25 +1391,25 @@
       "source": "frontend/src/pages/Workspace.tsx",
       "destination": "web/src/pages/Workspace.tsx",
       "source_sha256": "361a81c4a93bd4528479768df3324f39dec505403f9982fcebfd951faddc3d9f",
-      "destination_sha256": "b4afe627d17b7bd736caaaa6cb6f76ab06fd0d26e64342d63f50b5fad1068582",
+      "destination_sha256": "86cfcadb8758d63d704dec6f8fc3b663e2ef457c6ee621bb0389497f82a77749",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/src/styles.css",
       "destination": "web/src/styles.css",
       "source_sha256": "bf0104eddfda38faedfe3302ac6ab39e160eb4d2799abe04512c61499573e762",
-      "destination_sha256": "be60a9198077ad23dfd80b0dc7d5d87550cf5259f81040f9f862503bc9f1a2c6",
+      "destination_sha256": "40585ff0d9d077246fcf00e887314337bb32e3763b2d9b64175e80fcab8d68d9",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "9c5d7588b0da59fc519d0087af1b9d75f699e265f78d3c3f5259daeddf46fdf3",
+      "destination_sha256": "ab737bbf3fcd67cc0d9372b9a9f1c65f47d0af51ecf4d6415a5894ba37bc9f5a",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/src/vite-env.d.ts",
@@ -1463,9 +1463,9 @@
       "source": "frontend/tests/workspace.test.ts",
       "destination": "web/tests/workspace.test.ts",
       "source_sha256": "f4790ddc4dcbcfc1b613a647a6df770c7bf7308a93fcf9059f8f51811a5ca01a",
-      "destination_sha256": "83fa0d3083979dc1a37426e59d4cf110b716652a44b7c5d9080719e4fa745621",
+      "destination_sha256": "98b80fa9dc9bbd5ae0e56dd036fba89fac0a6991c19910dbb7f3d866027a5119",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
     {
       "source": "frontend/package.json",
@@ -1536,7 +1536,8 @@
     "evidence/chosen-release-human-review.json",
     "evidence/adaptive-four-author-supplement-v4.json",
     "evidence/storage-denial-runtime-supplement.json",
-    "evidence/generation-reliability-verification.json"
+    "evidence/generation-reliability-verification.json",
+    "evidence/planning-pause-verification.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

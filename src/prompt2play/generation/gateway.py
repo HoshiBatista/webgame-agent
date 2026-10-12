@@ -28,7 +28,12 @@ from .retries import (
     is_rejected_response,
     structured_diagnostic,
 )
-from .workspace import GenerationControl, GenerationStopped, invocation_reservation
+from .workspace import (
+    GenerationControl,
+    GenerationPaused,
+    GenerationStopped,
+    invocation_reservation,
+)
 
 
 @dataclass(frozen=True)
@@ -347,6 +352,8 @@ class ProviderGateway:
                     }
                 )
             return GatewayReply(cast(dict[str, Any], reply.data), usage, key)
+        except GenerationPaused:
+            raise
         except Exception as exc:
             from prompt2play.workers.diagnostics import exception_details
 

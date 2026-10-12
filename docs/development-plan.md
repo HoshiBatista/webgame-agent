@@ -403,3 +403,19 @@ proof of a changed release.
   response without double billing, resume a draft without reauthoring, reject
   stale/cancelled writes and incompatible old workers, and retain mandatory final
   browser validation. Fixture checks and fresh live results remain separate evidence.
+
+
+### Planning recovery and user pause (2026-10-12)
+
+- Align planner input descriptions with the actual isolated runner; drag durations
+  advance the game while the pointer is held. Keep manual controls mandatory and
+  permit observation of automatic mechanics after normal game start.
+- Persist rejected plans and precise diagnostics, reuse paid replies after interruption,
+  and feed corrections the prior proposal. Repeated identical rejection pauses for
+  inspection; productive work retains no default turn/time cap.
+- Expose pause/requested/continue states independently of final cancellation. Fence
+  concurrent transitions, preserve model receipts and money reservations, and retain
+  the Pro approval gate after pause. A paused job remains the active project job.
+- Verify plan/author/review interruption with scripted providers, the real coordinator,
+  and no extra paid calls on continuation; verify duration/control behavior in the
+  isolated browser and the pause controls in a browser with an explicit API fixture.

@@ -25,7 +25,7 @@ from prompt2play.generation import (
     ProviderGateway,
 )
 from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT, is_rejected_response
-from prompt2play.generation.workspace import BudgetExhausted, GenerationStopped
+from prompt2play.generation.workspace import BudgetExhausted, GenerationPaused, GenerationStopped
 from prompt2play.validation import IsolatedValidator
 from prompt2play.workers.diagnostics import emit, exception_details, safe_message
 from prompt2play.workers.model_catalog import CodexModelCatalog
@@ -125,6 +125,11 @@ class StageLease:
             self.cancel.set()
             raise
 
+    def pause_boundary(self, reason: str = "") -> None:
+        result = self.write("pause-boundary", **({"reason": reason} if reason else {}))
+        if result.get("paused"):
+            raise GenerationPaused(reason or "Задание приостановлено. Прогресс сохранён.")
+
     def _heartbeat(self) -> None:
         while not self.finished.wait(max(0.05, min(20, self.seconds / 4, self.remaining(20)))):
             try:
@@ -186,6 +191,8 @@ class RemoteJournal:
                 operation=operation,
                 prompt_sha256=request_sha256,
             )
+            if result.get("paused"):
+                raise GenerationPaused("Задание приостановлено перед следующим запросом.")
             emit(
                 "model_reserved",
                 job_id=self.lease.job["id"],
@@ -252,7 +259,9 @@ class RemoteJournal:
                 cost=self.control.snapshot(),
             )
             try:
-                self.lease.write("settle", **payload)
+                settled = self.lease.write("settle", **payload)
+                if settled.get("paused"):
+                    raise GenerationPaused("Ответ сохранён. Задание приостановлено.")
             except (LeaseRejected, httpx.HTTPError):
                 if usage is not None:
                     # Accounting-only endpoint cannot store output or advance a cancelled job.
@@ -277,6 +286,7 @@ def generation_request(claim: dict[str, Any], mode: str) -> GenerationRequest:
     return GenerationRequest(
         prompt=job["prompt"],
         resume_state=claim.get("draft") or {},
+        planning_state=claim.get("planning") or {},
         user_feedback=claim.get("user_feedback") or [],
         previous_proposal=claim.get("previous_proposal") or {},
         kind="repair" if job["stage"] == "repair" else job["kind"],
@@ -317,6 +327,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         executable=args.codex,
         journal=RemoteJournal(lease, control),
     )
+    lease.pause_boundary()
     gateway.preflight()
 
     def plan_ready(spec: dict[str, Any], plan: dict[str, Any]) -> None:
@@ -326,6 +337,11 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
 
     def save_draft(state: dict[str, Any]) -> None:
         lease.write("draft", draft=state)
+        lease.pause_boundary()
+
+    def save_planning(state: dict[str, Any]) -> None:
+        lease.write("planning", planning=state)
+        lease.pause_boundary()
 
     def browser_check(files: dict[str, str], spec: dict[str, Any]) -> dict[str, Any]:
         from prompt2play.generation.runtime import assemble_runtime
@@ -366,6 +382,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         candidate = GenerationHarness(
             on_plan=plan_ready,
             on_checkpoint=save_draft,
+            on_planning=save_planning,
             on_browser_check=browser_check,
             require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
         ).attempt(generation_request(lease.claim, args.mode), gateway, control)
@@ -391,6 +408,7 @@ def evidence_payload(report: dict[str, Any], directory: Path) -> dict[str, str]:
 
 
 def validate_stage(lease: StageLease, args: argparse.Namespace) -> None:
+    lease.pause_boundary()
     candidate = lease.claim["candidate"]
     acceptance = None
     if args.acceptance:
@@ -467,6 +485,7 @@ def main(argv: list[str] | None = None) -> int:
             "validator": "docker",
             "interactive_plan_v1": args.role == "generator" and args.mode == "single_author",
             "continuable_authoring_v1": args.role == "generator" and args.mode == "single_author",
+            "continuable_planning_v1": args.role == "generator" and args.mode == "single_author",
             "requires_job_model": ["openai"]
             if args.role == "generator" and args.provider == "openai" and not args.model
             else [],
@@ -537,6 +556,13 @@ def main(argv: list[str] | None = None) -> int:
                         duration_seconds=round(time.monotonic() - started, 3),
                         **context,
                     )
+                except GenerationPaused as exc:
+                    # A reserve/settlement may already have persisted the pause.
+                    # For a detected correction loop the worker requests it here.
+                    if lease.alive():
+                        with contextlib.suppress(LeaseRejected, GenerationPaused):
+                            lease.pause_boundary(str(exc))
+                    emit("stage_paused", **context, reason=str(exc))
                 except AwaitingApproval:
                     emit("stage_waiting_for_user", **context)
                 except LeaseRejected as exc:

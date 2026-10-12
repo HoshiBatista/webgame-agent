@@ -73,7 +73,7 @@ const invalidResponse = (mutation = false) => new ApiError(mutation ? 'Опер�
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const strings = (value: Record<string, unknown>, keys: string[]) => keys.every(key => typeof value[key] === 'string');
 const stringArray = (value: unknown) => Array.isArray(value) && value.every(item => typeof item === 'string');
-const job = (value: unknown) => record(value) && strings(value, ['id', 'project_id', 'created_at', 'updated_at', 'stage', 'error']) && ['queued', 'running', 'waiting', 'completed', 'failed', 'cancelled'].includes(String(value.status));
+const job = (value: unknown) => record(value) && strings(value, ['id', 'project_id', 'created_at', 'updated_at', 'stage', 'error']) && ['queued', 'running', 'waiting', 'paused', 'completed', 'failed', 'cancelled'].includes(String(value.status));
 const project = (value: unknown) => record(value) && strings(value, ['id', 'title', 'prompt', 'created_at', 'updated_at']) && (value.active_job == null || job(value.active_job)) && (value.latest_job == null || job(value.latest_job));
 const runner = (value: unknown) => record(value) && strings(value, ['id', 'name']) && record(value.capabilities) && (value.role === undefined || ['generator', 'validator'].includes(String(value.role)));
 const validation = (value: unknown) => record(value) && ['passed', 'partial', 'failed', 'unverified'].includes(String(value.status)) && Array.isArray(value.checks) && value.checks.every(check => record(check) && strings(check, ['name', 'status', 'message'])) && stringArray(value.errors) && stringArray(value.warnings);
@@ -114,6 +114,7 @@ export const api = {
   review: (jobId: string, stage_fence: number, action: 'approve' | 'revise', feedback = '') => checked(post<Job>(`/api/jobs/${id(jobId)}/review/`, {stage_fence, action, feedback}), job, true),
   events: (jobId: string, after = 0, signal?: AbortSignal) => checked(requestJson<JobEvent[]>(`/api/jobs/${id(jobId)}/events/?after=${after}`, { signal }), listOf(value => record(value) && Number.isSafeInteger(value.id) && strings(value, ['job_id', 'message', 'stage', 'level', 'created_at']))),
   cancelJob: (jobId: string) => checked(post<Job>(`/api/jobs/${id(jobId)}/cancel/`), job, true),
+  pauseJob: (jobId: string, stage_fence: number) => checked(post<Job>(`/api/jobs/${id(jobId)}/pause/`, {stage_fence}), job, true),
   resumeJob: (jobId: string, stage_fence: number) => checked(post<Job>(`/api/jobs/${id(jobId)}/resume/`, {stage_fence}), job, true),
   extendBudget: (jobId: string, stage_fence: number, budget: ({budget_usd: string} | {budget_tokens: number}) & {playthrough_mode?: 'manual' | 'auto'}) => checked(post<Job>(`/api/jobs/${id(jobId)}/budget/`, {stage_fence, ...budget}), job, true),
   runners: (signal?: AbortSignal) => checked(requestJson<Runner[]>('/api/runners/', { signal }), listOf(runner)),

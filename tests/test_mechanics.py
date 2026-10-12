@@ -131,3 +131,69 @@ def test_revision_cannot_drop_previously_tested_mechanic_or_key() -> None:
     new[0]["keyboard_keys"].pop()
     with pytest.raises(ValueError, match="Cannot drop"):
         preserve_mechanics(old, new)
+
+
+def test_automatic_mechanics_can_observe_time_but_input_smoke_stays_mandatory() -> None:
+    from prompt2play.validation.runner import validate_acceptance
+
+    cases = matrix()
+    cases[0]["keyboard_keys"] = []
+    for device in ("desktop", "touch"):
+        cases[0][device] = {
+            "steps": [{"kind": "wait", "ms": 100}],
+            "assertions": [
+                {
+                    "after_step": 1,
+                    "before_step": 0,
+                    "path": "/shots",
+                    "op": "greater",
+                    "value_json": "",
+                    "tolerance": 0,
+                }
+            ],
+        }
+    assert validate_mechanics(cases, ["MOVE"])
+    scenario = {
+        "steps": [{"kind": "wait", "ms": 100}],
+        "completion": {"path": "/phase", "one_of": ["playing"]},
+    }
+    with pytest.raises(ValueError, match="actual input"):
+        validate_acceptance(
+            {
+                "start_selector": "#start",
+                "restart_selector": "#restart",
+                "desktop": scenario,
+                "touch": scenario,
+            }
+        )
+
+
+def test_plan_drag_duration_and_repair_errors_are_actionable() -> None:
+    from prompt2play.validation.runner import validate_acceptance
+
+    case = matrix()[0]
+    step = {"kind": "drag", "from_selector": "#from", "to_selector": "#to", "ms": 350}
+    scenario = {"steps": [step], "completion": {"path": "/phase", "one_of": ["playing"]}}
+    acceptance = {
+        "start_selector": "#start",
+        "restart_selector": "#restart",
+        "desktop": scenario,
+        "touch": scenario,
+    }
+    assert validate_acceptance(acceptance)["touch"]["steps"][0]["ms"] == 350
+    case["desktop"]["steps"][0]["ms"] = 100
+    with pytest.raises(ValueError, match=r"mechanics\[move\].*desktop.steps\[0\].*ms must be 0"):
+        validate_mechanics([case], ["MOVE"])
+
+
+def test_equality_literals_can_describe_inventory_but_ordering_needs_numbers() -> None:
+    cases = matrix()
+    check = cases[0]["desktop"]["assertions"][0]
+    check.update(before_step=-1, value_json="[]", op="equal")
+    assert validate_mechanics(cases, ["MOVE"])
+    check["op"] = "greater"
+    with pytest.raises(ValueError, match="numeric"):
+        validate_mechanics(cases, ["MOVE"])
+    check.update(op="equal", value_json="[NaN]")
+    with pytest.raises(ValueError, match="finite JSON"):
+        validate_mechanics(cases, ["MOVE"])

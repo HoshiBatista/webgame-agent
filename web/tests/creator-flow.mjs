@@ -15,7 +15,7 @@ checks.push({name: 'mobile_layout:390', status: 'passed', message: 'Authored tra
 const validation = {schema_version: 2, artifact: {html_sha256: hash, html_bytes: 0, files_sha256: {}, spec_sha256: hash}, status: 'passed', checks, errors: [], warnings: [], browser_contract_version: 3, validator_image_sha256: `sha256:${hash}`, suite_sha256: hash};
 const versions = [];
 let job = null, projects = [], runners = [], jobCount = 0;
-let resumeRequests = 0;
+let resumeRequests = 0, mutationTime = 27;
 let issuedTokens = 0, expiredPreviewRequests = 0, failedDetailReads = 0, failNextDetail = false;
 const expiredTokens = new Set();
 function version(id, number, eligible, report = validation) {
@@ -23,7 +23,7 @@ function version(id, number, eligible, report = validation) {
 }
 function makeJob(input) {
   jobCount++;
-  return {id: `job-${jobCount}`, project_id: 'project-1', kind: input.kind, prompt: input.prompt, provider: input.provider, model: input.model, status: 'queued', stage: 'plan', progress: 0, base_version_id: input.base_version_id || null, result_version_id: null, runner_id: null, created_at: timestamp(10 + jobCount), updated_at: timestamp(10 + jobCount), error: '', max_repairs: input.max_repairs, budget_tokens: input.budget_tokens, usage};
+  return {id: `job-${jobCount}`, project_id: 'project-1', kind: input.kind, prompt: input.prompt, provider: input.provider, model: input.model, status: 'queued', stage: 'plan', stage_fence: 0, progress: 0, base_version_id: input.base_version_id || null, result_version_id: null, runner_id: null, created_at: timestamp(10 + jobCount), updated_at: timestamp(10 + jobCount), error: '', max_repairs: input.max_repairs, budget_tokens: input.budget_tokens, usage};
 }
 function currentProject() {
   return {...projects[0], latest_version_id: 'version-1', latest_version_number: versions.length ? 1 : null, active_job: job && ['queued', 'running'].includes(job.status) ? job : null, latest_job: job};
@@ -65,8 +65,9 @@ await page.route('**/api/**', async route => {
     value = versions.find(item => item.id === path.split('/')[3]);
     if (value?.eligible) value = {...value, preview_url: `http://127.0.0.1:8001/preview/${value.id}/?token=issued-${++issuedTokens}`};
   }
-  else if (path.endsWith('/resume/')) { resumeRequests++; assert.equal(request.postDataJSON().stage_fence, job.stage_fence); job = {...job, status: 'queued', stage: 'plan', can_resume: false, error: '', resume_count: (job.resume_count || 0) + 1, stage_fence: job.stage_fence + 1}; value = job; }
-  else if (path.endsWith('/cancel/')) {job = {...job, status: 'cancelled', updated_at: timestamp(30)}; value = job;}
+  else if (path.endsWith('/pause/')) { assert.equal(request.postDataJSON().stage_fence, job.stage_fence); job = {...job, status:'paused', pause_requested:false, stage_fence:job.stage_fence+1, updated_at:timestamp(++mutationTime)}; value = job; }
+  else if (path.endsWith('/resume/')) { resumeRequests++; assert.equal(request.postDataJSON().stage_fence, job.stage_fence); job = {...job, status: 'queued', stage: 'plan', can_resume: false, error: '', resume_count: (job.resume_count || 0) + 1, stage_fence: job.stage_fence + 1, updated_at:timestamp(++mutationTime)}; value = job; }
+  else if (path.endsWith('/cancel/')) {job = {...job, status: 'cancelled', stage_fence:(job.stage_fence || 0)+1, updated_at:timestamp(++mutationTime)}; value = job;}
   else if (path.endsWith('/events/')) value = [];
   else if (path.startsWith('/api/jobs/')) {
     if (job.id === 'job-1' && job.status === 'queued') {
@@ -138,6 +139,15 @@ try {
   assert.equal(resumeRequests, 1, 'Continuation sends one explicitly authorized mutation');
   assert.equal(job.id, 'job-2', 'Continuation retains the same job');
   assert.match(await page.locator('iframe').getAttribute('src'), /version-1/, 'Continuation preserves the old playable preview');
+  await page.getByRole('button', {name: 'Приостановить', exact: true}).click();
+  await page.locator('.job-monitor').getByText('На паузе', {exact: true}).waitFor();
+  assert.equal(await page.getByRole('button', {name: 'Внести изменения', exact: true}).isDisabled(), true);
+  assert.match(await page.locator('iframe').getAttribute('src'), /version-1/);
+  await page.screenshot({path: `${evidence}/paused-job.png`, fullPage: true});
+  await page.getByRole('button', {name: 'Продолжить задание', exact: true}).click();
+  await page.getByRole('button', {name: 'Приостановить', exact: true}).waitFor();
+  assert.equal(resumeRequests, 2);
+  assert.equal(job.id, 'job-2');
   await page.getByRole('button', {name: 'Отменить задание', exact: true}).click();
   await page.getByText('Отменено', {exact: true}).waitFor();
   await page.getByLabel('Запрос на изменение игры').fill('Another authored UI request.');
@@ -157,7 +167,7 @@ try {
   await page.getByText('Browser acceptance', {exact: true}).waitFor();
   assert.deepEqual(errors, []);
   await page.screenshot({path: `${evidence}/creator-flow.png`, fullPage: true});
-  fs.writeFileSync(`${evidence}/result.json`, JSON.stringify({passed: true, browser: browser.version(), scope: 'Trusted studio with authored API double; no live model/backend/game execution', expired_preview_requests: expiredPreviewRequests, checks: ['submit', 'scoped preview', 'expired URL refreshed on restart, stop/start and reopening', 'refresh failure bounded and no stale URL fallback', 'running preview stable during workspace polling', 'failed revise preserves playable', 'failed candidate diagnostics', 'source selection', 'cancel', 'admin validator role registration', 'one-time token hidden after dismissal']}, null, 2));
+  fs.writeFileSync(`${evidence}/result.json`, JSON.stringify({passed: true, browser: browser.version(), scope: 'Trusted studio with authored API double; no live model/backend/game execution', expired_preview_requests: expiredPreviewRequests, checks: ['submit', 'scoped preview', 'expired URL refreshed on restart, stop/start and reopening', 'refresh failure bounded and no stale URL fallback', 'running preview stable during workspace polling', 'failed revise preserves playable', 'failed candidate diagnostics', 'source selection', 'pause and resume same job', 'cancel', 'admin validator role registration', 'one-time token hidden after dismissal']}, null, 2));
   process.stdout.write('Creator browser flow passed (authored API double).\n');
 } finally {
   await context.tracing.stop({path: `${evidence}/creator-flow.zip`});

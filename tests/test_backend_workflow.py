@@ -44,7 +44,7 @@ job_data: Any = donor_job_data
 Team = tuple[Any, Any, Any, Any]
 
 pytestmark = pytest.mark.django_db
-CAPABILITIES = {"providers": ["codex", "openai"]}
+CAPABILITIES = {"providers": ["codex", "openai"], "continuable_planning_v1": True}
 
 
 @pytest.fixture
@@ -1359,3 +1359,257 @@ def test_native_submission_cannot_disable_mechanics_gate(team: Team) -> None:
             html=assemble_runtime(files, spec),
         )
     assert not Candidate.objects.filter(job=job).exists()
+
+
+def test_pause_waits_for_paid_reply_and_resumes_without_spend_reset(team: Team) -> None:
+    from prompt2play.adapters.django.forge import pauses, planning
+
+    pause: Any = pauses
+    saved: Any = planning
+    job, lease = job_for(team)
+    invocation = workflow.reserve_invocation(
+        job.pk,
+        team[2],
+        {
+            "lease_token": lease,
+            "stage_fence": job.stage_fence,
+            "invocation_key": "plan:fixture",
+            "prompt_sha256": "a" * 64,
+            "reserved_tokens": 100,
+            "operation": "plan",
+        },
+    )
+    pending = pause.pause_job(job.pk, {"stage_fence": job.stage_fence})
+    assert pending.status == "running" and pending.pause_requested
+    usage = {
+        "calls": 1,
+        "input_tokens": 10,
+        "cached_input_tokens": 5,
+        "output_tokens": 20,
+        "total_tokens": 30,
+    }
+    reply = {"game_spec": {"fixture": True}, "build_plan": {}}
+    workflow.settle_invocation(
+        job.pk,
+        team[2],
+        {
+            "lease_token": lease,
+            "stage_fence": job.stage_fence,
+            "invocation_id": invocation.pk,
+            "state": "completed",
+            "response": {"data": reply, "usage": usage},
+            "usage": usage,
+            "invocation_usage": usage,
+        },
+    )
+    job.refresh_from_db()
+    assert job.status == "paused" and not job.pause_requested
+    assert saved.load_planning(job)["proposal"] == reply
+    assert job.usage == usage
+    assert services.claim_job(team[2], CAPABILITIES) == (None, None)
+    with pytest.raises(Conflict):
+        services.create_job(
+            team[1], team[0], {"kind": "generate", "provider": "codex", "prompt": "Blocked"}
+        )
+    fence = job.stage_fence
+    resumed = pause.resume_paused(job.pk, {"stage_fence": fence})
+    assert resumed.status == "queued" and resumed.usage == usage
+    with pytest.raises(Conflict):
+        pause.resume_paused(job.pk, {"stage_fence": fence})
+    claimed, new_lease = services.claim_job(team[2], CAPABILITIES)
+    replay = workflow.reserve_invocation(
+        job.pk,
+        team[2],
+        {
+            "lease_token": new_lease,
+            "stage_fence": claimed.stage_fence,
+            "invocation_key": "plan:fixture",
+            "prompt_sha256": "a" * 64,
+            "reserved_tokens": 100,
+            "operation": "plan",
+        },
+    )
+    assert replay.pk == invocation.pk and replay.state == "completed"
+    assert job.invocations.count() == 1
+
+
+def test_pause_blocks_new_reservation_and_cancel_is_terminal(team: Team) -> None:
+    from prompt2play.adapters.django.forge import pauses
+
+    pause: Any = pauses
+    job, lease = job_for(team)
+    pause.pause_job(job.pk, {"stage_fence": job.stage_fence})
+    assert (
+        workflow.reserve_invocation(
+            job.pk,
+            team[2],
+            {
+                "lease_token": lease,
+                "stage_fence": job.stage_fence,
+                "invocation_key": "plan:new",
+                "prompt_sha256": "b" * 64,
+                "reserved_tokens": 100,
+                "operation": "plan",
+            },
+        )
+        is None
+    )
+    job.refresh_from_db()
+    assert job.status == "paused" and job.invocations.count() == 0
+    services.cancel_job(job.pk)
+    job.refresh_from_db()
+    assert job.status == "cancelled"
+    with pytest.raises(Conflict):
+        pause.resume_paused(job.pk, {"stage_fence": job.stage_fence})
+
+
+def test_pause_queued_and_approval_keep_their_stage(team: Team) -> None:
+    from prompt2play.adapters.django.forge import pauses
+
+    pause: Any = pauses
+    for status, stage in (("queued", "plan"), ("waiting", "review_plan")):
+        job = Job.objects.create(project=team[1], status=status, stage=stage)
+        stopped = pause.pause_job(job.pk, {"stage_fence": 0})
+        assert stopped.status == "paused" and stopped.stage == stage
+        resumed = pause.resume_paused(job.pk, {"stage_fence": stopped.stage_fence})
+        assert resumed.status == status and resumed.stage == stage
+        services.cancel_job(job.pk)
+
+
+def test_pause_api_requires_login_and_fence(team: Team) -> None:
+    job, _ = job_for(team)
+    client = Client()
+    url = f"/api/jobs/{job.pk}/pause/"
+    assert client.post(
+        url, {"stage_fence": job.stage_fence}, content_type="application/json"
+    ).status_code in (401, 403)
+    client.force_login(team[0])
+    assert (
+        client.post(
+            url, {"stage_fence": job.stage_fence - 1}, content_type="application/json"
+        ).status_code
+        == 409
+    )
+    response = client.post(url, {"stage_fence": job.stage_fence}, content_type="application/json")
+    assert response.status_code == 200 and response.json()["pause_requested"]
+
+
+def test_pause_during_commit_resumes_validation_of_the_same_candidate(team: Team) -> None:
+    from prompt2play.adapters.django.forge import pauses
+
+    pause: Any = pauses
+    job, lease = job_for(team)
+    with (
+        patch.object(
+            workflow, "finalize_intent", side_effect=RuntimeError("fixture commit interruption")
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        submit(job, lease, team[2])
+    job.refresh_from_db()
+    assert job.stage == "commit"
+    candidate_id = job.active_candidate_id
+    pause.pause_boundary(
+        job.pk,
+        team[2],
+        {"lease_token": lease, "stage_fence": job.stage_fence, "reason": "Fixture pause"},
+    )
+    job.refresh_from_db()
+    resumed = pause.resume_paused(job.pk, {"stage_fence": job.stage_fence})
+    assert resumed.status == "queued" and resumed.stage == "validate"
+    assert resumed.active_candidate_id == candidate_id
+    assert Candidate.objects.get(pk=candidate_id).committed
+
+
+def test_requested_pause_is_kept_after_worker_disconnect(team: Team) -> None:
+    from prompt2play.adapters.django.forge import pauses
+
+    pause: Any = pauses
+    job, _ = job_for(team)
+    pause.pause_job(job.pk, {"stage_fence": job.stage_fence})
+    Job.objects.filter(pk=job.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
+    assert services.claim_job(team[2], CAPABILITIES) == (None, None)
+    job.refresh_from_db()
+    assert job.status == "paused"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgresql_double_resume_from_pause_releases_only_once(team: Team) -> None:
+    if connection.vendor != "postgresql":
+        pytest.skip("PostgreSQL concurrency coverage")
+    from prompt2play.adapters.django.forge import pauses
+
+    pause: Any = pauses
+    job = Job.objects.create(project=team[1], status="queued")
+    job = pause.pause_job(job.pk, {"stage_fence": 0})
+    fence = job.stage_fence
+
+    def resume() -> str:
+        close_old_connections()
+        try:
+            pause.resume_paused(job.pk, {"stage_fence": fence})
+            return "resumed"
+        except Conflict:
+            return "stale"
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(lambda _: resume(), range(2))) == ["resumed", "stale"]
+    job.refresh_from_db()
+    assert job.status == "queued" and job.resume_count == 1
+
+
+def test_old_worker_cannot_discard_a_saved_planning_checkpoint(team: Team) -> None:
+    job = Job.objects.create(
+        project=team[1],
+        provider="codex",
+        kind="generate",
+        status="queued",
+        checkpoint={"planning": {"key": "a" * 64}},
+    )
+    assert services.claim_job(team[2], {"providers": ["codex"]}) == (None, None)
+    claimed, _ = services.claim_job(team[2], CAPABILITIES)
+    assert claimed.pk == job.pk
+
+
+def test_pause_retains_all_inflight_responses_before_releasing_lease(team: Team) -> None:
+    from prompt2play.adapters.django.forge import pauses
+
+    pause: Any = pauses
+    job, lease = job_for(team)
+
+    def reserve(key: str) -> Any:
+        return workflow.reserve_invocation(
+            job.pk,
+            team[2],
+            {
+                "lease_token": lease,
+                "stage_fence": job.stage_fence,
+                "invocation_key": key,
+                "prompt_sha256": "d" * 64,
+                "reserved_tokens": 100,
+                "operation": "engine",
+            },
+        )
+
+    calls = [reserve("engine:first"), reserve("renderer:second")]
+    pause.pause_job(job.pk, {"stage_fence": job.stage_fence})
+    assert reserve("audio:blocked") is None
+    job.refresh_from_db()
+    assert job.status == "running" and job.pause_requested
+    for index, call in enumerate(calls):
+        workflow.settle_invocation(
+            job.pk,
+            team[2],
+            {
+                "lease_token": lease,
+                "stage_fence": job.stage_fence,
+                "invocation_id": call.pk,
+                "state": "completed",
+                "response": {"data": {"fixture": True}, "usage": {}},
+            },
+        )
+        job.refresh_from_db()
+        assert job.status == ("running" if index == 0 else "paused")
+    assert job.invocations.filter(state="completed").count() == 2

@@ -37,7 +37,7 @@ def resume_timeout(job_id):
                 "Only an unrecovered Codex wall timeout may resume.", code="not_resumable"
             )
         if Job.objects.filter(
-            project_id=job.project_id, status__in=["queued", "running", "waiting"]
+            project_id=job.project_id, status__in=["queued", "running", "waiting", "paused"]
         ).exists():
             raise Conflict("The project already has an active job.", code="active_job")
         invocation = job.invocations.order_by("-created_at", "-id").first()

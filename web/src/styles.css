@@ -57,3 +57,7 @@
 .preview-pane:is(:fullscreen,:-webkit-full-screen,.expanded)>.preview-footer,.preview-pane:is(:fullscreen,:-webkit-full-screen,.expanded)>.preview-persistence-note{display:none}
 .preview-pane:is(:fullscreen,:-webkit-full-screen,.expanded) .preview-device{border:0;border-radius:0}
 .preview-actions .icon-button[aria-pressed=true]{width:auto;gap:7px;padding:0 10px;font-size:12px}
+
+.pause-controls { margin: 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
+.pause-controls p { font-size: 13px; line-height: 1.5; margin: 0 0 12px; }
+.status-paused { color: var(--copper); }

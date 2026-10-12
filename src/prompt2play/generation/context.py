@@ -201,7 +201,7 @@ class ContextConversations:
         self, prompt: str, schema: dict[str, Any], role: str, model: str
     ) -> ContextRequest | None:
         instructions, boundary, data = prompt.partition(PROMPT_BOUNDARY)
-        if not boundary or role not in ("author", "visual_review"):
+        if not boundary or role not in ("plan", "author", "visual_review"):
             return None
         try:
             context = json.loads(data)

@@ -106,6 +106,9 @@ def finalize_intent(candidate):
             lease_expires_at=None,
             updated_at=timezone.now(),
         )
+        from .pauses import hold_pending
+
+        hold_pending(candidate.job_id)
     candidate.committed = True
     return candidate
 
@@ -278,6 +281,12 @@ def reserve_invocation(job_id, runner, values):
                     "Invocation key reused for another request.", code="invocation_conflict"
                 )
             return invocation
+        if job.pause_requested:
+            from .pauses import finish_pause
+
+            if not job.invocations.filter(state="reserved", stage_fence=job.stage_fence).exists():
+                finish_pause(job)
+            return None
         if job.creation_mode == "pro" and values["operation"] != "plan":
             from .reviews import require_approved_plan
 
@@ -414,6 +423,25 @@ def settle_invocation(job_id, runner, values):
                 level="warning",
                 data={"operation": invocation.operation, "interruption": "codex_wall_timeout"},
             )
+        if (
+            state == "completed"
+            and invocation.operation == "plan"
+            and (
+                runner.capabilities.get("continuable_planning_v1") is True
+                or {"game_spec", "build_plan"} <= values["response"].get("data", {}).keys()
+            )
+        ):
+            from .planning import remember_response
+
+            remember_response(job, values["response"]["data"])
+            job.refresh_from_db()
+        if (
+            job.pause_requested
+            and not job.invocations.filter(state="reserved", stage_fence=job.stage_fence).exists()
+        ):
+            from .pauses import finish_pause
+
+            finish_pause(job)
         invocation.refresh_from_db()
         return invocation
 
@@ -628,6 +656,9 @@ def validate_candidate(job_id, runner, values):
             lease_expires_at=None,
             updated_at=timezone.now(),
         )
+        from .pauses import hold_pending
+
+        hold_pending(job.pk)
         services.event(
             job,
             "Сборка прошла обязательные проверки. Ожидаем ваше подтверждение или замечания."

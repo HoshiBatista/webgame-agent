@@ -63,6 +63,9 @@ def record_plan(job_id, runner, values):
                 stage="review_plan" if waiting else "plan",
                 data={"plan_key": key},
             )
+        from .pauses import hold_pending
+
+        hold_pending(job.pk)
         return {"waiting": waiting, "plan_key": key}
 
 

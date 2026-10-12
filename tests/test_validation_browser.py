@@ -513,3 +513,68 @@ def test_held_controls_release_and_opposites_are_required(broken: bool) -> None:
     assert any(c["name"] == "input:1280" and c["status"] == "passed" for c in report["checks"]), (
         "Smoke input alone should miss this defect"
     )
+
+
+@pytest.mark.parametrize("duration", [0, 350])
+def test_drag_duration_is_exercised_while_pointer_is_held(duration: int) -> None:
+    files, spec, _ = fixture("canvas")
+    spec["presentation_mode"] = "dom"
+    files["game.js"] = """function createGame(ctx) {
+      let phase='ready', x=100, held=false, heldTime=0;
+      ctx.root.innerHTML='<h1>Authored drag fixture</h1><div id="track" style="position:relative;width:100%;height:170px;background:#132030;touch-action:none"><span id="from" style="position:absolute;left:20px;top:60px;width:24px;height:24px;background:#f1d080">A</span><span id="to" style="position:absolute;right:20px;top:60px;width:24px;height:24px;background:#f1d080">B</span><span id="actor" style="position:absolute;top:120px;width:30px;height:30px;background:#80eebb"></span></div><button id="move">Move</button>';
+      const track=ctx.root.querySelector('#track'),actor=ctx.root.querySelector('#actor');
+      function render(){actor.style.left=(x%200)+'px';}
+      function move(){x+=35;render();}
+      ctx.input.key(key=>{if(key==='ArrowRight')move();});
+      ctx.input.on(ctx.root.querySelector('#move'),'click',move);
+      ctx.input.on(track,'pointerdown',()=>{held=true;});
+      ctx.input.on(document,'pointerup',()=>{held=false;});
+      ctx.input.on(document,'pointercancel',()=>{held=false;});
+      ctx.input.on(track,'pointermove',()=>{if(held)move();});
+      ctx.clock.fixedStep(dt=>{if(phase==='playing'&&held){heldTime+=dt;x+=2;render();}});
+      render();return {snapshot:()=>({phase,x,heldTime}),dispatch(a){if(a.type==='START')phase='playing';render();}};
+    }"""
+    spec["input_acceptance"] = {
+        "start_selector": "#p2p-start",
+        "restart_selector": "#p2p-restart",
+        "desktop": {
+            "steps": [{"kind": "key", "key": "ArrowRight"}],
+            "completion": {"path": "/phase", "one_of": ["playing"]},
+        },
+        "touch": {
+            "steps": [{"kind": "tap", "selector": "#move"}],
+            "completion": {"path": "/phase", "one_of": ["playing"]},
+        },
+    }
+    scenario = {
+        "steps": [{"kind": "drag", "from_selector": "#from", "to_selector": "#to", "ms": duration}],
+        "assertions": [
+            {
+                "after_step": 1,
+                "before_step": -1,
+                "path": "/heldTime",
+                "op": "greater",
+                "value_json": "0.25",
+                "tolerance": 0,
+            }
+        ],
+    }
+    spec.update(
+        mechanics_required=True,
+        mechanics_required_actions=["DRAG"],
+        mechanics_acceptance=[
+            {
+                "id": "timed-drag",
+                "description": "Clock progresses while pointer is down",
+                "actions": ["DRAG"],
+                "keyboard_keys": [],
+                "continuous": False,
+                "desktop": scenario,
+                "touch": scenario,
+            }
+        ],
+    )
+    report = execute(f"timed-drag-{duration}", files, spec, require_completion=False)
+    for width in (1280, 390):
+        check = next(c for c in report["checks"] if c["name"] == f"mechanics:{width}")
+        assert check["status"] == ("passed" if duration else "failed"), check

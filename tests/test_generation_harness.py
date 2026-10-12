@@ -803,3 +803,75 @@ def test_completed_response_is_saved_when_its_cost_exceeds_budget() -> None:
         )
     assert snapshots[-1]["files"]["game.js"] == source
     assert snapshots[-1]["turn"] == 1
+
+
+def test_planning_preserves_rejected_proposal_and_pauses_only_on_repeated_failure() -> None:
+    from prompt2play.generation.workspace import GenerationPaused
+
+    plan, _ = fixture()
+    plan["build_plan"]["mechanics"][0]["desktop"]["steps"][0]["ms"] = 300
+    gateway = ScriptedGateway([plan, plan, plan])
+    checkpoints: list[dict[str, Any]] = []
+    with pytest.raises(GenerationPaused, match="без прогресса"):
+        GenerationHarness(on_planning=checkpoints.append).attempt(
+            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+        )
+    assert gateway.roles == ["plan", "plan", "plan"]
+    correction = json.loads(gateway.prompts[1].split(PROMPT_BOUNDARY, 1)[1])
+    assert correction["previous_rejected_plan"] == plan
+    assert "desktop.steps[0]" in correction["plan_feedback"]["error"]
+    assert "ms must be 0" in correction["plan_feedback"]["error"]
+    assert checkpoints[-1]["repeat_count"] == 3
+    assert checkpoints[-1]["proposal"] == plan
+
+
+def test_resume_revalidates_saved_paid_plan_without_another_planning_call() -> None:
+    plan, source = fixture()
+    gateway = ScriptedGateway(
+        [
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Resume paid plan",
+            }
+        ]
+    )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest(
+            "Full game", planning_state={"proposal": plan, "correction": 2, "repeat_count": 0}
+        ),
+        gateway,
+        GenerationControl.bounded(),
+    )
+    assert "plan" not in gateway.roles
+    assert candidate.files["game.js"] == source
+
+
+def test_resume_rejection_does_not_count_the_saved_response_as_a_new_failure() -> None:
+    plan, source = fixture()
+    bad, _ = fixture()
+    bad["build_plan"]["mechanics"][0]["desktop"]["steps"][0]["ms"] = 300
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Corrected",
+            },
+        ]
+    )
+    checkpoints: list[dict[str, Any]] = []
+    GenerationHarness(on_planning=checkpoints.append).attempt(
+        GenerationRequest(
+            "Full game",
+            planning_state={
+                "proposal": bad,
+                "needs_validation": False,
+                "repeat_count": 2,
+                "correction": 2,
+            },
+        ),
+        gateway,
+        GenerationControl.bounded(),
+    )
+    assert checkpoints[0]["repeat_count"] == 2
+    assert gateway.roles.count("plan") == 1

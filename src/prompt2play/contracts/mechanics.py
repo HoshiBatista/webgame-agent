@@ -9,6 +9,29 @@ from typing import Any
 
 
 def validate_mechanics(value: Any, required_actions: list[str]) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or not 1 <= len(value) <= 24:
+        raise ValueError("Basic mechanics require one to 24 named real-input cases")
+    result, errors, seen = [], [], set()
+    for index, case in enumerate(value):
+        name = case.get("id", index) if isinstance(case, dict) else index
+        try:
+            checked = _validate_mechanics([case], [])
+            if checked[0]["id"] in seen:
+                raise ValueError("Mechanics case IDs must be unique bounded names")
+            seen.add(checked[0]["id"])
+            result.extend(checked)
+        except (ValueError, TypeError) as exc:
+            errors.append(f"mechanics[{name}]: {exc}")
+    if errors:
+        raise ValueError("; ".join(errors[:8]))
+    covered = {action for case in result for action in case["actions"]}
+    missing = set(required_actions) - {"START", "RESTART"} - covered
+    if missing:
+        raise ValueError("Untested gameplay actions: " + ", ".join(sorted(missing)))
+    return result
+
+
+def _validate_mechanics(value: Any, required_actions: list[str]) -> list[dict[str, Any]]:
     # Import here to keep input normalization shared with the legacy smoke suite.
     from prompt2play.validation.runner import validate_acceptance
 
@@ -74,13 +97,16 @@ def validate_mechanics(value: Any, required_actions: list[str]) -> list[dict[str
                 "touch": other,
                 device: simple,
             }
-            steps = validate_acceptance(acceptance)[device]["steps"]
+            try:
+                steps = validate_acceptance(acceptance, allow_passive=True)[device]["steps"]
+            except ValueError as exc:
+                raise ValueError(f"mechanics[{name}].{device}: {exc}") from exc
             if any(s["repeat"] != 1 for s in steps):
                 raise ValueError("Mechanics cases use explicit steps, not repeat")
             assertions = scenario["assertions"]
             if not isinstance(assertions, list) or not 1 <= len(assertions) <= 32:
                 raise ValueError("Each mechanic requires observable assertions")
-            for check in assertions:
+            for assertion_index, check in enumerate(assertions):
                 if not isinstance(check, dict) or set(check) != {
                     "after_step",
                     "before_step",
@@ -124,10 +150,16 @@ def validate_mechanics(value: Any, required_actions: list[str]) -> list[dict[str
                     raise ValueError("Invalid assertion literal")
                 if before == -1:
                     literal = json.loads(check["value_json"])
-                    if type(literal) not in (str, int, float, bool, type(None)) or (
-                        isinstance(literal, float) and not math.isfinite(literal)
-                    ):
-                        raise ValueError("Assertion literal must be a finite JSON scalar")
+                    try:
+                        json.dumps(literal, allow_nan=False)
+                    except (ValueError, TypeError) as exc:
+                        raise ValueError(
+                            f"{device}.assertions[{assertion_index}].value_json must contain finite JSON"
+                        ) from exc
+                    if check["op"] in ("greater", "less") and type(literal) not in (int, float):
+                        raise ValueError(
+                            f"{device}.assertions[{assertion_index}]: {check['op']} needs a numeric value_json; use equal/not_equal for arrays or objects"
+                        )
             if device == "desktop":
                 for key in keys:
                     down = [

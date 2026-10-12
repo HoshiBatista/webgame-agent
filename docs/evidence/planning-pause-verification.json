@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-12",
+  "scope": "Generator planning recovery and cooperative pause; authored tests plus offline validation of saved live receipts. No manual user-game edits.",
+  "harness": "generation-harness-v1.9",
+  "tests": {
+    "pytest": {
+      "passed": 316,
+      "skipped": 33,
+      "coverage_with_branches_percent": 89.42
+    },
+    "postgresql_backend_and_worker_integration": {
+      "passed": 84,
+      "database": "separate temporary database"
+    },
+    "frontend_unit": {
+      "passed": 69
+    },
+    "studio_browser": {
+      "result": "passed",
+      "backend": "explicit API double",
+      "browser": "Chrome 154.0.8037.99",
+      "scenarios": [
+        "pause",
+        "resume same job",
+        "cancel",
+        "previous preview remains playable"
+      ]
+    },
+    "isolated_browser": {
+      "passed": 6,
+      "image_tag": "prompt2play-validator:pause-planning",
+      "scenarios": [
+        "reviewed DOM/canvas",
+        "held arrows and broken-control negative case",
+        "timed drag and zero-duration negative case on desktop/touch"
+      ],
+      "evidence": "local /private/tmp/p2p-pause-browser-final"
+    },
+    "legacy_worker": {
+      "suite_passed": 168,
+      "timing_sensitive_failure": "terminal receipt cancellation subprocess exceeded the authored 0.5-second startup allowance under concurrent load",
+      "failed_test_rerun": "passed (1 test); no production code change"
+    },
+    "ruff_format": "passed",
+    "ruff_lint": "passed",
+    "strict_mypy": "passed",
+    "frontend_build": "passed",
+    "sdist_and_wheel": "passed"
+  },
+  "regressions": [
+    "Drag duration accepted and simulated during the held pointer interval",
+    "Automatic mechanics may observe gameplay after ordinary start; separate input gate remains mandatory",
+    "Finite JSON equality handles inventory arrays/objects with order-independent object keys",
+    "Rejected proposals and field diagnostics survive restart; unchanged rejection pauses after three occurrences",
+    "In-flight plan, author and review responses are saved and reused without another provider call",
+    "Pausing waits for all already reserved concurrent calls, blocks new dispatch, and retains unknown spend",
+    "Pause survives lost leases, approval gates and pending immutable artifact commits",
+    "Double continuation fenced and old workers cannot discard planning checkpoints"
+  ],
+  "live_observation": {
+    "saved_planner_responses": 5,
+    "last_proposal_revalidated_offline": "passed all current schema, mechanics, preservation and contract checks",
+    "job_budget_usd": "20.00",
+    "generation_paused_before_deployment": true
+  },
+  "limitations": [
+    "No new game quality or complete playthrough evaluation was performed",
+    "Unknown provider usage remains reserved; ambiguous transport failures require explicit continuation",
+    "Context reuse behavior is regression-tested, not a fresh cache-hit-rate benchmark",
+    "Actual contest WebView host remains unknown"
+  ]
+}

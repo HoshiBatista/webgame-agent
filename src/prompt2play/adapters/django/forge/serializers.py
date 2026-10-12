@@ -585,3 +585,16 @@ class DiagnosticSerializer(FencedSerializer):
     validate_spec = CandidateSerializer.validate_spec
     validate_report = CandidateValidationSerializer.validate_report
     validate_evidence_files = CandidateValidationSerializer.validate_evidence_files
+
+
+class PauseBoundarySerializer(LeaseSerializer):
+    stage_fence = serializers.IntegerField(min_value=0)
+    reason = serializers.CharField(max_length=1500, required=False, allow_blank=True)
+
+
+class PlanningStateSerializer(LeaseSerializer):
+    stage_fence = serializers.IntegerField(min_value=0)
+    planning = serializers.JSONField()
+
+    def validate_planning(self, value):
+        return bounded_object(value, MIB, "planning")

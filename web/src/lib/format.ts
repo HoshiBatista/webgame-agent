@@ -8,8 +8,8 @@ export function date(value: string | null | undefined, full = false): string {
   return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', ...(full ? { year: 'numeric' as const } : {}), hour: '2-digit', minute: '2-digit' }).format(d);
 }
 export const time = (value: string) => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-export const activeJob = (status?: JobStatus) => status === 'queued' || status === 'running' || status === 'waiting';
-export const jobLabels: Record<JobStatus, string> = { waiting: 'Ждёт решения', queued: 'В очереди', running: 'Создаётся', completed: 'Готово', failed: 'Ошибка', cancelled: 'Отменено' };
+export const activeJob = (status?: JobStatus) => status === 'queued' || status === 'running' || status === 'waiting' || status === 'paused';
+export const jobLabels: Record<JobStatus, string> = { paused: 'На паузе', waiting: 'Ждёт решения', queued: 'В очереди', running: 'Создаётся', completed: 'Готово', failed: 'Ошибка', cancelled: 'Отменено' };
 export const stageLabels: Record<string, string> = { browser_check: 'Проверка черновика в браузере', review_plan: 'Подтвердите план', review_build: 'Оцените сборку', author: 'Код игры', commit: 'Сохранение сборки', plan: 'План игры и дизайн', visual_review: 'Разбор графики и UI', contract: 'Согласование правил', prepare: 'Подготовка авторов', engine: 'Механика', renderer: 'Графика', audio: 'Звук', ui: 'Интерфейс игры', assemble: 'Сборка HTML', validate: 'Проверки', scenarios: 'Игровые сценарии', review: 'Ревью', repair: 'Исправления', done: 'Завершено' };
 export const settingsKey = 'forge.job_settings.v2';
 export const dollars = (value: number | string) => new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4}).format(Number(value));

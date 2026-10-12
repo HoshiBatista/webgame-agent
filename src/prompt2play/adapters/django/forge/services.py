@@ -86,7 +86,7 @@ def create_job(project, user, values):
             # First database operation is a write: serializes SQLite writers too.
             Project.objects.filter(pk=project.pk).update(updated_at=timezone.now())
             if Job.objects.filter(
-                project=project, status__in=["queued", "running", "waiting"]
+                project=project, status__in=["queued", "running", "waiting", "paused"]
             ).exists():
                 raise Conflict("У проекта уже есть активное задание.", code="active_job")
             # A previous completion may have advanced latest_version since the
@@ -125,8 +125,11 @@ def create_job(project, user, values):
 
 def cancel_job(job_id):
     with transaction.atomic():
-        changed = Job.objects.filter(pk=job_id, status__in=["queued", "running", "waiting"]).update(
+        changed = Job.objects.filter(
+            pk=job_id, status__in=["queued", "running", "waiting", "paused"]
+        ).update(
             status="cancelled",
+            pause_requested=False,
             lease_expires_at=None,
             stage_fence=F("stage_fence") + 1,
             updated_at=timezone.now(),
@@ -178,6 +181,20 @@ def claim_job(runner, capabilities, name=None):
         runner_changes["name"] = name
     if not Runner.objects.filter(pk=runner.pk, revoked=False).update(**runner_changes):
         raise AuthenticationFailed("Исполнитель отозван.", code="invalid_runner_token")
+    from .pauses import finish_pause
+
+    for paused_id in Job.objects.filter(
+        status="running", pause_requested=True, lease_expires_at__lte=now
+    ).values_list("id", flat=True):
+        with transaction.atomic():
+            Job.objects.filter(pk=paused_id).update(updated_at=F("updated_at"))
+            pending = Job.objects.get(pk=paused_id)
+            if (
+                pending.status == "running"
+                and pending.pause_requested
+                and pending.lease_expires_at <= now
+            ):
+                finish_pause(pending)
     eligible = (Q(status="queued") | Q(status="running", lease_expires_at__lte=now)) & (
         Q(execution_expires_at__isnull=True) | Q(execution_expires_at__gt=now)
     )
@@ -191,6 +208,8 @@ def claim_job(runner, capabilities, name=None):
         )
     else:
         compatible &= ~Q(stage__in=["validate", "commit"])
+        if capabilities.get("continuable_planning_v1") is not True:
+            compatible &= ~Q(checkpoint__has_key="planning")
         if capabilities.get("continuable_authoring_v1") is not True:
             compatible &= ~Q(checkpoint__has_key="authoring_draft")
         if capabilities.get("interactive_plan_v1") is not True:
@@ -309,6 +328,7 @@ def heartbeat(job_id, runner, raw_lease):
     job = Job.objects.get(pk=job_id)
     return {
         "cancelled": False,
+        "pause_requested": job.pause_requested,
         "lease_seconds": settings.FORGE_LEASE_SECONDS,
         "stage_fence": job.stage_fence,
         "stage": job.stage,

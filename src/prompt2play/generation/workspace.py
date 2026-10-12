@@ -23,6 +23,10 @@ class GenerationStopped(RuntimeError):
     """Cancellation, fence expiry, deadline, or a hard budget stops the attempt."""
 
 
+class GenerationPaused(GenerationStopped):
+    """A durable checkpoint is available; stop dispatch without marking failure."""
+
+
 class BudgetExhausted(GenerationStopped):
     """A resumable admission stop; completed work and receipts must be saved."""
 

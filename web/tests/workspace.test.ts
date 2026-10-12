@@ -166,3 +166,14 @@ test('a delayed pre-approval status cannot overwrite a newer human decision', ()
   const stale = job({status:'waiting', approval:'plan', stage_fence:3, updated_at:'2026-10-10T12:00:00Z'});
   assert.equal(reconcileJob(queued, stale), queued);
 });
+
+test('pause and resume fence out stale running or paused snapshots', () => {
+  const running = job({status:'running', stage_fence:2});
+  const paused = job({status:'paused', stage_fence:3, updated_at:'2026-10-10T11:00:00Z'});
+  const resumed = job({status:'queued', stage_fence:4, resume_count:1, updated_at:'2026-10-10T12:00:00Z'});
+  assert.equal(reconcileJob(running, paused), paused);
+  assert.equal(reconcileJob(paused, {...running, updated_at:'2026-10-10T13:00:00Z'}), paused);
+  assert.equal(reconcileJob(paused, resumed), resumed);
+  assert.equal(reconcileJob(resumed, {...paused, updated_at:'2026-10-10T14:00:00Z'}), resumed);
+  assert.equal(currentModelCall(paused), undefined);
+});

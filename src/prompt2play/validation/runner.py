@@ -69,7 +69,7 @@ def _point(value: Any) -> dict[str, int | float]:
     return {"x": value["x"], "y": value["y"]}
 
 
-def validate_acceptance(value: Any) -> dict[str, Any]:
+def validate_acceptance(value: Any, *, allow_passive: bool = False) -> dict[str, Any]:
     """Only declarative real input is permitted; there is no executable test source."""
     if not isinstance(value, dict) or set(value) != {
         "start_selector",
@@ -93,7 +93,7 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
             raise ValueError("Acceptance requires one to sixty-four steps")
         normalized = []
         actual_inputs = 0
-        for step in steps:
+        for step_index, step in enumerate(steps, 1):
             if not isinstance(step, dict) or step.get("kind") not in {
                 "key",
                 "key_down",
@@ -132,6 +132,12 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
                 else:
                     raise ValueError("Click requires a selector")
             elif kind == "drag":
+                ms = step.get("ms", 0)
+                if type(ms) is not int or not 0 <= ms <= 600000:
+                    raise ValueError("Drag duration must be zero to ten simulated minutes")
+                if ms:
+                    item["ms"] = ms
+                allowed.add("ms")
                 if step.get("from_selector") or step.get("to_selector"):
                     item["from_selector"] = _selector(step.get("from_selector"))
                     item["to_selector"] = _selector(step.get("to_selector"))
@@ -158,11 +164,20 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
                 "to": {"x": 0, "y": 0},
             }
             extra = set(step) - allowed
-            if any(name not in defaults or step[name] != defaults[name] for name in extra):
-                raise ValueError("Unknown real input operation property")
+            invalid = sorted(
+                name for name in extra if name not in defaults or step[name] != defaults[name]
+            )
+            if invalid:
+                rules = "; ".join(
+                    f"{name} must be {defaults[name]!r}" if name in defaults else f"remove {name}"
+                    for name in invalid
+                )
+                raise ValueError(
+                    f"{device}.steps[{step_index - 1}] ({kind}): {rules}. Duration ms is supported only for wait and drag; use a separate wait for held keys."
+                )
             actual_inputs += repeat if kind != "wait" else 0
             normalized.append(item)
-        if not 1 <= actual_inputs <= 128:
+        if not (0 if allow_passive else 1) <= actual_inputs <= 128:
             raise ValueError("Acceptance requires one to 128 actual input events")
         if sum(step.get("ms", 0) for step in normalized) > 1800000:
             raise ValueError("Scenario exceeds thirty simulated minutes")

@@ -39,7 +39,7 @@ from .workspace import (
     WorkspaceLimits,
 )
 
-HARNESS_VERSION = "generation-harness-v1.8"
+HARNESS_VERSION = "generation-harness-v1.9"
 PLANNING_INSTRUCTIONS = (
     QUALITY_BRIEF
     + """Plan the requested complete offline HTML5 game for continued development. Return GameSpec (what the game does) and BuildPlan (visual design, maintainable implementation and acceptance) separately.
@@ -87,7 +87,18 @@ Full victory remains optional; test short mechanic segments without simplifying 
 set_test_scenario may also include mechanics to fix test steps/assertions while preserving
 case IDs, action coverage and keyboard controls. Missing required checks block submission.
 """
-PLANNING_INSTRUCTIONS += MECHANICS_INSTRUCTIONS
+PLANNING_INSTRUCTIONS += (
+    MECHANICS_INSTRUCTIONS
+    + """
+Input schema details: all unused string fields must be empty and unused coordinates zero.
+ms is a duration only on wait and drag; for key_down use ms=0 then a separate wait step.
+For automatic mechanics (e.g. auto-fire), a wait-only mechanics case is legitimate after
+normal game start, with assertions proving the actual effect, target choice and idle
+behavior. Never invent player input just to satisfy a schema. Separate mandatory input
+smoke tests still exercise real controls. Assertion value_json supports finite JSON;
+greater/less require numbers, equal/not_equal also support arrays/objects.
+"""
+)
 AUTHOR_INSTRUCTIONS += (
     MECHANICS_INSTRUCTIONS
     + """
@@ -149,6 +160,7 @@ class GenerationRequest:
     user_feedback: list[dict[str, str]] = field(default_factory=list)
     previous_proposal: dict[str, Any] = field(default_factory=dict)
     resume_state: dict[str, Any] = field(default_factory=dict)
+    planning_state: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -186,12 +198,14 @@ class GenerationHarness:
         code_output_tokens: int = 24000,
         on_plan: Callable[[dict[str, Any], dict[str, Any]], None] | None = None,
         on_checkpoint: Callable[[dict[str, Any]], None] | None = None,
+        on_planning: Callable[[dict[str, Any]], None] | None = None,
         require_completion: bool = True,
         on_browser_check: Callable[[dict[str, str], dict[str, Any]], dict[str, Any]] | None = None,
     ) -> None:
         self.limits = limits or WorkspaceLimits()
         self.on_plan = on_plan
         self.on_checkpoint = on_checkpoint
+        self.on_planning = on_planning
         self.on_browser_check = on_browser_check
         self.require_completion = require_completion
         self.plan_output_tokens, self.code_output_tokens = plan_output_tokens, code_output_tokens
@@ -259,54 +273,100 @@ class GenerationHarness:
         if request.user_feedback:
             context["user_feedback"] = request.user_feedback
             context["previous_proposal"] = request.previous_proposal
-        planning_round = 0
+        from prompt2play.contracts.mechanics import preserve_mechanics, validate_mechanics
+        from prompt2play.generation.workspace import GenerationPaused
+        from prompt2play.workers.diagnostics import emit
+
+        saved = copy.deepcopy(request.planning_state)
+        planning_round = saved.get("correction", 0)
+        previous_fingerprint = saved.get("failure_fingerprint", "")
+        repeat_count = saved.get("repeat_count", 0)
+        proposal = saved.get("proposal") or None
+        # Revalidate a paid reply on resume before making any new model request.
+        # A deployment may have corrected the validator that rejected it.
+        if saved.get("feedback"):
+            context["plan_feedback"] = saved["feedback"]
         while True:
             control.guard()
             try:
-                reply = gateway.generate(
-                    PLANNING_INSTRUCTIONS
-                    + "\nFull authoritative planning schema, including every local size/range bound:\n"
-                    + stable(PLAN_SCHEMA)
-                    + PROMPT_BOUNDARY
-                    + ordered_context(context),
-                    PLAN_SCHEMA,
-                    "plan",
-                    control,
-                    max_output=self.plan_output_tokens,
-                )
-                validate(reply.data, PLAN_SCHEMA, "New game plan")
-                from prompt2play.contracts.mechanics import preserve_mechanics, validate_mechanics
-
+                if proposal is None:
+                    reply = gateway.generate(
+                        PLANNING_INSTRUCTIONS
+                        + "\nFull authoritative planning schema, including every local size/range bound:\n"
+                        + stable(PLAN_SCHEMA)
+                        + PROMPT_BOUNDARY
+                        + ordered_context(context),
+                        PLAN_SCHEMA,
+                        "plan",
+                        control,
+                        max_output=self.plan_output_tokens,
+                    )
+                    proposal = reply.data
+                validate(proposal, PLAN_SCHEMA, "New game plan")
                 validate_mechanics(
-                    reply.data["build_plan"]["mechanics"],
-                    [a["type"] for a in reply.data["game_spec"]["actions"]]
+                    proposal["build_plan"]["mechanics"],
+                    [a["type"] for a in proposal["game_spec"]["actions"]]
                     + [a["type"] for a in request.base_spec.get("actions", [])],
                 )
                 preserve_mechanics(
-                    request.base_plan.get("mechanics", []), reply.data["build_plan"]["mechanics"]
+                    request.base_plan.get("mechanics", []), proposal["build_plan"]["mechanics"]
                 )
-                return GameSpec(reply.data["game_spec"]), BuildPlan(reply.data["build_plan"])
+                return GameSpec(proposal["game_spec"]), BuildPlan(proposal["build_plan"])
             except ProviderError as exc:
                 diagnostic = structured_diagnostic(exc)
                 if diagnostic is None:
                     raise
-                context["plan_feedback"] = {
-                    "error": "Structured plan response rejected; correct it.",
-                    **diagnostic,
-                }
+                # Malformed repair output must not discard the last usable proposal.
+                proposal = context.get("previous_rejected_plan") or proposal
+                feedback = {"error": "Structured plan response rejected; correct it.", **diagnostic}
             except ValueError as exc:
-                context["plan_feedback"] = {
-                    "error": str(exc)[:1500],
-                    "instruction": "Correct the plan and its basic mechanics coverage; preserve requested scope.",
-                }
-            planning_round += 1
+                feedback = {"error": str(exc)[:1500]}
+            feedback["instruction"] = (
+                "Repair the exact fields/steps in previous_rejected_plan. Return the full corrected plan, "
+                "preserving all other requested design and mechanics. Read the error literally. "
+                "Do not redesign the whole game or drop tests to silence a failure."
+            )
+            fingerprint = digest(feedback)
+            # Revalidating a saved rejected response is not another failed model attempt.
+            revalidation = bool(saved and not saved.get("needs_validation", False))
+            if not revalidation:
+                repeat_count = repeat_count + 1 if fingerprint == previous_fingerprint else 1
+                planning_round += 1
+            saved = {}
+            previous_fingerprint = fingerprint
+            state = {
+                "proposal": proposal or {},
+                "feedback": feedback,
+                "correction": planning_round,
+                "failure_fingerprint": fingerprint,
+                "repeat_count": repeat_count,
+                "needs_validation": False,
+            }
+            emit(
+                "planning_rejected",
+                correction=planning_round,
+                same_problem_count=repeat_count,
+                diagnostic=feedback["error"],
+            )
+            if self.on_planning:
+                self.on_planning(state)
+            if repeat_count >= 3:
+                raise GenerationPaused(
+                    "Автоисправление плана повторяет одну причину без прогресса. "
+                    "План и замечания сохранены; можно продолжить после изучения: "
+                    + str(feedback["error"])[:900]
+                )
+            context["plan_feedback"] = feedback
+            context["previous_rejected_plan"] = proposal or {}
             context["planning_correction"] = planning_round
+            proposal = None
 
     def _single_author(
         self, request: GenerationRequest, gateway: ModelGateway, control: GenerationControl
     ) -> CandidateSubmission:
         identity = asdict(request)
         identity.pop("resume_state")
+        identity.pop("planning_state")
         identity["changed_files"] = (
             sorted(request.changed_files) if request.changed_files is not None else None
         )

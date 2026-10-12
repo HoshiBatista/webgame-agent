@@ -99,7 +99,10 @@ class Version(models.Model):
 
 
 class Job(models.Model):
-    STATUS = [(s, s) for s in ["queued", "running", "waiting", "completed", "failed", "cancelled"]]
+    STATUS = [
+        (s, s)
+        for s in ["queued", "running", "waiting", "paused", "completed", "failed", "cancelled"]
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(Project, on_delete=models.PROTECT, related_name="jobs")
     kind = models.CharField(max_length=12, choices=[("generate", "generate"), ("revise", "revise")])
@@ -138,6 +141,7 @@ class Job(models.Model):
     creation_mode = models.CharField(
         max_length=4, choices=[("lite", "lite"), ("pro", "pro")], default="lite"
     )
+    pause_requested = models.BooleanField(default=False)
     review = models.JSONField(default=dict)
     checkpoint = models.JSONField(default=dict)
     lease_hash = models.CharField(max_length=64, blank=True, editable=False)
@@ -153,7 +157,7 @@ class Job(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["project"],
-                condition=Q(status__in=["queued", "running", "waiting"]),
+                condition=Q(status__in=["queued", "running", "waiting", "paused"]),
                 name="one_active_job_per_project",
             )
         ]

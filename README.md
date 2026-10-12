@@ -43,6 +43,25 @@ The studio supports this complete workflow:
 A generated game is successful only if it renders, responds to input, and
 supports a working restart flow. Full victory/failure playthrough and balance are reviewed by a person by default; automatic end-to-end playthrough is an optional launch setting.
 New native plans include mandatory named mechanics checks with real inputs and expected gameplay-state assertions on desktop and touch. Revisions retain previous action/control coverage and test new actions; a single input reaction is insufficient. Failed jobs offer **Continue after error**, preserving drafts, completed responses and uncertain cost reserves. Increasing the budget also preserves unknown spend.
+**Pause** is separate from cancellation. A queued job pauses immediately; an in-flight
+model response is first saved and accounted, then no new request is dispatched. The
+monitor shows “pause requested” until this boundary. **Continue task** resumes the same
+job with its draft, paid responses, frozen tariff and uncertain reserves. Paused jobs
+still occupy their project and survive restarts; cancellation remains final. An
+independent validation already in progress finishes its report and pauses a queued
+follow-up; a completed game remains completed.
+
+Planning corrections now retain the rejected proposal and exact field/step diagnostics,
+including across restarts. Before another paid request the saved proposal is revalidated.
+Planner turns also share context. Three consecutive rejections with the same diagnostic
+pause the job with an explanation instead of spending indefinitely; there is no general
+limit on productive correction steps or generation time. Continue explicitly retries the
+saved proposal. This handles known correctable output errors; lost authorization,
+ambiguous transport receipts and exhausted budgets still require an explicit action.
+Automatic mechanics may use observation-only scenarios after ordinary game start;
+separate real-input acceptance remains mandatory. Drag duration is exercised while the
+pointer is down. Equality assertions support finite JSON inventory values.
+
 Required skipped checks, including unavailable browser validation, mean
 **unverified**, not successful delivery. A failed edit preserves the last
 playable revision.

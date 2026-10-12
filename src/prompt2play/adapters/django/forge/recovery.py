@@ -51,7 +51,7 @@ def resume_job(job_id, values):
                 "Для этого задания продолжение недоступно; проверьте бюджет.", code="not_resumable"
             )
         if Job.objects.filter(
-            project_id=job.project_id, status__in=["queued", "running", "waiting"]
+            project_id=job.project_id, status__in=["queued", "running", "waiting", "paused"]
         ).exists():
             raise Conflict("В проекте уже есть активное задание.", code="active_job")
         draft = load_draft(job) if job.stage in ("plan", "repair") else {}

@@ -7,11 +7,16 @@ export function at(snapshot, path) {
   }
   return value;
 }
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])]));
+  return value;
+}
 export function assertion(check, states) {
   const actual = at(states[check.after_step], check.path);
   const expected = check.before_step < 0 ? JSON.parse(check.value_json) : at(states[check.before_step], check.path);
   const numeric = typeof actual === 'number' && typeof expected === 'number' && Number.isFinite(actual) && Number.isFinite(expected);
-  const equal = numeric ? Math.abs(actual - expected) <= check.tolerance : JSON.stringify(actual) === JSON.stringify(expected);
+  const equal = numeric ? Math.abs(actual - expected) <= check.tolerance : JSON.stringify(canonical(actual)) === JSON.stringify(canonical(expected));
   const passed = check.op === 'equal' ? equal : check.op === 'not_equal' ? !equal : numeric && (check.op === 'greater' ? actual > expected + check.tolerance : actual < expected - check.tolerance);
   return {path: check.path, after_step: check.after_step, before_step: check.before_step, op: check.op, actual, expected, passed};
 }

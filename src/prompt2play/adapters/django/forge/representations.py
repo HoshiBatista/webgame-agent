@@ -38,6 +38,7 @@ def job_data(job):
             "stage_fence",
             "resume_count",
             "creation_mode",
+            "pause_requested",
             "attempts",
         )
     }
@@ -113,10 +114,14 @@ def job_data(job):
 def project_data(project):
     if hasattr(project, "_recent_jobs"):
         latest = next(iter(project._recent_jobs), None)
-        active = latest if latest and latest.status in ["queued", "running", "waiting"] else None
+        active = (
+            latest
+            if latest and latest.status in ["queued", "running", "waiting", "paused"]
+            else None
+        )
     else:
         jobs = public_jobs().filter(project_id=project.pk)
-        active = jobs.filter(status__in=["queued", "running", "waiting"]).first()
+        active = jobs.filter(status__in=["queued", "running", "waiting", "paused"]).first()
         latest = active or jobs.order_by("-created_at", "-id").first()
     return {
         "id": ident(project.id),

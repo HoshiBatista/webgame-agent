@@ -201,7 +201,12 @@ class JobResumeView(TeamView):
         from .serializers import ResumeSerializer
 
         get_object_or_404(Job, pk=pk)
-        return Response(job_data(resume_job(pk, validated(ResumeSerializer, request.data))))
+        values = validated(ResumeSerializer, request.data)
+        if Job.objects.get(pk=pk).status == "paused":
+            from .pauses import resume_paused
+
+            return Response(job_data(resume_paused(pk, values)))
+        return Response(job_data(resume_job(pk, values)))
 
 
 class JobBudgetView(TeamView):
@@ -358,6 +363,8 @@ class ClaimView(WorkerView):
         from .reviews import worker_review_context
         from .drafts import load_draft
 
+        from .planning import load_planning
+
         worker_job = job_data(job)
         worker_job["checkpoint"] = job.checkpoint
         return Response(
@@ -365,6 +372,7 @@ class ClaimView(WorkerView):
                 "job": worker_job,
                 **worker_review_context(job),
                 "draft": load_draft(job),
+                "planning": load_planning(job),
                 "lease_token": lease,
                 "lease_seconds": settings.FORGE_LEASE_SECONDS,
                 "checkpoint": job.checkpoint,
@@ -429,7 +437,10 @@ class InvocationReserveView(WorkerView):
         invocation = workflow.reserve_invocation(
             pk, request.user, validated(ReserveSerializer, request.data)
         )
-        return Response(workflow.invocation_data(invocation), status=201)
+        return Response(
+            {"paused": True} if invocation is None else workflow.invocation_data(invocation),
+            status=201,
+        )
 
 
 class InvocationSettleView(WorkerView):
@@ -437,7 +448,12 @@ class InvocationSettleView(WorkerView):
         invocation = workflow.settle_invocation(
             pk, request.user, validated(SettleSerializer, request.data)
         )
-        return Response(workflow.invocation_data(invocation))
+        return Response(
+            {
+                **workflow.invocation_data(invocation),
+                "paused": Job.objects.filter(pk=pk, status="paused").exists(),
+            }
+        )
 
 
 class InvocationAccountView(WorkerView):
@@ -533,4 +549,33 @@ class DraftDiagnosticView(WorkerView):
 
         return Response(
             record_diagnostic(pk, request.user, validated(DiagnosticSerializer, request.data))
+        )
+
+
+class JobPauseView(TeamView):
+    def post(self, request, pk):
+        from .pauses import pause_job
+        from .serializers import ResumeSerializer
+
+        get_object_or_404(Job, pk=pk)
+        return Response(job_data(pause_job(pk, validated(ResumeSerializer, request.data))))
+
+
+class PauseBoundaryView(WorkerView):
+    def post(self, request, pk):
+        from .pauses import pause_boundary
+        from .serializers import PauseBoundarySerializer
+
+        return Response(
+            pause_boundary(pk, request.user, validated(PauseBoundarySerializer, request.data))
+        )
+
+
+class PlanningStateView(WorkerView):
+    def post(self, request, pk):
+        from .planning import record_planning
+        from .serializers import PlanningStateSerializer
+
+        return Response(
+            record_planning(pk, request.user, validated(PlanningStateSerializer, request.data))
         )

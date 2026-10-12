@@ -6,7 +6,7 @@ import copy
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import jsonschema
 
@@ -91,17 +91,22 @@ STEP_SCHEMA = obj(
         "to_selector": {"type": "string"},
         "x": {"type": "number"},
         "y": {"type": "number"},
-        "ms": {"type": "integer", "minimum": 0, "maximum": 600000},
+        "ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 600000,
+            "description": "Duration for wait or drag only. Use 0 for other operations; follow key_down with a separate wait.",
+        },
         "from": obj(
             {
-                "x": {"type": "number", "minimum": 0, "maximum": 4096},
-                "y": {"type": "number", "minimum": 0, "maximum": 4096},
+                "x": {"type": "number", "minimum": 0, "maximum": 1280},
+                "y": {"type": "number", "minimum": 0, "maximum": 1280},
             }
         ),
         "to": obj(
             {
-                "x": {"type": "number", "minimum": 0, "maximum": 4096},
-                "y": {"type": "number", "minimum": 0, "maximum": 4096},
+                "x": {"type": "number", "minimum": 0, "maximum": 1280},
+                "y": {"type": "number", "minimum": 0, "maximum": 1280},
             }
         ),
     }
@@ -240,8 +245,19 @@ def validate(value: JSON, schema: JSON, label: str) -> None:
         if len(stable(value).encode()) > 100_000:
             raise ContractError(f"{label} exceeds 100 KB")
         jsonschema.validate(value, schema)
-    except (jsonschema.ValidationError, TypeError, ValueError, RecursionError) as exc:
-        raise ContractError(f"Invalid {label}: {str(exc)[:200]}") from exc
+    except jsonschema.ValidationError as exc:
+        path = "/" + "/".join(
+            str(part).replace("~", "~0").replace("/", "~1") for part in exc.absolute_path
+        )
+        if exc.validator in ("maxItems", "minItems", "maxLength", "minLength"):
+            detail = f"{exc.validator}={exc.validator_value}; received length {len(cast(Any, exc.instance))}"
+        elif exc.validator in ("minimum", "maximum", "type", "enum"):
+            detail = f"expected {exc.validator}={exc.validator_value}"
+        else:
+            detail = exc.message[:500]
+        raise ContractError(f"Invalid {label} at {path}: {detail}") from exc
+    except (TypeError, ValueError, RecursionError) as exc:
+        raise ContractError(f"Invalid {label}: {str(exc)[:500]}") from exc
 
 
 @dataclass(frozen=True)

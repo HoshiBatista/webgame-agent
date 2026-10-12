@@ -45,7 +45,7 @@ def extend_budget(job_id, values):
         if field not in values or values[field] <= getattr(job, field):
             raise Conflict("Укажите новый общий лимит больше прежнего.", code="invalid_budget")
         if Job.objects.filter(
-            project_id=job.project_id, status__in=["queued", "running", "waiting"]
+            project_id=job.project_id, status__in=["queued", "running", "waiting", "paused"]
         ).exists():
             raise Conflict("В проекте уже есть активное задание.", code="active_job")
         from .recovery import continuation_checkpoint

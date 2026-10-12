@@ -103,7 +103,7 @@ def resume_authoring(job_id):
                 "Only a failed obsolete authoring limit may resume.", code="not_resumable"
             )
         if Job.objects.filter(
-            project_id=job.project_id, status__in=["queued", "running", "waiting"]
+            project_id=job.project_id, status__in=["queued", "running", "waiting", "paused"]
         ).exists():
             raise Conflict("The project already has an active job.", code="active_job")
         # A transport timeout/unknown call must not turn into permission for a new call.

@@ -134,7 +134,13 @@ def prepared(settings: Any, tmp_path: Path) -> tuple[Any, worker.Coordinator, di
     transport = coordinator("worker-fixture-token")
     claim = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     assert claim["job"]["id"] == str(job.pk)
     return runner, transport, claim
@@ -294,7 +300,13 @@ def test_worker_reclaimed_completed_response_reuses_without_double_charge(
     )
     resumed = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     assert resumed["job"]["usage"]["total_tokens"] == 7
     second_lease = worker.StageLease(transport, resumed, threading.Event())
@@ -397,7 +409,13 @@ def test_usd_restart_replays_saved_responses_without_repricing_or_paid_calls(
     Job.objects.filter(pk=before.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
     resumed = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
     after = Job.objects.get(pk=before.pk)
@@ -469,7 +487,13 @@ def test_timeout_continuation_reuses_plan_and_preserves_dollar_ledger(
             cast(Any, resume_timeout)(before.pk)
         claim = transport.post(
             "api/worker/claim/",
-            {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+            {
+                "capabilities": {
+                    "providers": ["codex"],
+                    "continuable_authoring_v1": True,
+                    "continuable_planning_v1": True,
+                }
+            },
         )
         lease = worker.StageLease(transport, claim, threading.Event())
     worker.generate_stage(lease, arguments())
@@ -570,6 +594,7 @@ def test_pro_pauses_before_code_and_approval_reuses_paid_plan(
                     "providers": ["codex"],
                     "interactive_plan_v1": True,
                     "continuable_authoring_v1": True,
+                    "continuable_planning_v1": True,
                 }
             },
         )["job"]
@@ -596,7 +621,13 @@ def test_pro_pauses_before_code_and_approval_reuses_paid_plan(
     assert (
         transport.post(
             "api/worker/claim/",
-            {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+            {
+                "capabilities": {
+                    "providers": ["codex"],
+                    "continuable_authoring_v1": True,
+                    "continuable_planning_v1": True,
+                }
+            },
         )["job"]
         is None
     )
@@ -607,6 +638,7 @@ def test_pro_pauses_before_code_and_approval_reuses_paid_plan(
                 "providers": ["codex"],
                 "interactive_plan_v1": True,
                 "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
             }
         },
     )
@@ -660,6 +692,7 @@ def test_pro_plan_feedback_is_persisted_and_requires_fresh_confirmation(
                 "providers": ["codex"],
                 "interactive_plan_v1": True,
                 "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
             }
         },
     )
@@ -779,7 +812,13 @@ def test_rejected_model_response_is_feedback_and_accounted_once_across_restart(
     Job.objects.filter(pk=before.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
     resumed = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
     after = Job.objects.get(pk=before.pk)
@@ -824,7 +863,13 @@ def test_draft_is_fenced_and_old_workers_cannot_reclaim_it(
     )
     resumed = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     assert resumed["draft"]["phase"] == "author"
     with pytest.raises(worker.LeaseRejected):
@@ -888,7 +933,13 @@ def test_legacy_operation_limit_recovers_completed_draft_without_replaying_autho
         cast(Any, resume_authoring)(before.pk)
     resumed = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     assert resumed["draft"]["files"]["game.js"]
     provider.outputs.insert(
@@ -921,7 +972,13 @@ def test_claim_failure_loading_snapshot_does_not_orphan_a_lease(
     with pytest.raises(ValueError, match="unreadable"):
         transport.post(
             "api/worker/claim/",
-            {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+            {
+                "capabilities": {
+                    "providers": ["codex"],
+                    "continuable_authoring_v1": True,
+                    "continuable_planning_v1": True,
+                }
+            },
         )
     after = Job.objects.get(pk=before.pk)
     assert after.stage_fence == before.stage_fence and after.lease_hash == before.lease_hash
@@ -968,7 +1025,13 @@ def test_explicit_continuation_finishes_saved_work_without_replaying_successful_
     cast(Any, resume_job)(job.pk, {"stage_fence": job.stage_fence})
     fresh = transport.post(
         "api/worker/claim/",
-        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
     )
     assert fresh["job"]["id"] == str(job.pk)
     assert bool(fresh.get("draft")) == (failed_role == "author")
@@ -981,3 +1044,78 @@ def test_explicit_continuation_finishes_saved_work_without_replaying_successful_
     assert job.usage["calls"] == before_calls + current[0].calls
     assert unknown.actual_usage is None and unknown.state == "ambiguous"
     assert job.project.latest_version_id is None
+
+
+@pytest.mark.parametrize("pause_at", [1, 2, 3])
+def test_pause_during_model_call_keeps_reply_and_continuation_does_not_pay_twice(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+    pause_at: int,
+) -> None:
+    from prompt2play.adapters.django.forge.pauses import pause_job, resume_paused
+    from prompt2play.generation.workspace import GenerationPaused
+
+    _, transport, claim = prepared
+    job_id = claim["job"]["id"]
+
+    class PausingProvider(ScriptedProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Any:
+            reply = super().generate(*args, **kwargs)
+            if self.calls == pause_at:
+                job = Job.objects.get(pk=job_id)
+                cast(Any, pause_job)(job.pk, {"stage_fence": job.stage_fence})
+            return reply
+
+    provider = PausingProvider(replies())
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        configured.provider = provider
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    with pytest.raises(GenerationPaused):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    job = Job.objects.get(pk=job_id)
+    assert job.status == "paused" and job.usage["calls"] == pause_at
+    assert job.invocations.filter(state="completed").count() == pause_at
+    cast(Any, resume_paused)(job.pk, {"stage_fence": job.stage_fence})
+    new_claim = transport.post(
+        "api/worker/claim/",
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "continuable_authoring_v1": True,
+                "continuable_planning_v1": True,
+            }
+        },
+    )
+    worker.generate_stage(worker.StageLease(transport, new_claim, threading.Event()), arguments())
+    job.refresh_from_db()
+    assert provider.calls == 3
+    assert job.usage["calls"] == 3 and job.stage == "validate"
+    assert job.invocations.count() == 3
+    assert job.candidates.count() == 1
+
+
+def test_planner_rejections_are_saved_and_can_self_correct_after_restart(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _, transport, claim = prepared
+    sequence = replies()
+    invalid = json.loads(json.dumps(sequence[0]))
+    invalid["build_plan"]["mechanics"][0]["desktop"]["steps"][0]["ms"] = 200
+    provider = ScriptedProvider([invalid, *sequence])
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        configured.provider = provider
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    job = Job.objects.get(pk=claim["job"]["id"])
+    assert job.stage == "validate" and provider.calls == 4
+    event = job.events.filter(level="warning", data__correction=1).get()
+    assert "ms must be 0" in event.message

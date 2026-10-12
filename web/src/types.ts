@@ -1,6 +1,6 @@
 export type RunnerRole = 'generator' | 'validator';
 export type Provider = 'codex' | 'openai';
-export type JobStatus = 'queued' | 'running' | 'waiting' | 'completed' | 'failed' | 'cancelled';
+export type JobStatus = 'queued' | 'running' | 'waiting' | 'paused' | 'completed' | 'failed' | 'cancelled';
 export interface User { id: string | number; username: string; is_staff: boolean }
 export interface Session { authenticated: boolean; user: User | null; csrf_token?: string }
 export interface Usage { input_tokens: number; cached_input_tokens: number; output_tokens: number; total_tokens: number; calls: number }
@@ -34,7 +34,7 @@ export interface Job {
   runner_id: string | null; created_at: string; updated_at: string; error: string; max_repairs: number; budget_tokens: number; usage: Usage;
   creation_mode?: 'lite' | 'pro'; approval?: 'plan' | 'build' | null;
   activity?: JobActivity; stage_fence?: number; resume_count?: number;
-  can_resume?: boolean; budget_stopped?: boolean; playthrough_mode?: 'manual' | 'auto';
+  pause_requested?: boolean; can_resume?: boolean; budget_stopped?: boolean; playthrough_mode?: 'manual' | 'auto';
   budget_usd?: string | null; cost?: Cost | null; pricing?: { model: string; as_of: string; source: string };
 }
 export interface Project { id: string; title: string; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }
