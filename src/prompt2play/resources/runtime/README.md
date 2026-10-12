@@ -35,6 +35,15 @@ and controls scrollable. Binding an input listener does not disable scrolling
 for the entire surface. Mobile qualification includes a raw finger swipe before
 locator actions, which otherwise can silently scroll an unreachable control.
 
+Runtime v1.0.6 lets viewport-filling games set
+`ctx.root.dataset.layout = 'viewport'` before constructing their UI. This gives
+the game surface a definite viewport height below the actual toolbar. Percentage-height Canvas/Grid games can resize without feeding
+their intrinsic canvas dimensions back into an unconstrained page height.
+Ordinary long DOM games leave the attribute unset and keep natural document
+height and scrolling. Viewport layouts scroll inside their surface when a
+game declares a minimum size larger than the available viewport. The v1.0.5 bundle is archived; existing published HTML is unchanged
+until a child revision is explicitly packaged and validated.
+
 `examples/canvas` is a reviewed real-time Canvas fixture; `examples/dom` is a
 reviewed turn-based DOM fixture. Their acceptance files are independent fixture
 checks. They are regression material, **not fresh model generations** and not

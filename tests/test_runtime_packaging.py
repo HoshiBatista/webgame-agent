@@ -87,7 +87,7 @@ def test_scroll_fix_preserves_exact_preceding_candidate_runtime() -> None:
     assert trusted_runtime(digest)["runtime-v1.css"] in old_html
     assert 'const VERSION = "runtime-v1.0.4"' in old_html
     current = capture_runtime_identity()
-    assert current["version"] == "runtime-v1.0.5"
+    assert current["version"] == "runtime-v1.0.6"
     assert current["sha256"] != digest
     new_html = assemble_runtime(files, {**spec, "runtime": current})
     assert old_html != new_html

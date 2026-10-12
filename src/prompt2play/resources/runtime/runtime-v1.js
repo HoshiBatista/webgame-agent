@@ -1,7 +1,7 @@
 /* Prompt2Play trusted runtime v1. Mechanics and rendering remain in game.js. */
 (() => {
   "use strict";
-  const VERSION = "runtime-v1.0.5";
+  const VERSION = "runtime-v1.0.6";
   const copy = value => JSON.parse(JSON.stringify(value));
   const rng = seed => {
     let n = 2166136261;

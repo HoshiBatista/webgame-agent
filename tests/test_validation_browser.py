@@ -241,17 +241,18 @@ def test_dense_buttons_can_pan_without_locator_auto_scrolling() -> None:
     assert layout["evidence"]["scroll_probe"]["scroll_changed"] is True
 
 
-def test_runtime_detached_scoped_input_lifecycle_cleanup() -> None:
+@pytest.mark.parametrize("scenario", ["scope", "resize"])
+def test_runtime_scoped_input_and_resize_lifecycle(scenario: str) -> None:
     """Qualify platform event ownership with real input and explicit API negatives."""
     fixtures = Path(__file__).parent / "browser_fixtures"
     root = Path(os.environ.get("P2P_BROWSER_EVIDENCE", "/tmp/prompt2play-browser-regressions"))
-    directory = root / "runtime-input-scope"
+    directory = root / f"runtime-{scenario}"
     inputs, evidence = directory / "input", directory / "evidence"
     inputs.mkdir(parents=True, exist_ok=True)
     evidence.mkdir(parents=True, exist_ok=True)
     inputs.chmod(0o755)
     evidence.chmod(0o777)
-    source = (fixtures / "runtime_scope_game.js").read_text()
+    source = (fixtures / f"runtime_{scenario}_game.js").read_text()
     spec = {
         "title": "Scoped input API qualification",
         "capabilities": ["input", "lifecycle"],
@@ -260,7 +261,11 @@ def test_runtime_detached_scoped_input_lifecycle_cleanup() -> None:
     html = assemble_runtime(
         {
             "game.js": source,
-            "style.css": "button{display:block;min-height:48px;margin:8px;padding:8px}main{padding:12px}",
+            "style.css": (
+                "button{display:block;min-height:48px;margin:8px;padding:8px}main{padding:12px}"
+                if scenario == "scope"
+                else ""
+            ),
         },
         spec,
     )
@@ -322,7 +327,7 @@ def test_runtime_detached_scoped_input_lifecycle_cleanup() -> None:
         "--mount",
         f"type=bind,src={evidence.resolve()},dst=/evidence",
         "--mount",
-        f"type=bind,src={(fixtures / 'runtime_scope.mjs').resolve()},dst=/review/challenge.mjs,readonly",
+        f"type=bind,src={(fixtures / f'runtime_{scenario}.mjs').resolve()},dst=/review/challenge.mjs,readonly",
         image_id,
         "node",
         "/review/challenge.mjs",
@@ -334,14 +339,14 @@ def test_runtime_detached_scoped_input_lifecycle_cleanup() -> None:
             ["docker", "rm", "--force", name], capture_output=True, timeout=15, check=False
         )
     report = json.loads(completed.stdout)
-    (root / "runtime-input-scope-report.json").write_text(
+    (root / f"runtime-{scenario}-report.json").write_text(
         json.dumps(report, ensure_ascii=False, indent=2)
     )
     assert report["passed"] is True, [check for check in report["checks"] if not check["passed"]]
     assert report["html_sha256"] == hashlib.sha256(html.encode()).hexdigest()
     assert (
         report["script_sha256"]
-        == hashlib.sha256((fixtures / "runtime_scope.mjs").read_bytes()).hexdigest()
+        == hashlib.sha256((fixtures / f"runtime_{scenario}.mjs").read_bytes()).hexdigest()
     )
     assert report["runtime"] == spec["runtime"] and report["validator_image_sha256"] == image_id
     assert report["harness_files_sha256"] == harness_files

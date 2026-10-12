@@ -1271,7 +1271,7 @@
       "source": "frontend/src/components/PreviewPane.tsx",
       "destination": "web/src/components/PreviewPane.tsx",
       "source_sha256": "d2dbbab02a6af6338f0a02b25b7b8311e435016f23f5ad02fd4b35e741523d78",
-      "destination_sha256": "57e9f7f9486f37dd98416dd58255803596dfe253ed905ac159d0a91cce3eeb33",
+      "destination_sha256": "065d3ea0785c6a7c48645aba9080b6594635087b9c5671312eac8ec011ac4622",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Authenticated remount/restart refreshes expiring scoped preview capabilities; refresh failure does not reuse expired URLs."
     },
@@ -1399,7 +1399,7 @@
       "source": "frontend/src/styles.css",
       "destination": "web/src/styles.css",
       "source_sha256": "bf0104eddfda38faedfe3302ac6ab39e160eb4d2799abe04512c61499573e762",
-      "destination_sha256": "c18f8b0a82c58b6c47b07ef628d24576fe00d7b43d82f9620609de4ba1e8f391",
+      "destination_sha256": "be60a9198077ad23dfd80b0dc7d5d87550cf5259f81040f9f862503bc9f1a2c6",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
