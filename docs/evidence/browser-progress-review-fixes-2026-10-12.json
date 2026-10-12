@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-12T20:01:12.715339+00:00",
+  "source_sha256": {
+    "src/prompt2play/application/progress.py": "df194e749d57235275c35a12d6aa97beb8f3e8705aa5feb8fc6aa64531480c4e",
+    "src/prompt2play/validation/progress.py": "6e194caae5114ff70972e3e229920d9556d57f5650ab196da13028b87d8aa67e",
+    "src/prompt2play/validation/runner.py": "e4998e7241d5486e8cf42c96166daf533fa6cf7098c19898e83a3536c6d88348",
+    "src/prompt2play/workers/runner.py": "8bf4ef8ea8d518beaddf7d407d6259fa40700c29c25409fcbdda1571e1f4d51b",
+    "tests/test_validation_recovery.py": "0adb1408bc9ef9d3eb81a18ab54b61c5f7a681aa9626c3221da2d943ff9cca44",
+    "tests/test_adaptive_contracts.py": "e1ba7787da6d9fa55dac76860132fd4e5d41f12cd1370b19bc48872ba18bcdd5",
+    "tests/test_validation.py": "03628b8ae89c5064d46cc874f26016a6fc8e4c0a12dd730df12e4d033a9c8dc1",
+    "tests/test_validation_browser.py": "eb96e042ef25315a52778ce994455f2013e4cbc562674ecf1c5ba0a634d8aaa3"
+  },
+  "changes": [
+    "Progress-event HTTP failures or malformed acknowledgements cannot abort healthy validation. Lease revocation and cancellation still stop execution.",
+    "Incomplete reports preserve unresolved prior defects; complete runs compare against the last complete baseline. Alternating interrupted and unchanged full runs retain their no-progress count.",
+    "Bound partial findings and bounded stderr are attached to stalls, nonzero process exits, output overflow and invalid final reports."
+  ],
+  "verification": {
+    "python_tests_passed": 446,
+    "python_tests_skipped": 40,
+    "coverage_percent": 86.3,
+    "format": "passed",
+    "lint": "passed",
+    "strict_types": "passed",
+    "transport_regressions": [
+      "503",
+      "read timeout",
+      "malformed acknowledgement",
+      "401/403/409 lease rejection",
+      "cancellation during HTTP failure",
+      "exit 137",
+      "malformed final report",
+      "output overflow",
+      "stale partial findings rejected"
+    ],
+    "transport_method": "Authored process and HTTP doubles; not a live model or real OOM claim.",
+    "isolated_browser": [
+      {
+        "fixture": "progressing-wait",
+        "status": "passed",
+        "incomplete": false,
+        "report_sha256": "86d1c66545066711c5cdb64724bf3c850bd092553a1037766987bf0490a8594e",
+        "image": "sha256:1ace4dc1fc6003ce0ba9637e2150d682fc175caf5af6d4d3abf6ed5f6811b0e1",
+        "failed_checks": []
+      },
+      {
+        "fixture": "hung-game",
+        "status": "failed",
+        "incomplete": true,
+        "report_sha256": "f4459faa40317c0a6dd7227a6ebff6a2ce3db28a88ed9e9677a163578a200d04",
+        "image": "sha256:1ace4dc1fc6003ce0ba9637e2150d682fc175caf5af6d4d3abf6ed5f6811b0e1",
+        "failed_checks": [
+          "mechanic_case:1280:move",
+          "browser_progress_stalled"
+        ]
+      }
+    ]
+  },
+  "user_job_resumed": false,
+  "user_game_modified": false,
+  "model_calls": 0
+}

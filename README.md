@@ -241,8 +241,14 @@ manual cancellation, worker heartbeat/fencing and isolated validation resource l
 Browser validation has no total time limit either: `--validation-idle-timeout`
 (default 90 seconds; `--validation-timeout` remains an alias) only detects a lack
 of completed work. Real input steps and simulation batches renew it. Status
-heartbeats alone do not. Validation events expose device, scenario and step;
-partial findings survive a stall. Game/scenario failures return to the author
+heartbeats alone do not. Validation events expose device, scenario and step.
+Partial findings and bounded container diagnostics survive stalls, process
+crashes, output overflow and rejected final reports. Temporary progress-event
+delivery failures are logged locally without interrupting validation; lease
+loss and user cancellation still stop execution. Incomplete checks keep prior
+defects open and never establish a verified fix. Full reports are compared with
+the last complete run, so alternating crashes and unchanged results cannot reset
+the no-progress counter. Game/scenario failures return to the author
 for correction; container startup or transport failures preserve the resumable draft.
 Explicit time limits are retained for bounded CLI experiments and older jobs;
 measured historical evidence is not rewritten.

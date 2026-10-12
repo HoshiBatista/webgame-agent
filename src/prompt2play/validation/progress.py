@@ -70,7 +70,7 @@ class ProgressWatchdog:
                 and check.get("status") == "failed"
                 and isinstance(check.get("name"), str)
                 and check.get("artifact_sha256") == artifact_hash
-                and len(json.dumps(check).encode()) <= 16_000
+                and len(json.dumps(check, ensure_ascii=False).encode()) <= 16_000
             ):
                 result.append(check)
         return result

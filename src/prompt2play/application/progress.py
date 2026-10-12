@@ -99,6 +99,26 @@ def stable_error(value: Any) -> str:
     return re.sub(r"\b\d+(?:\.\d+)?\b", "#", str(value).split("\n")[0])[:1000]
 
 
+def incomplete_report(report: Mapping[str, Any]) -> bool:
+    """Recognize new metadata and saved reports from before it was propagated."""
+    if report.get("incomplete") is True or report.get("scope") == "infrastructure":
+        return True
+    checks = report.get("checks", report.get("findings", []))
+    if not isinstance(checks, list):
+        return False
+    return any(
+        isinstance(check, dict)
+        and (
+            check.get("name") in ("browser_progress_stalled", "isolated_browser_runtime")
+            or (
+                isinstance(check.get("evidence"), dict)
+                and check["evidence"].get("incomplete") is True
+            )
+        )
+        for check in checks
+    )
+
+
 def failure_category(report: Mapping[str, Any]) -> str:
     scope = report.get("scope")
     if scope in ("infrastructure", "provider", "contract_incompatibility", "plan_conflict"):
@@ -133,21 +153,41 @@ def observe(
         (o for o in reversed(observations) if o["action"] == action and o["suite_id"] == suite_id),
         None,
     )
+    # An interrupted run cannot replace the comparison baseline. Otherwise a
+    # later unchanged full report would "resolve" only the interruption itself.
+    baseline = next(
+        (
+            o
+            for o in reversed(observations)
+            if o["action"] == action
+            and o["suite_id"] == suite_id
+            and not o.get("incomplete", incomplete_report(o.get("evidence", {})))
+        ),
+        None,
+    )
+    incomplete = incomplete_report(report)
     defects = defect_ids(report)
     comparable = prior is not None
-    resolved = sorted(set(prior["defects"]) - set(defects)) if prior else []
+    if incomplete and prior:
+        # Untested prior defects remain open; absence is not a passing observation.
+        defects = sorted(set(prior["defects"]) | set(defects))
+    resolved = (
+        sorted(set(baseline["defects"]) - set(defects)) if baseline and not incomplete else []
+    )
     added = sorted(set(defects) - set(prior["defects"])) if prior else defects
     successful = ("passed", "rendered_ready", "source_ready", "covered")
+    reference = baseline or prior
     terminal = report.get("status") in (*successful, "failed", "needs_revision")
     # A changed test, a source hash, or a cached report cannot be counted as improvement.
     measured = (
         terminal
+        and not incomplete
         and not report.get("cached")
         and (
             bool(resolved)
             or (
-                prior is not None
-                and prior["status"] not in successful
+                reference is not None
+                and reference["status"] not in successful
                 and report["status"] in successful
             )
         )
@@ -160,6 +200,7 @@ def observe(
         "draft_id": source_id,
         "suite_id": suite_id,
         "status": report.get("status", "unknown"),
+        "incomplete": incomplete,
         "category": failure_category(report),
         "defects": defects,
         "resolved": resolved,
@@ -185,6 +226,7 @@ def observe(
                 "passed_checks",
                 "criteria",
                 "error",
+                "incomplete",
             )
             if k in report
         },
@@ -197,16 +239,28 @@ def observe(
         {"defects": defects, "error": stable_error(report.get("error", "")), "suite": suite_id}
     )
     unsuccessful = bool(
-        defects
+        incomplete
+        or defects
         or report.get("error")
         or report.get("status") in ("failed", "unverified", "rejected", "needs_revision")
     )
     repeats = (
-        (stall.get("repeats", 0) + 1 if stall.get("fingerprint") == fingerprint else 1)
+        (
+            stall.get("repeats", 0) + 1
+            if (
+                stall.get("fingerprint") == fingerprint
+                or (
+                    prior is not None
+                    and stall.get("suite_id") == suite_id
+                    and (incomplete or prior.get("incomplete", False))
+                )
+            )
+            else 1
+        )
         if unsuccessful and not measured
         else 0
     )
-    state["stall"][action] = {"fingerprint": fingerprint, "repeats": repeats}
+    state["stall"][action] = {"fingerprint": fingerprint, "repeats": repeats, "suite_id": suite_id}
     if repeats >= 3:
         state["supervisor_due"] = "Repeated " + action + " failure without verified progress"
     return value

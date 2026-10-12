@@ -166,6 +166,7 @@ def test_failed_required_checks_and_skips_never_become_ready(tmp_path: Path) -> 
         report, manifest, "c" * 64, "d" * 64, "sha256:" + "e" * 64, tmp_path
     )
     assert result["status"] == "unverified"
+    assert result["incomplete"] is True
     report["checks"][0]["status"] = "failed"
     assert (
         IsolatedValidator.checked_report(
@@ -173,6 +174,21 @@ def test_failed_required_checks_and_skips_never_become_ready(tmp_path: Path) -> 
         )["status"]
         == "failed"
     )
+
+
+def test_early_browser_failure_marks_omitted_checks_incomplete(tmp_path: Path) -> None:
+    report, manifest = authored_report(tmp_path)
+    report["checks"][0]["status"] = "failed"
+    complete = IsolatedValidator.checked_report(
+        copy.deepcopy(report), manifest, "c" * 64, "d" * 64, "sha256:" + "e" * 64, tmp_path
+    )
+    assert complete["status"] == "failed" and not complete["incomplete"]
+    report["checks"] = report["checks"][:1]
+    report["incomplete"] = False  # The host must infer coverage, not trust this flag.
+    partial = IsolatedValidator.checked_report(
+        report, manifest, "c" * 64, "d" * 64, "sha256:" + "e" * 64, tmp_path
+    )
+    assert partial["status"] == "failed" and partial["incomplete"]
 
 
 def test_evidence_traversal_and_symlinks_are_rejected(tmp_path: Path) -> None:

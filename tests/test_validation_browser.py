@@ -75,6 +75,7 @@ def test_progressing_wait_outlives_idle_interval() -> None:
         acceptance[device]["steps"].insert(1, {"kind": "wait", "ms": 12000})
     report = execute("progressing-wait", files, spec, acceptance, idle_timeout=10)
     assert report["status"] == "passed", report["errors"]
+    assert report["incomplete"] is False
 
 
 def test_hung_game_retains_defects_for_repair() -> None:
@@ -98,6 +99,7 @@ def test_hung_game_retains_defects_for_repair() -> None:
     )
     report = execute("hung-game", files, spec, acceptance, idle_timeout=10)
     assert report["status"] == "failed"
+    assert report["incomplete"] is True
     names = [check["name"] for check in report["checks"]]
     assert "browser_progress_stalled" in names
     assert "isolated_browser_runtime" not in names

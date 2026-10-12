@@ -410,6 +410,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         )
         return {
             "status": report["status"],
+            "incomplete": report.get("incomplete", False),
             "scope": "infrastructure"
             if unavailable
             else "test_scenario"
@@ -549,14 +550,28 @@ def browser_progress(lease: StageLease, value: dict[str, Any]) -> None:
         "close_browser": "завершение проверки",
     }.get(value.get("phase", ""), "проверка поведения игры")
     detail = f"сценарий {case}, шаг {value.get('step', 0)}" if case else phase
-    lease.write(
-        "events",
-        stage=lease.job["stage"],
-        progress=lease.job.get("progress", 0),
-        level="info",
-        message=f"Проверка игры: {device}, {detail}. Проверка продвигается.",
-        data={"event": "browser_validation_progress", **value},
-    )
+    try:
+        lease.write(
+            "events",
+            stage=lease.job["stage"],
+            progress=lease.job.get("progress", 0),
+            level="info",
+            message=f"Проверка игры: {device}, {detail}. Проверка продвигается.",
+            data={"event": "browser_validation_progress", **value},
+        )
+    except (httpx.HTTPError, ValueError) as exc:
+        # Telemetry is best effort. Lease rejection/cancellation still propagates;
+        # the independent heartbeat remains responsible for execution authority.
+        with contextlib.suppress(OSError):
+            emit(
+                "browser_progress_delivery_failed",
+                secrets=[lease.token],
+                job_id=lease.job["id"],
+                **exception_details(exc, [lease.token]),
+            )
+        if not lease.alive():
+            lease.cancel.set()
+            raise LeaseRejected("Lease no longer acknowledged") from exc
 
 
 def validate_stage(lease: StageLease, args: argparse.Namespace) -> None:

@@ -140,6 +140,67 @@ def test_same_defect_requests_diagnosis_without_a_global_operation_limit() -> No
     assert "without verified progress" in state["supervisor_due"]
 
 
+@pytest.mark.parametrize("legacy", [False, True])
+def test_interrupted_checks_never_resolve_untested_defects_or_reset_repeats(legacy: bool) -> None:
+    state, _, _ = contracts()
+    first = observe(
+        state, "browser_check", report(), source_id="unchanged", suite_id="suite", cost={}
+    )
+    interrupted = {
+        "status": "failed",
+        "checks": [
+            {
+                "name": "browser_progress_stalled",
+                "status": "failed",
+                "message": "Interrupted",
+                "evidence": {"incomplete": True},
+            }
+        ],
+        **({} if legacy else {"incomplete": True}),
+    }
+    for value in (interrupted, report(), interrupted, report()):
+        item = observe(
+            state, "browser_check", value, source_id="unchanged", suite_id="suite", cost={}
+        )
+        assert item["progress"] != "measured" and not item["resolved"]
+        assert set(first["defects"]) <= set(item["defects"])
+    assert state["stall"]["browser_check"]["repeats"] == 5
+    assert "without verified progress" in state["supervisor_due"]
+    verified = observe(
+        state, "browser_check", report(passed=True), source_id="fixed", suite_id="suite", cost={}
+    )
+    assert verified["progress"] == "measured" and verified["resolved"] == first["defects"]
+    assert state["stall"]["browser_check"]["repeats"] == 0
+
+
+def test_partial_success_claim_is_not_progress_and_other_suites_stay_separate() -> None:
+    state, _, _ = contracts()
+    observe(state, "browser", report(), source_id="a", suite_id="one", cost={})
+    partial = {**report(passed=True), "incomplete": True}
+    observed = observe(state, "browser", partial, source_id="b", suite_id="one", cost={})
+    assert observed["progress"] != "measured" and observed["defects"] and not observed["resolved"]
+    other = observe(state, "browser", partial, source_id="b", suite_id="two", cost={})
+    assert other["progress"] == "unknown"
+    assert state["stall"]["browser"]["repeats"] == 1
+
+
+def test_recovered_interruption_alone_is_not_a_verified_game_fix() -> None:
+    state, _, _ = contracts()
+    observe(state, "browser", report(passed=True), source_id="a", suite_id="one", cost={})
+    observe(
+        state,
+        "browser",
+        {"status": "failed", "incomplete": True},
+        source_id="a",
+        suite_id="one",
+        cost={},
+    )
+    recovered = observe(
+        state, "browser", report(passed=True), source_id="a", suite_id="one", cost={}
+    )
+    assert recovered["progress"] != "measured" and not recovered["resolved"]
+
+
 def test_repeated_rendered_findings_trigger_supervision_despite_reworded_feedback() -> None:
     state, _, _ = contracts()
     for i in range(3):

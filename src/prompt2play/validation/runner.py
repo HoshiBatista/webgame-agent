@@ -272,6 +272,7 @@ def _failure(
         "schema_version": 2,
         "artifact": manifest,
         "status": "unverified" if unavailable else "failed",
+        "incomplete": True,
         "browser_contract_version": BROWSER_CONTRACT_VERSION,
         "checks": [
             check_record(
@@ -532,27 +533,45 @@ class IsolatedValidator:
                 try:
                     while process.poll() is None:
                         check_cancel(cancel)
-                        if stdout.tell() > 1_000_000 or stderr.tell() > 256_000:
-                            return _failure(
-                                manifest, "Isolated validator exceeded its output bound"
-                            )
                         now = time.monotonic()
                         progressed = watchdog.observe(evidence_dir, now)
+                        if stdout.tell() > 1_000_000 or stderr.tell() > 256_000:
+                            stderr.seek(0)
+                            return self._interrupted_report(
+                                manifest,
+                                watchdog,
+                                evidence_dir,
+                                request,
+                                "Isolated validator exceeded its output bound",
+                                diagnostic=stderr.read(256_000),
+                            )
                         if progressed and on_progress and now - last_notification >= 10:
                             on_progress(
                                 {"completed_operations": watchdog.completed, **watchdog.active}
                             )
                             last_notification = now
                         if watchdog.stalled(now, self.timeout):
-                            return self._stalled_report(manifest, watchdog, evidence_dir, request)
+                            stderr.seek(0)
+                            return self._stalled_report(
+                                manifest,
+                                watchdog,
+                                evidence_dir,
+                                request,
+                                diagnostic=stderr.read(256_000),
+                            )
                         cancel.wait(0.05)
+                    check_cancel(cancel)
+                    watchdog.observe(evidence_dir, time.monotonic())
                     stderr.seek(0)
                     diagnostic = stderr.read(256_000)
-                    (evidence_dir / "container-stderr.txt").write_bytes(diagnostic)
                     if process.returncode:
-                        return _failure(
+                        return self._interrupted_report(
                             manifest,
-                            "Isolated validator failed; inspect private container-stderr.txt",
+                            watchdog,
+                            evidence_dir,
+                            request,
+                            f"Isolated validator exited with code {process.returncode}; inspect attached diagnostic",
+                            diagnostic=diagnostic,
                         )
                     stdout.seek(0)
                     try:
@@ -575,29 +594,22 @@ class IsolatedValidator:
                             cast(Callable[..., Any], require_report_binding)(
                                 files, html, spec, value
                             )
+                        if mechanics:
+                            names = {c["name"] for c in value["checks"]}
+                            value["incomplete"] = (
+                                value.get("incomplete", False)
+                                or not {"mechanics:1280", "mechanics:390"} <= names
+                            )
                     except (ValueError, TypeError, KeyError, OSError, RecursionError) as exc:
                         reason = str(exc)[:1000]
-                        # Keep the precise contract rejection private and bounded.
-                        # Exclusive creation cannot follow a container-made symlink.
-                        try:
-                            with (evidence_dir / "evidence-rejection.json").open(
-                                "x", encoding="utf-8"
-                            ) as rejection:
-                                json.dump(
-                                    {
-                                        "exception": type(exc).__name__,
-                                        "reason": reason,
-                                        "request_sha256": hashlib.sha256(request_bytes).hexdigest(),
-                                        "suite_sha256": suite,
-                                    },
-                                    rejection,
-                                )
-                        except OSError:
-                            pass
-                        return _failure(
+                        return self._interrupted_report(
                             manifest,
+                            watchdog,
+                            evidence_dir,
+                            request,
                             "Invalid, stale, incomplete, or unbound isolated browser evidence: "
                             + reason,
+                            diagnostic=diagnostic,
                         )
                     value["checks"] = static["checks"] + value["checks"]
                     value["warnings"] = static["warnings"] + value["warnings"]
@@ -638,6 +650,8 @@ class IsolatedValidator:
         watchdog: ProgressWatchdog,
         directory: Path,
         request: dict[str, Any],
+        *,
+        diagnostic: bytes = b"",
     ) -> dict[str, Any]:
         game = watchdog.active["kind"] == "game"
         message = (
@@ -645,6 +659,28 @@ class IsolatedValidator:
             if game
             else "Isolated browser infrastructure stopped making progress; saved draft can be retried"
         )
+        return self._interrupted_report(
+            manifest,
+            watchdog,
+            directory,
+            request,
+            message,
+            check_name="browser_progress_stalled" if game else "isolated_browser_runtime",
+            diagnostic=diagnostic,
+        )
+
+    def _interrupted_report(
+        self,
+        manifest: dict[str, Any],
+        watchdog: ProgressWatchdog,
+        directory: Path,
+        request: dict[str, Any],
+        message: str,
+        *,
+        check_name: str = "isolated_browser_runtime",
+        diagnostic: bytes = b"",
+    ) -> dict[str, Any]:
+        """Preserve request-bound findings on every abnormal container exit."""
         evidence = {
             "idle_timeout_seconds": self.timeout,
             "completed_operations": watchdog.completed,
@@ -654,7 +690,7 @@ class IsolatedValidator:
         checks = watchdog.findings(directory, manifest["html_sha256"])
         checks.append(
             check_record(
-                "browser_progress_stalled" if game else "isolated_browser_runtime",
+                check_name,
                 "failed",
                 message,
                 manifest,
@@ -667,6 +703,7 @@ class IsolatedValidator:
             "checks": checks,
             "errors": [str(check.get("message", "Browser check failed")) for check in checks],
             "request_sha256": watchdog.request_hash,
+            "completion_required": request.get("completion_required", True),
             **{
                 key: request[key]
                 for key in ("suite_sha256", "validator_image_sha256", "harness_files_sha256")
@@ -674,8 +711,14 @@ class IsolatedValidator:
             "warnings": ["Validation is incomplete. No unexecuted check is claimed as passed."],
         }
         # Exclusive, host-owned immutable snapshot. Mutable progress files are never uploaded.
-        data = canonical_json({"progress": evidence, "report": report}).encode()
-        name = f"stalled-{uuid.uuid4().hex}.json"
+        data = canonical_json(
+            {
+                "progress": evidence,
+                "report": report,
+                "container_stderr": diagnostic[:256_000].decode("utf-8", errors="replace"),
+            }
+        ).encode()
+        name = f"interrupted-{uuid.uuid4().hex}.json"
         with (directory / name).open("xb") as output:
             output.write(data)
         report["evidence_files"] = [
@@ -909,5 +952,10 @@ class IsolatedValidator:
         ):
             raise ValueError("Omitted mandatory browser checks or evidence")
         value["status"] = "failed" if failed else "unverified" if skipped else "passed"
+        value["incomplete"] = (
+            skipped
+            or not REQUIRED_CHECKS.issubset(names)
+            or not expected_evidence.issubset(evidence_names)
+        )
         value["scope"] = {"isolated": True, "real_input": True, "webview": False}
         return value

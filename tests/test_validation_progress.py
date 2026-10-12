@@ -118,6 +118,7 @@ def test_stall_preserves_bound_defects_and_never_promotes_partial_checks(
         },
     )
     assert report["status"] == "failed"
+    assert report["incomplete"] is True
     assert report["checks"][0] == failed
     assert report["checks"][1]["name"] == name
     assert report["checks"][1]["evidence"]["active"]["step"] == 7
