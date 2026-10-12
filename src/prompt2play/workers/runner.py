@@ -24,7 +24,7 @@ from prompt2play.generation import (
     GenerationRequest,
     ProviderGateway,
 )
-from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT
+from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT, is_rejected_response
 from prompt2play.generation.workspace import GenerationStopped
 from prompt2play.validation import IsolatedValidator
 from prompt2play.workers.diagnostics import emit, exception_details, safe_message
@@ -201,8 +201,11 @@ class RemoteJournal:
                 if not isinstance(response, dict) or not {"data", "usage"} <= response.keys():
                     raise GenerationStopped("Completed invocation response is unavailable")
                 return response
-            if result["state"] == "ambiguous" and result.get("response") == CODEX_TIMEOUT_RECEIPT:
-                return dict(CODEX_TIMEOUT_RECEIPT)
+            if result["state"] == "ambiguous" and (
+                result.get("response") == CODEX_TIMEOUT_RECEIPT
+                or is_rejected_response(result.get("response"))
+            ):
+                return dict(result["response"])
             if (
                 result["state"] != "reserved"
                 or result["stage_fence"] != self.lease.fence
@@ -229,6 +232,8 @@ class RemoteJournal:
                 "response": (
                     {"data": data, "usage": usage}
                     if status == "completed"
+                    else data
+                    if status == "rejected_response"
                     else dict(CODEX_TIMEOUT_RECEIPT)
                     if status == "timed_out"
                     else {}
@@ -271,6 +276,7 @@ def generation_request(claim: dict[str, Any], mode: str) -> GenerationRequest:
     changed = checkpoint.get("files") if strategy in ("local", "structural") else None
     return GenerationRequest(
         prompt=job["prompt"],
+        resume_state=claim.get("draft") or {},
         user_feedback=claim.get("user_feedback") or [],
         previous_proposal=claim.get("previous_proposal") or {},
         kind="repair" if job["stage"] == "repair" else job["kind"],
@@ -318,7 +324,10 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         if result.get("waiting"):
             raise AwaitingApproval("Plan awaits user approval")
 
-    candidate = GenerationHarness(on_plan=plan_ready).attempt(
+    def save_draft(state: dict[str, Any]) -> None:
+        lease.write("draft", draft=state)
+
+    candidate = GenerationHarness(on_plan=plan_ready, on_checkpoint=save_draft).attempt(
         generation_request(lease.claim, args.mode), gateway, control
     )
     data = candidate.as_dict()
@@ -414,6 +423,7 @@ def main(argv: list[str] | None = None) -> int:
             "model": args.model,
             "validator": "docker",
             "interactive_plan_v1": args.role == "generator" and args.mode == "single_author",
+            "continuable_authoring_v1": args.role == "generator" and args.mode == "single_author",
             "requires_job_model": ["openai"]
             if args.role == "generator" and args.provider == "openai" and not args.model
             else [],

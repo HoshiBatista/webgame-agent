@@ -28,9 +28,9 @@ class WorkspaceLimits:
     max_files: int = 16
     max_file_bytes: int = 180_000
     max_total_bytes: int = 600_000
-    max_turns: int = 8
-    max_quick_checks: int = 8
-    max_operations: int = 64
+    max_turns: int | None = None
+    max_quick_checks: int | None = None
+    max_operations: int | None = None
 
 
 @dataclass
@@ -208,7 +208,7 @@ class DraftWorkspace:
         if self.closed:
             raise GenerationStopped("Draft was already submitted")
         self.operations += 1
-        if self.operations > self.limits.max_operations:
+        if self.limits.max_operations is not None and self.operations > self.limits.max_operations:
             raise GenerationStopped("Draft operation budget exceeded")
         if path is not None:
             path = normalized_path(path)
@@ -237,8 +237,6 @@ class DraftWorkspace:
         before = self.files.get(path)
         if before == content:
             self.noops += 1
-            if self.noops >= 2:
-                raise GenerationStopped("Repeated no-op writes")
             raise ValueError("No-op write does not create a revision")
         proposed = {**self.files, path: content}
         if (
@@ -271,7 +269,10 @@ class DraftWorkspace:
     def check(self) -> list[dict[str, Any]]:
         self._guard()
         self.quick_checks += 1
-        if self.quick_checks > self.limits.max_quick_checks:
+        if (
+            self.limits.max_quick_checks is not None
+            and self.quick_checks > self.limits.max_quick_checks
+        ):
             raise GenerationStopped("Quick-check budget exceeded")
         return quick_check(self.files, self.control)
 

@@ -10,14 +10,14 @@ The intended experience is simple:
 ## Project status
 
 **Integrated studio implemented; contest acceptance in progress.** This branch
-contains Django/DRF coordination, React studio, local Codex/API adapters, bounded
-generation and repair, immutable artifact storage, and a separate isolated
+contains Django/DRF coordination, React studio, local Codex/API adapters, budget-controlled
+generation and configurable repair, immutable artifact storage, and a separate isolated
 browser validation role. Only candidates that pass required checks can be played
 or downloaded. A failed edit preserves the previous playable version.
 
 The accepted plan selectively adopts the existing Game Forge 1.3.0 application:
 Django/DRF and PostgreSQL, React/Vite, and local Codex/API workers. The target
-adds an application-owned workflow, bounded generation attempts, a small trusted
+adds an application-owned workflow, resumable generation attempts, a small trusted
 game runtime, mandatory isolated Playwright validation, and content-addressed
 artifact storage. Database-backed worker polling is the initial dispatch model;
 FastAPI, Celery/Redis, and a new model framework are not required.
@@ -222,13 +222,33 @@ have explicit ownership even when packaged in one JavaScript file.
 
 Before submission a separate `visual_review` model call critiques the exact source
 against that plan. Material findings return to the author for changes; unchanged
-rejected source cannot be submitted. At most three critiques fit inside the same
-attempt and its original dollar budget. A remaining issue, invalid source
-citation or exhausted budget stops the attempt instead of silently accepting a
-placeholder. Plans and review rounds are visible on the Checks tab. This is a
+rejected source cannot be submitted. Authoring, quick checks and source critiques
+have no default count limit. Invalid review citations return to the reviewer;
+material findings return to the author until the source is ready or the original
+budget is exhausted. A review failure never silently accepts a placeholder. Plans and review rounds are visible on the Checks tab. This is a
 source critique, not a screenshot review or proof of artistic quality. Browser
 validation still runs separately on the committed bytes. Older versions remain
 unchanged; a revision of an old plan adds design through a new planning call.
+
+Native authoring has **no fixed limit of 16 operations per response, 64 operations,
+8 turns, 8 quick checks or 3 source reviews**. Operations are applied sequentially
+with cancellation/fence checks. Repeated reads and unsuccessful patches return
+feedback instead of failing the entire job. Malformed structured author/review
+responses are durably recorded, charged once and corrected in a fresh budgeted
+request; network failures with uncertain results still require reconciliation.
+Explicit operation/check/turn bounds remain available only to offline experiments.
+
+The worker saves immutable draft snapshots between author/review steps. A restart
+uses the saved files, plan, current step and feedback without rewriting completed
+work or resetting the ledger. Snapshots cannot be played or published; immutable
+candidate submission and independent browser validation are still mandatory.
+Only workers advertising `continuable_authoring_v1` may reclaim saved drafts.
+`prompt2play manage resume_authoring JOB_ID` recovers a failed obsolete authoring
+limit from a snapshot or, for an unambiguous first attempt, recorded responses.
+It refuses cancelled/completed jobs, an active successor or an unreconciled last
+call. Recovery preserves the budget, usage, reservations and previous failure event.
+User-configured automatic repair limits after independent browser validation are
+separate from the now-unlimited authoring steps inside each candidate attempt.
 
 The generator uses the controlled single-author runtime by default. The
 `--mode four_author` option preserves the adopted donor strategy for measured

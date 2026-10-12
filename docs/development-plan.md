@@ -339,3 +339,17 @@ For each phase or imported slice, report:
 Keep immutable historical reports. New source, prompt, runtime, provider-policy,
 or validation changes require fresh evidence; an old successful report is never
 proof of a changed release.
+
+
+### Authoring continuation follow-up (2026-10-12)
+
+- Remove default fixed authoring batch/operation/turn/check/source-review ceilings.
+- Return invalid operations and review evidence as actionable model feedback.
+- Save immutable source checkpoints between steps, with fenced restoration and
+  unchanged budget/accounting across restarts; keep Pro plan approval mandatory.
+- Recover the existing operations-limit failure from its completed responses,
+  preserving both original failed receipts and their spending.
+- Acceptance: exceed each old count threshold, survive a crash around a rejected
+  response without double billing, resume a draft without reauthoring, reject
+  stale/cancelled writes and incompatible old workers, and retain mandatory final
+  browser validation. Fixture checks and fresh live results remain separate evidence.

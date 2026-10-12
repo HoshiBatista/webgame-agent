@@ -14,7 +14,12 @@ from prompt2play.legacy.worker.core import CodexCallTimeout, ProviderError
 from prompt2play.legacy.worker.providers import CodexProvider, OpenAIProvider
 from prompt2play.pricing import reservation_usage
 
-from .retries import CODEX_TIMEOUT_RECEIPT, TIMEOUT_RETRY_SUFFIX
+from .retries import (
+    CODEX_TIMEOUT_RECEIPT,
+    TIMEOUT_RETRY_SUFFIX,
+    is_rejected_response,
+    structured_diagnostic,
+)
 from .workspace import GenerationControl, GenerationStopped, invocation_reservation
 
 
@@ -161,6 +166,10 @@ class ProviderGateway:
                 reused = self.journal.reserve(key, journal_tokens, role, request_sha)
         if reused == CODEX_TIMEOUT_RECEIPT:
             raise cast(Any, CodexCallTimeout)("Recorded Codex call exceeded wall timeout")
+        if reused is not None and is_rejected_response(reused):
+            error = cast(Any, ProviderError)("Recorded structured response was rejected")
+            error.structured_diagnostic = reused["diagnostic"]
+            raise error
         if reused:
             control.guard()
             data = cast(dict[str, Any], reused["data"])
@@ -244,16 +253,21 @@ class ProviderGateway:
                 )
             return GatewayReply(cast(dict[str, Any], reply.data), usage, key)
         except Exception as exc:
+            diagnostic = structured_diagnostic(exc)
             if key in control.reservations:
                 usage = cast(dict[str, int] | None, getattr(exc, "usage", None))
                 control.settle(key, usage)
                 if self.journal:
                     self.journal.settle(
                         key,
-                        data=None,
+                        data={"rejection": "structured_output", "diagnostic": diagnostic}
+                        if diagnostic
+                        else None,
                         usage=usage,
                         status=(
-                            "timed_out"
+                            "rejected_response"
+                            if diagnostic
+                            else "timed_out"
                             if isinstance(exc, CodexCallTimeout)
                             else "interrupted_unknown"
                             if usage is None

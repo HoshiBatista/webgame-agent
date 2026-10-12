@@ -86,7 +86,10 @@ def prepared(settings: Any, tmp_path: Path) -> tuple[Any, worker.Coordinator, di
         {"kind": "generate", "prompt": "Fixture game", "provider": "codex", "model": "fixture"},
     )
     transport = coordinator("worker-fixture-token")
-    claim = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
+    claim = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
     assert claim["job"]["id"] == str(job.pk)
     return runner, transport, claim
 
@@ -237,7 +240,10 @@ def test_worker_reclaimed_completed_response_reuses_without_double_charge(
     Job.objects.filter(pk=claim["job"]["id"]).update(
         lease_expires_at=timezone.now() - timedelta(seconds=1)
     )
-    resumed = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
+    resumed = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
     assert resumed["job"]["usage"]["total_tokens"] == 7
     second_lease = worker.StageLease(transport, resumed, threading.Event())
     second_control = GenerationControl.bounded(
@@ -337,7 +343,10 @@ def test_usd_restart_replays_saved_responses_without_repricing_or_paid_calls(
     assert provider.calls == 3 and not Candidate.objects.exists()
     monkeypatch.setattr(transport, "post", original)
     Job.objects.filter(pk=before.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
-    resumed = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
+    resumed = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
     worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
     after = Job.objects.get(pk=before.pk)
     assert provider.calls == 3 and ModelInvocation.objects.count() == 3
@@ -406,7 +415,10 @@ def test_timeout_continuation_reuses_plan_and_preserves_dollar_ledger(
         assert resumed.budget_seconds is None and resumed.execution_expires_at is None
         with pytest.raises(Exception, match="unrecovered"):
             cast(Any, resume_timeout)(before.pk)
-        claim = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
+        claim = transport.post(
+            "api/worker/claim/",
+            {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        )
         lease = worker.StageLease(transport, claim, threading.Event())
     worker.generate_stage(lease, arguments())
     job = Job.objects.get(pk=original_job.pk)
@@ -501,7 +513,13 @@ def test_pro_pauses_before_code_and_approval_reuses_paid_plan(
     assert (
         transport.post(
             "api/worker/claim/",
-            {"capabilities": {"providers": ["codex"], "interactive_plan_v1": True}},
+            {
+                "capabilities": {
+                    "providers": ["codex"],
+                    "interactive_plan_v1": True,
+                    "continuable_authoring_v1": True,
+                }
+            },
         )["job"]
         is None
     )
@@ -524,11 +542,21 @@ def test_pro_pauses_before_code_and_approval_reuses_paid_plan(
     assert duplicate.status_code == 409
     # An older worker cannot silently bypass the interactive gate.
     assert (
-        transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})["job"]
+        transport.post(
+            "api/worker/claim/",
+            {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+        )["job"]
         is None
     )
     claim = transport.post(
-        "api/worker/claim/", {"capabilities": {"providers": ["codex"], "interactive_plan_v1": True}}
+        "api/worker/claim/",
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "interactive_plan_v1": True,
+                "continuable_authoring_v1": True,
+            }
+        },
     )
     worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
     assert provider.calls == 3 and Candidate.objects.get().committed
@@ -574,7 +602,14 @@ def test_pro_plan_feedback_is_persisted_and_requires_fresh_confirmation(
         job_id, stage_fence=job.stage_fence, action="revise", feedback="Add the requested rule"
     )
     claim = transport.post(
-        "api/worker/claim/", {"capabilities": {"providers": ["codex"], "interactive_plan_v1": True}}
+        "api/worker/claim/",
+        {
+            "capabilities": {
+                "providers": ["codex"],
+                "interactive_plan_v1": True,
+                "continuable_authoring_v1": True,
+            }
+        },
     )
     with pytest.raises(worker.AwaitingApproval):
         worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
@@ -628,4 +663,190 @@ def test_insights_exposes_draft_steps_without_claiming_a_saved_or_validated_game
     assert detail["provenance"]["visual_quality"]["draft_only"] is True
     assert detail["validation"] is None and detail["files"] == []
     assert "PRIVATE_SOURCE_NOT_IN_INSIGHTS" not in json.dumps(detail)
+    transport.close()
+
+
+def test_rejected_model_response_is_feedback_and_accounted_once_across_restart(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from prompt2play.adapters.django.forge import workflow
+    from prompt2play.adapters.django.forge.drafts import load_draft
+    from prompt2play.legacy.worker.core import ProviderError
+
+    _, transport, claim = prepared
+
+    class RejectOnce(ScriptedProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Any:
+            if self.calls == 1:
+                self.calls += 1
+                error = cast(Any, ProviderError)("Invalid structured JSON", usage=dict(USAGE))
+                error.structured_diagnostic = {
+                    "category": "schema",
+                    "keyword": "required",
+                    "instance_path": ["operations"],
+                }
+                raise error
+            return super().generate(*args, **kwargs)
+
+    provider = RejectOnce(replies())
+    prompts = []
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        result = ProviderGateway(*args, **kwargs)
+
+        class Recording:
+            preflight = provider.preflight
+
+            def generate(self, prompt: str, *args: Any, **kwargs: Any) -> Any:
+                prompts.append(prompt)
+                return provider.generate(prompt, *args, **kwargs)
+
+        result.provider = Recording()
+        return result
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    original = transport.post
+
+    def fail_checkpoint(path: str, values: dict[str, Any]) -> dict[str, Any]:
+        if path.endswith("/draft/") and values["draft"]["turn"] == 1:
+            raise httpx.ReadTimeout("Crash after rejection receipt, before checkpoint")
+        return original(path, values)
+
+    monkeypatch.setattr(transport, "post", fail_checkpoint)
+    with pytest.raises(httpx.ReadTimeout):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    before = Job.objects.get(pk=claim["job"]["id"])
+    assert provider.calls == 2 and before.usage["calls"] == 2
+    assert cast(Any, load_draft)(before)["turn"] == 0
+    receipt = ModelInvocation.objects.get(operation="author")
+    assert (
+        cast(Any, workflow.invocation_data)(receipt)["response"]["rejection"] == "structured_output"
+    )
+    monkeypatch.setattr(transport, "post", original)
+    Job.objects.filter(pk=before.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
+    resumed = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
+    worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
+    after = Job.objects.get(pk=before.pk)
+    assert provider.calls == 4 and after.usage["calls"] == 4
+    assert "Response rejected; no operations applied" in prompts[2]
+    assert Candidate.objects.get().committed
+    transport.close()
+
+
+def test_draft_is_fenced_and_old_workers_cannot_reclaim_it(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _, transport, claim = prepared
+    provider = ScriptedProvider(replies())
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        result = ProviderGateway(*args, **kwargs)
+        result.provider = provider
+        return result
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    original = transport.post
+    captured: list[dict[str, Any]] = []
+
+    def interrupt(path: str, values: dict[str, Any]) -> dict[str, Any]:
+        result = original(path, values)
+        if path.endswith("/draft/"):
+            captured.append(values)
+            raise httpx.ReadTimeout("Crash after draft save")
+        return result
+
+    monkeypatch.setattr(transport, "post", interrupt)
+    with pytest.raises(httpx.ReadTimeout):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    job = Job.objects.get(pk=claim["job"]["id"])
+    monkeypatch.setattr(transport, "post", original)
+    Job.objects.filter(pk=job.pk).update(lease_expires_at=timezone.now() - timedelta(seconds=1))
+    assert (
+        transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})["job"]
+        is None
+    )
+    resumed = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
+    assert resumed["draft"]["phase"] == "author"
+    with pytest.raises(worker.LeaseRejected):
+        transport.post(f"api/worker/jobs/{job.pk}/draft/", captured[-1])
+    services.cancel_job(job.pk)
+    payload = {
+        **captured[-1],
+        "lease_token": resumed["lease_token"],
+        "stage_fence": resumed["job"]["stage_fence"],
+    }
+    with pytest.raises(worker.LeaseRejected):
+        transport.post(f"api/worker/jobs/{job.pk}/draft/", payload)
+    assert not Candidate.objects.exists()
+    transport.close()
+
+
+def test_legacy_operation_limit_recovers_completed_draft_without_replaying_author(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from prompt2play.adapters.django.forge.authoring_recovery import resume_authoring
+    from prompt2play.legacy.worker.core import ProviderError
+
+    _, transport, claim = prepared
+    outputs = replies()
+    # Save a real authored draft before a second author response hits the old limit.
+    outputs[1]["operations"] = outputs[1]["operations"][:-1]
+
+    class LegacyProvider(ScriptedProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Any:
+            if self.calls == 2:
+                self.calls += 1
+                raise cast(Any, ProviderError)(
+                    "Provider returned invalid structured JSON; maxItems at /operations",
+                    usage=dict(USAGE),
+                )
+            return super().generate(*args, **kwargs)
+
+    provider = LegacyProvider(outputs)
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        result = ProviderGateway(*args, **kwargs)
+        result.provider = provider
+        return result
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    lease = worker.StageLease(transport, claim, threading.Event())
+    with pytest.raises(ProviderError):
+        worker.generate_stage(lease, arguments())
+    lease.write(
+        "fail",
+        error="ProviderError: Provider returned invalid structured JSON; maxItems at /operations",
+    )
+    # Old versions had receipts but no source checkpoint.
+    Job.objects.filter(pk=claim["job"]["id"]).update(checkpoint={})
+    before = Job.objects.get(pk=claim["job"]["id"])
+    recovered = cast(Any, resume_authoring)(before.pk)
+    assert recovered.usage == before.usage and recovered.resume_count == before.resume_count + 1
+    assert recovered.cost_upper_nano == before.cost_upper_nano
+    with pytest.raises(Exception, match="Only a failed"):
+        cast(Any, resume_authoring)(before.pk)
+    resumed = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
+    assert resumed["draft"]["files"]["game.js"]
+    provider.outputs.insert(
+        0,
+        {
+            "operations": [{"op": "submit", "path": "", "content": "", "old": "", "new": ""}],
+            "summary": "Continue draft",
+        },
+    )
+    worker.generate_stage(worker.StageLease(transport, resumed, threading.Event()), arguments())
+    assert provider.calls == 5 and ModelInvocation.objects.filter(operation="plan").count() == 1
+    assert Candidate.objects.get().committed
     transport.close()

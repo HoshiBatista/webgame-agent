@@ -153,6 +153,11 @@ class ClaimSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Недоступный каталог должен быть пустым.")
         if value.get("validator", "static") not in ["static", "docker"]:
             raise serializers.ValidationError("validator: static или docker.")
+        if (
+            "continuable_authoring_v1" in value
+            and type(value["continuable_authoring_v1"]) is not bool
+        ):
+            raise serializers.ValidationError("continuable_authoring_v1 must be boolean.")
         if "interactive_plan_v1" in value and type(value["interactive_plan_v1"]) is not bool:
             raise serializers.ValidationError("interactive_plan_v1 must be boolean.")
         requires = value.get("requires_job_model", [])
@@ -492,3 +497,10 @@ class ReviewDecisionSerializer(serializers.Serializer):
     stage_fence = serializers.IntegerField(min_value=1)
     action = serializers.ChoiceField(choices=["approve", "revise"])
     feedback = serializers.CharField(max_length=12000, default="", allow_blank=True)
+
+
+class DraftSerializer(FencedSerializer):
+    draft = serializers.JSONField()
+
+    def validate_draft(self, value):
+        return bounded_object(value, 12 * MIB, "draft")

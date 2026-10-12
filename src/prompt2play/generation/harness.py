@@ -6,7 +6,7 @@ import copy
 import hashlib
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, cast
 
 import jsonschema
@@ -17,8 +17,10 @@ from prompt2play.legacy.validator.checks import assemble
 from prompt2play.legacy.worker.core import COMPONENT_SCHEMA, PLAN_OUTPUT_SCHEMA, PROMPT_BOUNDARY
 from prompt2play.paths import LEGACY_ROOT
 
-from .gateway import ModelGateway
+from .draft_state import validate_draft_state
+from .gateway import ModelGateway, ProviderError
 from .knowledge import KNOWLEDGE_VERSION, select_lessons
+from .retries import structured_diagnostic
 from .runtime import PACKAGER_VERSION, assemble_runtime, capture_runtime_identity
 from .visual_quality import (
     QUALITY_BRIEF,
@@ -34,7 +36,7 @@ from .workspace import (
     WorkspaceLimits,
 )
 
-HARNESS_VERSION = "generation-harness-v1.3"
+HARNESS_VERSION = "generation-harness-v1.4"
 PLANNING_INSTRUCTIONS = (
     QUALITY_BRIEF
     + """Plan the requested complete offline HTML5 game for continued development. Return GameSpec (what the game does) and BuildPlan (visual design, maintainable implementation and acceptance) separately.
@@ -47,9 +49,9 @@ Dependencies are between generated files only. Format must be runtime-v1. The ap
 )
 AUTHOR_INSTRUCTIONS = (
     QUALITY_BRIEF
-    + """Create or revise the complete game using ONLY typed draft operations. Implement the detailed visual_design and implementation_design, including artwork and UI states, not only the mechanics. Never execute source or request host shell access. Output a bounded operations array, each op with all schema fields; use empty strings for unused fields.
-Allowed operations: read(path), create(path,content), replace(path,content), patch(path,old,new), delete(path), check(), submit(). Patch requires old text to occur exactly once. Use a surgical patch for local changes and preserve unrelated source bytes. Read/check results appear in the next turn. Submit ends this one candidate attempt; it never declares the game validated. Failed quick checks can be fixed inside the remaining turns.
-Before submit, inspect every planned asset and UI state in your implementation and finish its treatment. Submission triggers a separate mandatory art/UI source review; material findings return as visual_review feedback. Fix those findings in the remaining turns and resubmit changed source. Neither that critique nor check() has rendered screenshots, so never claim that the game has been visually tested.
+    + """Create or revise the complete game using ONLY typed draft operations. Implement the detailed visual_design and implementation_design, including artwork and UI states, not only the mechanics. Never execute source or request host shell access. Output an operations array, each op with all schema fields; use empty strings for unused fields. Prefer manageable batches and continue across as many turns as needed; there is no default operation or turn count limit. Do not rush to submit or reduce quality to fit a batch.
+Allowed operations: read(path), create(path,content), replace(path,content), patch(path,old,new), delete(path), check(), submit(). Patch requires old text to occur exactly once. Use a surgical patch for local changes and preserve unrelated source bytes. Read/check results appear in the next turn. Submit ends this one candidate attempt; it never declares the game validated. Use tool feedback to fix unsuccessful operations and failed quick checks in subsequent turns. The monetary budget and user cancellation still apply.
+Before submit, inspect every planned asset and UI state in your implementation and finish its treatment. Submission triggers a separate mandatory art/UI source review; material findings return as visual_review feedback. Fix those findings and resubmit changed source until the review passes. Neither that critique nor check() has rendered screenshots, so never claim that the game has been visually tested.
 Define function createGame(ctx) in game.js, returning {snapshot(), dispatch(action), dispose?(), pause?(hidden)}. snapshot is finite JSON including /phase as ready|playing|won|lost; won/lost are terminal outcomes and restart reconstructs ready state. dispatch performs the same rules used by real inputs. createGame must render meaningful visible content immediately in ctx.root. Show concise game title/instructions/progress/outcome in ctx.root; platform supplies Start/Restart buttons and lifecycle status, but toolbar status cannot substitute visible game progress.
 Trusted runtime API: ctx.root is the DOM game surface; ctx.spec; ctx.seed; seeded ctx.random(); ctx.cleanup(fn); ctx.active(); ctx.input.on(target,event,fn); ctx.input.key((key,event)=>...); ctx.input.pointer(target,(point,event)=>...), where point has x/y/width/height/pointerType. Input automatically pauses before Start and when hidden. Attach input handlers via these scoped helpers to preserve lifecycle cleanup. ctx.resize((width,height,dpr)=>...) observes the surface and cleans up. Buttons created for ctx.root use ctx.input.on(button,'click',fn); binding before append is allowed for detached elements of this document, but events run only while that exact target is currently inside ctx.root. Connected controls outside the surface and foreign-document controls are rejected. The DOM surface preserves native vertical finger scrolling (touch-action:pan-y); Canvas elements use touch-action:none. For DOM dragging, set touch-action:none on each draggable element only, and preserve scrolling on ordinary content/buttons. Do not disable touch scrolling on the whole root.
 Optional clock: ctx.clock.fixedStep(fn,seconds=1/60), pause(), resume(), advance(count), tick; register the update callback once; platform starts/stops timing. Mechanics may also accept deterministic STEP actions. Turn-based games must not invent clock requirements.
@@ -73,7 +75,7 @@ OPERATION_SCHEMA = obj(
 )
 OPERATIONS_SCHEMA = obj(
     {
-        "operations": {"type": "array", "minItems": 1, "maxItems": 16, "items": OPERATION_SCHEMA},
+        "operations": {"type": "array", "minItems": 1, "items": OPERATION_SCHEMA},
         "summary": {"type": "string", "maxLength": 3000},
     }
 )
@@ -94,6 +96,7 @@ class GenerationRequest:
     replan: bool = False
     user_feedback: list[dict[str, str]] = field(default_factory=list)
     previous_proposal: dict[str, Any] = field(default_factory=dict)
+    resume_state: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -130,9 +133,11 @@ class GenerationHarness:
         plan_output_tokens: int = 12000,
         code_output_tokens: int = 24000,
         on_plan: Callable[[dict[str, Any], dict[str, Any]], None] | None = None,
+        on_checkpoint: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         self.limits = limits or WorkspaceLimits()
         self.on_plan = on_plan
+        self.on_checkpoint = on_checkpoint
         self.plan_output_tokens, self.code_output_tokens = plan_output_tokens, code_output_tokens
 
     def attempt(
@@ -210,8 +215,40 @@ class GenerationHarness:
     def _single_author(
         self, request: GenerationRequest, gateway: ModelGateway, control: GenerationControl
     ) -> CandidateSubmission:
-        runtime_identity = capture_runtime_identity()
-        game, plan = self._plan(request, gateway, control)
+        identity = asdict(request)
+        identity.pop("resume_state")
+        identity["changed_files"] = (
+            sorted(request.changed_files) if request.changed_files is not None else None
+        )
+        request_sha = digest(identity)
+        state = copy.deepcopy(request.resume_state)
+        if state:
+            validate_draft_state(state)
+            if state["request_sha256"] != request_sha:
+                raise ValueError("Draft checkpoint belongs to a different generation request")
+            game, plan = GameSpec(state["spec"]), BuildPlan(state["plan"])
+            runtime_identity = state["runtime"]
+        else:
+            runtime_identity = capture_runtime_identity()
+            game, plan = self._plan(request, gateway, control)
+            state = {
+                "version": "authoring-draft-v1",
+                "request_sha256": request_sha,
+                "spec": game.data,
+                "plan": plan.data,
+                "runtime": runtime_identity,
+                "files": request.base_files,
+                "history": [],
+                "operations": 0,
+                "quick_checks": 0,
+                "turn": 0,
+                "feedback": [],
+                "summary": "",
+                "visual_reviews": [],
+                "phase": "author",
+                "review_attempt": 0,
+                "review_feedback": [],
+            }
         if self.on_plan is not None:
             self.on_plan(game.data, plan.data)
         control.guard()
@@ -225,18 +262,89 @@ class GenerationHarness:
             if request.changed_files is not None
             else planned
         )
-        # Existing unrelated source remains part of the draft, but its write scope
-        # is explicitly limited when the application requests a local edit.
-        workspace = DraftWorkspace(control, self.limits, request.base_files, allowed_paths=None)
+        workspace = DraftWorkspace(control, self.limits, state["files"], allowed_paths=None)
         workspace.allowed_paths = capabilities
+        workspace.history = state["history"]
+        workspace.operations = state["operations"]
+        workspace.quick_checks = state["quick_checks"]
         lessons = select_lessons(game.data, request.findings)
-        feedback: list[dict[str, Any]] = []
-        summary = ""
-        source: dict[str, str] | None = None
-        visual_reviews: list[dict[str, Any]] = []
-        seen: set[str] = set()
-        for turn in range(self.limits.max_turns):
+        visual_reviews = state["visual_reviews"]
+
+        def checkpoint() -> None:
             control.guard()
+            state.update(
+                files=dict(workspace.files),
+                history=workspace.history,
+                operations=workspace.operations,
+                quick_checks=workspace.quick_checks,
+            )
+            if self.on_checkpoint is not None:
+                self.on_checkpoint(copy.deepcopy(state))
+
+        checkpoint()
+        while state["phase"] != "ready":
+            control.guard()
+            if state["phase"] == "review":
+                context = {
+                    "request": request.prompt,
+                    "kind": request.kind,
+                    "game_spec": game.data,
+                    "build_plan": plan.data,
+                    "files": workspace.files,
+                    "allowed_paths": sorted(capabilities),
+                    "previous_reviews": visual_reviews[-3:],
+                    "attempt_id": request.attempt_id,
+                    "review_attempt": state["review_attempt"],
+                    "review_feedback": state["review_feedback"],
+                }
+                try:
+                    review = gateway.generate(
+                        SOURCE_REVIEW_INSTRUCTIONS
+                        + QUALITY_BRIEF
+                        + "\nAuthoritative source review schema:\n"
+                        + stable(SOURCE_REVIEW_SCHEMA)
+                        + PROMPT_BOUNDARY
+                        + stable(context),
+                        SOURCE_REVIEW_SCHEMA,
+                        "visual_review",
+                        control,
+                        max_output=6000,
+                    )
+                    ready = validate_source_review(review.data, workspace.files)
+                except ProviderError as exc:
+                    diagnostic = structured_diagnostic(exc)
+                    if diagnostic is None:
+                        raise
+                    state["review_feedback"] = [{"error": "Return valid review JSON", **diagnostic}]
+                    state["review_attempt"] += 1
+                    checkpoint()
+                    continue
+                except ValueError:
+                    # Invalid citations/status are feedback to the reviewer, never approval.
+                    state["review_feedback"] = [
+                        {
+                            "error": "Review evidence is invalid. Include all criteria, exact existing file excerpts, and consistent status/required_change fields."
+                        }
+                    ]
+                    state["review_attempt"] += 1
+                    checkpoint()
+                    continue
+                visual_reviews.append(
+                    {
+                        "source_sha256": digest(workspace.files),
+                        "build_plan_sha256": plan.sha256,
+                        "status": "source_ready" if ready else "needs_revision",
+                        "criteria": copy.deepcopy(review.data["criteria"]),
+                    }
+                )
+                state["phase"] = "ready" if ready else "author"
+                state["feedback"] = [
+                    {"op": "visual_review", "review": visual_reviews[-1], "release_eligible": False}
+                ]
+                checkpoint()
+                continue
+            if self.limits.max_turns is not None and state["turn"] >= self.limits.max_turns:
+                raise GenerationStopped("Attempt exhausted its explicit turn budget")
             context = {
                 "request": request.prompt,
                 "kind": request.kind,
@@ -246,9 +354,11 @@ class GenerationHarness:
                 "allowed_paths": sorted(capabilities),
                 "lessons": lessons,
                 "release_findings": request.findings,
-                "tool_results": feedback,
-                "turn": turn + 1,
-                "remaining_turns": self.limits.max_turns - turn,
+                "tool_results": state["feedback"],
+                "turn": state["turn"] + 1,
+                "remaining_turns": self.limits.max_turns - state["turn"]
+                if self.limits.max_turns is not None
+                else None,
                 "token_ceiling": control.token_limit if control.cost_limit_nano is None else None,
                 **(
                     {"cost_ceiling_nano_usd": control.cost_limit_nano}
@@ -259,107 +369,78 @@ class GenerationHarness:
             }
             if request.user_feedback:
                 context["user_feedback"] = request.user_feedback
-            reply = gateway.generate(
-                AUTHOR_INSTRUCTIONS + PROMPT_BOUNDARY + stable(context),
-                OPERATIONS_SCHEMA,
-                "author",
-                control,
-                max_output=self.code_output_tokens,
-            )
-            jsonschema.validate(reply.data, OPERATIONS_SCHEMA)
-            fingerprint = hashlib.sha256(stable(reply.data["operations"]).encode()).hexdigest()
-            if fingerprint in seen:
-                raise GenerationStopped("Repeated identical tool call batch")
-            seen.add(fingerprint)
-            feedback = []
-            summary = reply.data["summary"]
+            try:
+                reply = gateway.generate(
+                    AUTHOR_INSTRUCTIONS + PROMPT_BOUNDARY + stable(context),
+                    OPERATIONS_SCHEMA,
+                    "author",
+                    control,
+                    max_output=self.code_output_tokens,
+                )
+                jsonschema.validate(reply.data, OPERATIONS_SCHEMA)
+            except ProviderError as exc:
+                diagnostic = structured_diagnostic(exc)
+                if diagnostic is None:
+                    raise
+                state["feedback"] = [
+                    {
+                        "error": "Response rejected; no operations applied. Return valid operations JSON, using smaller batches if necessary.",
+                        **diagnostic,
+                    }
+                ]
+                state["turn"] += 1
+                checkpoint()
+                continue
+            except jsonschema.ValidationError:
+                state["feedback"] = [
+                    {
+                        "error": "Response rejected; no operations applied. Follow the operations schema."
+                    }
+                ]
+                state["turn"] += 1
+                checkpoint()
+                continue
+            state["turn"] += 1
+            state["feedback"] = []
+            state["summary"] = reply.data["summary"]
             for operation in reply.data["operations"]:
                 control.guard()
                 op, path = operation["op"], operation["path"]
                 try:
                     if op == "read":
-                        feedback.append({"op": op, "path": path, "content": workspace.read(path)})
+                        state["feedback"].append(
+                            {"op": op, "path": path, "content": workspace.read(path)}
+                        )
                     elif op in ("create", "replace"):
                         workspace.write(path, operation["content"], create=op == "create")
-                        feedback.append({"op": op, "path": path, "status": "applied"})
+                        state["feedback"].append({"op": op, "path": path, "status": "applied"})
                     elif op == "patch":
                         workspace.patch(path, operation["old"], operation["new"])
-                        feedback.append({"op": op, "path": path, "status": "applied"})
+                        state["feedback"].append({"op": op, "path": path, "status": "applied"})
                     elif op == "delete":
                         workspace.delete(path)
-                        feedback.append({"op": op, "path": path, "status": "applied"})
+                        state["feedback"].append({"op": op, "path": path, "status": "applied"})
                     elif op == "check":
-                        feedback.append(
+                        state["feedback"].append(
                             {"op": op, "findings": workspace.check(), "release_eligible": False}
                         )
                     elif op == "submit":
                         if not workspace.files.get("game.js", "").strip():
                             raise ValueError("Cannot review an empty game")
-                        source_digest = digest(workspace.files)
-                        if any(item["source_sha256"] == source_digest for item in visual_reviews):
+                        if any(
+                            item["source_sha256"] == digest(workspace.files)
+                            for item in visual_reviews
+                        ):
                             raise ValueError(
                                 "Fix the visual review findings before resubmitting unchanged source"
                             )
-                        if len(visual_reviews) >= 3:
-                            raise GenerationStopped(
-                                "Visual source review still requires changes; candidate not submitted"
-                            )
-                        review = gateway.generate(
-                            SOURCE_REVIEW_INSTRUCTIONS
-                            + QUALITY_BRIEF
-                            + "\nAuthoritative source review schema:\n"
-                            + stable(SOURCE_REVIEW_SCHEMA)
-                            + PROMPT_BOUNDARY
-                            + stable(
-                                {
-                                    "request": request.prompt,
-                                    "kind": request.kind,
-                                    "game_spec": game.data,
-                                    "build_plan": plan.data,
-                                    "files": workspace.files,
-                                    "allowed_paths": sorted(capabilities),
-                                    "previous_reviews": visual_reviews,
-                                    "attempt_id": request.attempt_id,
-                                }
-                            ),
-                            SOURCE_REVIEW_SCHEMA,
-                            "visual_review",
-                            control,
-                            max_output=6000,
-                        )
-                        try:
-                            ready = validate_source_review(review.data, workspace.files)
-                        except ValueError as exc:
-                            raise GenerationStopped(
-                                "Visual source review returned invalid evidence"
-                            ) from exc
-                        visual_reviews.append(
-                            {
-                                "source_sha256": source_digest,
-                                "build_plan_sha256": plan.sha256,
-                                "status": "source_ready" if ready else "needs_revision",
-                                "criteria": copy.deepcopy(review.data["criteria"]),
-                            }
-                        )
-                        if not ready:
-                            feedback.append(
-                                {
-                                    "op": "visual_review",
-                                    "review": visual_reviews[-1],
-                                    "release_eligible": False,
-                                }
-                            )
-                            break
-                        source = workspace.submit()
+                        state.update(phase="review", review_attempt=0, review_feedback=[])
                         break
                 except (ValueError, KeyError) as exc:
-                    feedback.append({"op": op, "path": path, "error": str(exc)[:1200]})
-            if source is not None:
-                break
-        if source is None:
-            raise GenerationStopped(
-                "Attempt exhausted its turn budget without submitting a candidate"
-            )
+                    state["feedback"].append({"op": op, "path": path, "error": str(exc)[:1200]})
+            checkpoint()
+        source = workspace.submit()
+        summary = state["summary"]
         if request.base_files and source == request.base_files:
             raise GenerationStopped("Submitted edit does not change source")
         control.guard()
@@ -378,7 +459,7 @@ class GenerationHarness:
             selected_lessons=[entry["id"] for entry in lessons],
             operations=workspace.history,
             quick_checks=workspace.quick_checks,
-            turns=turn + 1,
+            turns=state["turn"],
             visual_quality={
                 "version": QUALITY_VERSION,
                 "reviews": visual_reviews,

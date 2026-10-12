@@ -191,6 +191,8 @@ def claim_job(runner, capabilities, name=None):
         )
     else:
         compatible &= ~Q(stage__in=["validate", "commit"])
+        if capabilities.get("continuable_authoring_v1") is not True:
+            compatible &= ~Q(checkpoint__has_key="authoring_draft")
         if capabilities.get("interactive_plan_v1") is not True:
             compatible &= Q(creation_mode="lite")
     candidates = list(

@@ -130,6 +130,8 @@ class FileJournal:
                     existing["reused_response_reads"] = existing.get("reused_response_reads", 0) + 1
                     write_json(self.path, self.records)
                     return {"data": existing["data"], "usage": existing["usage"]}
+                if existing["state"] == "rejected_response":
+                    return dict(existing["data"])
                 if existing["state"] == "timed_out":
                     return dict(CODEX_TIMEOUT_RECEIPT)
                 raise GenerationStopped(

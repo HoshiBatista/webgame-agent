@@ -335,6 +335,7 @@ class ClaimView(WorkerView):
         if job is None:
             return Response({"job": None})
         from .reviews import worker_review_context
+        from .drafts import load_draft
 
         worker_job = job_data(job)
         worker_job["checkpoint"] = job.checkpoint
@@ -342,6 +343,7 @@ class ClaimView(WorkerView):
             {
                 "job": worker_job,
                 **worker_review_context(job),
+                "draft": load_draft(job),
                 "lease_token": lease,
                 "lease_seconds": settings.FORGE_LEASE_SECONDS,
                 "checkpoint": job.checkpoint,
@@ -492,3 +494,11 @@ class PlanProposalView(WorkerView):
         return Response(
             record_plan(pk, request.user, validated(PlanProposalSerializer, request.data))
         )
+
+
+class DraftSaveView(WorkerView):
+    def post(self, request, pk):
+        from .drafts import record_draft
+        from .serializers import DraftSerializer
+
+        return Response(record_draft(pk, request.user, validated(DraftSerializer, request.data)))

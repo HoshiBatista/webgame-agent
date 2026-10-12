@@ -58,7 +58,7 @@ def test_noop_ambiguous_anchor_and_quota() -> None:
         workspace.patch("game.js", "x", "y")
     with pytest.raises(ValueError, match="No-op"):
         workspace.write("game.js", "x+x")
-    with pytest.raises(GenerationStopped, match="no-op"):
+    with pytest.raises(ValueError, match="No-op"):
         workspace.write("game.js", "x+x")
     with pytest.raises(ValueError, match="per-file"):
         workspace.write("game.js", "x" * 51)

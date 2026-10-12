@@ -6,7 +6,7 @@ import json
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -191,14 +191,25 @@ def test_local_visual_edit_preserves_mechanics_bytes() -> None:
     assert candidate.files["style.css"] == "article{color:blue}"
 
 
-def test_repeated_tool_calls_stop_within_original_turn_budget() -> None:
-    plan, _ = fixture()
-    repeated = {"operations": [operation("read", "missing.js")], "summary": "No progress"}
-    gateway = ScriptedGateway([plan, repeated, repeated])
-    with pytest.raises(GenerationStopped, match="Repeated identical"):
-        GenerationHarness(limits=WorkspaceLimits(max_turns=3)).attempt(
-            GenerationRequest("Fixture"), gateway, GenerationControl.bounded()
-        )
+def test_repeated_reads_are_feedback_and_do_not_stop_generation() -> None:
+    plan, source = fixture()
+    repeated = {"operations": [operation("read", "missing.js")], "summary": "Retry reading"}
+    gateway = ScriptedGateway(
+        [
+            plan,
+            repeated,
+            repeated,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Complete",
+            },
+        ]
+    )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Fixture"), gateway, GenerationControl.bounded()
+    )
+    assert candidate.files["game.js"] == source
+    assert candidate.provenance["turns"] == 3
 
 
 def test_unsupported_provider_cannot_enable_unrestricted_tools() -> None:
@@ -404,13 +415,15 @@ def test_visual_review_cannot_approve_with_unbound_or_incomplete_evidence(defect
             review,
         ]
     )
-    with pytest.raises(GenerationStopped, match="invalid evidence"):
-        GenerationHarness().attempt(
-            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
-        )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+    )
+    assert gateway.roles.count("visual_review") == 2
+    assert "Review evidence is invalid" in gateway.prompts[-1]
+    assert len(candidate.provenance["visual_quality"]["reviews"]) == 1
 
 
-def test_persistent_visual_findings_stop_without_promoting_a_candidate() -> None:
+def test_visual_review_continues_beyond_three_rounds_until_ready() -> None:
     plan, source = fixture()
     replies = [plan]
     for index in range(4):
@@ -430,11 +443,11 @@ def test_persistent_visual_findings_stop_without_promoting_a_candidate() -> None
         if index < 3:
             replies.append(review_fixture(reject=True))
     gateway = ScriptedGateway(replies)
-    with pytest.raises(GenerationStopped, match="still requires changes"):
-        GenerationHarness().attempt(
-            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
-        )
-    assert gateway.roles.count("visual_review") == 3
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+    )
+    assert gateway.roles.count("visual_review") == 4
+    assert candidate.provenance["visual_quality"]["reviews"][-1]["status"] == "source_ready"
 
 
 def test_cancel_during_art_review_does_not_submit() -> None:
@@ -508,3 +521,150 @@ def test_old_revision_replans_design_without_widening_file_permissions() -> None
     assert gateway.roles == ["plan", "author", "visual_review"]
     assert result.files["game.js"] == source and result.files["style.css"] == "article{color:blue}"
     assert "visual_design" in result.plan and "visual_design" not in old_plan
+
+
+def test_long_authoring_exceeds_old_batch_turn_operation_and_check_limits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from prompt2play.generation.harness import OPERATIONS_SCHEMA
+    from prompt2play.legacy.worker.providers import parse_json
+
+    plan, source = fixture()
+    first = {
+        "operations": [operation("create", "game.js", content=source)]
+        + [operation("read", "game.js") for _ in range(20)],
+        "summary": "Large valid batch",
+    }
+    # Exercise the actual transport parser which rejected the user's answer.
+    assert cast(Any, parse_json)(json.dumps(first), OPERATIONS_SCHEMA) == first
+    batch = {
+        "operations": [operation("read", "game.js") for _ in range(6)] + [operation("check")],
+        "summary": "Continue",
+    }
+    monkeypatch.setattr("prompt2play.generation.workspace.quick_check", lambda *_: [])
+    gateway = ScriptedGateway(
+        [
+            plan,
+            first,
+            *[batch for _ in range(10)],
+            {"operations": [operation("submit")], "summary": "Finished"},
+        ]
+    )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Long fixture"), gateway, GenerationControl.bounded()
+    )
+    assert candidate.provenance["turns"] == 12
+    assert candidate.provenance["quick_checks"] == 10
+    assert candidate.files["game.js"] == source
+
+
+def test_checkpoint_resumes_before_review_without_replanning_or_rewriting() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    saved: list[dict[str, Any]] = []
+
+    class Interrupted(Exception):
+        pass
+
+    def save(state: dict[str, Any]) -> None:
+        saved.append(state)
+        if state["phase"] == "review":
+            raise Interrupted()
+
+    request = GenerationRequest("Recover fixture", attempt_id="job:1")
+    first = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Persisted author",
+            },
+        ]
+    )
+    with pytest.raises(Interrupted):
+        GenerationHarness(on_checkpoint=save).attempt(request, first, GenerationControl.bounded())
+    resumed = ScriptedGateway([])
+    candidate = GenerationHarness().attempt(
+        replace(request, resume_state=saved[-1]), resumed, GenerationControl.bounded()
+    )
+    assert resumed.roles == ["visual_review"]
+    assert candidate.files["game.js"] == source and candidate.provenance["turns"] == 1
+    with pytest.raises(ValueError, match="different generation request"):
+        GenerationHarness().attempt(
+            replace(request, prompt="Another game", resume_state=saved[-1]),
+            ScriptedGateway([]),
+            GenerationControl.bounded(),
+        )
+
+
+@pytest.mark.parametrize("stop", ["cancel", "money"])
+def test_continued_authoring_still_stops_for_user_or_money(stop: str) -> None:
+    from prompt2play.pricing import nano_usd
+
+    plan, _ = fixture()
+    control = GenerationControl.bounded(cost_limit_nano=nano_usd("10"))
+
+    class StoppingGateway(ScriptedGateway):
+        def generate(self, *args: Any, **kwargs: Any) -> GatewayReply:
+            if self.roles.count("author") == 10:
+                if stop == "cancel":
+                    control.cancel.set()
+                else:
+                    control.spent_nano = nano_usd("11")
+            return super().generate(*args, **kwargs)
+
+    gateway = StoppingGateway(
+        [
+            plan,
+            *[
+                {"operations": [operation("read", "missing.js")], "summary": "Retry"}
+                for _ in range(12)
+            ],
+        ]
+    )
+    with pytest.raises(GenerationStopped):
+        GenerationHarness().attempt(GenerationRequest("Continue"), gateway, control)
+    assert gateway.roles.count("author") == 10
+
+
+def test_explicit_experiment_turn_bound_remains_opt_in() -> None:
+    plan, _ = fixture()
+    batch = {"operations": [operation("read", "missing.js")], "summary": "Feedback"}
+    with pytest.raises(GenerationStopped, match="explicit turn budget"):
+        GenerationHarness(limits=WorkspaceLimits(max_turns=2)).attempt(
+            GenerationRequest("Bounded experiment"),
+            ScriptedGateway([plan, batch, batch]),
+            GenerationControl.bounded(),
+        )
+
+
+def test_restored_ready_draft_must_have_review_for_exact_source() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    states: list[dict[str, Any]] = []
+    request = GenerationRequest("Fixture")
+    GenerationHarness(on_checkpoint=states.append).attempt(
+        request,
+        ScriptedGateway(
+            [
+                plan,
+                {
+                    "operations": [
+                        operation("create", "game.js", content=source),
+                        operation("submit"),
+                    ],
+                    "summary": "Fixture",
+                },
+            ]
+        ),
+        GenerationControl.bounded(),
+    )
+    saved = states[-1]
+    assert saved["phase"] == "ready"
+    saved["files"]["game.js"] += "\n// Changed after review"
+    with pytest.raises(ValueError, match="matching successful source review"):
+        GenerationHarness().attempt(
+            replace(request, resume_state=saved), ScriptedGateway([]), GenerationControl.bounded()
+        )

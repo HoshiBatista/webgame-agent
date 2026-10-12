@@ -529,3 +529,35 @@ reservations and remaining budget. Rates can be updated through the server's
 `PROMPT2PLAY_PRICING_FILE`; old snapshots remain immutable. New or unrecognized
 models require an operator-reviewed tariff. Standard-equivalent cost does not
 claim to reproduce subscription usage limits or an actual API invoice.
+
+
+## Continuable native authoring (2026-10-12)
+
+Harness v1.4 removes the default operation-batch, operation-total, author-turn,
+quick-check and source-review count ceilings. Each operation still checks the
+current lease and cancellation; each paid request reserves against the same job
+budget. Path/source byte constraints and isolated validation remain. An optional
+explicit `WorkspaceLimits` bound is for controlled experiments, not Studio's default.
+Repeated reads and no-op/failed writes are tool feedback. Rejected structured
+responses and invalid review evidence feed a new request; the model cannot waive
+schema/path/runtime validation. Unknown transport outcomes are not blindly retried.
+A durable rejected-response marker prevents paying for that same failed response
+again after a process crash, while retaining its reported spend or unknown reserve.
+
+The native loop alternates author and source-review phases until source readiness.
+It writes an immutable CAS draft at each boundary, including before paid review.
+The coordinator stores only its key and scope (attempt/stage/feedback round) in
+`Job.checkpoint.authoring_draft`; `/worker/jobs/:id/draft/` is role- and lease-fenced.
+Plan approval is required in Pro, and snapshot plan bytes must match the current
+proposal. Claims return only a matching scoped snapshot. The harness checks its
+request identity and ready snapshots require a matching successful source review.
+Drafts are not candidates and cannot create previews or versions. Old workers
+without `continuable_authoring_v1` cannot reclaim a job with a saved draft.
+
+`resume_authoring` is a guarded operator action for failures caused by obsolete
+count limits. It preserves all accounting and failure evidence; where no snapshot
+exists, it reconstructs an unambiguous initial attempt using completed receipts
+without a provider call. It never authorizes replay of an unknown in-flight call.
+The next request contains explicit recovery feedback and has its own identity.
+User-configured post-browser repair attempts remain an application policy, distinct
+from authoring iterations. Historical bounded-run evidence is not rewritten.

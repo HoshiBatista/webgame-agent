@@ -135,6 +135,7 @@ def test_worker_claim_without_model_matches_api_contract(
     monkeypatch.setattr(runner, "Coordinator", lambda *_args: coordinator)
     assert runner.main(["--role", role, "--provider", provider, "--once"]) == 0
     assert len(requests) == 1
+    assert requests[0]["capabilities"]["continuable_authoring_v1"] is (role == "generator")
 
 
 def test_idle_worker_recovers_transport_failure_without_replaying_stage(

@@ -18,7 +18,11 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from prompt2play.adapters.artifacts.store import ArtifactStore, canonical
 from prompt2play.application.policy import decide, repair_route
-from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT, TIMEOUT_RETRY_SUFFIX
+from prompt2play.generation.retries import (
+    CODEX_TIMEOUT_RECEIPT,
+    TIMEOUT_RETRY_SUFFIX,
+    is_rejected_response,
+)
 
 from . import services
 from .artifacts import artifact_manifest, require_report_binding
@@ -346,9 +350,19 @@ def settle_invocation(job_id, runner, values):
             )
         state = values["state"]
         response_key = ""
-        if state != "completed" and values.get("response") not in ({}, CODEX_TIMEOUT_RECEIPT):
-            raise ValidationError("Only a local timeout marker may accompany an interrupted call.")
-        if state == "completed" or values.get("response") == CODEX_TIMEOUT_RECEIPT:
+        if (
+            state != "completed"
+            and values.get("response") not in ({}, CODEX_TIMEOUT_RECEIPT)
+            and not is_rejected_response(values.get("response"))
+        ):
+            raise ValidationError(
+                "Only a local timeout or rejected response marker may accompany an interrupted call."
+            )
+        if (
+            state == "completed"
+            or values.get("response") == CODEX_TIMEOUT_RECEIPT
+            or is_rejected_response(values.get("response"))
+        ):
             intent, response_key = store().prepare(values["response"])
             store().commit(intent, response_key)
         if "usage" in values:
