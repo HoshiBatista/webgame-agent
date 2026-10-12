@@ -96,6 +96,10 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
         for step in steps:
             if not isinstance(step, dict) or step.get("kind") not in {
                 "key",
+                "key_down",
+                "key_up",
+                "blur",
+                "focus",
                 "click",
                 "tap",
                 "drag",
@@ -108,7 +112,7 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
                 raise ValueError("Input repeat must be between one and thirty")
             item: dict[str, Any] = {"kind": kind, "repeat": repeat}
             allowed = {"kind", "repeat"}
-            if kind == "key":
+            if kind in {"key", "key_down", "key_up"}:
                 if device == "touch":
                     raise ValueError("Touch acceptance cannot substitute keyboard input")
                 key = step.get("key")
@@ -116,6 +120,8 @@ def validate_acceptance(value: Any) -> dict[str, Any]:
                     raise ValueError("A bounded keyboard key is required")
                 item["key"] = key
                 allowed.add("key")
+            elif kind in {"blur", "focus"}:
+                pass
             elif kind in {"click", "tap"}:
                 if step.get("selector"):
                     item["selector"] = _selector(step["selector"])
@@ -284,6 +290,21 @@ class IsolatedValidator:
             return _failure(
                 manifest, "No valid real-input acceptance scenario: " + str(exc), unavailable=True
             )
+        mechanics = []
+        if spec.get("mechanics_required") or spec.get("mechanics_acceptance"):
+            from prompt2play.contracts.mechanics import validate_mechanics
+
+            try:
+                mechanics = validate_mechanics(
+                    spec.get("mechanics_acceptance"),
+                    spec.get(
+                        "mechanics_required_actions", [a["type"] for a in spec.get("actions", [])]
+                    ),
+                )
+            except (ValueError, TypeError) as exc:
+                return _failure(
+                    manifest, "Invalid basic mechanics acceptance: " + str(exc), unavailable=True
+                )
         acceptance_source = "release-config" if release_scenarios is not None else "candidate-plan"
         if release_scenarios is None and "game.js" in files:
             acceptance_source = "native-conformance"
@@ -331,6 +352,7 @@ class IsolatedValidator:
                 {
                     "version": BROWSER_CONTRACT_VERSION,
                     "acceptance": acceptance,
+                    "mechanics": mechanics,
                     "completion_required": require_completion,
                     "harness_files_sha256": harness_files,
                 }
@@ -342,6 +364,7 @@ class IsolatedValidator:
             "artifact": manifest,
             "spec": spec,
             "acceptance": acceptance,
+            "mechanics": mechanics,
             "completion_required": require_completion,
             "acceptance_source": acceptance_source,
             "suite_sha256": suite,
@@ -435,6 +458,14 @@ class IsolatedValidator:
                             expected_harness=harness_files,
                             require_completion=require_completion,
                         )
+                        if mechanics and value["status"] == "passed":
+                            from prompt2play.adapters.django.forge.artifacts import (
+                                require_report_binding,
+                            )
+
+                            cast(Callable[..., Any], require_report_binding)(
+                                files, html, spec, value
+                            )
                     except (ValueError, TypeError, KeyError, OSError, RecursionError):
                         return _failure(
                             manifest,

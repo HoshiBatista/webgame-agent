@@ -560,6 +560,7 @@ def main(argv: list[str] | None = None) -> int:
                         lease.write(
                             "fail",
                             error=safe_message(f"{type(exc).__name__}: {exc}", [lease.token]),
+                            diagnostic=exception_details(exc, [lease.token]),
                         )
             active.remove(cancel)
             if args.once:

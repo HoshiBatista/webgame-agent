@@ -55,7 +55,7 @@ export function PlanPane({job, inspectedStage}: {job: Job; inspectedStage: strin
         <h4>{text(spec.title) || 'Предложенная игра'}</h4><p>{text(spec.summary)}</p><p><b>Жанр:</b> {text(spec.genre)}</p>
         <h5>Механики и правила</h5><Items value={spec.rules}/><h5>Управление</h5><Items value={spec.controls}/>
         <p><b>Цель:</b> {text(spec.win_condition)}</p>{text(spec.lose_condition) && <p><b>Условие поражения:</b> {text(spec.lose_condition)}</p>}
-        <VisualDesign plan={plan} showReview={false}/><h5>Критерии готовности</h5><Items value={plan.acceptance_criteria}/>
+        <VisualDesign plan={plan} showReview={false}/><h5>Критерии готовности</h5><Items value={plan.acceptance_criteria}/>{records(plan.mechanics).length > 0 && <details className="contract-item"><summary>Обязательные проверки механик</summary><p>При доработке проверяются также действия предыдущей версии. Полное прохождение — отдельная настройка.</p>{records(plan.mechanics).map((item, i) => <p key={i}><b>{text(item.id)}:</b> {text(item.description)}</p>)}</details>}
         <details className="contract-item"><summary>Что входит в реализацию</summary>{records(plan.files).map((file, i) => <p key={i}><b>{text(file.path)}:</b> {text(file.purpose)}</p>)}<h5>Свойства правил</h5><Items value={spec.invariants}/></details>
         <details className="report-json"><summary>Полный сохранённый план</summary><pre>{JSON.stringify(data.proposal, null, 2)}</pre></details>
       </> : <p>План пока не получен. Он появится здесь после завершения запроса планировщика.</p>)}

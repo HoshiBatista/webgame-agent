@@ -68,6 +68,9 @@ def job_data(job):
     result["pricing"] = job.pricing
     result["cost"] = workflow.cost_summary(job)
     result["budget_stopped"] = budget_stopped(job)
+    from .recovery import resumable
+
+    result["can_resume"] = resumable(job) and not budget_stopped(job)
     result["activity"] = {
         "worker_contact_at": dated(
             job.lease_expires_at - timedelta(seconds=settings.FORGE_LEASE_SECONDS)

@@ -48,12 +48,9 @@ def extend_budget(job_id, values):
             project_id=job.project_id, status__in=["queued", "running", "waiting"]
         ).exists():
             raise Conflict("В проекте уже есть активное задание.", code="active_job")
-        last = job.invocations.order_by("-created_at", "-id").first()
-        if last and (last.state == "reserved" or last.actual_usage is None):
-            raise Conflict(
-                "Результат последнего вызова ещё не подтверждён. Сначала восстановите его учёт.",
-                code="unreconciled_invocation",
-            )
+        from .recovery import continuation_checkpoint
+
+        checkpoint = continuation_checkpoint(job)
         # Validate an existing checkpoint before queuing, never discard an unreadable draft.
         draft = load_draft(job)
         if job.checkpoint.get("authoring_draft") and not draft:
@@ -61,6 +58,7 @@ def extend_budget(job_id, values):
         previous = getattr(job, field)
         Job.objects.filter(pk=job.pk).update(
             **{field: values[field]},
+            checkpoint=checkpoint,
             playthrough_mode=values.get("playthrough_mode", job.playthrough_mode),
             status="queued",
             error="",

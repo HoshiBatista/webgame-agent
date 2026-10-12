@@ -1132,7 +1132,7 @@ def test_budget_extension_requires_larger_same_unit_and_no_active_successor(team
     )
 
 
-def test_budget_extension_refuses_unknown_last_call_and_requires_session(team: Team) -> None:
+def test_budget_extension_preserves_unknown_last_call_and_requires_session(team: Team) -> None:
     job, _ = job_for(team)
     Job.objects.filter(pk=job.pk).update(
         status="failed", error="GenerationStopped: Run token budget exceeded"
@@ -1151,7 +1151,15 @@ def test_budget_extension_refuses_unknown_last_call_and_requires_session(team: T
     )
     client = Client()
     client.force_login(team[0])
-    assert client.post(path, values, content_type="application/json").status_code == 409
+    assert client.post(path, values, content_type="application/json").status_code == 200
+    unknown = job.invocations.get(invocation_key="unknown")
+    assert (
+        unknown.state == "ambiguous"
+        and unknown.actual_usage is None
+        and unknown.reserved_tokens == 100
+    )
+    job.refresh_from_db()
+    assert job.checkpoint["user_retry_keys"]["unknown"].endswith(":user-resume:1")
 
 
 def test_worker_cannot_downgrade_user_requested_automatic_playthrough(team: Team) -> None:
@@ -1173,3 +1181,181 @@ def test_worker_cannot_downgrade_user_requested_automatic_playthrough(team: Team
             },
         )
     assert not Version.objects.filter(candidate=candidate).exists()
+
+
+def test_user_continuation_keeps_unknown_spend_and_fences_duplicate_clicks(team: Team) -> None:
+    from prompt2play.adapters.django.forge.recovery import resume_job
+
+    job, lease = job_for(team)
+    generator = team[2]
+    values = {
+        "lease_token": lease,
+        "stage_fence": job.stage_fence,
+        "invocation_key": "plan:unknown",
+        "operation": "plan",
+        "prompt_sha256": "a" * 64,
+        "reserved_tokens": 1234,
+    }
+    previous = workflow.reserve_invocation(job.pk, generator, values)
+    ModelInvocation.objects.filter(pk=previous.pk).update(state="ambiguous")
+    Job.objects.filter(pk=job.pk).update(
+        status="failed", error="ProviderError: unknown", lease_hash="", lease_expires_at=None
+    )
+    job.refresh_from_db()
+    old_fence = job.stage_fence
+    client = Client()
+    client.force_login(team[0])
+    assert client.get(f"/api/jobs/{job.pk}/").json()["can_resume"] is True
+    response = client.post(
+        f"/api/jobs/{job.pk}/resume/", {"stage_fence": old_fence}, content_type="application/json"
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "queued"
+    assert (
+        client.post(
+            f"/api/jobs/{job.pk}/resume/",
+            {"stage_fence": old_fence},
+            content_type="application/json",
+        ).status_code
+        == 409
+    )
+    job, lease = services.claim_job(generator, CAPABILITIES)
+    values.update(lease_token=lease, stage_fence=job.stage_fence)
+    new = workflow.reserve_invocation(job.pk, generator, values)
+    assert new.pk != previous.pk
+    assert workflow.reserve_invocation(job.pk, generator, values).pk == new.pk
+    previous.refresh_from_db()
+    assert (
+        previous.state == "ambiguous"
+        and previous.actual_usage is None
+        and previous.reserved_tokens == 1234
+    )
+    Job.objects.filter(pk=job.pk).update(
+        status="failed", error="ProviderError: second failure", lease_hash="", lease_expires_at=None
+    )
+    resumed = cast(Any, resume_job)(job.pk, {"stage_fence": job.stage_fence})
+    assert resumed.resume_count == 2
+    job, lease = services.claim_job(generator, CAPABILITIES)
+    values.update(lease_token=lease, stage_fence=job.stage_fence)
+    third = workflow.reserve_invocation(job.pk, generator, values)
+    assert third.pk not in (new.pk, previous.pk)
+    assert job.invocations.count() == 3
+
+
+def test_continuation_refuses_completed_cancelled_or_active_successor(team: Team) -> None:
+    from prompt2play.adapters.django.forge.recovery import resume_job
+
+    job, _ = job_for(team)
+    for status in ("completed", "cancelled", "running"):
+        Job.objects.filter(pk=job.pk).update(status=status)
+        with pytest.raises(Conflict):
+            cast(Any, resume_job)(job.pk, {"stage_fence": job.stage_fence})
+    Job.objects.filter(pk=job.pk).update(status="failed", error="ProviderError: failed")
+    Job.objects.create(project=team[1], status="queued", prompt="successor")
+    with pytest.raises(Conflict, match="активное"):
+        cast(Any, resume_job)(job.pk, {"stage_fence": job.stage_fence})
+
+
+def test_failure_event_retains_safe_provider_details(team: Team) -> None:
+    job, lease = job_for(team)
+    client = Client()
+    response = client.post(
+        f"/api/worker/jobs/{job.pk}/fail/",
+        {
+            "lease_token": lease,
+            "stage_fence": job.stage_fence,
+            "error": "ProviderError: context window exceeded",
+            "diagnostic": {
+                "exceptions": [
+                    {
+                        "type": "ProviderError",
+                        "provider_diagnostic": {
+                            "exit_code": 7,
+                            "category": "context_length",
+                            "message": "Context window exceeded; prompt=private prompt",
+                        },
+                        "locals": {"secret": "hidden"},
+                    }
+                ]
+            },
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION="Bearer generator-token",
+    )
+    assert response.status_code == 200, response.content
+    job.refresh_from_db()
+    assert job.status == "failed"
+    diagnostic = job.events.last().data
+    assert diagnostic["exceptions"][0]["provider_diagnostic"]["exit_code"] == 7
+    assert "private prompt" not in str(diagnostic) and "locals" not in str(diagnostic)
+
+
+def test_continuation_from_committed_failure_preserves_candidate(team: Team) -> None:
+    from prompt2play.adapters.django.forge.recovery import resume_job
+
+    job, lease = job_for(team)
+    candidate = submit(job, lease, team[2])
+    Job.objects.filter(pk=job.pk).update(
+        status="failed", stage="commit", error="Storage acknowledgement interrupted"
+    )
+    job.refresh_from_db()
+    updated = cast(Any, resume_job)(job.pk, {"stage_fence": job.stage_fence})
+    assert updated.stage == "validate" and updated.status == "queued"
+    assert updated.active_candidate_id == candidate.pk
+    assert updated.project.latest_version_id is None
+
+
+def test_second_continuation_reuses_successful_retry_instead_of_old_ambiguous_call(
+    team: Team,
+) -> None:
+    from prompt2play.adapters.django.forge.recovery import continuation_checkpoint
+
+    job, _ = job_for(team)
+    original = ModelInvocation.objects.create(
+        job=job,
+        invocation_key="plan:original",
+        operation="plan",
+        prompt_sha256="a" * 64,
+        stage_fence=1,
+        reserved_tokens=10,
+        state="ambiguous",
+    )
+    successful = ModelInvocation.objects.create(
+        job=job,
+        invocation_key="plan:original:user-resume:1",
+        operation="plan",
+        prompt_sha256="a" * 64,
+        stage_fence=2,
+        reserved_tokens=10,
+        state="completed",
+        actual_usage={"calls": 1},
+    )
+    job.checkpoint = {"user_retry_keys": {original.invocation_key: successful.invocation_key}}
+    job.resume_count = 1
+    checkpoint = cast(Any, continuation_checkpoint)(job)
+    assert checkpoint["user_retry_keys"][original.invocation_key] == successful.invocation_key
+
+
+def test_native_submission_cannot_disable_mechanics_gate(team: Team) -> None:
+    from prompt2play.generation.runtime import assemble_runtime, capture_runtime_identity
+
+    job, lease = job_for(team)
+    spec = {
+        "title": "Authored gate fixture",
+        "format": "runtime-v1",
+        "runtime": capture_runtime_identity(),
+    }
+    files = {
+        "game.js": 'function createGame(){return {snapshot(){return {phase:"ready"}},dispatch(){}}}'
+    }
+    with pytest.raises(ValidationError, match="require basic mechanics"):
+        submit(
+            job,
+            lease,
+            team[2],
+            format="runtime-v1",
+            files=files,
+            spec=spec,
+            html=assemble_runtime(files, spec),
+        )
+    assert not Candidate.objects.filter(job=job).exists()

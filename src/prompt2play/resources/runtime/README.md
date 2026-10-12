@@ -54,3 +54,14 @@ audio/save delegation when explicitly enabled.
 The browser validator remains mandatory. Parse-only quick checks inside an
 attempt never make a candidate eligible. Generated JavaScript must run only in
 the isolated runner or restricted preview; do not evaluate it on the host.
+
+Runtime v1.0.7 adds `ctx.input.keys((pressed, event) => ...)` for continuous
+controls. `pressed` is a frozen array of current `event.key` values. Key release
+is delivered even after focus changes; blur, focus leaving the game, visibility
+pause, and `ctx.clock.pause()` clear held state with an event of type `reset`.
+Restart disposes the old listeners and creates an empty state. Ignore movement
+while a game-owned pause/menu is active and clear game-owned motion there too.
+The original `ctx.input.key` and `ctx.input.pointer` helpers are explicitly
+**down-only**, preserving existing action handlers. Use scoped `on` listeners for
+pointer move/up/cancel and old pinned keyboard runtimes. The v1.0.6 bundle is
+archived unchanged; existing published game HTML is never rewritten.

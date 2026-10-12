@@ -348,6 +348,16 @@ class ProviderGateway:
                 )
             return GatewayReply(cast(dict[str, Any], reply.data), usage, key)
         except Exception as exc:
+            from prompt2play.workers.diagnostics import exception_details
+
+            emit(
+                "model_failed",
+                invocation_key=key,
+                request_sha256=request_sha,
+                role=role,
+                provider=self.name,
+                **exception_details(exc),
+            )
             diagnostic = structured_diagnostic(exc)
             if key in control.reservations:
                 usage = cast(dict[str, int] | None, getattr(exc, "usage", None))

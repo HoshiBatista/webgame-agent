@@ -195,6 +195,15 @@ class JobCancelView(TeamView):
         return Response(job_data(services.cancel_job(pk)))
 
 
+class JobResumeView(TeamView):
+    def post(self, request, pk):
+        from .recovery import resume_job
+        from .serializers import ResumeSerializer
+
+        get_object_or_404(Job, pk=pk)
+        return Response(job_data(resume_job(pk, validated(ResumeSerializer, request.data))))
+
+
 class JobBudgetView(TeamView):
     def post(self, request, pk):
         from .budgets import extend_budget
@@ -452,6 +461,7 @@ class FailView(WorkerView):
     def post(self, request, pk):
         data = validated(FailSerializer, request.data)
         data["error"] = services.scrub_log(data["error"])[:4000]
+        diagnostic = data.pop("diagnostic", {})
         with transaction.atomic():
             job = services.fence(
                 pk,
@@ -462,7 +472,7 @@ class FailView(WorkerView):
                 lease_expires_at=None,
                 **data,
             )
-            services.event(job, data["error"][:2000], level="error")
+            services.event(job, data["error"][:2000], level="error", data=diagnostic)
         return Response(job_data(job))
 
 

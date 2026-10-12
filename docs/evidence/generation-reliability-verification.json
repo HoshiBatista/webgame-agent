@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-12",
+  "scope": "Generator reliability; authored fixtures only, no user-game edits or paid model calls",
+  "harness": "generation-harness-v1.8",
+  "runtime": {
+    "version": "runtime-v1.0.7",
+    "sha256": "7c8535613222d4590224741886d078fe4cccd41305294b833ce1eb5cc366eb6a"
+  },
+  "tests": {
+    "pytest": {
+      "passed": 298,
+      "skipped": 30,
+      "coverage_with_branches_percent": 89.38
+    },
+    "legacy_worker": {
+      "passed": 169,
+      "subtests_passed": 200
+    },
+    "frontend_unit": {
+      "passed": 66
+    },
+    "studio_browser": {
+      "result": "passed",
+      "backend": "explicit API double",
+      "continuation_requests": 1
+    },
+    "isolated_browser": {
+      "focused_suite_passed": 6,
+      "final_held_control_regressions_passed": 2,
+      "image_tag": "prompt2play-validator:mechanics",
+      "evidence": "local /private/tmp/gameforge-mechanics-browser-v3"
+    },
+    "ruff_format": "passed",
+    "ruff_lint": "passed",
+    "strict_mypy": "passed",
+    "frontend_build": "passed",
+    "sdist_and_wheel": "passed"
+  },
+  "regressions": [
+    "Down-only handler with a stale pressed-key set passes smoke input and fails mechanics acceptance",
+    "Held-control helper passes release, re-press, opposite arrows and focus recovery",
+    "Unknown provider spend survives explicit continuation and budget increase",
+    "Successful continuation receipts remain reusable during later recovery",
+    "Stale double-clicks and active successor jobs cannot create concurrent continuations",
+    "Native candidate submission and promotion reject missing mechanics coverage",
+    "Provider errors retain sanitized terminal details without request or successful-output transcripts"
+  ],
+  "limitations": [
+    "No fresh model-generated game was evaluated",
+    "No complete playthrough or human quality evaluation",
+    "Contest WebView host remains unknown",
+    "Declarative checks test the declared mechanics contract, not every possible gameplay behavior"
+  ]
+}

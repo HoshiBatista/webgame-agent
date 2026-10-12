@@ -81,7 +81,10 @@ GAME_SPEC_SCHEMA = obj(
 )
 STEP_SCHEMA = obj(
     {
-        "kind": {"type": "string", "enum": ["key", "click", "tap", "drag", "wait"]},
+        "kind": {
+            "type": "string",
+            "enum": ["key", "key_down", "key_up", "blur", "focus", "click", "tap", "drag", "wait"],
+        },
         "key": {"type": "string"},
         "selector": {"type": "string"},
         "from_selector": {"type": "string"},
@@ -103,6 +106,40 @@ STEP_SCHEMA = obj(
         ),
     }
 )
+ASSERTION_SCHEMA = obj(
+    {
+        "after_step": {"type": "integer", "minimum": 1, "maximum": 64},
+        "before_step": {"type": "integer", "minimum": -1, "maximum": 63},
+        "path": STRING,
+        "op": {"type": "string", "enum": ["equal", "not_equal", "greater", "less"]},
+        "value_json": {"type": "string", "maxLength": 1000},
+        "tolerance": {"type": "number", "minimum": 0, "maximum": 1000},
+    }
+)
+CASE_SCHEMA = obj(
+    {
+        "steps": {"type": "array", "items": STEP_SCHEMA, "minItems": 1, "maxItems": 64},
+        "assertions": {"type": "array", "items": ASSERTION_SCHEMA, "minItems": 1, "maxItems": 32},
+    }
+)
+MECHANICS_SCHEMA = {
+    "type": "array",
+    "minItems": 1,
+    "maxItems": 24,
+    "items": obj(
+        {
+            "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,47}$"},
+            "description": STRING,
+            "actions": {**STRINGS, "minItems": 1},
+            "keyboard_keys": {**STRINGS, "maxItems": 16},
+            "continuous": {"type": "boolean"},
+            "desktop": CASE_SCHEMA,
+            "touch": CASE_SCHEMA,
+        }
+    ),
+}
+
+
 ACCEPTANCE_SCHEMA = obj(
     {
         "start_selector": STRING,
@@ -189,10 +226,12 @@ IMPLEMENTATION_DESIGN_SCHEMA = obj(
 # Historical plans remain readable without inventing an art direction for them.
 # New model responses must contain both detailed design contracts.
 BUILD_PLAN_SCHEMA["properties"].update(
-    visual_design=VISUAL_DESIGN_SCHEMA, implementation_design=IMPLEMENTATION_DESIGN_SCHEMA
+    visual_design=VISUAL_DESIGN_SCHEMA,
+    implementation_design=IMPLEMENTATION_DESIGN_SCHEMA,
+    mechanics=MECHANICS_SCHEMA,
 )
 PLANNING_BUILD_PLAN_SCHEMA = copy.deepcopy(BUILD_PLAN_SCHEMA)
-PLANNING_BUILD_PLAN_SCHEMA["required"] += ["visual_design", "implementation_design"]
+PLANNING_BUILD_PLAN_SCHEMA["required"] += ["visual_design", "implementation_design", "mechanics"]
 PLAN_SCHEMA = obj({"game_spec": GAME_SPEC_SCHEMA, "build_plan": PLANNING_BUILD_PLAN_SCHEMA})
 
 

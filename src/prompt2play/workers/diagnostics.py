@@ -56,6 +56,23 @@ def exception_details(exc: Exception, secrets: Iterable[str] = ()) -> dict[str, 
                 for key, value in diagnostic.items()
                 if key in {"category", "keyword", "instance_path", "schema_path"}
             }
+        provider = getattr(current, "provider_diagnostic", None)
+        if isinstance(provider, dict):
+            item["provider_diagnostic"] = {
+                key: safe_message(value, secrets) if isinstance(value, str) else value
+                for key, value in provider.items()
+                if key
+                in {
+                    "provider",
+                    "exit_code",
+                    "category",
+                    "terminal_event",
+                    "code",
+                    "message",
+                    "events_sha256",
+                    "stderr_sha256",
+                }
+            }
         chain.append(item)
         current = current.__cause__ or (
             None if current.__suppress_context__ else current.__context__

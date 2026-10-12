@@ -42,6 +42,7 @@ The studio supports this complete workflow:
 
 A generated game is successful only if it renders, responds to input, and
 supports a working restart flow. Full victory/failure playthrough and balance are reviewed by a person by default; automatic end-to-end playthrough is an optional launch setting.
+New native plans include mandatory named mechanics checks with real inputs and expected gameplay-state assertions on desktop and touch. Revisions retain previous action/control coverage and test new actions; a single input reaction is insufficient. Failed jobs offer **Continue after error**, preserving drafts, completed responses and uncertain cost reserves. Increasing the budget also preserves unknown spend.
 Required skipped checks, including unavailable browser validation, mean
 **unverified**, not successful delivery. A failed edit preserves the last
 playable revision.

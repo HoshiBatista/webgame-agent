@@ -484,8 +484,15 @@ class CodexProvider:
             if events_file.stat().st_size > 8_000_000 or stderr_file.stat().st_size > 1_000_000:
                 raise ProviderError("Codex process output exceeded safety limit", usage=usage)
             if proc.returncode or not output.exists():
-                reason = codex_failure_reason(events_file, stderr_file)
-                raise ProviderError("Codex generation failed; " + reason, usage=usage)
+                from prompt2play.workers.provider_diagnostics import codex_diagnostic
+
+                diagnostic = codex_diagnostic(events_file, stderr_file, proc.returncode)
+                error = ProviderError(
+                    f"Codex generation failed [{diagnostic['category']}]: {diagnostic['message']}",
+                    usage=usage,
+                )
+                error.provider_diagnostic = diagnostic
+                raise error
             if output.stat().st_size > 2_000_000:
                 raise ProviderError("Codex structured output too large", usage=usage)
             if usage is None:
@@ -585,4 +592,4 @@ def codex_failure_reason(events_path, stderr_path):
         for word in ("connection", "network", "dns", "certificate", "stream disconnected")
     ):
         return "provider connection failed; ambiguous request was not replayed"
-    return "verify local login and CLI configuration"
+    return "unknown provider failure; inspect retained diagnostic evidence"

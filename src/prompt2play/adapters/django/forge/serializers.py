@@ -108,6 +108,10 @@ class RunnerCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
 
 
+class ResumeSerializer(serializers.Serializer):
+    stage_fence = serializers.IntegerField(min_value=0)
+
+
 class BudgetExtensionSerializer(serializers.Serializer):
     stage_fence = serializers.IntegerField(min_value=0)
     playthrough_mode = serializers.ChoiceField(choices=["manual", "auto"], required=False)
@@ -401,6 +405,51 @@ class CompleteSerializer(LeaseSerializer):
 
 
 class FailSerializer(LeaseSerializer):
+    diagnostic = serializers.JSONField(required=False)
+
+    def validate_diagnostic(self, value):
+        from prompt2play.workers.provider_diagnostics import error_excerpt
+
+        if not isinstance(value, dict) or len(json.dumps(value)) > 20000:
+            raise serializers.ValidationError("Invalid failure diagnostic")
+
+        # Redact every leaf; no source/locals are accepted from a worker.
+        def clean(item):
+            if isinstance(item, str):
+                return error_excerpt(item)
+            if isinstance(item, list):
+                return [clean(v) for v in item[:12]]
+            if isinstance(item, dict):
+                return {
+                    k: clean(v)
+                    for k, v in item.items()
+                    if k
+                    in {
+                        "exceptions",
+                        "type",
+                        "message",
+                        "frames",
+                        "file",
+                        "line",
+                        "function",
+                        "structured_diagnostic",
+                        "provider_diagnostic",
+                        "provider",
+                        "category",
+                        "exit_code",
+                        "terminal_event",
+                        "code",
+                        "events_sha256",
+                        "stderr_sha256",
+                        "keyword",
+                        "instance_path",
+                        "schema_path",
+                    }
+                }
+            return item if type(item) in (int, bool) or item is None else None
+
+        return clean(value)
+
     error = serializers.CharField(max_length=4000)
     usage = UsageSerializer(required=False)
 

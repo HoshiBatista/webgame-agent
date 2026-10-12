@@ -343,19 +343,30 @@ def cast_review(value: Any) -> dict[str, Any]:
     return value
 
 
-def test_new_plan_requires_detailed_design_but_historical_plan_remains_readable() -> None:
-    from prompt2play.contracts import BuildPlan, ContractError
+def test_new_plan_reprompts_missing_design_but_historical_plan_remains_readable() -> None:
+    from prompt2play.contracts import BuildPlan
 
     plan, _ = fixture()
     del plan["build_plan"]["visual_design"]
     del plan["build_plan"]["implementation_design"]
     assert BuildPlan(plan["build_plan"]).data["format"] == "runtime-v1"
-    gateway = ScriptedGateway([plan])
-    with pytest.raises(ContractError, match="New game plan"):
-        GenerationHarness().attempt(
-            GenerationRequest("Full game"), gateway, GenerationControl.bounded()
-        )
-    assert gateway.roles == ["plan"]
+    corrected, source = fixture()
+    gateway = ScriptedGateway(
+        [
+            plan,
+            corrected,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Corrected plan",
+            },
+        ]
+    )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Full game"), gateway, GenerationControl.bounded()
+    )
+    assert candidate.files["game.js"] == source
+    assert gateway.roles[:2] == ["plan", "plan"]
+    assert "plan_feedback" in gateway.prompts[1]
 
 
 def test_visual_findings_require_changed_source_and_new_review_before_submission() -> None:

@@ -10,7 +10,7 @@ from typing import Any
 from prompt2play.contracts.models import stable
 from prompt2play.paths import RESOURCE_ROOT
 
-RUNTIME_VERSION = "runtime-v1.0.6"
+RUNTIME_VERSION = "runtime-v1.0.7"
 PACKAGER_VERSION = "runtime-packager-v1"
 CSP = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
 

@@ -87,7 +87,28 @@ def browser_transport_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
             "schema_version": 2,
             "artifact": artifact_manifest(files, html, spec),
             "status": "passed",
-            "checks": [],
+            "checks": [
+                {
+                    "name": f"mechanics:{width}",
+                    "status": "passed",
+                    "artifact_sha256": artifact_manifest(files, html, spec)["html_sha256"],
+                    "evidence": {
+                        "actual_input": True,
+                        "cases": [
+                            {
+                                "id": case["id"],
+                                "actions": case["actions"],
+                                "passed": True,
+                                "visible_changed": True,
+                            }
+                            for case in spec.get("mechanics_acceptance", [])
+                        ],
+                    },
+                }
+                for width in (1280, 390)
+            ]
+            if spec.get("mechanics_required")
+            else [],
             "warnings": ["Authored transport fixture"],
             "evidence_files": [],
         }
@@ -906,3 +927,57 @@ def test_claim_failure_loading_snapshot_does_not_orphan_a_lease(
     assert after.stage_fence == before.stage_fence and after.lease_hash == before.lease_hash
     assert after.lease_expires_at == before.lease_expires_at
     transport.close()
+
+
+@pytest.mark.parametrize("failed_role", ["plan", "author"])
+def test_explicit_continuation_finishes_saved_work_without_replaying_successful_calls(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+    failed_role: str,
+) -> None:
+    from prompt2play.adapters.django.forge.recovery import resume_job
+    from prompt2play.legacy.worker.core import ProviderError
+
+    _, transport, claim = prepared
+    saved = replies()
+
+    class InterruptedProvider(ScriptedProvider):
+        def generate(self, *_args: Any, **kwargs: Any) -> Any:
+            if (failed_role == "plan") or self.calls == 1:
+                self.calls += 1
+                raise cast(Any, ProviderError)("Fixture transport interruption")
+            return super().generate(*_args, **kwargs)
+
+    broken = InterruptedProvider(saved[:1])
+    current: list[ScriptedProvider] = [broken]
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        configured.provider = current[0]
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    lease = worker.StageLease(transport, claim, threading.Event())
+    with pytest.raises(ProviderError):
+        worker.generate_stage(lease, arguments())
+    lease.write("fail", error="ProviderError: Fixture transport interruption")
+    job = Job.objects.get(pk=claim["job"]["id"])
+    before_calls = job.usage["calls"]
+    unknown = job.invocations.get(state="ambiguous")
+    assert unknown.actual_usage is None
+    cast(Any, resume_job)(job.pk, {"stage_fence": job.stage_fence})
+    fresh = transport.post(
+        "api/worker/claim/",
+        {"capabilities": {"providers": ["codex"], "continuable_authoring_v1": True}},
+    )
+    assert fresh["job"]["id"] == str(job.pk)
+    assert bool(fresh.get("draft")) == (failed_role == "author")
+    current[0] = ScriptedProvider(replies()[1:] if failed_role == "author" else replies())
+    worker.generate_stage(worker.StageLease(transport, fresh, threading.Event()), arguments())
+    job.refresh_from_db()
+    unknown.refresh_from_db()
+    assert job.stage == "validate" and job.status == "queued"
+    assert current[0].calls == (2 if failed_role == "author" else 3)
+    assert job.usage["calls"] == before_calls + current[0].calls
+    assert unknown.actual_usage is None and unknown.state == "ambiguous"
+    assert job.project.latest_version_id is None

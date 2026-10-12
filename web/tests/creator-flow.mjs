@@ -15,6 +15,7 @@ checks.push({name: 'mobile_layout:390', status: 'passed', message: 'Authored tra
 const validation = {schema_version: 2, artifact: {html_sha256: hash, html_bytes: 0, files_sha256: {}, spec_sha256: hash}, status: 'passed', checks, errors: [], warnings: [], browser_contract_version: 3, validator_image_sha256: `sha256:${hash}`, suite_sha256: hash};
 const versions = [];
 let job = null, projects = [], runners = [], jobCount = 0;
+let resumeRequests = 0;
 let issuedTokens = 0, expiredPreviewRequests = 0, failedDetailReads = 0, failNextDetail = false;
 const expiredTokens = new Set();
 function version(id, number, eligible, report = validation) {
@@ -64,14 +65,15 @@ await page.route('**/api/**', async route => {
     value = versions.find(item => item.id === path.split('/')[3]);
     if (value?.eligible) value = {...value, preview_url: `http://127.0.0.1:8001/preview/${value.id}/?token=issued-${++issuedTokens}`};
   }
+  else if (path.endsWith('/resume/')) { resumeRequests++; assert.equal(request.postDataJSON().stage_fence, job.stage_fence); job = {...job, status: 'queued', stage: 'plan', can_resume: false, error: '', resume_count: (job.resume_count || 0) + 1, stage_fence: job.stage_fence + 1}; value = job; }
   else if (path.endsWith('/cancel/')) {job = {...job, status: 'cancelled', updated_at: timestamp(30)}; value = job;}
   else if (path.endsWith('/events/')) value = [];
   else if (path.startsWith('/api/jobs/')) {
     if (job.id === 'job-1' && job.status === 'queued') {
       versions.push(version('version-1', 1, true)); job = {...job, status: 'completed', stage: 'done', progress: 100, result_version_id: 'version-1', updated_at: timestamp(20)};
-    } else if (job.id === 'job-2' && job.status === 'queued') {
+    } else if (job.id === 'job-2' && job.status === 'queued' && resumeRequests === 0) {
       versions.push(version('version-2', 2, false, {...validation, status: 'failed', errors: ['Actual browser input gate failed'], checks: [{...checks[0], status: 'failed'}]}));
-      job = {...job, status: 'failed', stage: 'validate', error: 'Candidate failed; last playable revision preserved', updated_at: timestamp(25)};
+      job = {...job, status: 'failed', stage: 'validate', can_resume: true, stage_fence: 3, error: 'Candidate failed; last playable revision preserved', updated_at: timestamp(25)};
     }
     value = job;
   }
@@ -131,6 +133,13 @@ try {
   await page.getByText('Authored diagnostic source; never execute', {exact: false}).waitFor();
   await page.getByLabel('Выбранная версия').selectOption('version-1');
   await page.getByRole('tab', {name: 'Игра', exact: true}).click();
+  await page.getByRole('button', {name: 'Продолжить после ошибки', exact: true}).click();
+  await page.getByRole('button', {name: 'Отменить задание', exact: true}).waitFor();
+  assert.equal(resumeRequests, 1, 'Continuation sends one explicitly authorized mutation');
+  assert.equal(job.id, 'job-2', 'Continuation retains the same job');
+  assert.match(await page.locator('iframe').getAttribute('src'), /version-1/, 'Continuation preserves the old playable preview');
+  await page.getByRole('button', {name: 'Отменить задание', exact: true}).click();
+  await page.getByText('Отменено', {exact: true}).waitFor();
   await page.getByLabel('Запрос на изменение игры').fill('Another authored UI request.');
   await page.getByRole('button', {name: 'Внести изменения', exact: true}).click();
   await page.getByRole('button', {name: 'Отменить задание', exact: true}).click();

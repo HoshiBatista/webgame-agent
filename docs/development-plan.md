@@ -233,6 +233,56 @@ schema change updates its dependencies; a structurally bad plan can be replaced;
 repeated failures stop within the original budget. Targeted tests and the full
 release suite pass on the exact final candidate.
 
+## Delivered follow-up — revision diagnostics and basic mechanics (2026-10-12)
+
+**Status: implemented; dedicated browser regressions distinguish broken and working controls.** Investigating a failed
+revision exposed two separate gaps. The first planning call failed before any
+new draft was saved; the provider adapter retained only a generic error and
+deleted its temporary process diagnostics. Separately, inspection of an accepted
+space-game HTML showed that its movement handler expects `keyup` through
+`ctx.input.key`, whereas the embedded runtime forwards only `keydown`. Released
+keys therefore remain in the game's pressed-key set, and opposite directions
+cancel each other. Its desktop acceptance scenario presses only `ArrowLeft`
+once, so it cannot detect this defect. These are source/report findings, not a
+new browser reproduction or proof of the provider failure's underlying cause.
+
+Implemented scope and acceptance:
+
+1. Preserve bounded, secret-safe provider failure evidence: process exit status,
+   terminal event type, available structured error code, and a useful sanitized
+   diagnosis tied to the invocation. Keep an explicit unknown category instead
+   of implying an authentication failure. Test retention and redaction before
+   retrying a failed request; preserve ambiguous accounting and previous versions.
+2. Make keyboard press/release semantics explicit in the runtime contract,
+   generation instructions, examples, and checks. Provide a compatible route for
+   held controls and reset pressed state on blur, pause, and restart. Do not
+   silently send new release events to existing press-only handlers. Repair
+   affected games through new immutable revisions, preserving their original
+   runtime and artifact evidence.
+3. Require a per-game matrix of basic mechanics even with manual playthrough:
+   each declared direction/action, held input across multiple frames, release,
+   repeated press, opposite directions in sequence, applicable simultaneous
+   keys, focus loss/recovery, and pointer/touch equivalents. Check the expected
+   gameplay effect and visible result for each case; opening a menu or a single
+   changed frame cannot establish that movement works. Tests must follow the
+   game's declared interaction model, without imposing continuous movement on
+   turn-based games.
+4. For combat games, cover the declared primary attack, target selection,
+   cooldown/repeat behavior, and auto-attack with no target, nearest target in
+   range, and targets outside range. Derive expectations from the approved spec
+   and revision request, and retain unaffected-mechanic checks after an edit.
+5. Run these short scenarios on the exact final artifact in the isolated browser,
+   recording inputs, expected/observed outcomes, screenshots, and errors. Require
+   the known keyboard mismatch to fail a regression scenario before the fix and
+   pass afterward. Report missing required evidence as unverified. Full victory,
+   difficulty, balance, and complete playthrough remain human review by default;
+   automatic full playthrough stays optional.
+
+**Exit:** a validated game cannot pass on one incidental input response while a
+declared basic control is broken; failed revisions retain actionable diagnostics
+and the previous playable version. Explicit continuation is available in the studio. No user-game revision or paid
+model generation was run as part of this implementation.
+
 ## Phase 4 — contest acceptance and reproducible demonstration
 
 **Depends on:** G1 for a minimum viable submission; G2/G3 when included in the

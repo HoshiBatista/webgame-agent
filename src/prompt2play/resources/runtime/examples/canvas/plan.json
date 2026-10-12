@@ -181,5 +181,134 @@
     }
   },
   "visual_direction": "Clear responsive original geometry",
-  "audio_direction": ""
+  "audio_direction": "",
+  "mechanics": [
+    {
+      "id": "move",
+      "description": "Repeated gameplay input changes the move count",
+      "actions": [
+        "MOVE"
+      ],
+      "keyboard_keys": [
+        "ArrowRight"
+      ],
+      "continuous": false,
+      "desktop": {
+        "steps": [
+          {
+            "kind": "key",
+            "key": "ArrowRight",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "key",
+            "key": "ArrowRight",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "after_step": 1,
+            "before_step": 0,
+            "path": "/position",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 2,
+            "before_step": 1,
+            "path": "/position",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          }
+        ]
+      },
+      "touch": {
+        "steps": [
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "canvas",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "canvas",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "after_step": 1,
+            "before_step": 0,
+            "path": "/position",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 2,
+            "before_step": 1,
+            "path": "/position",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          }
+        ]
+      }
+    }
+  ]
 }

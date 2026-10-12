@@ -159,6 +159,31 @@ def submit_candidate(job_id, runner, values):
             if previous.artifact_key != content_key:
                 raise Conflict("Submission key conflict.", code="submission_conflict")
             return previous
+        if payload["format"] == "runtime-v1":
+            from prompt2play.contracts.mechanics import preserve_mechanics, validate_mechanics
+
+            try:
+                if payload["spec"].get("mechanics_required") is not True:
+                    raise ValueError(
+                        "New native candidates require basic mechanics acceptance; update the generator."
+                    )
+                required = {a["type"] for a in payload["spec"].get("actions", [])}
+                previous_cases = []
+                if job.base_version_id:
+                    base_spec = job.base_version.spec
+                    required.update(a["type"] for a in base_spec.get("actions", []))
+                    previous_cases = base_spec.get("mechanics_acceptance", [])
+                if not required <= set(payload["spec"].get("mechanics_required_actions", [])):
+                    raise ValueError(
+                        "Revision omitted existing or new gameplay actions from required acceptance"
+                    )
+                matrix = validate_mechanics(
+                    payload["spec"].get("mechanics_acceptance"), sorted(required)
+                )
+                preserve_mechanics(payload["plan"].get("mechanics", []), matrix)
+                preserve_mechanics(previous_cases, matrix)
+            except (ValueError, KeyError, TypeError) as exc:
+                raise ValidationError(str(exc)) from exc
         if job.stage in ("commit", "validate"):
             raise Conflict("Candidate delivery is already pending.", code="stage_conflict")
         if (
@@ -237,6 +262,10 @@ def reserve_invocation(job_id, runner, values):
         )
         if job.stage in ("commit", "validate"):
             raise Conflict("Generation is not the current stage.", code="stage_conflict")
+        values = dict(values)
+        values["invocation_key"] = job.checkpoint.get("user_retry_keys", {}).get(
+            values["invocation_key"], values["invocation_key"]
+        )
         invocation = ModelInvocation.objects.filter(
             job=job, invocation_key=values["invocation_key"]
         ).first()

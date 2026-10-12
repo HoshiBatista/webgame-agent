@@ -604,3 +604,42 @@ without a provider call. It never authorizes replay of an unknown in-flight call
 The next request contains explicit recovery feedback and has its own identity.
 User-configured post-browser repair attempts remain an application policy, distinct
 from authoring iterations. Historical bounded-run evidence is not rewritten.
+
+
+## Mechanics acceptance and explicit failure continuation (2026-10-12)
+
+Native harness v1.8 requires a `BuildPlan.mechanics` matrix. Cases map every
+non-lifecycle GameSpec action to desktop/touch inputs and snapshot assertions.
+Revisions retain old action names, case IDs and keyboard coverage alongside new
+actions; all cases run again, including affected mechanics and regressions.
+Continuous keyboard cases must include hold/release/re-press and simulated time.
+Comparisons reference an earlier observed step or a finite JSON scalar; no model
+JavaScript test or privileged game-state setup is executed. A plan rejected for
+missing coverage returns explicit correction feedback within the same budget.
+
+The container runs each case from a fresh deterministic state through real UI
+input. It records expected/actual values, visible effects and failures in the
+immutable mechanics evidence. The coordinator rejects passing native reports
+that omit required case coverage. Scenario edits can correct steps and expected
+outcomes but cannot remove planned action/control coverage. These checks verify
+the declared contract; they do not prove every possible behavior or replace human
+assessment of intent, difficulty, balance or complete playthrough.
+
+`POST /api/jobs/<id>/resume/` accepts an authenticated, CSRF-protected explicit
+user continuation with the current stage fence. Project/job serialization blocks
+concurrent successors and stale double clicks. The same job, draft, model, budget,
+known usage, immutable candidates and completed invocation responses are kept.
+Only unsuccessful logical invocations receive a new user-resume identity;
+unknown spend stays reserved. This is not silent transport retry or a budget
+reset. Budget extensions use the same conservative continuation rule. Failed
+validation after a recorded report starts repair with a new candidate, while a
+transport failure during validation can retry delivery of the same candidate.
+Commit recovery finalizes the existing immutable artifact before validation.
+
+Codex failures retain bounded sanitized terminal errors, error classification,
+provider code, process exit status and diagnostic hashes before temporary logs
+are deleted. Unknown errors are labeled unknown instead of implying login is
+broken. Worker logs correlate failures with invocation keys; job error events
+retain safe exception frames and provider details. Successful output, request
+payloads, credentials and raw transcripts are excluded. No additional generation
+wall-clock or operation-count limits are introduced.

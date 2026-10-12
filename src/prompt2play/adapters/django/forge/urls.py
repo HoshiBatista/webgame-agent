@@ -20,6 +20,7 @@ urlpatterns = [
     path("jobs/<uuid:pk>/", views.JobView.as_view()),
     path("jobs/<uuid:pk>/events/", views.JobEventsView.as_view()),
     path("jobs/<uuid:pk>/cancel/", views.JobCancelView.as_view()),
+    path("jobs/<uuid:pk>/resume/", views.JobResumeView.as_view()),
     path("jobs/<uuid:pk>/budget/", views.JobBudgetView.as_view()),
     path("jobs/<uuid:pk>/candidates/", views.JobCandidatesView.as_view()),
     path("candidates/<uuid:pk>/", views.CandidateView.as_view()),

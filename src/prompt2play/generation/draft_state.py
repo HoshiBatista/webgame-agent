@@ -34,7 +34,7 @@ DRAFT_SCHEMA = obj(
 )
 # Optional additions preserve immutable v1 checkpoints from earlier workers.
 DRAFT_SCHEMA["properties"].update(
-    test_scenario={"type": "object"}, browser_result={"type": "object"}
+    test_scenario={"type": "object"}, browser_result={"type": "object"}, mechanics={"type": "array"}
 )
 
 

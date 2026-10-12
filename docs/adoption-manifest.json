@@ -31,7 +31,7 @@
       "source": "backend/forge/artifacts.py",
       "destination": "src/prompt2play/adapters/django/forge/artifacts.py",
       "source_sha256": "f0c589a628de507010222befce52ca80b95132b3631ced3e38f389a9e5dc9e71",
-      "destination_sha256": "e523c4444dd5e9a48c3b5fbe7bca64dd86b0c5b53fef9eac020a4412fab5b540",
+      "destination_sha256": "3cf05b1d188b3cc47d63ac0be0a990e9126bec85d33264406c0cb98d9b1bcb48",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -135,7 +135,7 @@
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "7e673271db5d1565be9ea22dd2f7a4a2e93aa94852d64f3c6e98df2c3ba492e3",
+      "destination_sha256": "ac6e4023b0cd78afd442c5e7faeb3a894a5b5e7c72c562cd73895f9edadd716d",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -143,7 +143,7 @@
       "source": "backend/forge/serializers.py",
       "destination": "src/prompt2play/adapters/django/forge/serializers.py",
       "source_sha256": "8d8a07894f9b5e4acc3caf49a18f57000e5241b53ac82816401aab15535f3824",
-      "destination_sha256": "a456ceaa83d401d1a015bb73b60f600a82d4b1f4fd2802652edab25578f09bfc",
+      "destination_sha256": "75086914cc860cc640c0e2b7ed5b76b74cfcd7b3a8d2119468f0395ad7df68b0",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -207,7 +207,7 @@
       "source": "backend/forge/urls.py",
       "destination": "src/prompt2play/adapters/django/forge/urls.py",
       "source_sha256": "91d876887830ae6f77c9910b7891578ade6a74fc6392d2c91a2e3ba5c24acc41",
-      "destination_sha256": "8bcea4dc11ab481502bc8f7cf867931c3073fdfed06ddb23ebde0e50700c36ae",
+      "destination_sha256": "d648eb32e416ce446ecf770ea3fd20bfc5ecaf037d6620209f5cf80625c3030d",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -215,7 +215,7 @@
       "source": "backend/forge/views.py",
       "destination": "src/prompt2play/adapters/django/forge/views.py",
       "source_sha256": "e2311c7540a26fcf54bb81aef2a9f6b3c0e1d0c8cc1932449bcf9e5c5fb68f31",
-      "destination_sha256": "28a0cf819e6bf1c44af2f83db30c569e56213122972c7b0208f17ce7be318a0c",
+      "destination_sha256": "24d857ac8a1da2ac2124a9f7881554875e0f4ac78c5e9870a33aeb2781ddf8bd",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -303,7 +303,7 @@
       "source": "worker/providers.py",
       "destination": "src/prompt2play/legacy/worker/providers.py",
       "source_sha256": "c6dc28d5cc1e5193a8fc5660d93d64c51090aea5ed282b562065f322fd970db4",
-      "destination_sha256": "55eb766cddcc31bd9de1bfdf4e4ef25c53d55d4c7c314378414402455c38690e",
+      "destination_sha256": "83b12c4f2960ee7e0c3da961af8b2d0e0ff25b901078903e9015f20cc5ae61fb",
       "modified": true,
       "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness. Codex wire-schema compatibility preserves full local validation; bounded safe schema diagnostics and literal credential-isolated provider setup."
     },
@@ -1255,7 +1255,7 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "701c4f82f93f4b6c0587df85a912db18b55747ea6bff0c2f74dfe2f7a538dc96",
+      "destination_sha256": "b42293c0b3bd6371c055fc4139ebb3b781172e6f56f4b4609123a5eae40fd63c",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1311,7 +1311,7 @@
       "source": "frontend/src/lib/api.ts",
       "destination": "web/src/lib/api.ts",
       "source_sha256": "3b054504e03ab25c193fa7d766be43f60c01735067a35de3c0ed18a19236d32b",
-      "destination_sha256": "1f882298d220812b505fc27ab82ed1b4a746abcf819b5ba884e181cd83cbcf3e",
+      "destination_sha256": "c1aa5fa71e120adbd4d68c42693adbd223d690fb2d759805c65c932eb38ab222",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1407,7 +1407,7 @@
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "8e1756f3292b410e2b2a507965b6913499a1d2a4d17a278a45fd0cc02dd35f79",
+      "destination_sha256": "9c5d7588b0da59fc519d0087af1b9d75f699e265f78d3c3f5259daeddf46fdf3",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1535,7 +1535,8 @@
     "evidence/historical-examples-final-touch-revalidation.json",
     "evidence/chosen-release-human-review.json",
     "evidence/adaptive-four-author-supplement-v4.json",
-    "evidence/storage-denial-runtime-supplement.json"
+    "evidence/storage-denial-runtime-supplement.json",
+    "evidence/generation-reliability-verification.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

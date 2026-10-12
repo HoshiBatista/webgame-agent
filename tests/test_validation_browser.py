@@ -417,3 +417,99 @@ def test_manual_playthrough_still_rejects_broken_keyboard() -> None:
     report = execute("manual-broken-input", files, spec, acceptance, require_completion=False)
     assert report["status"] == "failed"
     assert next(c for c in report["checks"] if c["name"] == "input:1280")["status"] == "failed"
+
+
+@pytest.mark.parametrize("broken", [True, False])
+def test_held_controls_release_and_opposites_are_required(broken: bool) -> None:
+    files, spec, acceptance = fixture("canvas")
+    source = """function createGame(ctx) {
+      let phase='ready', x=200, y=140, vx=0, vy=0;
+      ctx.root.innerHTML='<h1>Authored input regression</h1><canvas width="640" height="320"></canvas><button id="left">Left</button><button id="right">Right</button>';
+      const c=ctx.root.querySelector('canvas'),g=c.getContext('2d');
+      function render(){g.fillStyle='#132030';g.fillRect(0,0,640,320);g.fillStyle='#f1d080';g.fillRect(x,y,32,32);}
+      function movement(pressed){vx=(pressed.includes('ArrowRight')?60:0)-(pressed.includes('ArrowLeft')?60:0);vy=(pressed.includes('ArrowDown')?60:0)-(pressed.includes('ArrowUp')?60:0);}
+      INPUT_BINDING
+      ctx.input.on(ctx.root.querySelector('#left'),'click',()=>{x-=20;render();});
+      ctx.input.on(ctx.root.querySelector('#right'),'click',()=>{x+=20;render();});
+      ctx.clock.fixedStep(dt=>{if(phase==='playing'){x+=vx*dt;y+=vy*dt;render();}});
+      render();return {snapshot:()=>({phase,x,y,vx,vy}),dispatch(a){if(a.type==='START')phase='playing';render();}};
+    }"""
+    binding = "ctx.input.keys(pressed=>movement(pressed));"
+    if broken:
+        binding = "const held=new Set();ctx.input.key((key,event)=>{if(event.type==='keyup')held.delete(key);else held.add(key);movement([...held]);});"
+    files["game.js"] = source.replace("INPUT_BINDING", binding)
+
+    def check(after: int, before: int, path: str, op: str, literal: str = "") -> dict[str, Any]:
+        return {
+            "after_step": after,
+            "before_step": before,
+            "path": path,
+            "op": op,
+            "value_json": literal,
+            "tolerance": 0.001,
+        }
+
+    steps: list[dict[str, Any]] = []
+    assertions = []
+    keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"]
+    for key in keys:
+        path = "/x" if key in keys[:2] else "/y"
+        velocity = "/vx" if key in keys[:2] else "/vy"
+        op = "less" if key in ("ArrowLeft", "ArrowUp") else "greater"
+        start = len(steps)
+        steps.extend(
+            [
+                {"kind": "key_down", "key": key},
+                {"kind": "wait", "ms": 200},
+                {"kind": "key_up", "key": key},
+                {"kind": "wait", "ms": 200},
+                {"kind": "key_down", "key": key},
+                {"kind": "wait", "ms": 200},
+                {"kind": "key_up", "key": key},
+            ]
+        )
+        assertions.extend(
+            [
+                check(start + 2, start + 1, path, op),
+                check(start + 3, -1, velocity, "equal", "0"),
+                check(start + 4, start + 3, path, "equal"),
+                check(start + 6, start + 5, path, op),
+            ]
+        )
+    steps.extend([{"kind": "key_down", "key": "ArrowRight"}, {"kind": "blur"}, {"kind": "focus"}])
+    assertions.append(check(len(steps) - 1, -1, "/vx", "equal", "0"))
+    matrix = [
+        {
+            "id": "movement",
+            "description": "Every arrow supports hold, release, repeat and focus recovery",
+            "actions": ["MOVE"],
+            "keyboard_keys": keys,
+            "continuous": True,
+            "desktop": {"steps": steps, "assertions": assertions},
+            "touch": {
+                "steps": [
+                    {"kind": "tap", "selector": "#left"},
+                    {"kind": "tap", "selector": "#right"},
+                ],
+                "assertions": [check(1, 0, "/x", "less"), check(2, 1, "/x", "greater")],
+            },
+        }
+    ]
+    acceptance["desktop"]["steps"] = [{"kind": "key", "key": "ArrowRight", "repeat": 1}]
+    acceptance["touch"]["steps"] = [{"kind": "tap", "selector": "#left", "repeat": 1}]
+    spec.update(
+        mechanics_required=True, mechanics_required_actions=["MOVE"], mechanics_acceptance=matrix
+    )
+    report = execute(
+        "held-controls-" + ("broken" if broken else "fixed"),
+        files,
+        spec,
+        acceptance,
+        require_completion=False,
+    )
+    assert report["status"] == ("failed" if broken else "passed"), report.get("errors")
+    desktop = next(c for c in report["checks"] if c["name"] == "mechanics:1280")
+    assert desktop["status"] == ("failed" if broken else "passed")
+    assert any(c["name"] == "input:1280" and c["status"] == "passed" for c in report["checks"]), (
+        "Smoke input alone should miss this defect"
+    )

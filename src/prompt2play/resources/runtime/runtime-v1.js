@@ -1,7 +1,7 @@
 /* Prompt2Play trusted runtime v1. Mechanics and rendering remain in game.js. */
 (() => {
   "use strict";
-  const VERSION = "runtime-v1.0.6";
+  const VERSION = "runtime-v1.0.7";
   const copy = value => JSON.parse(JSON.stringify(value));
   const rng = seed => {
     let n = 2166136261;
@@ -34,7 +34,7 @@
     function create(nextSeed = seed) {
       if (disposed) throw new Error("Runtime has been disposed");
       teardown(); seed = String(nextSeed); started = false;
-      session = {alive: true, cleanup: [], audio: null, clock: null, eventCount: 0};
+      session = {alive: true, cleanup: [], audio: null, clock: null, eventCount: 0, releaseKeys: []};
       const owned = session;
       const active = () => owned.alive && session === owned;
       const cleanup = callback => { if (!active()) throw new Error("Expired runtime session"); owned.cleanup.push(callback); return callback; };
@@ -59,6 +59,28 @@
         input: {
           on,
           key(callback) { return on(document, "keydown", event => { if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault(); callback(event.key, event); }); },
+          keys(callback) {
+            const pressed = new Set();
+            const notify = event => { owned.eventCount++; callback(Object.freeze([...pressed]), event); syncStatus(); };
+            const release = () => { if (pressed.size && active()) { pressed.clear(); notify(Object.freeze({type: "reset", key: ""})); } };
+            const down = event => {
+              if (!active() || !started || hidden || !root.contains(document.activeElement)) return;
+              if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
+              if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
+              pressed.add(event.key); notify(event);
+            };
+            const up = event => { if (active() && pressed.delete(event.key)) notify(event); };
+            const focus = event => { if (!root.contains(event.relatedTarget)) release(); };
+            document.addEventListener("keydown", down); document.addEventListener("keyup", up);
+            window.addEventListener("blur", release); root.addEventListener("focusout", focus);
+            owned.releaseKeys.push(release);
+            const dispose = () => {
+              pressed.clear(); document.removeEventListener("keydown", down); document.removeEventListener("keyup", up);
+              window.removeEventListener("blur", release); root.removeEventListener("focusout", focus);
+              const index = owned.releaseKeys.indexOf(release); if (index >= 0) owned.releaseKeys.splice(index, 1);
+            };
+            cleanup(dispose); return dispose;
+          },
           pointer(target, callback) { return on(target, "pointerdown", event => { event.preventDefault(); surface.focus({preventScroll: true}); const box = target.getBoundingClientRect(); callback({x: event.clientX - box.left, y: event.clientY - box.top, width: box.width, height: box.height, pointerType: event.pointerType}, event); }); },
         },
         resize(callback) {
@@ -81,7 +103,7 @@
         };
         owned.clock = {
           fixedStep(fn, seconds = 1 / 60) { if (!(seconds > 0 && seconds <= 0.1)) throw new Error("Invalid fixed step"); callback = fn; step = seconds; },
-          pause() { paused = true; last = 0; accumulator = 0; },
+          pause() { for (const release of owned.releaseKeys) release(); paused = true; last = 0; accumulator = 0; },
           resume() { if (active()) { paused = false; last = 0; accumulator = 0; } },
           setManualMode(enabled) { manual = Boolean(enabled); last = 0; accumulator = 0; },
           advance, get tick() { return tick; },
@@ -141,7 +163,7 @@
     start.addEventListener("click", begin);
     const restartGame = () => { create(seed); begin(); };
     restart.addEventListener("click", restartGame);
-    const visibility = () => { hidden = document.hidden; if (session && session.clock) { if (hidden) session.clock.pause(); else if (started) session.clock.resume(); } if (instance && instance.pause) instance.pause(hidden); };
+    const visibility = () => { hidden = document.hidden; if (hidden && session) for (const release of session.releaseKeys) release(); if (session && session.clock) { if (hidden) session.clock.pause(); else if (started) session.clock.resume(); } if (instance && instance.pause) instance.pause(hidden); };
     document.addEventListener("visibilitychange", visibility);
     create(seed);
     const surfaceObserver = new MutationObserver(syncStatus);

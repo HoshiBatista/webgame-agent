@@ -79,3 +79,47 @@ def test_receipt_keeps_token_counters(capsys: pytest.CaptureFixture[str]) -> Non
     record = json.loads(capsys.readouterr().out)
     assert record["usage"]["total_tokens"] == 321
     assert record["timestamp"].endswith("+00:00")
+
+
+def test_provider_failure_preserves_cause_not_transcript(
+    tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from prompt2play.workers.provider_diagnostics import codex_diagnostic
+
+    monkeypatch.setenv("PRIVATE_API_KEY", "secret-value-fixture")
+    events, stderr = tmp_path / "events", tmp_path / "stderr"
+    events.write_text(
+        "\n".join(
+            json.dumps(e)
+            for e in [
+                {"type": "item.completed", "item": {"text": "private-generated-source"}},
+                {
+                    "type": "turn.failed",
+                    "error": {
+                        "code": "context_length_exceeded",
+                        "message": "Context window exceeded. secret-value-fixture prompt=private-user-prompt",
+                    },
+                },
+            ]
+        )
+    )
+    stderr.write_text("private unrelated output")
+    diagnostic = codex_diagnostic(events, stderr, 7)
+    assert diagnostic["category"] == "context_length"
+    assert diagnostic["code"] == "context_length_exceeded"
+    assert diagnostic["exit_code"] == 7
+    serialized = json.dumps(diagnostic)
+    for secret in (
+        "private-generated-source",
+        "secret-value-fixture",
+        "private-user-prompt",
+        "private unrelated output",
+    ):
+        assert secret not in serialized
+    error = cast(Any, ProviderError)("provider failed")
+    error.provider_diagnostic = diagnostic
+    assert exception_details(error)["exceptions"][0]["provider_diagnostic"] == diagnostic
+    events.write_text("not-json")
+    assert codex_diagnostic(events, stderr, 1)["category"] == "unknown"
+    stderr.write_text("error: unexpected argument --unknown\nprivate prompt")
+    assert codex_diagnostic(events, stderr, 2)["category"] == "configuration"

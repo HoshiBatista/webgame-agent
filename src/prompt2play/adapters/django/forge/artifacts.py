@@ -48,6 +48,29 @@ def require_report_binding(files, html, spec, report):
     for check in report.get("checks", []):
         if check.get("artifact_sha256") != manifest["html_sha256"]:
             raise ValueError("Результат проверки относится к другой сборке HTML.")
+    if spec.get("mechanics_required") and report.get("status") == "passed":
+        from prompt2play.contracts.mechanics import validate_mechanics
+
+        cases = validate_mechanics(
+            spec.get("mechanics_acceptance"), spec.get("mechanics_required_actions", [])
+        )
+        expected = {case["id"]: case["actions"] for case in cases}
+        for width in (1280, 390):
+            checks = [c for c in report.get("checks", []) if c.get("name") == f"mechanics:{width}"]
+            if len(checks) != 1 or checks[0].get("status") != "passed":
+                raise ValueError("Missing required basic mechanics evidence")
+            evidence = checks[0].get("evidence", {})
+            observed = evidence.get("cases", [])
+            if (
+                evidence.get("actual_input") is not True
+                or len(observed) != len(expected)
+                or {c.get("id"): c.get("actions") for c in observed} != expected
+                or any(
+                    c.get("passed") is not True or c.get("visible_changed") is not True
+                    for c in observed
+                )
+            ):
+                raise ValueError("Incomplete basic mechanics coverage")
     review = report.get("review")
     if review is not None and review.get("artifact_sha256") != manifest["html_sha256"]:
         raise ValueError("Ревью модели относится к другой сборке HTML.")

@@ -145,5 +145,344 @@
     }
   },
   "visual_direction": "Clear responsive original geometry",
-  "audio_direction": ""
+  "audio_direction": "",
+  "mechanics": [
+    {
+      "id": "move",
+      "description": "Repeated gameplay input changes the move count",
+      "actions": [
+        "MOVE"
+      ],
+      "keyboard_keys": [
+        "1",
+        "2",
+        "3"
+      ],
+      "continuous": false,
+      "desktop": {
+        "steps": [
+          {
+            "kind": "key",
+            "key": "1",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "key",
+            "key": "1",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "key",
+            "key": "2",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "key",
+            "key": "2",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "key",
+            "key": "3",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "key",
+            "key": "3",
+            "selector": "",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "after_step": 1,
+            "before_step": 0,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 2,
+            "before_step": 1,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 3,
+            "before_step": 2,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 4,
+            "before_step": 3,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 5,
+            "before_step": 4,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 6,
+            "before_step": 5,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          }
+        ]
+      },
+      "touch": {
+        "steps": [
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "#move-0",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "#move-0",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "#move-1",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "#move-1",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "#move-2",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "kind": "tap",
+            "key": "",
+            "selector": "#move-2",
+            "from_selector": "",
+            "to_selector": "",
+            "x": 0,
+            "y": 0,
+            "ms": 0,
+            "from": {
+              "x": 0,
+              "y": 0
+            },
+            "to": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        ],
+        "assertions": [
+          {
+            "after_step": 1,
+            "before_step": 0,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 2,
+            "before_step": 1,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 3,
+            "before_step": 2,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 4,
+            "before_step": 3,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 5,
+            "before_step": 4,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          },
+          {
+            "after_step": 6,
+            "before_step": 5,
+            "path": "/moves",
+            "op": "greater",
+            "value_json": "",
+            "tolerance": 0
+          }
+        ]
+      }
+    }
+  ]
 }

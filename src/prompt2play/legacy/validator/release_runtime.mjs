@@ -9,6 +9,7 @@ import { inspectNativeControls } from './native_controls_probe.mjs';
 import { swipeDocument, tapReachable } from './touch_scroll_probe.mjs';
 import { installAudioProbe } from './audio_probe.mjs';
 import { installStorageProbe } from './storage_probe.mjs';
+import { checkMechanics } from './mechanics_probe.mjs';
 import { installLifecycleProbe } from './lifecycle_probe.mjs';
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
@@ -46,6 +47,10 @@ function completed(snapshot, condition) {
 async function input(page, step, touch) {
   if (step.kind === 'wait') return page.waitForTimeout(step.ms);
   if (step.kind === 'key') return page.keyboard.press(step.key);
+  if (step.kind === 'key_down') return page.keyboard.down(step.key);
+  if (step.kind === 'key_up') return page.keyboard.up(step.key);
+  if (step.kind === 'blur') return page.evaluate(() => document.activeElement?.blur());
+  if (step.kind === 'focus') return page.locator('#p2p-surface').focus();
   if (step.kind === 'click') return touch ? tapReachable(page, step.selector) : page.locator(step.selector).click();
   if (step.kind === 'tap') {
     if (step.selector) return touch ? tapReachable(page, step.selector) : page.locator(step.selector).click();
@@ -182,6 +187,9 @@ try {
             await bridge.advance(batch); remaining -= batch;
           }
         }
+        else if (step.kind === 'key' && nativeClock) {
+          await page.keyboard.down(step.key); await bridge.advance(6); await page.keyboard.up(step.key);
+        }
         else {
           await input(page, step, touch);
           if (nativeClock) await bridge.advance(6);
@@ -233,6 +241,20 @@ try {
       if (requireCompletion) record(`completion:${width}`, outcome, outcome ? 'Real gameplay reached the declared outcome' : 'The scenario ended before the declared outcome. Inspect its actions, waits and observed state before changing mechanics.', {path: scenario.completion.path, expected: scenario.completion.one_of, observed: pointer(final, scenario.completion.path), steps: scenario.steps.slice(-8), total_steps: scenario.steps.length, recent_observations: observations.slice(-2), actual_input: true, native_oracle: nativeOracle, visible_status: terminalStatus, ...(native ? {controls: controlsAtOutcome} : {})});
       else checks.push({name: `completion:${width}`, status: 'skipped', required: false, message: 'Прохождение, победа, поражение и баланс оставлены для ручной проверки.', check_kind: 'browser', artifact_sha256: manifest.html_sha256, limitations: ['Human playthrough not performed'], evidence: {observed_phase: final.phase, completion_required: false}});
       record(`independent_acceptance:${width}`, (!requireCompletion || outcome) && causalControl && observedInput, requireCompletion ? 'Independent harness checks real controls, visible progress, outcome and restart' : 'Automatic launch, real input and visible progress checks; complete playthrough requires human review', {actual_input: true, events, assertions: 1, steps_completed: scenario.steps.length + 1, suite_sha256: request.suite_sha256, acceptance_source: request.acceptance_source}, 'scenario');
+      if (request.mechanics?.length) {
+        const mechanics = await checkMechanics({
+          cases: request.mechanics, device: touch ? 'touch' : 'desktop',
+          reset: resetFrozen, runStep, snapshot: () => bridge.snapshot(),
+          screenshot: () => surface.locator.screenshot({animations: 'disabled'}), compareImages,
+          release: async () => { for (const test of request.mechanics) for (const key of test.keyboard_keys) await page.keyboard.up(key); },
+        });
+        save(`mechanics-${width}.json`, Buffer.from(JSON.stringify(mechanics, null, 2)));
+        record(`mechanics:${width}`, mechanics.every(test => test.passed), 'Every required gameplay action must pass its declared real-input assertions', {
+          actual_input: true, cases: mechanics.map(test => ({id: test.id, actions: test.actions, passed: test.passed, visible_changed: test.visible_changed, failed_assertions: test.observations.filter(o => !o.passed).slice(0, 2), ...(test.error ? {error: test.error} : {})})),
+        });
+        // Existing completion/storage/restart checks refer to the smoke/playthrough timeline.
+        await replay(history);
+      }
       const requestedCapabilities = request.spec.capabilities || {};
       const requestedStorage = requestedCapabilities.persistence === true || Array.isArray(requestedCapabilities) && requestedCapabilities.includes('storage') || request.spec.persistence_required === true;
       const completionSave = requestedStorage ? await bridge.exportSave() : null;
