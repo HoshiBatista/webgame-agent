@@ -454,6 +454,7 @@ class GenerationHarness:
     ) -> CandidateSubmission:
         request_sha = digest(request_identity(request))
         state = copy.deepcopy(request.resume_state)
+        migrated = False
         if state:
             validate_draft_state(state)
             if (
@@ -468,6 +469,7 @@ class GenerationHarness:
                 }
                 state["request_sha256"] = request_sha
                 state["request_identity_version"] = 2
+                migrated = True
                 if state["phase"] == "ready":
                     state["phase"] = "rendered_review"
             if state.get("request_identity_version") != 2:
@@ -586,9 +588,8 @@ class GenerationHarness:
                 "mechanics_acceptance": state.get("mechanics") or plan.data.get("mechanics", []),
             }
 
-        def browser_check(*, retry: bool = False) -> dict[str, Any]:
-            spec = current_spec()
-            identity = digest(
+        def browser_request_identity(spec: dict[str, Any]) -> str:
+            return digest(
                 {
                     "files": workspace.files,
                     "spec": spec,
@@ -597,6 +598,10 @@ class GenerationHarness:
                     "validator": self.browser_identity,
                 }
             )
+
+        def browser_check(*, retry: bool = False) -> dict[str, Any]:
+            spec = current_spec()
+            identity = browser_request_identity(spec)
             cached = state.get("browser_result", {})
             if (
                 not retry
@@ -772,6 +777,31 @@ class GenerationHarness:
                 result = browser_check(retry=True)
                 state["feedback"].append({"op": "browser_check", **result})
                 checkpoint()
+
+        if migrated:
+            # Preserve the source and paid work, but let the controller diagnose
+            # the existing result before requesting another author correction.
+            spec = current_spec()
+            cached = state.get("browser_result", {})
+            identity = browser_request_identity(spec)
+            if cached.get("identity") == identity:
+                record_browser_result(cached["result"], spec, identity)
+            else:
+                observation(
+                    "pipeline_migration",
+                    {
+                        "status": "unverified",
+                        "message": "Saved source and plan were migrated unchanged. No matching "
+                        "browser result exists for the current source, tests and validator.",
+                    },
+                )
+            assert adaptive is not None
+            adaptive["supervisor_due"] = (
+                "Review the migrated draft and available validation evidence before continuing. "
+                "Preserve existing implementation and protected requirements; diagnose remaining "
+                "failures or proceed to missing quality reviews. Do not rebuild the game or plan "
+                "from scratch merely because its pipeline changed."
+            )
 
         if not current_spec()["mechanics_acceptance"]:
             state["phase"] = "author"

@@ -50,6 +50,8 @@ CAPABILITIES = {"providers": ["codex", "openai"], "continuable_planning_v1": Tru
 @pytest.fixture
 def team(settings: Any, tmp_path: Path) -> Team:
     settings.ARTIFACT_ROOT = tmp_path / "artifacts"
+    # These coordinator fixtures exercise the explicit compatibility protocol.
+    settings.FORGE_PIPELINE_VERSION = "legacy-v1"
     user = User.objects.create_user("fixture", password="irrelevant-test-password", is_staff=True)
     project = Project.objects.create(title="Fixture", prompt="Fixture request", created_by=user)
     generator = Runner.objects.create(

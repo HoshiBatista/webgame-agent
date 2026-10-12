@@ -239,7 +239,7 @@
       "source": "backend/config/settings.py",
       "destination": "src/prompt2play/adapters/django/config/settings.py",
       "source_sha256": "c8c4c8838092a27158a65a2a6f7024d804b503aeffa8e25b6dc01a728e9a5b84",
-      "destination_sha256": "a9c123c75a6e2ed1cc3b547dd6ac62296b66377840ebc1030636c1321ad3a5b1",
+      "destination_sha256": "c49fe40c9dca9a3ca245ecc6c5d23cf9d228e86a2cdf084ff5fb3f85d577016d",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Bundled studio discovery, role/coordinator policy and redacted preview capability logging. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
@@ -1263,7 +1263,7 @@
       "source": "frontend/src/components/JobSettings.tsx",
       "destination": "web/src/components/JobSettings.tsx",
       "source_sha256": "f552bb8504c859167a88f923a4bf1c5f86f26ad5805b1d1079140a3c279a5eec",
-      "destination_sha256": "4f031161ad8e7b9dc6809717099336500bb8d6eb45f55d47202572cad6118a64",
+      "destination_sha256": "ca2fd5a0ffa3c95b0471e9c1eff05b71a91d0b130b6a6de60f844659a772122c",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable. Adaptive mode explains plan revisions and incomplete visual assessment."
     },
@@ -1319,7 +1319,7 @@
       "source": "frontend/src/lib/format.ts",
       "destination": "web/src/lib/format.ts",
       "source_sha256": "92b75dce945e753f038d600d1d2cae92476c3249dc75502fdaaeda1e67e91923",
-      "destination_sha256": "35cc33f6e1b2afb9393a266c43fc03d32cb231b17a789db46bb77c646fd2704e",
+      "destination_sha256": "b4e662452becc325749c32ea592ba8d4544740a7c16f8d7a6e53af11edd4660a",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
@@ -1391,7 +1391,7 @@
       "source": "frontend/src/pages/Workspace.tsx",
       "destination": "web/src/pages/Workspace.tsx",
       "source_sha256": "361a81c4a93bd4528479768df3324f39dec505403f9982fcebfd951faddc3d9f",
-      "destination_sha256": "bfa51dff24ac14530fed1039baa0528d5f145a9f92bfed28dbd46163e31adc28",
+      "destination_sha256": "85548ae8940c80192cceefd854580a661b21304900d9e9080a57617a44ddf086",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
@@ -1447,7 +1447,7 @@
       "source": "frontend/tests/settings.test.ts",
       "destination": "web/tests/settings.test.ts",
       "source_sha256": "a3f3af95cdcadfe2aceee950bba8d1ad1b7a28937a2528afada4b7cec66a1909",
-      "destination_sha256": "a8c6b2226d234544dae1f702bcaf4f1d573293f2940d7fb4f4b91d3a89dd9cea",
+      "destination_sha256": "8a6ee0ca321942e3a74f06e22042e19382a0bf6f505fa16ae40f4120ab3cff1e",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1545,7 +1545,8 @@
     "evidence/code-review-fixes-2026-10-12.json",
     "evidence/optional-game-title-2026-10-12.json",
     "evidence/browser-progress-watchdog-2026-10-12.json",
-    "evidence/browser-progress-review-fixes-2026-10-12.json"
+    "evidence/browser-progress-review-fixes-2026-10-12.json",
+    "evidence/planner-default-and-migration-2026-10-12.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

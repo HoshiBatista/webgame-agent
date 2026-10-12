@@ -32,9 +32,15 @@ device compatibility. See the [phased plan](docs/development-plan.md).
 The [2026-10-12 pipeline improvement plan](docs/pipeline-improvement-plan.md)
 records the implemented R0–R6 changes: repaired recovery/acceptance bugs,
 shared progress assessment, adaptive planning, screenshot review and modular
-source packaging. New jobs can select the adaptive process; existing jobs stay
+source packaging. New jobs use the adaptive process by default; existing jobs stay
 on their pinned version. A paused native job can explicitly switch when resumed.
-Default adoption remains gated by the R7 live comparison and human visual review. [ADR 0004](docs/adr/0004-adaptive-generation-control.md) defines
+The switch preserves the original draft and accounting, and first asks the supervisor
+to assess the saved implementation. Matching browser evidence is reused only when
+source, scenarios and validator identities match; obsolete evidence cannot verify work.
+The previous process remains an explicit comparison option. Browser settings migrate
+once to the new default while retaining the model, budget and other preferences.
+This default was enabled at the user's request; comparative quality and human visual
+acceptance remain separate release criteria. [ADR 0004](docs/adr/0004-adaptive-generation-control.md) defines
 the migration boundaries. Source coverage, rendered art and independent mechanics
 are separate gates. Without image support or complete state evidence, the studio
 asks for explicit human acceptance, including in Lite. Modular source uses pinned

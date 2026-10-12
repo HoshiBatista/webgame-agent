@@ -160,7 +160,7 @@ REST_FRAMEWORK = {
     "UNAUTHENTICATED_USER": "django.contrib.auth.models.AnonymousUser",
 }
 FORGE_LEASE_SECONDS = 120
-FORGE_PIPELINE_VERSION = os.environ.get("PROMPT2PLAY_PIPELINE_VERSION", "legacy-v1")
+FORGE_PIPELINE_VERSION = os.environ.get("PROMPT2PLAY_PIPELINE_VERSION", "adaptive-v1")
 
 # Preserve Django's normal error handlers; sanitize before every handler can emit
 # a scoped preview URL. Dedicated preview settings inherit this configuration.

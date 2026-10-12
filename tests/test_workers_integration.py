@@ -138,6 +138,8 @@ def test_stale_validator_fails_before_provider_or_reservation(
 @pytest.fixture
 def prepared(settings: Any, tmp_path: Path) -> tuple[Any, worker.Coordinator, dict[str, Any]]:
     settings.ARTIFACT_ROOT = tmp_path / "artifacts"
+    # Saved-reply and recovery fixtures intentionally use the legacy protocol.
+    settings.FORGE_PIPELINE_VERSION = "legacy-v1"
     user = User.objects.create_user("worker-fixture", password="fixture-password")
     project = Project.objects.create(
         title="Worker fixture", prompt="fixture request", created_by=user

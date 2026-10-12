@@ -115,6 +115,7 @@ def money_job(db: Any) -> tuple[Any, Any, str]:
             "prompt": "fixture",
             "budget_usd": Decimal("3.00"),
             "budget_tokens": 1000,
+            "pipeline_version": "legacy-v1",
         },
     )
     claimed, lease = services.claim_job(runner, runner.capabilities)

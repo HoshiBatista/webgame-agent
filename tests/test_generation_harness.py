@@ -1197,7 +1197,7 @@ def test_explicit_upgrade_preserves_immutable_legacy_draft_and_reuses_plan_and_s
         new_gateway,
         GenerationControl.bounded(),
     )
-    assert new_gateway.roles == ["coverage_review", "supervisor"]
+    assert new_gateway.roles == ["supervisor", "coverage_review", "supervisor"]
     assert migrated.files == {"game.js": source}
     assert old_snapshots[-1] == original and "adaptive" not in original
     assert migrated.provenance["visual_quality"]["rendered_visual_review"] == "human_required"
@@ -1212,6 +1212,74 @@ def test_explicit_upgrade_preserves_immutable_legacy_draft_and_reuses_plan_and_s
             AdaptiveGateway([]),
             GenerationControl.bounded(),
         )
+
+
+@pytest.mark.parametrize("changed_validator", [False, True])
+def test_upgrade_diagnoses_saved_failures_before_authoring_and_preserves_checkpoint(
+    changed_validator: bool,
+) -> None:
+    import copy
+
+    from prompt2play.generation.workspace import GenerationPaused
+
+    plan, source = fixture()
+    snapshots: list[dict[str, Any]] = []
+    report = {
+        "status": "failed",
+        "checks": [{"name": "mechanics:390", "status": "failed", "message": "Touch input fails"}],
+        "diagnostic_key": "saved-fixture-report",
+    }
+
+    def save_legacy(state: dict[str, Any]) -> None:
+        snapshots.append(state)
+        if state.get("browser_result"):
+            raise GenerationStopped("Saved failed check")
+
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("create", "game.js", content=source),
+                    operation("browser_check"),
+                ],
+                "summary": "Existing implementation",
+            },
+        ]
+    )
+    with pytest.raises(GenerationStopped, match="Saved failed check"):
+        GenerationHarness(
+            on_checkpoint=save_legacy,
+            on_browser_check=lambda *_: report,
+            browser_identity={"image": "original"},
+        ).attempt(GenerationRequest("Fixture"), gateway, GenerationControl.bounded())
+    original = copy.deepcopy(snapshots[-1])
+    upgraded: list[dict[str, Any]] = []
+    supervisor = AdaptiveGateway([], advice="pause")
+    with pytest.raises(GenerationPaused, match="diagnostic fixture"):
+        GenerationHarness(
+            on_checkpoint=lambda state: upgraded.append(state),
+            browser_identity={"image": "changed" if changed_validator else "original"},
+        ).attempt(
+            GenerationRequest(
+                "Fixture",
+                pipeline_version="adaptive-v1",
+                resume_state=original,
+                migration_from_sha=original["request_sha256"],
+            ),
+            supervisor,
+            GenerationControl.bounded(),
+        )
+    assert supervisor.roles == ["supervisor"]
+    context = json.loads(supervisor.prompts[0].rsplit(PROMPT_BOUNDARY, 1)[1])
+    observation = context["observations"][-1]
+    assert observation["action"] == ("pipeline_migration" if changed_validator else "browser_check")
+    assert observation["status"] == ("unverified" if changed_validator else "failed")
+    if not changed_validator:
+        assert observation["evidence"]["diagnostic_key"] == "saved-fixture-report"
+    for key in ("files", "plan", "spec", "history", "turn", "operations", "browser_result"):
+        assert upgraded[-1][key] == original[key]
+    assert snapshots[-1] == original and "adaptive" not in original
 
 
 def test_adaptive_author_plan_change_request_preserves_code_and_pauses_on_supervisor_advice() -> (

@@ -1,6 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultSettings, readSettings, rememberSettings, settingsError, switchProvider } from '../src/lib/format.ts';
+import { defaultSettings, readSettings, rememberSettings, settingsError, settingsKey, switchProvider } from '../src/lib/format.ts';
+
+test('new runs and old saved defaults use the adaptive planner; explicit new legacy choice persists', () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const storage = new Map<string, string>();
+  Object.defineProperty(globalThis, 'localStorage', {configurable: true, value: {
+    getItem: (key: string) => storage.get(key) ?? null,
+    setItem: (key: string, value: string) => storage.set(key, value),
+  }});
+  try {
+    assert.equal(readSettings().pipeline_version, 'adaptive-v1');
+    storage.set('forge.job_settings.v2', JSON.stringify({pipeline_version: 'legacy-v1', model: 'chosen-model', budget_usd: 20, creation_mode: 'pro'}));
+    const migrated = readSettings();
+    assert.equal(migrated.pipeline_version, 'adaptive-v1');
+    assert.equal(migrated.model, 'chosen-model');
+    assert.equal(migrated.budget_usd, 20);
+    assert.equal(migrated.creation_mode, 'pro');
+    rememberSettings({...migrated, pipeline_version: 'legacy-v1'});
+    assert(storage.has(settingsKey));
+    assert.equal(readSettings().pipeline_version, 'legacy-v1');
+  } finally { if (previous) Object.defineProperty(globalThis, 'localStorage', previous); else Reflect.deleteProperty(globalThis, 'localStorage'); }
+});
 
 test('provider switch clears an incompatible explicit model while repeated selection preserves it', () => {
   const before = { ...defaultSettings, model: 'codex-only-model' };

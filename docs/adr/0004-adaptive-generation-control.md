@@ -1,6 +1,6 @@
 # ADR 0004 Adaptive generation control and protected acceptance
 
-- **Status:** Implemented for selected jobs (R0–R6); default rollout pending R7 and human review
+- **Status:** Implemented; adaptive default enabled by explicit user request on 2026-10-12
 - **Date:** 2026-10-12
 - **Extends:** [ADR 0003](0003-hybrid-adoption.md)
 - **Amends:** [ADR 0002](0002-generation-harness.md), specifically its iteration
@@ -114,5 +114,14 @@ or generated config/plugins/dependency installation. Output is one HTML up to
 envelopes remain unchanged. Compiler resource limits are isolation safeguards,
 not model-generation timeouts.
 
-The implementation stays opt-in until the frozen R7 comparison and human quality
-assessment justify default rollout. WebView-host verification remains pending.
+The user explicitly requested enabling the planner after a live legacy run repeatedly
+repaired mobile controls without shared progress supervision. New Studio and API jobs
+now default to adaptive generation; the previous process remains selectable for
+comparison. Existing jobs retain their pinned protocol until explicitly upgraded at a
+durable pause. Migration preserves source bytes, the plan, original snapshot and ledger,
+then invokes supervision before authoring. Only a matching saved browser result seeds
+verified work; other evidence remains unverified. Browser preference schema v3 replaces
+the former default without resetting the selected model or budget.
+
+Enabling the default does not assert superior comparative quality, human visual
+acceptance or completion of WebView-host verification. Those checks remain separate.
