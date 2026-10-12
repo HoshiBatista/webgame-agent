@@ -9,6 +9,7 @@ import { useRequestGate } from '../lib/useRequestGate';
 import { Button, ErrorBanner, Spinner, ValidationBadge } from './ui';
 import VisualDesign from './VisualDesign';
 import ValidationReport from './ValidationReport';
+import AdaptiveProgress from './AdaptiveProgress';
 const text = (value: unknown) => typeof value === 'string' ? value : '';
 function Items({value}: {value: unknown}) { return Array.isArray(value) ? <ul>{value.filter(item => typeof item === 'string').map((item, i) => <li key={i}>{item}</li>)}</ul> : null; }
 export function ApprovalControls({job, onUpdate}: {job: Job; onUpdate: (value: Job) => void}) {
@@ -25,7 +26,7 @@ export function ApprovalControls({job, onUpdate}: {job: Job; onUpdate: (value: J
   };
   const plan = job.approval === 'plan';
   return <section className="approval-card" aria-label="Согласование предложения">
-    <div className="section-heading"><h3><ClipboardList size={19}/>{plan ? 'Сначала согласуем план' : 'Сборка готова к вашей оценке'}</h3><span className="badge outline">Pro · ваше решение</span></div>
+    <div className="section-heading"><h3><ClipboardList size={19}/>{plan ? 'Сначала согласуем план' : 'Сборка готова к вашей оценке'}</h3><span className="badge outline">{job.creation_mode === 'pro' ? 'Pro · ваше решение' : 'Оценка человеком'}</span></div>
     <p>{plan ? 'Изучите механики, графику и интерфейс во вкладке «План и этапы». Код начнём писать после вашего подтверждения.' : 'Поиграйте в предложенной версии и изучите проверки. Она станет основной только после вашего подтверждения.'}</p>
     <p className="micro muted-text">Пауза не ограничена по времени. Пока вы изучаете предложение, новых запросов к модели нет.</p>
     <details className="feedback-editor"><summary><MessageSquareText size={15}/>Предложить изменения</summary><label className="field">Что уточнить или переделать<textarea rows={4} maxLength={12000} value={feedback} onChange={event => setFeedback(event.target.value)} disabled={busy} placeholder={plan ? 'Например: добавь развитие базы, распиши различия противников, сделай интерфейс похожим на штабную карту…' : 'Например: укрупни отряды, сделай анимацию попаданий выразительнее, добавь объяснение ресурсов…'}/></label><Button busy={busy} disabled={!feedback.trim()} onClick={() => void decide('revise')}>Переработать предложение</Button><p className="micro muted-text">Замечания сохранятся в истории. Обновлённый план снова придёт на согласование. Денежный бюджет не обнуляется.</p></details>
@@ -47,7 +48,11 @@ export function PlanPane({job, inspectedStage}: {job: Job; inspectedStage: strin
     <header><span className="section-kicker">{job.creation_mode === 'pro' ? 'PRO · СОГЛАСОВАНИЕ ПО ШАГАМ' : 'LITE · АВТОМАТИЧЕСКОЕ СОЗДАНИЕ'}</span><h3>Что создаём и как проверяем</h3><p>Раскройте этап, чтобы увидеть предложенное решение, его результат и ограничения проверки.</p></header>
     {error && <ErrorBanner retry={() => setRetry(value => value + 1)}>{error}</ErrorBanner>}
     {!data && !error && <Spinner label="Загрузка сохранённого плана"/>}
-    {['plan', 'author', 'browser_check', 'visual_review', 'commit', 'validate', 'repair'].map(stage => <details className="creation-step" key={stage} open={stage === inspectedStage}>
+    {data && <AdaptiveProgress data={data}/>}
+    {data?.visual_pending && <p className="notice amber">Технические проверки пройдены. Графика и состояния интерфейса ожидают вашей явной оценки; сборка пока не опубликована.</p>}
+    {data?.previous_proposal && <details className="contract-item"><summary>Сравнить с предыдущим планом</summary><pre>{JSON.stringify({previous:data.previous_proposal, proposed:data.proposal}, null, 2)}</pre></details>}
+    {data?.draft_diagnostic?.evidence_files?.some(f => f.path.endsWith('.png')) && <details className="contract-item"><summary>Кадры из браузерной проверки</summary><div className="evidence-frames">{data.draft_diagnostic.evidence_files.filter(f => f.path.endsWith('.png')).map(f => <figure key={f.path}><figcaption>{f.path}</figcaption><img src={`/api/jobs/${job.id}/evidence/${encodeURIComponent(f.path)}/`} alt={`Игра: ${f.path}`} loading="lazy"/></figure>)}</div></details>}
+    {['plan', 'author', 'browser_check', 'visual_review', 'coverage_review', 'rendered_review', 'supervisor', 'commit', 'validate', 'repair'].map(stage => <details className="creation-step" key={stage} open={stage === inspectedStage}>
       <summary><span>{stageLabels[stage]}</span><small>{stage === 'plan' && data?.proposal ? 'План доступен' : stage === 'validate' && data?.validation ? 'Отчёт сохранён' : ''}</small></summary>
       <p className="step-explanation">{stageDescriptions[stage]}</p>
       {stage === 'plan' && (data?.proposal ? <>
@@ -62,6 +67,7 @@ export function PlanPane({job, inspectedStage}: {job: Job; inspectedStage: strin
       {stage === 'author' && <>
         {data?.author_steps?.map((step, i) => <details key={i} className="contract-item"><summary>Ответ автора {i + 1} · {step.operations.length} действий</summary><p>{step.summary}</p><ul>{step.operations.map((op, j) => <li key={j}>{op.op} {op.path}</li>)}</ul></details>)}{data?.summary ? <p>{data.summary}</p> : <p>Сохранённой сборки пока нет. Дождёмся законченного ответа автора.</p>}{!!data?.files.length && <p><b>Созданные файлы:</b> {data.files.join(', ')}</p>}</>}
       {stage === 'visual_review' && (Object.keys(record(data?.provenance.visual_quality)).length ? <>{record(data?.provenance.visual_quality).draft_only === true && <p>Сохранённый ответ проверяющего до фиксации сборки. Это ещё не отчёт проверки готовой игры.</p>}<VisualDesign plan={plan} provenance={data?.provenance}/></> : <p>Сохранённого разбора пока нет. Замечания и итог появятся вместе со сборкой.</p>)}
+      {['coverage_review', 'rendered_review', 'supervisor'].includes(stage) && data && <AdaptiveProgress data={data}/>}
       {stage === 'browser_check' && (data?.draft_diagnostic ? <><p>Диагностика сохранённого черновика. Готовая сборка дополнительно проходит независимую проверку.</p><ValidationReport validation={data.draft_diagnostic} spec={spec} plan={plan}/></> : <p>Браузерной проверки черновика пока нет.</p>)}
       {stage === 'commit' && <p>{data?.files.length ? `Сборка сохранена: ${data.files.length} файлов. Исходники доступны во вкладке «Исходники».` : 'Сборка ещё не сохранена.'}</p>}
       {stage === 'validate' && (data?.validation ? <><ValidationBadge value={data.validation}/><ValidationReport validation={data.validation} spec={spec} plan={plan} provenance={data.provenance}/></> : <p>Проверка ещё не завершена. Планируемые проверки не считаются пройденными.</p>)}

@@ -1613,3 +1613,187 @@ def test_pause_retains_all_inflight_responses_before_releasing_lease(team: Team)
         job.refresh_from_db()
         assert job.status == ("running" if index == 0 else "paused")
     assert job.invocations.filter(state="completed").count() == 2
+
+
+def test_adaptive_worker_capability_and_explicit_human_gate_preserve_mechanical_result(
+    team: Team,
+) -> None:
+    import json
+
+    from prompt2play.adapters.django.forge.reviews import decide_review
+    from prompt2play.contracts.adaptive import initial_contracts
+    from prompt2play.generation.runtime import assemble_runtime, capture_runtime_identity
+    from prompt2play.paths import RESOURCE_ROOT
+
+    user, project, generator, _ = team
+    job = services.create_job(
+        project,
+        user,
+        {
+            "kind": "generate",
+            "prompt": "Fixture request",
+            "provider": "codex",
+            "model": "",
+            "pipeline_version": "adaptive-v1",
+            "project_format": "runtime-v1",
+        },
+    )
+    assert services.claim_job(generator, CAPABILITIES)[0] is None
+    job, lease = services.claim_job(generator, {**CAPABILITIES, "adaptive_generation_v1": True})
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    spec = json.loads((root / "spec.json").read_text())
+    plan = {
+        **json.loads((root / "plan.json").read_text()),
+        **json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text()),
+    }
+    files = {"game.js": (root / "game.js").read_text()}
+    controller = initial_contracts("Fixture request", spec, plan)
+    spec.update(
+        format="runtime-v1",
+        runtime=capture_runtime_identity(),
+        input_acceptance=plan["input_acceptance"],
+        mechanics_required=True,
+        mechanics_required_actions=[a["type"] for a in spec["actions"]],
+        mechanics_acceptance=plan["mechanics"],
+    )
+    candidate = submit(
+        job,
+        lease,
+        generator,
+        format="runtime-v1",
+        files=files,
+        spec=spec,
+        plan=plan,
+        html=assemble_runtime(files, spec),
+        provenance={
+            "adaptive": controller,
+            "visual_quality": {"rendered_reviews": [{"status": "human_required"}]},
+        },
+    )
+
+    def mechanics(report: dict[str, Any]) -> None:
+        for width in (1280, 390):
+            report["checks"].append(
+                {
+                    "name": f"mechanics:{width}",
+                    "status": "passed",
+                    "artifact_sha256": candidate.artifact["html_sha256"],
+                    "evidence": {
+                        "actual_input": True,
+                        "cases": [
+                            {
+                                "id": c["id"],
+                                "actions": c["actions"],
+                                "passed": True,
+                                "visible_changed": True,
+                            }
+                            for c in plan["mechanics"]
+                        ],
+                    },
+                }
+            )
+
+    validate(team, candidate, mutate=mechanics)
+    job.refresh_from_db()
+    version = Version.objects.get(pk=job.result_version_id)
+    assert job.status == "waiting" and job.stage == "review_build" and job.review["visual_pending"]
+    assert workflow.version_reviewable(version) and not workflow.version_eligible(version)
+    assert project.latest_version_id is None and version.validation["status"] == "passed"
+    fence = job.stage_fence
+    with pytest.raises(ValidationError, match="acting user"):
+        cast(Any, decide_review)(job.pk, stage_fence=fence, action="approve")
+    accepted = cast(Any, decide_review)(
+        job.pk, stage_fence=fence, action="approve", actor_id=user.pk
+    )
+    assert accepted.status == "completed"
+    version.refresh_from_db()
+    assert workflow.version_eligible(version)
+    with pytest.raises(Conflict):
+        cast(Any, decide_review)(job.pk, stage_fence=fence, action="approve", actor_id=user.pk)
+
+
+def test_adaptive_candidate_cannot_change_pinned_user_requirements(team: Team) -> None:
+    import json
+
+    from prompt2play.contracts.adaptive import initial_contracts
+    from prompt2play.generation.runtime import assemble_runtime, capture_runtime_identity
+    from prompt2play.paths import RESOURCE_ROOT
+
+    user, project, generator, _ = team
+    services.create_job(
+        project,
+        user,
+        {
+            "kind": "generate",
+            "prompt": "Fixture request",
+            "provider": "codex",
+            "model": "",
+            "pipeline_version": "adaptive-v1",
+            "project_format": "runtime-v1",
+        },
+    )
+    job, lease = services.claim_job(generator, {**CAPABILITIES, "adaptive_generation_v1": True})
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    spec = json.loads((root / "spec.json").read_text())
+    plan = {
+        **json.loads((root / "plan.json").read_text()),
+        **json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text()),
+    }
+    controller = initial_contracts("Fixture request", spec, plan)
+    spec.update(
+        format="runtime-v1",
+        runtime=capture_runtime_identity(),
+        rules=["Silently discard user rules"],
+    )
+    files = {"game.js": (root / "game.js").read_text()}
+    with pytest.raises(ValidationError, match="contracts"):
+        submit(
+            job,
+            lease,
+            generator,
+            format="runtime-v1",
+            files=files,
+            spec=spec,
+            plan=plan,
+            html=assemble_runtime(files, spec),
+            provenance={"adaptive": controller},
+        )
+    assert not Candidate.objects.exists()
+
+
+def test_paused_pipeline_upgrade_is_fenced_and_preserves_accounting_with_clarification(
+    team: Team,
+) -> None:
+    from prompt2play.adapters.django.forge.pauses import pause_job, resume_paused
+
+    job, _lease = job_for(team)
+    usage = {
+        "input_tokens": 80,
+        "cached_input_tokens": 60,
+        "output_tokens": 10,
+        "total_tokens": 90,
+        "calls": 1,
+    }
+    Job.objects.filter(pk=job.pk).update(usage=usage)
+    paused = cast(Any, pause_job)(job.pk, {"stage_fence": job.stage_fence})
+    # The leased running step has no paid request: take the normal durable boundary.
+    from prompt2play.adapters.django.forge.pauses import finish_pause
+
+    if paused.status != "paused":
+        cast(Any, finish_pause)(paused)
+        paused.refresh_from_db()
+    restored = cast(Any, resume_paused)(
+        job.pk,
+        {
+            "stage_fence": paused.stage_fence,
+            "upgrade_pipeline": True,
+            "feedback": "Please keep the original rule and explain the next correction.",
+        },
+    )
+    assert restored.checkpoint["pipeline_version"] == "adaptive-v1"
+    assert restored.usage == usage and restored.budget_usd == job.budget_usd
+    assert restored.checkpoint["continuation_feedback"]
+    assert not ModelInvocation.objects.filter(job=job).exists()
+    assert services.claim_job(team[2], CAPABILITIES)[0] is None
+    with pytest.raises(Conflict):
+        cast(Any, resume_paused)(job.pk, {"stage_fence": paused.stage_fence})

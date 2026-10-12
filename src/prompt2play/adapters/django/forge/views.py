@@ -237,6 +237,35 @@ class VersionView(TeamView):
         return Response(version_data(get_object_or_404(Version, pk=pk), detail=True))
 
 
+class JobEvidenceView(TeamView):
+    def get(self, request, pk, name):
+        job = get_object_or_404(Job, pk=pk)
+        key = job.checkpoint.get("browser_diagnostic")
+        if not key:
+            raise Conflict("Кадры ещё не получены.", code="missing_evidence")
+        report = workflow.store().read_json(key)["report"]
+        frame = next(
+            (
+                item
+                for item in report.get("evidence_files", [])
+                if item["path"] == name and name.endswith(".png")
+            ),
+            None,
+        )
+        if not frame:
+            raise Conflict("Кадр не относится к этой проверке.", code="missing_evidence")
+        data = workflow.store().read(frame["object_key"])
+        import hashlib
+
+        if hashlib.sha256(data).hexdigest() != frame["sha256"]:
+            raise Conflict("Байты доказательства изменились.", code="evidence_mismatch")
+        response = HttpResponse(data, content_type="image/png")
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Cache-Control"] = "private, no-store"
+        response["Content-Security-Policy"] = "default-src 'none'; sandbox"
+        return response
+
+
 def attachment_response(content, content_type, filename):
     response = HttpResponse(content, content_type=content_type)
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
@@ -372,6 +401,14 @@ class ClaimView(WorkerView):
                 "job": worker_job,
                 **worker_review_context(job),
                 "draft": load_draft(job),
+                "previous_draft": workflow.store().read_json(
+                    job.checkpoint["authoring_draft"]["key"]
+                )
+                if job.checkpoint.get("authoring_draft") and not load_draft(job)
+                else {},
+                "controller": workflow.store().read_json(job.checkpoint["controller_state"])
+                if job.checkpoint.get("controller_state")
+                else {},
                 "planning": load_planning(job),
                 "lease_token": lease,
                 "lease_seconds": settings.FORGE_LEASE_SECONDS,
@@ -520,7 +557,13 @@ class JobReviewView(TeamView):
 
         get_object_or_404(Job, pk=pk)
         return Response(
-            job_data(decide_review(pk, **validated(ReviewDecisionSerializer, request.data)))
+            job_data(
+                decide_review(
+                    pk,
+                    actor_id=request.user.pk,
+                    **validated(ReviewDecisionSerializer, request.data),
+                )
+            )
         )
 
 

@@ -61,3 +61,5 @@
 .pause-controls { margin: 16px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; }
 .pause-controls p { font-size: 13px; line-height: 1.5; margin: 0 0 12px; }
 .status-paused { color: var(--copper); }
+
+.evidence-frames {display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.evidence-frames figure{margin:0}.evidence-frames img{max-width:100%;border-radius:12px}.adaptive-progress{margin-block:24px}

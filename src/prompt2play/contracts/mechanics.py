@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import re
+from collections import Counter
 from typing import Any
 
 
@@ -228,3 +229,33 @@ def preserve_mechanics(previous: list[dict[str, Any]], updated: list[dict[str, A
             or (case["continuous"] and not fresh["continuous"])
         ):
             raise ValueError("Cannot drop planned mechanics or controls: " + case["id"])
+        for device in ("desktop", "touch"):
+            old = Counter(assertion_identity(q) for q in case[device]["assertions"])
+            new = Counter(assertion_identity(q) for q in fresh[device]["assertions"])
+            if old - new:
+                raise ValueError(
+                    "Cannot weaken protected mechanics expectations: "
+                    + case["id"]
+                    + "."
+                    + device
+                    + ". Preserve path, comparison, literal, tolerance and observation baseline; "
+                    "selectors and preparation steps may be corrected. Request a plan change "
+                    "for a disputed expectation."
+                )
+
+
+def assertion_identity(check: dict[str, Any]) -> str:
+    """Protected oracle, independent of editable scenario step positions."""
+    literal = json.loads(check["value_json"]) if check["before_step"] == -1 else None
+    return json.dumps(
+        {
+            "path": check["path"],
+            "op": check["op"],
+            "literal": literal,
+            "baseline": "literal" if check["before_step"] == -1 else "observed",
+            "tolerance": check["tolerance"],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )

@@ -197,3 +197,41 @@ def test_equality_literals_can_describe_inventory_but_ordering_needs_numbers() -
     check.update(op="equal", value_json="[NaN]")
     with pytest.raises(ValueError, match="finite JSON"):
         validate_mechanics(cases, ["MOVE"])
+
+
+@pytest.mark.parametrize(
+    "change", ["score", "operator", "tolerance", "delete", "baseline", "literal"]
+)
+def test_author_cannot_weaken_the_acceptance_oracle(change: str) -> None:
+    from prompt2play.contracts.mechanics import preserve_mechanics
+
+    old, new = matrix(), matrix()
+    assertion = new[0]["desktop"]["assertions"][0]
+    if change == "score":
+        assertion.update(path="/score", op="greater", before_step=-1, value_json="-1")
+    elif change == "operator":
+        assertion["op"] = "equal"
+    elif change == "tolerance":
+        assertion["tolerance"] = 1000
+    elif change == "delete":
+        new[0]["desktop"]["assertions"].pop(0)
+    elif change == "baseline":
+        assertion.update(before_step=-1, value_json="0")
+    else:
+        old[0]["desktop"]["assertions"][0].update(before_step=-1, value_json="3")
+        assertion.update(before_step=-1, value_json="1")
+    with pytest.raises(ValueError, match="protected mechanics"):
+        preserve_mechanics(old, new)
+
+
+def test_selectors_and_preparation_may_change_without_changing_the_oracle() -> None:
+    from prompt2play.contracts.mechanics import preserve_mechanics
+
+    old, new = matrix(), matrix()
+    for device in ("desktop", "touch"):
+        new[0][device]["steps"].insert(0, {"kind": "tap", "selector": "#choose-level"})
+        for q in new[0][device]["assertions"]:
+            q["after_step"] += 1
+            if q["before_step"] >= 0:
+                q["before_step"] += 1
+    preserve_mechanics(old, new)

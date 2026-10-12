@@ -6,6 +6,11 @@
 - **Supersedes:** [ADR 0001](0001-target-architecture.md)
 - **Amends:** [ADR 0002](0002-generation-harness.md)
 
+[ADR 0004](0004-adaptive-generation-control.md) is the implemented opt-in extension for
+adaptive decisions, protected acceptance and rendered quality. It retains this
+stack and the single persisted workflow owner; its implementation is tracked
+separately in the [R0–R7 migration plan](../pipeline-improvement-plan.md).
+
 ## Context
 
 Prompt2Play has an architectural plan and a Python foundation, but no product

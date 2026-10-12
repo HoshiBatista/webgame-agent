@@ -71,6 +71,10 @@ def assemble_runtime(
         raise ValueError("Declared runtime digest does not match its exact trusted sources")
     if not files.get("game.js", "").strip():
         raise ValueError("runtime-v1 requires game.js")
+    if spec.get("format") == "runtime-modules-v2":
+        from .project import bundle_project
+
+        files = bundle_project(files, spec.get("packager", {}))
     if set(files) - {"game.js", "style.css"}:
         raise ValueError("runtime-v1 allows only game.js and optional style.css")
     script = runtime["runtime-v1.js"] + "\n" + files["game.js"]

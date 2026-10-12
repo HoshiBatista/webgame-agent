@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import subprocess
 import tempfile
 import threading
 import time
@@ -22,6 +23,7 @@ from prompt2play.pricing import reservation_usage
 from prompt2play.workers.diagnostics import emit
 
 from .context import ContextConversations, ContextRequest
+from .images import ImageInput, image_metadata
 from .retries import (
     CODEX_TIMEOUT_RECEIPT,
     TIMEOUT_RETRY_SUFFIX,
@@ -118,8 +120,11 @@ class ProviderGateway:
         control: GenerationControl,
         max_output: int,
         context: ContextRequest | None,
+        images: list[ImageInput] | None = None,
     ) -> Any:
         kwargs: dict[str, Any] = {"max_output": max_output, "model": self.model}
+        if images:
+            kwargs["images"] = [i.wire() for i in images]
         if context is not None:
             if self.name == "codex":
                 if self.session_directory is None:
@@ -182,6 +187,22 @@ class ProviderGateway:
     def preflight(self) -> None:
         self.provider.preflight()
 
+    def image_preflight(self) -> bool:
+        """Check transport support without dispatching a billable model call."""
+        if self.name == "openai":
+            return True
+        try:
+            result = subprocess.run(
+                [self.provider.executable, "exec", "--help"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            return result.returncode == 0 and "--image" in result.stdout
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+
     @property
     def is_replay(self) -> bool:
         """True only when this gateway has reused every recorded structured response."""
@@ -198,11 +219,12 @@ class ProviderGateway:
         control: GenerationControl,
         *,
         max_output: int = 16000,
+        images: list[ImageInput] | None = None,
     ) -> GatewayReply:
         for retry in (False, True):
             try:
                 return self._generate_once(
-                    prompt, schema, role, control, max_output=max_output, retry=retry
+                    prompt, schema, role, control, max_output=max_output, retry=retry, images=images
                 )
             except CodexCallTimeout:
                 if retry or self.name != "codex":
@@ -220,8 +242,10 @@ class ProviderGateway:
         *,
         max_output: int,
         retry: bool,
+        images: list[ImageInput] | None = None,
     ) -> GatewayReply:
         control.guard()
+        screenshots = image_metadata(images) if images else []
         if control.cost_limit_nano is not None and (
             control.pricing.get("model") != self.model
             or control.pricing.get("provider") != self.name
@@ -236,13 +260,19 @@ class ProviderGateway:
                     "schema": schema,
                     "role": role,
                     "max_output": max_output,
+                    **({"images": screenshots} if screenshots else {}),
                 }
             ).encode()
         ).hexdigest()
         key = role + ":" + request_sha + (TIMEOUT_RETRY_SUFFIX if retry else "")
-        context = self.contexts.prepare(prompt, schema, role, self.model)
+        # Fresh image messages keep exact pixel binding; text roles still reuse conversations.
+        context = None if images else self.contexts.prepare(prompt, schema, role, self.model)
         context_metrics = context.metrics() if context is not None else {"mode": "snapshot"}
         reservation_prompt = context.reservation_prompt if context is not None else prompt
+        if screenshots:
+            # A conservative image allowance, in addition to the text-byte
+            # overestimate. Actual multimodal usage always settles the receipt.
+            reservation_prompt += " " * (32_768 * len(screenshots))
         reservation = control.estimate(reservation_prompt, max_output, stable(schema))
         journal_tokens = invocation_reservation(reservation_prompt, max_output)
         reused = None
@@ -333,7 +363,11 @@ class ProviderGateway:
             timer.start()
         usage: dict[str, int] | None = None
         try:
-            reply = self._invoke(prompt, schema, role, control, max_output, context)
+            reply = (
+                self._invoke(prompt, schema, role, control, max_output, context, images)
+                if images
+                else self._invoke(prompt, schema, role, control, max_output, context)
+            )
             usage = cast(dict[str, int], reply.usage)
             control.settle(key, usage)
             if self.journal:

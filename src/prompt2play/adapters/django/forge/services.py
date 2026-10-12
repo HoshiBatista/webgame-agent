@@ -116,7 +116,27 @@ def create_job(project, user, values):
                     "Эталон доступен для просмотра. Создайте новый проект, чтобы генерировать и редактировать игры.",
                     code="reference_readonly",
                 )
-            job = Job.objects.create(project=project, created_by=user, base_version=base, **values)
+            pipeline_version = values.pop("pipeline_version", settings.FORGE_PIPELINE_VERSION)
+            from . import workflow
+
+            project_format = values.pop("project_format", None) or (
+                workflow.candidate_payload(base.candidate)["format"]
+                if base and base.candidate_id
+                else "runtime-modules-v2"
+                if pipeline_version == "adaptive-v1"
+                else "runtime-v1"
+            )
+            if project_format == "runtime-modules-v2" and pipeline_version != "adaptive-v1":
+                raise ValidationError("Modular projects require the adaptive generation protocol")
+            if pipeline_version not in ("legacy-v1", "adaptive-v1"):
+                raise ValidationError("Unknown generation pipeline version")
+            job = Job.objects.create(
+                project=project,
+                created_by=user,
+                base_version=base,
+                checkpoint={"pipeline_version": pipeline_version, "project_format": project_format},
+                **values,
+            )
             event(job, "Задание добавлено в очередь. Ожидаем совместимого исполнителя.")
     except IntegrityError as exc:
         raise Conflict("У проекта уже есть активное задание.", code="active_job") from exc
@@ -208,6 +228,10 @@ def claim_job(runner, capabilities, name=None):
         )
     else:
         compatible &= ~Q(stage__in=["validate", "commit"])
+        if capabilities.get("adaptive_generation_v1") is not True:
+            compatible &= Q(checkpoint__pipeline_version="legacy-v1") | ~Q(
+                checkpoint__has_key="pipeline_version"
+            )
         if capabilities.get("continuable_planning_v1") is not True:
             compatible &= ~Q(checkpoint__has_key="planning")
         if capabilities.get("continuable_authoring_v1") is not True:

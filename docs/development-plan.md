@@ -15,6 +15,31 @@ The internal quality target remains unmet. Human participant assessment and
 actual host/device acceptance remain open; these are not claimed complete by
 the implementation status below.
 
+The next implementation sequence is the
+[pipeline correction and architecture migration plan](pipeline-improvement-plan.md),
+dated **2026-10-12**, with [ADR 0004](adr/0004-adaptive-generation-control.md).
+R0–R6 are implemented behind a per-job process selection. They extend the delivered
+G0–G4 baseline with recovery fixes, observable progress, protected acceptance,
+coordinator-validated supervision, rendered review and modular source packaging.
+R7 compares frozen old/new snapshots under the authorized $50 pooled budget;
+human visual assessment and default rollout remain explicit gates. Historical measurements below remain unchanged.
+
+| Next stage | Required result | Dependency |
+| --- | --- | --- |
+| R0 | Retry recovered browser infrastructure; compare actual defects; prevent weakened assertions | Existing baseline |
+| R1 | Typed observations, failure categories and progress evidence across all loops | R0 |
+| R2 | Versioned requirements, acceptance, design and execution plan with safe migration | R1 |
+| R3 | Coordinator-validated supervisor decisions and incremental plan changes | R2; R4 before automatic rollout |
+| R4 | Lite automation and Pro plan diffs, approval, pause and recovery explanations | R3 decision contract |
+| R5 | Actual screenshot review with provider capability checks and explicit human fallback | R2–R4 |
+| R6 | Modular editable source and local assets packaged into exact standalone HTML | R3–R4 |
+| R7 | Failure injection, quality/cost comparison and staged default adoption | R0–R6 |
+
+Each stage's implementation scope, affected modules, acceptance cases, compatibility
+and rollback rules are defined in the linked plan. The review's three reproductions
+and fresh test counts are retained in
+[pipeline review evidence](evidence/pipeline-review-2026-10-12.json).
+
 | Phase | Implementation status | Evidence boundary |
 | --- | --- | --- |
 | G0 | Donor reproduced; original planner blocker recorded | 301 fresh named tests plus 24 authored cases; original live planner timed out, so no original live success rate |
@@ -208,9 +233,10 @@ errors or incompatible plans.
 Tasks:
 
 1. Add a capability-scoped draft workspace and typed read/create/patch/delete/
-   quick-check/submit operations. Enforce path, file, byte and turn limits,
+   quick-check/submit operations. Enforce path, file and byte limits,
    runtime immutability, cancellation and current fences on every step. Studio
-   generation has no wall-clock timeout; bounded experiments may opt into one.
+   has no default generation wall-clock or productive-turn/operation limit;
+   bounded experiments may opt into explicit limits.
 2. Adapt providers explicitly to the allowed operations. A structured-output
    adapter can return operations for the application to validate and apply;
    enabling unrestricted shell/file access is not an acceptable shortcut.
@@ -365,10 +391,12 @@ workstream contributes a tested part of the same end-to-end path.
 
 ## Scope cuts and subsequent work
 
-If time is short, keep the working G1 flow and improve its measured defects.
-Reduce game complexity, supported optional capabilities, and UI polish before
-weakening isolation, browser gates, budget limits, or result honesty. A partial
-G2/G3 experiment stays behind an explicit mode and out of the contest default.
+If time is short, keep the working flow and improve its measured defects.
+Defer uncompleted platform features and select representative demonstration
+requests with the user. Do not silently reduce a requested game's complexity,
+mechanics or visual quality to fit a release or budget. Isolation, browser gates,
+budget accounting and result honesty remain mandatory. An unfinished migration
+stays outside the default path; current failures are reported explicitly.
 
 Defer FastAPI migration, Celery/Redis, SSE, broad runtime/genre registries,
 generated external assets, public multi-tenant authoring, multiplayer, and 3D

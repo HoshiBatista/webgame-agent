@@ -8,6 +8,7 @@ urlpatterns = [
     path("worker/jobs/<uuid:pk>/draft/", views.DraftSaveView.as_view()),
     path("worker/jobs/<uuid:pk>/diagnostics/", views.DraftDiagnosticView.as_view()),
     path("jobs/<uuid:pk>/insights/", views.JobInsightsView.as_view()),
+    path("jobs/<uuid:pk>/evidence/<str:name>/", views.JobEvidenceView.as_view()),
     path("jobs/<uuid:pk>/review/", views.JobReviewView.as_view()),
     path("worker/jobs/<uuid:pk>/plan/", views.PlanProposalView.as_view()),
     path("health/", views.HealthView.as_view()),

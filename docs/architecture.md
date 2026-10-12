@@ -19,12 +19,23 @@ ADR 0003 supersedes the stack selection in ADR 0001 and amends the deployment
 assumptions in ADR 0002. ADR 0002's single-attempt boundary remains applicable.
 The landscape review is historical research, not the current implementation plan.
 
+The **2026-10-12 implemented opt-in extension** is
+[ADR 0004](adr/0004-adaptive-generation-control.md), delivered through the
+[R0–R7 migration plan](pipeline-improvement-plan.md). Its supervisor, protected
+acceptance contracts, image review and modular-source format are implemented for
+selected jobs. The existing baseline remains operational while R7 is evaluated;
+the [pipeline review](evidence/pipeline-review-2026-10-12.json) preserves the
+original three defect reproductions. Regression tests now cover their fixes.
+
 ## Product scope
 
 Input is a natural-language description of a game or a requested revision.
 Output is a complete offline HTML5 game with controls, a meaningful playable
-loop, an appropriate outcome, and restart behavior. Editable source remains
-modular; a self-contained `index.html` is the initial delivery format.
+loop, an appropriate outcome, and restart behavior. A self-contained `index.html`
+is the delivery format. `runtime-v1` preserves `game.js` and optional `style.css`.
+`runtime-modules-v2` accepts planned local JS/CSS/JSON/SVG/base64 PNG modules and
+assets, then uses pinned esbuild in an unprivileged, networkless container to
+create one offline HTML. Source modules are retained for later edits.
 
 Support different mechanics through Canvas, DOM/SVG, or hybrid presentation.
 Do not reduce generation to selecting a prewritten game by genre. At the same
@@ -225,9 +236,12 @@ operations which the application validates and applies; do not enable unrestrict
 CLI tools to simulate the target interface. Adapters advertise capabilities and
 reject unsupported modes explicitly.
 
-Check cancellation, fence, turns, the selected run budget policy,
-file count, bytes, and quick-check budgets before operations. Bound retries and
-stop on repeated identical calls, no-op writes, or unchanged failures. Provider
+Check cancellation, fence, the selected run budget policy, file count and bytes
+before operations. Studio has no default operation, productive-turn or quick-check
+count ceiling. The current planner pauses on repeated identical rejection;
+the adaptive author/reviewer loops record shared observations and request a
+constrained supervisor diagnosis on stagnation, conflicts and readiness. Repeated
+invalid advice or ineffective decisions preserve the draft and pause. Provider
 output limits are only enforced where supported; a Codex reservation estimate is
 not a guaranteed provider cap. Preserve reported usage and conservative unknown
 reservations after interrupted calls.
@@ -238,7 +252,8 @@ The native harness sends stable instructions, approved design and relevant lesso
 before source and transient feedback. Canonical artifact hashing remains unchanged;
 prompt ordering has its own serializer. `context-v1` preserves one conversation per
 attempt/model/schema/instruction set and role. The author and source reviewer never
-share a conversation. Planning and historical four-author calls remain independent.
+share a conversation. Native planning also reuses its own scoped conversation;
+historical four-author calls remain independent.
 
 The first call contains a full authoritative snapshot. Subsequent user messages
 append only actual state changes and tool results: file additions/deletions, unique
@@ -316,9 +331,10 @@ Before native draft submission, a separate `visual_review` call critiques source
 against these plans in seven areas. Each result cites an exact source excerpt;
 the harness validates coverage and citations and binds the result to source and
 plan hashes. `needs_revision` returns findings to the author; acceptance requires
-a fresh critique of changed source. Three critiques at most share the attempt's
-existing accounting, cancellation and lease. Invalid evidence or
-remaining findings stop submission. This is a draft tool round trip, not a
+a fresh critique of changed source. Critiques share the attempt's accounting,
+cancellation and lease without a default review-count limit. Invalid review
+evidence returns corrective feedback; remaining findings block submission.
+This is a draft tool round trip, not a
 second application repair or promotion loop. Provenance explicitly records
 `rendered_visual_review: not_performed`; no source review becomes browser or
 artistic-quality evidence. The retained four-author comparison baseline is
@@ -329,12 +345,13 @@ Application code chooses `LOCAL_PATCH`, `STRUCTURAL_REPAIR`, `REPLAN`,
 files; shared contract changes expand to declared dependencies. A bad plan can
 be replaced rather than repeatedly patching incompatible modules.
 
-Default to at most two additional semantic candidate attempts per run, shared
-across repair, replan, and regeneration. Replanning also consumes its own model
-budget; it cannot reset the counter or monetary accounting. Infrastructure retries
-do not consume semantic attempts. Stop when the same finding survives two targeted
-patches or admission headroom is exhausted. Record the
-selected strategy and reason.
+The current job policy defaults to two additional semantic candidate attempts,
+shared across repair, replan and regeneration. Replanning consumes the original
+budget and cannot reset the attempt counter or accounting. Repeated failures compare concrete case/action/assertion identities. They preserve
+useful source and request diagnosis instead of discarding it. The adaptive version
+distinguishes productive repairs from stalls without a fixed candidate ceiling. Old jobs retain their recorded policy.
+Infrastructure retries must not consume semantic attempts or change game code.
+Every selected strategy needs recorded evidence and a reason.
 
 Each submitted attempt becomes a child candidate, including failed candidates.
 Promotion updates the project's current playable revision only after required
@@ -613,16 +630,18 @@ non-lifecycle GameSpec action to desktop/touch inputs and snapshot assertions.
 Revisions retain old action names, case IDs and keyboard coverage alongside new
 actions; all cases run again, including affected mechanics and regressions.
 Continuous keyboard cases must include hold/release/re-press and simulated time.
-Comparisons reference an earlier observed step or a finite JSON scalar; no model
+Comparisons reference an earlier observed step or finite JSON; ordering comparisons
+require numbers, while equality also supports arrays and objects. No model
 JavaScript test or privileged game-state setup is executed. A plan rejected for
 missing coverage returns explicit correction feedback within the same budget.
 
 The container runs each case from a fresh deterministic state through real UI
 input. It records expected/actual values, visible effects and failures in the
 immutable mechanics evidence. The coordinator rejects passing native reports
-that omit required case coverage. Scenario edits can correct steps and expected
-outcomes but cannot remove planned action/control coverage. These checks verify
-the declared contract; they do not prove every possible behavior or replace human
+that omit required case coverage. Scenario edits can correct selectors and preparation steps. Protected fields,
+operators, literal/observed baselines, tolerances and assertion multiplicity cannot
+be weakened or deleted. Action/control coverage is also preserved. These checks verify the declared contract; they do not prove every
+possible behavior or replace human
 assessment of intent, difficulty, balance or complete playthrough.
 
 `POST /api/jobs/<id>/resume/` accepts an authenticated, CSRF-protected explicit
@@ -643,3 +662,68 @@ broken. Worker logs correlate failures with invocation keys; job error events
 retain safe exception frames and provider details. Successful output, request
 payloads, credentials and raw transcripts are excluded. No additional generation
 wall-clock or operation-count limits are introduced.
+
+## Adaptive generation implementation
+
+This section describes the opt-in R1–R6 implementation. Default rollout remains
+gated by R7 live measurements and explicit human artistic assessment. PostgreSQL remains the only workflow owner. A supervisor is another
+structured model role behind `ModelGateway`; it has no independent scheduler,
+host tools, publication permission or authority over budget and trusted checks.
+
+Separate immutable `Requirements` and `AcceptanceContract` revisions from
+`GameSpec`/`BuildPlan` design and `ExecutionPlan` work items. An execution item binds
+its dependencies, file scope and completion evidence to the relevant requirements.
+Changing a selector or preparation step is distinct from changing expected game
+behavior. The author cannot approve weaker expectations for its own implementation.
+
+At each meaningful boundary, persist a `StepObservation` containing actual changes,
+typed defects, evidence identity and cost. A deterministic policy continues clear
+productive work or identifies a decision requiring supervision. Invoke the model
+for contradictions, lack of progress, scope changes and readiness milestones;
+do not pay for supervision after every file read or patch.
+
+The supervisor proposes a typed decision with evidence and an expected improvement.
+The coordinator validates the current plan/draft/fence, allowed scope, acceptance
+preservation, budget and approvals. Applying an accepted decision creates an
+immutable child DesignPlan and decision record, then advances their active
+references atomically with the draft and approval transition. Checkpointed
+authoring can then resume within the same candidate attempt. Late responses remain
+accounted but cannot modify a draft under an incompatible plan.
+
+```text
+Execution item → Author/tool step → Saved observation
+    → Deterministic progress policy → Continue the plan
+                                   → Supervisor proposal
+                                       → Coordinator checks
+                                           → Revised plan / targeted repair
+                                           → Validation retry / user decision / pause
+All requirements verified → Readiness decision → Immutable candidate
+    → Independent final validation → Pro acceptance when applicable → Publication
+```
+
+One ledger accounts for planning, authoring, supervision and visual review. Stable
+requirements and the active plan lead each role's context; relevant observations
+and confirmed deltas follow. Receipt reuse and prefix caching remain different
+mechanisms. Unknown paid outcomes never become automatic retries through a
+supervisor suggestion. Productive work has no default wall-clock or step ceiling;
+stalled or internally contradictory supervision must yield an explained pause.
+
+Lite applies technical corrections within the user's intent automatically. Pro
+shows substantial plan changes and waits for approval before dependent work.
+Both expose evidence, the reason for the next action and pause/continuation.
+Neither permits silent scope reduction, budget increases or cancellation reversal.
+
+R5 captures rendered-state evidence and image-capable art/UI review, with explicit
+human review when unavailable. R6 supports modular source and local resources
+with deterministic isolated assembly into a single HTML. Both preserve exact-byte
+validation, historical runtimes and immutable published versions. Pin workflow
+versions, use compatible checkpoint migration and worker capability checks, and
+roll back by pausing incompatible work rather than resetting or deleting it.
+
+The job pins `pipeline_version` and `project_format`. A worker must declare
+`adaptive_generation_v1` to author adaptive jobs. `/resume/` can explicitly
+upgrade a paused native legacy draft; the original CAS object and its identity
+remain intact, and the migrated draft must pass new coverage/art checks. Optional
+continuation feedback is delivered without changing the prior request identity,
+financial receipt or requirements. Unknown WebView hosts still require separate
+device acceptance.

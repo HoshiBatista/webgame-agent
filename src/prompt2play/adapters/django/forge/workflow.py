@@ -18,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from prompt2play.adapters.artifacts.store import ArtifactStore, canonical
 from prompt2play.application.policy import decide, repair_route
+from prompt2play.contracts.models import digest
 from prompt2play.generation.retries import (
     CODEX_TIMEOUT_RECEIPT,
     TIMEOUT_RETRY_SUFFIX,
@@ -82,6 +83,29 @@ def version_eligible(version):
         and hasattr(version.candidate, "result")
         and version.candidate.result.report == version.validation
         and decide(version.validation, version.candidate.attempt, 0).action == "promote"
+        and visual_ready(version.candidate)
+    )
+
+
+def visual_ready(candidate):
+    if candidate.job.checkpoint.get("pipeline_version") != "adaptive-v1":
+        return True
+    from .visual_acceptance import human_ready, rendered_ready
+
+    return human_ready(candidate) or rendered_ready(candidate, candidate_payload(candidate))
+
+
+def version_reviewable(version):
+    """A scoped review preview is permitted only after all mechanical checks pass."""
+    return bool(
+        version.candidate_id
+        and version.candidate.committed
+        and hasattr(version.candidate, "result")
+        and version.candidate.result.report == version.validation
+        and decide(version.validation, version.candidate.attempt, 0).action == "promote"
+        and version.candidate.job.status == "waiting"
+        and version.candidate.job.result_version_id == version.pk
+        and version.candidate.job.review.get("visual_pending")
     )
 
 
@@ -122,7 +146,7 @@ def submit_candidate(job_id, runner, values):
     invocation_id = values.pop("invocation_id", None)
     payload = {name: values[name] for name in ("html", "files", "spec", "plan", "provenance")}
     payload["format"] = values.get("format", "legacy-four-module-v1")
-    if payload["format"] == "runtime-v1":
+    if payload["format"] in ("runtime-v1", "runtime-modules-v2"):
         from prompt2play.generation.runtime import assemble_runtime
 
         try:
@@ -162,7 +186,26 @@ def submit_candidate(job_id, runner, values):
             if previous.artifact_key != content_key:
                 raise Conflict("Submission key conflict.", code="submission_conflict")
             return previous
-        if payload["format"] == "runtime-v1":
+        if job.checkpoint.get("pipeline_version") == "adaptive-v1":
+            from prompt2play.contracts.adaptive import validate_adaptive
+
+            try:
+                if payload["format"] != job.checkpoint.get("project_format", "runtime-v1"):
+                    raise ValueError("Candidate format differs from the pinned job format")
+                controller = payload["provenance"]["adaptive"]
+                if controller["requirements"]["payload"]["request"] != job.prompt:
+                    raise ValueError("Requirements do not contain the original user request")
+                validate_adaptive(
+                    controller,
+                    {
+                        name: payload["spec"].get(name)
+                        for name in controller["design"]["payload"]["spec"]
+                    },
+                    payload["plan"],
+                )
+            except (KeyError, ValueError, TypeError) as exc:
+                raise ValidationError("Invalid adaptive candidate contracts: " + str(exc)) from exc
+        if payload["format"] in ("runtime-v1", "runtime-modules-v2"):
             from prompt2play.contracts.mechanics import preserve_mechanics, validate_mechanics
 
             try:
@@ -578,13 +621,20 @@ def validate_candidate(job_id, runner, values):
             raise ValidationError(str(exc)) from exc
         report["evidence_files"] = store_evidence(report, values.get("evidence_files", {}))
         semantic_attempt = max(1, candidate.attempt - job.review.get("manual_revisions", 0))
-        decision = decide(report, semantic_attempt, job.max_repairs)
+        adaptive_job = job.checkpoint.get("pipeline_version") == "adaptive-v1"
+        decision = decide(
+            report, 1 if adaptive_job else semantic_attempt, 1 if adaptive_job else job.max_repairs
+        )
         if decision.outcome == "passed" and len(report["evidence_files"]) < 2:
             report["status"] = "unverified"
             report.setdefault("warnings", []).append(
                 "Desktop and mobile evidence bytes are required."
             )
-            decision = decide(report, semantic_attempt, job.max_repairs)
+            decision = decide(
+                report,
+                1 if adaptive_job else semantic_attempt,
+                1 if adaptive_job else job.max_repairs,
+            )
         report["status"] = decision.outcome
         report["submission_sha256"] = submission_sha256
         services.require_deadline(job)
@@ -595,26 +645,28 @@ def validate_candidate(job_id, runner, values):
         number = (
             Version.objects.filter(project=project).aggregate(last=Max("number"))["last"] or 0
         ) + 1
+        art_ready = decision.action == "promote" and visual_ready(candidate)
         version = Version.objects.create(
             project=project,
             number=number,
             prompt=job.prompt,
             summary=candidate.summary,
             candidate=candidate,
-            eligible=decision.action == "promote",
+            eligible=decision.action == "promote" and art_ready,
             validation=report,
             usage=candidate.usage,
             spec=payload["spec"],
             files={},
             html="",
         )
-        if decision.action == "promote" and job.creation_mode == "pro":
+        if decision.action == "promote" and (job.creation_mode == "pro" or not art_ready):
             changes = {
                 "status": "waiting",
                 "stage": "review_build",
                 "progress": 95,
                 "result_version": version,
                 "error": "",
+                "review": {**job.review, "visual_pending": not art_ready},
             }
         elif decision.action == "promote":
             services.require_deadline(job)
@@ -632,18 +684,51 @@ def validate_candidate(job_id, runner, values):
             route = repair_route(
                 report, sorted(payload["files"]), job.checkpoint.get("failure_fingerprint")
             )
+            controller_key = None
+            if adaptive_job:
+                from prompt2play.application.progress import observe
+
+                controller = deepcopy(payload.get("provenance", {}).get("adaptive"))
+                if not controller:
+                    raise ValidationError("Adaptive candidate is missing its controller checkpoint")
+                observe(
+                    controller,
+                    "independent_validation",
+                    report,
+                    source_id=digest(payload["files"]),
+                    suite_id=report.get("suite_sha256", ""),
+                    cost=cost_summary(job),
+                )
+                controller["supervisor_due"] = (
+                    "Independent validation found blocking defects; diagnose using saved evidence"
+                )
+                intent, controller_key = store().prepare(controller)
+                store().commit(intent, controller_key)
             changes = {
-                "status": "queued",
+                "status": "paused" if route.strategy == "stop" and not adaptive_job else "queued",
                 "stage": "repair",
                 "progress": 30,
                 "error": route.reason,
                 "checkpoint": {
+                    **job.checkpoint,
                     "candidate_id": str(candidate.pk),
                     "report": report,
-                    "strategy": route.strategy,
+                    "strategy": "structural" if adaptive_job else route.strategy,
                     "files": list(route.files),
                     "failure_fingerprint": route.fingerprint,
                     "reason": route.reason,
+                    **({"controller_state": controller_key} if controller_key else {}),
+                    **(
+                        {
+                            "pause": {
+                                "return_status": "queued",
+                                "remaining_seconds": None,
+                                "reason": route.reason,
+                            }
+                        }
+                        if route.strategy == "stop" and not adaptive_job
+                        else {}
+                    ),
                 },
             }
         else:

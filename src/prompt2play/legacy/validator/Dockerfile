@@ -2,8 +2,8 @@
 # Never built/launched automatically by application startup.
 FROM mcr.microsoft.com/playwright:v1.58.2-noble
 WORKDIR /validator
-RUN npm init -y && npm install --save-exact playwright@1.58.2 && useradd --uid 10001 --create-home forgecheck
-COPY runtime.mjs /validator/runtime.mjs
+RUN npm init -y && npm install --save-exact playwright@1.58.2 esbuild@0.25.12 && useradd --uid 10001 --create-home forgecheck
+COPY *.mjs /validator/
 COPY release_runtime.mjs /validator/release_runtime.mjs
 COPY audio_probe.mjs /validator/audio_probe.mjs
 COPY scenario_runner.mjs /validator/scenario_runner.mjs

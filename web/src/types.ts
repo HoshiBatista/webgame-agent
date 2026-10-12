@@ -29,6 +29,7 @@ export interface Validation {
 export interface ModelCall { id: string; operation: string; state: string; started_at: string; finished_at: string | null; usage_known: boolean; stage_fence: number }
 export interface JobActivity { worker_contact_at: string | null; worker_connected: boolean; calls: ModelCall[] }
 export interface Job {
+  pipeline_version?: 'legacy-v1' | 'adaptive-v1';
   id: string; project_id: string; kind: 'generate' | 'revise'; prompt: string; provider: Provider; model: string;
   status: JobStatus; stage: string; progress: number; base_version_id: string | null; result_version_id: string | null;
   runner_id: string | null; created_at: string; updated_at: string; error: string; max_repairs: number; budget_tokens: number; usage: Usage;
@@ -39,6 +40,7 @@ export interface Job {
 }
 export interface Project { id: string; title: string; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }
 export interface Version {
+  visual_review_pending?: boolean;
   id: string; project_id: string; number: number; prompt: string; summary: string; created_at: string; is_reference: boolean;
   validation: Validation; usage: Usage; spec: Record<string, unknown>; download_url: string; source_url: string;
   eligible?: boolean; preview_url?: string | null;
@@ -48,6 +50,6 @@ export interface JobEvent { id: number; job_id: string; stage: string; level: 'i
 export interface Runner { id: string; name: string; role?: RunnerRole; created_at: string; last_seen: string | null; online: boolean; revoked: boolean; capabilities: Record<string, unknown> }
 export interface PriceCatalog { as_of: string; service_tier: string; source: string; models: Record<string, {input: string; cached_input: string; cache_write: string; output: string}> }
 export interface Cost { estimated_usd: string; upper_usd: string; reserved_usd: string; remaining_usd: string; over_budget: boolean }
-export interface JobInsights { draft_diagnostic?: Validation | null; author_steps?: {summary: string; operations: {op: string; path: string}[]}[]; proposal_current?: boolean; job_id: string; proposal: {spec: Record<string, unknown>; plan: Record<string, unknown>} | null; summary: string; files: string[]; provenance: Record<string, unknown>; validation: Validation | null; feedback: {stage: string; text: string}[]; approval: 'plan' | 'build' | null; version_id: string | null }
-export interface JobSettings { playthrough_mode?: 'manual' | 'auto'; creation_mode?: 'lite' | 'pro'; provider: Provider; model: string; max_repairs: number; budget_usd: number }
+export interface JobInsights { adaptive?: Record<string, unknown> | null; visual_pending?: boolean; previous_proposal?: {spec: Record<string, unknown>; plan: Record<string, unknown>} | null; draft_diagnostic?: Validation | null; author_steps?: {summary: string; operations: {op: string; path: string}[]}[]; proposal_current?: boolean; job_id: string; proposal: {spec: Record<string, unknown>; plan: Record<string, unknown>} | null; summary: string; files: string[]; provenance: Record<string, unknown>; validation: Validation | null; feedback: {stage: string; text: string}[]; approval: 'plan' | 'build' | null; version_id: string | null }
+export interface JobSettings { pipeline_version?: 'legacy-v1' | 'adaptive-v1'; playthrough_mode?: 'manual' | 'auto'; creation_mode?: 'lite' | 'pro'; provider: Provider; model: string; max_repairs: number; budget_usd: number }
 export interface JobInput extends JobSettings { kind: 'generate' | 'revise'; prompt: string; base_version_id?: string | null }

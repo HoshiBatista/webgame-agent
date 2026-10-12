@@ -5,8 +5,9 @@ from datetime import timedelta
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
-from . import services
+from . import services, workflow
 from .errors import Conflict
 from .models import Job, Project
 
@@ -107,7 +108,41 @@ def resume_paused(job_id, values):
             finalize_intent(job.active_candidate)
             stage = "validate"
         checkpoint = continuation_checkpoint(job)
+        if (
+            values.get("upgrade_pipeline")
+            and checkpoint.get("pipeline_version", "legacy-v1") != "adaptive-v1"
+        ):
+            if checkpoint.get("project_format", "runtime-v1") not in (
+                "runtime-v1",
+                "runtime-modules-v2",
+            ):
+                raise ValidationError("Эта версия формата требует отдельной дочерней доработки.")
+            saved = checkpoint.get("authoring_draft")
+            old = workflow.store().read_json(saved["key"]) if saved else {}
+            checkpoint.update(
+                pipeline_version="adaptive-v1",
+                project_format=old.get("plan", {}).get(
+                    "format", checkpoint.get("project_format", "runtime-v1")
+                ),
+            )
+            if old:
+                checkpoint["pipeline_migration"] = {
+                    "from": "legacy-v1",
+                    "draft_key": saved["key"],
+                    "request_sha256": old["request_sha256"],
+                }
+            services.event(
+                job,
+                "Продолжение переведено на новый процесс. Исходный черновик сохранён неизменным; новые проверки выполняются отдельно.",
+                data={"pipeline": "adaptive-v1", "original_draft": saved["key"] if saved else None},
+            )
         pause = checkpoint.pop("pause", {})
+        feedback = values.get("feedback", "").strip()
+        if feedback:
+            notes = checkpoint.get("continuation_feedback", [])
+            if sum(len(note) for note in notes) + len(feedback) > 48000:
+                raise ValidationError("История уточнений превышает 48 000 символов.")
+            checkpoint["continuation_feedback"] = [*notes, feedback]
         # Resuming is explicit permission for another corrective attempt; the
         # preserved proposal/error is retried, not regenerated from the request.
         if "planning" in checkpoint:

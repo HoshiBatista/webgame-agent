@@ -75,6 +75,10 @@ class ProjectUpdateSerializer(serializers.Serializer):
 
 
 class JobCreateSerializer(serializers.Serializer):
+    project_format = serializers.ChoiceField(
+        choices=["runtime-v1", "runtime-modules-v2"], required=False
+    )
+    pipeline_version = serializers.ChoiceField(choices=["legacy-v1", "adaptive-v1"], required=False)
     creation_mode = serializers.ChoiceField(choices=["lite", "pro"], default="lite")
     kind = serializers.ChoiceField(choices=["generate", "revise"])
     prompt = serializers.CharField(max_length=12000)
@@ -109,6 +113,8 @@ class RunnerCreateSerializer(serializers.Serializer):
 
 
 class ResumeSerializer(serializers.Serializer):
+    upgrade_pipeline = serializers.BooleanField(required=False, default=False)
+    feedback = serializers.CharField(max_length=12000, required=False, allow_blank=True, default="")
     stage_fence = serializers.IntegerField(min_value=0)
 
 
@@ -466,7 +472,8 @@ class CandidateSerializer(FencedSerializer):
     plan = serializers.JSONField(default=dict)
     provenance = serializers.JSONField(default=dict)
     format = serializers.ChoiceField(
-        choices=["legacy-four-module-v1", "runtime-v1"], default="legacy-four-module-v1"
+        choices=["legacy-four-module-v1", "runtime-v1", "runtime-modules-v2"],
+        default="legacy-four-module-v1",
     )
     summary = serializers.CharField(max_length=3000, allow_blank=True, default="")
     usage = UsageSerializer(required=False)
@@ -506,7 +513,11 @@ class CandidateSerializer(FencedSerializer):
         return bounded_object(value, 512 * 1024, "plan")
 
     def validate_provenance(self, value):
-        return bounded_object(value, 512 * 1024, "provenance")
+        return bounded_object(
+            value,
+            16 * MIB if isinstance(value, dict) and "adaptive" in value else 512 * 1024,
+            "provenance",
+        )
 
 
 class ReserveSerializer(FencedSerializer):
@@ -571,7 +582,9 @@ class DraftSerializer(FencedSerializer):
     draft = serializers.JSONField()
 
     def validate_draft(self, value):
-        return bounded_object(value, 12 * MIB, "draft")
+        return bounded_object(
+            value, (32 if isinstance(value, dict) and "adaptive" in value else 12) * MIB, "draft"
+        )
 
 
 class DiagnosticSerializer(FencedSerializer):

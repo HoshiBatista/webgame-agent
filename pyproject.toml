@@ -38,6 +38,7 @@ dev = [
 include = [
   "/src",
   "/tests",
+  "/tools",
   "/AGENTS.md",
   "/CLAUDE.md",
   "/CONTRIBUTING.md",

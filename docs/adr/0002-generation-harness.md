@@ -4,6 +4,12 @@
 - **Date:** 2026-10-10
 - **Decision owners:** Prompt2Play maintainers
 
+The implemented [ADR 0004](0004-adaptive-generation-control.md) extension introduces
+checkpointed plan decisions inside the same candidate boundary. Its R0–R7 delivery
+plan supersedes default productive-turn/operation/time ceilings for the new
+workflow; existing Studio behavior already removes those defaults. Historical
+bounded-experiment results and explicit policies on old jobs are preserved.
+
 The single-attempt, controlled-tools, candidate-commit, and release-validation
 boundaries below remain accepted. ADR 0003 changes the initial HTTP framework to
 Django/DRF and dispatch to database-backed polling. It makes PydanticAI optional

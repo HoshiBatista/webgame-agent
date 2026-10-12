@@ -39,6 +39,8 @@ def record_plan(job_id, runner, values):
         workflow.store().commit(intent, key)
         review = deepcopy(job.review)
         changed = review.get("plan_key") != key
+        if changed and review.get("plan_key"):
+            review["previous_plan_key"] = review["plan_key"]
         review["plan_key"] = key
         review["plan_feedback_round"] = len(review.get("feedback", []))
         waiting = job.creation_mode == "pro" and review.get("approved_plan_key") != key
@@ -98,6 +100,13 @@ def insights(job):
     if proposal is None and payload:
         proposal = {"spec": payload["spec"], "plan": payload["plan"]}
     provenance = payload.get("provenance", {})
+    adaptive = provenance.get("adaptive")
+    if job.checkpoint.get("authoring_draft"):
+        adaptive = (
+            workflow.store()
+            .read_json(job.checkpoint["authoring_draft"]["key"])
+            .get("adaptive", adaptive)
+        )
     author_steps, draft_reviews = [], []
     if not payload:
         for receipt in job.invocations.filter(
@@ -139,18 +148,23 @@ def insights(job):
         else None,
         "feedback": job.review.get("feedback", []),
         "approval": job.stage.removeprefix("review_") if job.status == "waiting" else None,
+        "adaptive": adaptive,
+        "visual_pending": job.review.get("visual_pending", False),
+        "previous_proposal": workflow.store().read_json(job.review["previous_plan_key"])
+        if job.review.get("previous_plan_key")
+        else None,
         "version_id": str(job.result_version_id) if job.result_version_id else None,
     }
 
 
-def decide_review(job_id, *, stage_fence, action, feedback=""):
+def decide_review(job_id, *, stage_fence, action, feedback="", actor_id=None):
     with transaction.atomic():
         original = Job.objects.get(pk=job_id)
         Project.objects.filter(pk=original.project_id).update(updated_at=F("updated_at"))
         Job.objects.filter(pk=job_id).update(updated_at=F("updated_at"))
         job = Job.objects.get(pk=job_id)
         if (
-            job.creation_mode != "pro"
+            (job.creation_mode != "pro" and not job.review.get("visual_pending"))
             or job.status != "waiting"
             or job.stage not in ("review_plan", "review_build")
             or job.stage_fence != stage_fence
@@ -179,11 +193,24 @@ def decide_review(job_id, *, stage_fence, action, feedback=""):
                 version = Version.objects.filter(
                     pk=job.result_version_id, candidate__job=job
                 ).first()
-                if version is None or not workflow.version_eligible(version):
+                if version is None or not (
+                    workflow.version_eligible(version) or workflow.version_reviewable(version)
+                ):
                     raise Conflict(
                         "Сборка не прошла обязательные проверки.", code="validation_required"
                     )
                 workflow.candidate_payload(version.candidate)
+                if review.pop("visual_pending", False):
+                    if actor_id is None:
+                        raise ValidationError(
+                            "Explicit human visual approval requires the acting user"
+                        )
+                    review["visual_approval"] = {
+                        "artifact_key": version.candidate.artifact_key,
+                        "user_id": str(actor_id),
+                        "at": timezone.now().isoformat(),
+                    }
+                    Version.objects.filter(pk=version.pk).update(eligible=True)
                 Project.objects.filter(pk=job.project_id).update(
                     latest_version=version, updated_at=timezone.now()
                 )

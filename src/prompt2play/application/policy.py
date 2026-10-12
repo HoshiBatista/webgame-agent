@@ -112,16 +112,9 @@ def repair_route(
         else []
     )
     defects = checks + issues
-    signature = {
-        "errors": report.get("errors", []),
-        "defects": [
-            {
-                key: defect.get(key)
-                for key in ("name", "message", "scope", "affected_files", "contract_ids")
-            }
-            for defect in defects
-        ],
-    }
+    from prompt2play.application.progress import defect_ids
+
+    signature = defect_ids(report)
     fingerprint = hashlib.sha256(
         json.dumps(signature, sort_keys=True, separators=(",", ":"), default=str).encode()
     ).hexdigest()
@@ -137,10 +130,10 @@ def repair_route(
     files = tuple(sorted(affected or allowed))
     if fingerprint == previous_fingerprint:
         return RepairRoute(
-            "regenerate",
+            "stop",
             tuple(sorted(allowed)),
             fingerprint,
-            "The same failure survived a repair; regenerate a fresh candidate.",
+            "The same verified defect survived a repair; preserve the draft and diagnose before continuing.",
         )
     scopes = {defect.get("scope") for defect in defects if isinstance(defect.get("scope"), str)}
     if "contract" in scopes or any(defect.get("contract_ids") for defect in defects):

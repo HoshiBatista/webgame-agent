@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from collections.abc import Callable
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
 
@@ -50,6 +51,49 @@ REQUIRED_CHECKS = frozenset(
 ) | {"mobile_layout:390"}
 MAX_EVIDENCE_BYTES = 32_000_000
 HASH = re.compile(r"[0-9a-f]{64}")
+
+
+@lru_cache(maxsize=16)
+def _preflight_image(docker: str, image: str, expected: str) -> None:
+    # Only trusted container inventory is inspected; no generated game is mounted.
+    script = (
+        "const fs=require('fs'),crypto=require('crypto');let result={};"
+        "for(const name of fs.readdirSync('/validator').filter(p=>p.endsWith('.mjs')).sort())"
+        "result[name]=crypto.createHash('sha256').update(fs.readFileSync('/validator/'+name))"
+        ".digest('hex');process.stdout.write(JSON.stringify(result));"
+    )
+    try:
+        value = subprocess.run(
+            [
+                docker,
+                "run",
+                "--rm",
+                "--pull=never",
+                "--network=none",
+                "--read-only",
+                "--cap-drop=ALL",
+                "--security-opt=no-new-privileges",
+                "--user=10001:10001",
+                "--memory=128m",
+                "--pids-limit=32",
+                image,
+                "node",
+                "-e",
+                script,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        if value.returncode or json.loads(value.stdout) != json.loads(expected):
+            raise ValueError(
+                "Validator image does not match trusted checking code; rebuild before generation"
+            )
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+        raise ValueError(
+            "Validator environment is unavailable before generation; no model call made"
+        ) from exc
 
 
 def _selector(value: Any) -> str:
@@ -277,6 +321,45 @@ class IsolatedValidator:
             raise ValueError("Invalid validator configuration")
         self.image = image
         self.timeout = timeout
+
+    def cache_identity(self) -> dict[str, Any]:
+        """Bind draft reuse to the actual image and trusted suite, not a mutable tag."""
+        image_id = "unavailable"
+        docker = shutil.which("docker")
+        if docker:
+            try:
+                value = subprocess.run(
+                    [docker, "image", "inspect", "--format", "{{.Id}}", self.image],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                if not value.returncode and re.fullmatch(
+                    r"sha256:[0-9a-f]{64}", value.stdout.strip()
+                ):
+                    image_id = value.stdout.strip()
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        return {
+            "image": image_id,
+            "image_tag": self.image,
+            "timeout": self.timeout,
+            "browser_contract": BROWSER_CONTRACT_VERSION,
+            "harness_files": {
+                p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in sorted(self.runtime_path.parent.glob("*.mjs"))
+            },
+        }
+
+    def preflight(self) -> dict[str, Any]:
+        """Reject an unavailable/stale image before paying for planning or authoring."""
+        identity = self.cache_identity()
+        docker = shutil.which("docker")
+        if not docker or identity["image"] == "unavailable":
+            raise ValueError("Validator image is unavailable before generation; no model call made")
+        _preflight_image(docker, identity["image"], canonical_json(identity["harness_files"]))
+        return identity
 
     def validate(
         self,
@@ -547,6 +630,7 @@ class IsolatedValidator:
         )
         if not exact_assembly:
             errors.append("Native delivered HTML differs from trusted assembly")
+        modular = spec.get("format") == "runtime-modules-v2"
         valid = (
             bool(files)
             and len(html.encode()) <= 1_000_000
@@ -557,6 +641,14 @@ class IsolatedValidator:
                 for name, source in files.items()
             )
         )
+        if modular:
+            from prompt2play.generation.project import PROJECT_QUOTAS, project_sources
+
+            try:
+                project_sources(files)
+                valid = len(html.encode()) <= PROJECT_QUOTAS["html_bytes"]
+            except (ValueError, TypeError):
+                valid = False
         checks.append(
             check_record(
                 "module_paths",
@@ -568,8 +660,10 @@ class IsolatedValidator:
         if not valid:
             errors.append("Invalid native source paths or byte limits")
         for name, source in files.items():
+            if modular and not name.endswith((".js", ".css")):
+                continue
             forbidden = source_findings(
-                source, javascript=name.endswith(".js"), runtime_managed=True
+                source, javascript=name.endswith(".js"), runtime_managed=True, modules=modular
             )
             checks.append(
                 check_record(
@@ -588,7 +682,8 @@ class IsolatedValidator:
                     if not name.endswith(".js"):
                         continue
                     check_cancel(cancel)
-                    path = Path(temporary) / name
+                    path = Path(temporary) / (name + (".mjs" if modular else ""))
+                    path.parent.mkdir(parents=True, exist_ok=True)
                     path.write_text(source, encoding="utf-8")
                     try:
                         parsed = subprocess.run(

@@ -135,25 +135,25 @@
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "f4095e5e0f8f5f06a55e5d5f509e78d72b81e2059a798e4df3353e2973dd13bd",
+      "destination_sha256": "57293d7ad8ddfdf09c09f291c9dcff6fcf3e6b51e1e7eb07a530f23e9bbb8102",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "backend/forge/serializers.py",
       "destination": "src/prompt2play/adapters/django/forge/serializers.py",
       "source_sha256": "8d8a07894f9b5e4acc3caf49a18f57000e5241b53ac82816401aab15535f3824",
-      "destination_sha256": "40894d387de1d0f98377fab902e5e60d8ec45e5a5cd4d2e82c6bb0374957abad",
+      "destination_sha256": "e4ed45cfed36bebcfa9ea29cdce32f71f6ac579e5667bfab166461ee66e01f12",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "backend/forge/services.py",
       "destination": "src/prompt2play/adapters/django/forge/services.py",
       "source_sha256": "6a81de265c7c23a6060405d1797703e2cd8b2fd1a2c5226fcef73708f5610568",
-      "destination_sha256": "d2b178b8337e050445c0be203165e5cfb46ca14081c64dc58f4ddb6d63266489",
+      "destination_sha256": "4399902f5d03e521c5eefeceeb30c3be1d2c223071a5f47031dc8808017dfc99",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "backend/forge/tests/__init__.py",
@@ -207,17 +207,17 @@
       "source": "backend/forge/urls.py",
       "destination": "src/prompt2play/adapters/django/forge/urls.py",
       "source_sha256": "91d876887830ae6f77c9910b7891578ade6a74fc6392d2c91a2e3ba5c24acc41",
-      "destination_sha256": "8d51016613d7bcc390261ef39ed17c9826595e7f4a97c39a6f906f76f7ebe49e",
+      "destination_sha256": "38aaf5fad919f07e48c46e81d836d7c0f12f34347a0269797a296e45fdf437ec",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "backend/forge/views.py",
       "destination": "src/prompt2play/adapters/django/forge/views.py",
       "source_sha256": "e2311c7540a26fcf54bb81aef2a9f6b3c0e1d0c8cc1932449bcf9e5c5fb68f31",
-      "destination_sha256": "254e431cb2d0d1da07f5ec35888e2eca072841bc8c1ce9812d94e6aea26e155c",
+      "destination_sha256": "8a0cfb3182f26b3de74737590215269e5bbfa81c48f6bfa8ce98898b2ff8cd34",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "backend/config/__init__.py",
@@ -239,9 +239,9 @@
       "source": "backend/config/settings.py",
       "destination": "src/prompt2play/adapters/django/config/settings.py",
       "source_sha256": "c8c4c8838092a27158a65a2a6f7024d804b503aeffa8e25b6dc01a728e9a5b84",
-      "destination_sha256": "f78bb09b5dac001d6f91fd53f08eb87bf230d5d1bf0b8fced26827b3d8a87ec8",
+      "destination_sha256": "a9c123c75a6e2ed1cc3b547dd6ac62296b66377840ebc1030636c1321ad3a5b1",
       "modified": true,
-      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Bundled studio discovery, role/coordinator policy and redacted preview capability logging."
+      "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Bundled studio discovery, role/coordinator policy and redacted preview capability logging. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "backend/config/urls.py",
@@ -303,9 +303,9 @@
       "source": "worker/providers.py",
       "destination": "src/prompt2play/legacy/worker/providers.py",
       "source_sha256": "c6dc28d5cc1e5193a8fc5660d93d64c51090aea5ed282b562065f322fd970db4",
-      "destination_sha256": "83b12c4f2960ee7e0c3da961af8b2d0e0ff25b901078903e9015f20cc5ae61fb",
+      "destination_sha256": "06647462071a2791627fee73a98b12d57b9f82d3c37fecbabc1e8c4f6d8fd241",
       "modified": true,
-      "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness. Codex wire-schema compatibility preserves full local validation; bounded safe schema diagnostics and literal credential-isolated provider setup."
+      "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness. Codex wire-schema compatibility preserves full local validation; bounded safe schema diagnostics and literal credential-isolated provider setup. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "worker/semantics.py",
@@ -455,9 +455,9 @@
       "source": "validator/Dockerfile",
       "destination": "src/prompt2play/legacy/validator/Dockerfile",
       "source_sha256": "7967f671a12c5538b5c34ef2d260a66802f06b91ff314480f8c106cf36abca4c",
-      "destination_sha256": "7af6e3918edc7616c1af71d1e69843479898f1dcf45c40cdfcc6de4a141612f0",
+      "destination_sha256": "60b3e6641eb1dab4f91cc7b8ef1e876dd7170f4b9c97b206fe1ae74b77871269",
       "modified": true,
-      "adaptation": "Adopted static/isolated starting point; trusted real-input release runner, independent outcome profile, pixel/no-input causality and exact private evidence added."
+      "adaptation": "Adopted static/isolated starting point; trusted real-input release runner, independent outcome profile, pixel/no-input causality and exact private evidence added. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "validator/README.md",
@@ -1255,25 +1255,25 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "f79ff20168fd3668be035c39d1c141b06aa5f069176407dfdadeff10df7c43b9",
+      "destination_sha256": "32980ce564da1a228743b37ba3ecdf5c0bd9313e8bc5e373a4533183179253f0",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "frontend/src/components/JobSettings.tsx",
       "destination": "web/src/components/JobSettings.tsx",
       "source_sha256": "f552bb8504c859167a88f923a4bf1c5f86f26ad5805b1d1079140a3c279a5eec",
-      "destination_sha256": "98a311e340298bddcca6fdd7dd1b345f01202e3232e16c7a0f49032a56026270",
+      "destination_sha256": "4f031161ad8e7b9dc6809717099336500bb8d6eb45f55d47202572cad6118a64",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable. Adaptive mode explains plan revisions and incomplete visual assessment."
     },
     {
       "source": "frontend/src/components/PreviewPane.tsx",
       "destination": "web/src/components/PreviewPane.tsx",
       "source_sha256": "d2dbbab02a6af6338f0a02b25b7b8311e435016f23f5ad02fd4b35e741523d78",
-      "destination_sha256": "065d3ea0785c6a7c48645aba9080b6594635087b9c5671312eac8ec011ac4622",
+      "destination_sha256": "b257697f6f624328c6a4e0e2248e99bab67a11f6d9d2c441e48f4f5112e761d6",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Authenticated remount/restart refreshes expiring scoped preview capabilities; refresh failure does not reuse expired URLs."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Authenticated remount/restart refreshes expiring scoped preview capabilities; refresh failure does not reuse expired URLs. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "frontend/src/components/SemanticContract.tsx",
@@ -1311,17 +1311,17 @@
       "source": "frontend/src/lib/api.ts",
       "destination": "web/src/lib/api.ts",
       "source_sha256": "3b054504e03ab25c193fa7d766be43f60c01735067a35de3c0ed18a19236d32b",
-      "destination_sha256": "2ac551c8612c20f98c295c60db26bd6de5990cd7035bebb72dd22d02a29df39f",
+      "destination_sha256": "09663905e7d6eeec7bc9a9029c3aa03a71d4f4341ca866990640c5892259d324",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "frontend/src/lib/format.ts",
       "destination": "web/src/lib/format.ts",
       "source_sha256": "92b75dce945e753f038d600d1d2cae92476c3249dc75502fdaaeda1e67e91923",
-      "destination_sha256": "59cd1e0e9e2b60aa0a077475ab8d12416d38f8e8616ad82ff6e6167c1538ca6c",
+      "destination_sha256": "35cc33f6e1b2afb9393a266c43fc03d32cb231b17a789db46bb77c646fd2704e",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "frontend/src/lib/preview.ts",
@@ -1399,17 +1399,17 @@
       "source": "frontend/src/styles.css",
       "destination": "web/src/styles.css",
       "source_sha256": "bf0104eddfda38faedfe3302ac6ab39e160eb4d2799abe04512c61499573e762",
-      "destination_sha256": "40585ff0d9d077246fcf00e887314337bb32e3763b2d9b64175e80fcab8d68d9",
+      "destination_sha256": "10e7ae58bb1ff8d83acca8533923c1e26eec925ecd05e438442b62543a2d7afe",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "ab737bbf3fcd67cc0d9372b9a9f1c65f47d0af51ecf4d6415a5894ba37bc9f5a",
+      "destination_sha256": "467e06196c7febdf39c30e8f13671a90491833e94ea5dc57117c177cadce5100",
       "modified": true,
-      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
+      "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
     {
       "source": "frontend/src/vite-env.d.ts",
@@ -1537,7 +1537,8 @@
     "evidence/adaptive-four-author-supplement-v4.json",
     "evidence/storage-denial-runtime-supplement.json",
     "evidence/generation-reliability-verification.json",
-    "evidence/planning-pause-verification.json"
+    "evidence/planning-pause-verification.json",
+    "evidence/adaptive-implementation-verification-2026-10-12.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

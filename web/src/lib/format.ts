@@ -10,16 +10,17 @@ export function date(value: string | null | undefined, full = false): string {
 export const time = (value: string) => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 export const activeJob = (status?: JobStatus) => status === 'queued' || status === 'running' || status === 'waiting' || status === 'paused';
 export const jobLabels: Record<JobStatus, string> = { paused: 'На паузе', waiting: 'Ждёт решения', queued: 'В очереди', running: 'Создаётся', completed: 'Готово', failed: 'Ошибка', cancelled: 'Отменено' };
-export const stageLabels: Record<string, string> = { browser_check: 'Проверка черновика в браузере', review_plan: 'Подтвердите план', review_build: 'Оцените сборку', author: 'Код игры', commit: 'Сохранение сборки', plan: 'План игры и дизайн', visual_review: 'Разбор графики и UI', contract: 'Согласование правил', prepare: 'Подготовка авторов', engine: 'Механика', renderer: 'Графика', audio: 'Звук', ui: 'Интерфейс игры', assemble: 'Сборка HTML', validate: 'Проверки', scenarios: 'Игровые сценарии', review: 'Ревью', repair: 'Исправления', done: 'Завершено' };
+export const stageLabels: Record<string, string> = { coverage_review: 'Полнота требований', supervisor: 'Оценка прогресса и плана', rendered_review: 'Просмотр графики игры', browser_check: 'Проверка черновика в браузере', review_plan: 'Подтвердите план', review_build: 'Оцените сборку', author: 'Код игры', commit: 'Сохранение сборки', plan: 'План игры и дизайн', visual_review: 'Разбор графики и UI', contract: 'Согласование правил', prepare: 'Подготовка авторов', engine: 'Механика', renderer: 'Графика', audio: 'Звук', ui: 'Интерфейс игры', assemble: 'Сборка HTML', validate: 'Проверки', scenarios: 'Игровые сценарии', review: 'Ревью', repair: 'Исправления', done: 'Завершено' };
 export const settingsKey = 'forge.job_settings.v2';
 export const dollars = (value: number | string) => new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4}).format(Number(value));
-export const defaultSettings: JobSettings = { playthrough_mode: 'manual', creation_mode: 'lite', provider: 'codex', model: '', max_repairs: 2, budget_usd: 10 };
+export const defaultSettings: JobSettings = { pipeline_version: 'legacy-v1', playthrough_mode: 'manual', creation_mode: 'lite', provider: 'codex', model: '', max_repairs: 2, budget_usd: 10 };
 export function readSettings(): JobSettings {
   try {
     const raw = JSON.parse(localStorage.getItem(settingsKey) || localStorage.getItem('forge.job_settings.v1') || '{}');
     return {
       playthrough_mode: raw.playthrough_mode === 'auto' ? 'auto' : 'manual',
       creation_mode: raw.creation_mode === 'pro' ? 'pro' : 'lite',
+      pipeline_version: raw.pipeline_version === 'adaptive-v1' ? 'adaptive-v1' : 'legacy-v1',
       provider: raw.provider === 'openai' ? 'openai' : 'codex',
       model: typeof raw.model === 'string' ? raw.model.slice(0, 120) : '',
       max_repairs: Number.isInteger(raw.max_repairs) ? Math.min(2, Math.max(0, raw.max_repairs)) : 2,

@@ -172,7 +172,7 @@ def _tokens(source: str) -> list[_Token]:
 
 
 def source_findings(
-    source: str, *, javascript: bool = True, runtime_managed: bool = False
+    source: str, *, javascript: bool = True, runtime_managed: bool = False, modules: bool = False
 ) -> list[SourceViolation]:
     """Return bounded construct labels/offsets, never payload excerpts or secrets."""
     findings: list[SourceViolation] = []
@@ -231,6 +231,8 @@ def source_findings(
             and following != ":"
             and not method(index)
         ):
+            if modules and not (token.text == "import" and following in ("(", ".")):
+                continue
             finding(
                 "dynamic_import"
                 if token.text == "import" and following == "("

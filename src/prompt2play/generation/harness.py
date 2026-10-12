@@ -7,12 +7,14 @@ import hashlib
 import json
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any, cast
 
 import jsonschema
 
+from prompt2play.application.progress import observe
 from prompt2play.contracts import PLAN_SCHEMA, BuildPlan, GameSpec, split_legacy_plan
+from prompt2play.contracts.adaptive import initial_contracts, revise_design, revise_execution
 from prompt2play.contracts.models import digest, obj, stable, validate
 from prompt2play.legacy.validator.checks import assemble
 from prompt2play.legacy.worker.core import COMPONENT_SCHEMA, PLAN_OUTPUT_SCHEMA, PROMPT_BOUNDARY
@@ -35,11 +37,12 @@ from .visual_quality import (
 from .workspace import (
     DraftWorkspace,
     GenerationControl,
+    GenerationPaused,
     GenerationStopped,
     WorkspaceLimits,
 )
 
-HARNESS_VERSION = "generation-harness-v1.9"
+HARNESS_VERSION = "generation-harness-v2.0"
 PLANNING_INSTRUCTIONS = (
     QUALITY_BRIEF
     + """Plan the requested complete offline HTML5 game for continued development. Return GameSpec (what the game does) and BuildPlan (visual design, maintainable implementation and acceptance) separately.
@@ -112,6 +115,7 @@ reset on pause/blur. ctx.input.pointer is DOWN-ONLY too; drag requires scoped po
 pointerup and pointercancel listeners. Match the supplied runtime identity exactly.
 """
 )
+AUTHOR_INSTRUCTIONS += """\nProtected acceptance: set_test_scenario can correct selectors and preparation steps, but cannot change expected paths, comparisons, literals or tolerances, delete assertions or change snapshot/literal baselines. To dispute a planned expectation in adaptive-v1, use request_plan_change(content) with JSON {task_id,problem,proposal}; source is saved and the controller reviews the conflict. Never repeatedly rebuild the complete plan to silence an error.\n"""
 
 
 OPERATION_SCHEMA = obj(
@@ -127,6 +131,7 @@ OPERATION_SCHEMA = obj(
                 "check",
                 "browser_check",
                 "set_test_scenario",
+                "request_plan_change",
                 "submit",
             ],
         },
@@ -147,6 +152,9 @@ OPERATIONS_SCHEMA = obj(
 @dataclass(frozen=True)
 class GenerationRequest:
     prompt: str
+    pipeline_version: str = "legacy-v1"
+    project_format: str = "runtime-v1"
+    controller_state: dict[str, Any] = field(default_factory=dict)
     kind: str = "generate"
     mode: str = "single_author"
     base_files: dict[str, str] = field(default_factory=dict)
@@ -161,6 +169,8 @@ class GenerationRequest:
     previous_proposal: dict[str, Any] = field(default_factory=dict)
     resume_state: dict[str, Any] = field(default_factory=dict)
     planning_state: dict[str, Any] = field(default_factory=dict)
+    continuation_feedback: list[str] = field(default_factory=list)
+    migration_from_sha: str = ""
 
 
 @dataclass(frozen=True)
@@ -201,19 +211,31 @@ class GenerationHarness:
         on_planning: Callable[[dict[str, Any]], None] | None = None,
         require_completion: bool = True,
         on_browser_check: Callable[[dict[str, str], dict[str, Any]], dict[str, Any]] | None = None,
+        browser_identity: dict[str, Any] | None = None,
+        on_rendered_check: Callable[
+            [dict[str, str], dict[str, Any], dict[str, Any]], dict[str, Any]
+        ]
+        | None = None,
     ) -> None:
         self.limits = limits or WorkspaceLimits()
         self.on_plan = on_plan
         self.on_checkpoint = on_checkpoint
         self.on_planning = on_planning
         self.on_browser_check = on_browser_check
+        self.browser_identity = browser_identity or {}
+        self.on_rendered_check = on_rendered_check
         self.require_completion = require_completion
         self.plan_output_tokens, self.code_output_tokens = plan_output_tokens, code_output_tokens
+        self.packager: dict[str, Any] = {}
 
     def attempt(
         self, request: GenerationRequest, gateway: ModelGateway, control: GenerationControl
     ) -> CandidateSubmission:
         control.guard()
+        if request.project_format == "runtime-modules-v2":
+            from .project import compiler_identity
+
+            self.packager = compiler_identity()
         if request.kind not in ("generate", "revise", "repair"):
             raise ValueError("Unsupported generation kind")
         if request.mode == "four_author":
@@ -242,6 +264,7 @@ class GenerationHarness:
                 if key
                 not in (
                     "format",
+                    "packager",
                     "runtime",
                     "independent_acceptance",
                     "input_acceptance",
@@ -291,7 +314,17 @@ class GenerationHarness:
             try:
                 if proposal is None:
                     reply = gateway.generate(
-                        PLANNING_INSTRUCTIONS
+                        (
+                            PLANNING_INSTRUCTIONS.replace(
+                                "runtime-v1", "runtime-modules-v2"
+                            ).replace(
+                                "with game.js and optional style.css.",
+                                "with game.js as the entry point, optional style.css, and planned local modules/assets.",
+                            )
+                            + "\nUse ES modules: game.js exports createGame(ctx); split rules, rendering, UI and content into planned local modules. Local JSON, SVG and base64-encoded PNG files are supported; imports must be relative. No package/config files, dynamic imports or external dependencies. A trusted isolated compiler embeds assets. Quotas: 32 files, 2 MB per file, 4 MB total.\n"
+                            if request.project_format == "runtime-modules-v2"
+                            else PLANNING_INSTRUCTIONS
+                        )
                         + "\nFull authoritative planning schema, including every local size/range bound:\n"
                         + stable(PLAN_SCHEMA)
                         + PROMPT_BOUNDARY
@@ -303,6 +336,14 @@ class GenerationHarness:
                     )
                     proposal = reply.data
                 validate(proposal, PLAN_SCHEMA, "New game plan")
+                if proposal["build_plan"]["format"] != request.project_format or (
+                    request.project_format == "runtime-v1"
+                    and {f["path"] for f in proposal["build_plan"]["files"]}
+                    - {"game.js", "style.css"}
+                ):
+                    raise ValueError(
+                        "Plan must use the requested project format: " + request.project_format
+                    )
                 validate_mechanics(
                     proposal["build_plan"]["mechanics"],
                     [a["type"] for a in proposal["game_spec"]["actions"]]
@@ -367,6 +408,12 @@ class GenerationHarness:
         identity = asdict(request)
         identity.pop("resume_state")
         identity.pop("planning_state")
+        identity.pop("continuation_feedback")
+        identity.pop("migration_from_sha")
+        if request.pipeline_version == "legacy-v1":
+            identity.pop("pipeline_version")
+            identity.pop("project_format")
+            identity.pop("controller_state")
         identity["changed_files"] = (
             sorted(request.changed_files) if request.changed_files is not None else None
         )
@@ -374,6 +421,19 @@ class GenerationHarness:
         state = copy.deepcopy(request.resume_state)
         if state:
             validate_draft_state(state)
+            if (
+                request.pipeline_version == "adaptive-v1"
+                and "adaptive" not in state
+                and request.migration_from_sha
+                and state["request_sha256"] == request.migration_from_sha
+            ):
+                state["migration"] = {
+                    "from": "legacy-v1",
+                    "original_request_sha256": state["request_sha256"],
+                }
+                state["request_sha256"] = request_sha
+                if state["phase"] == "ready":
+                    state["phase"] = "rendered_review"
             if state["request_sha256"] != request_sha:
                 raise ValueError("Draft checkpoint belongs to a different generation request")
             game, plan = GameSpec(state["spec"]), BuildPlan(state["plan"])
@@ -398,32 +458,69 @@ class GenerationHarness:
                 "phase": "author",
                 "review_attempt": 0,
                 "review_feedback": [],
+                **({"packager": self.packager} if self.packager else {}),
             }
         if self.on_plan is not None:
             self.on_plan(game.data, plan.data)
+        if request.pipeline_version == "adaptive-v1":
+            state.setdefault(
+                "adaptive",
+                copy.deepcopy(request.controller_state)
+                or initial_contracts(request.prompt, game.data, plan.data),
+            )
         control.guard()
-        if plan.data["format"] != "runtime-v1":
-            raise ValueError("Single-author native harness requires runtime-v1")
+        if plan.data["format"] not in ("runtime-v1", "runtime-modules-v2"):
+            raise ValueError("Unsupported native project format")
         planned = {item["path"] for item in plan.data["files"]}
-        if planned - {"game.js", "style.css"}:
+        if plan.data["format"] == "runtime-v1" and planned - {"game.js", "style.css"}:
             raise ValueError("runtime-v1 currently supports game.js and style.css only")
         capabilities = (
             plan.expand_dependencies(set(request.changed_files))
             if request.changed_files is not None
             else planned
         )
-        workspace = DraftWorkspace(control, self.limits, state["files"], allowed_paths=None)
+        limits = (
+            replace(
+                self.limits,
+                project_format="runtime-modules-v2",
+                max_files=32,
+                max_file_bytes=2_000_000,
+                max_total_bytes=4_000_000,
+            )
+            if plan.data["format"] == "runtime-modules-v2"
+            else self.limits
+        )
+        workspace = DraftWorkspace(control, limits, state["files"], allowed_paths=None)
         workspace.allowed_paths = capabilities
         workspace.history = state["history"]
         workspace.operations = state["operations"]
         workspace.quick_checks = state["quick_checks"]
         lessons = select_lessons(game.data, request.findings)
         visual_reviews = state["visual_reviews"]
+        state.setdefault("rendered_reviews", [])
+        state.setdefault("requirement_reviews", [])
+        if request.continuation_feedback:
+            state["feedback"].append(
+                {"op": "user_clarification", "notes": request.continuation_feedback}
+            )
+        adaptive = state.get("adaptive")
+
+        def observation(action: str, report: dict[str, Any], suite_id: str = "") -> None:
+            if adaptive is not None:
+                observe(
+                    adaptive,
+                    action,
+                    report,
+                    source_id=digest(workspace.files),
+                    suite_id=suite_id,
+                    cost=control.snapshot(),
+                )
 
         def current_spec() -> dict[str, Any]:
             return {
                 **copy.deepcopy(game.data),
-                "format": "runtime-v1",
+                "format": plan.data["format"],
+                **({"packager": state["packager"]} if "packager" in state else {}),
                 "runtime": runtime_identity,
                 "input_acceptance": state.get("test_scenario") or plan.data["input_acceptance"],
                 "mechanics_required": True,
@@ -436,7 +533,7 @@ class GenerationHarness:
                 "mechanics_acceptance": state.get("mechanics") or plan.data.get("mechanics", []),
             }
 
-        def browser_check() -> dict[str, Any]:
+        def browser_check(*, retry: bool = False) -> dict[str, Any]:
             spec = current_spec()
             identity = digest(
                 {
@@ -444,10 +541,16 @@ class GenerationHarness:
                     "spec": spec,
                     "harness": HARNESS_VERSION,
                     "completion_required": self.require_completion,
+                    "validator": self.browser_identity,
                 }
             )
             cached = state.get("browser_result", {})
-            if cached.get("identity") == identity:
+            if (
+                not retry
+                and cached.get("identity") == identity
+                and cached.get("result", {}).get("status") == "passed"
+                and cached.get("result", {}).get("scope") != "infrastructure"
+            ):
                 return {**cached["result"], "cached": True}
             try:
                 from prompt2play.contracts.mechanics import validate_mechanics
@@ -472,6 +575,35 @@ class GenerationHarness:
                 }
             result = self.on_browser_check(dict(workspace.files), spec)
             state["browser_result"] = {"identity": identity, "result": result}
+            observation(
+                "browser_check",
+                result,
+                digest(
+                    {
+                        "mechanics": spec["mechanics_acceptance"],
+                        "scenario": spec["input_acceptance"],
+                        "validator": self.browser_identity,
+                        "completion": self.require_completion,
+                    }
+                ),
+            )
+            if adaptive is not None and result.get("status") in ("passed", "failed"):
+                checks = result.get("checks", result.get("findings", []))
+                devices: dict[str, set[str]] = {}
+                for check in checks:
+                    if str(check.get("name", "")).startswith("mechanics:"):
+                        devices[check["name"]] = {
+                            c["id"]
+                            for c in check.get("evidence", {}).get("cases", [])
+                            if c.get("passed") is True and c.get("visible_changed") is True
+                        }
+                verified = {
+                    "mechanic:" + c["id"]: [adaptive["observations"][-1]["id"]]
+                    for c in plan.data["mechanics"]
+                    if c["id"]
+                    in devices.get("mechanics:1280", set()) & devices.get("mechanics:390", set())
+                }
+                revise_execution(adaptive, verified)
             return result
 
         def checkpoint() -> None:
@@ -485,6 +617,104 @@ class GenerationHarness:
             if self.on_checkpoint is not None:
                 self.on_checkpoint(copy.deepcopy(state))
 
+        def supervise() -> None:
+            nonlocal plan, capabilities
+            from .supervisor import SUPERVISOR_INSTRUCTIONS, SUPERVISOR_SCHEMA, validate_decision
+
+            assert adaptive is not None
+            context = {
+                "requirements": adaptive["requirements"],
+                "acceptance": adaptive["acceptance"],
+                "build_plan": plan.data,
+                "execution_plan": adaptive["execution"],
+                "observations": adaptive["observations"][-24:],
+                "previous_decisions": adaptive["decisions"][-6:],
+                "trigger": adaptive["supervisor_due"],
+                "user_clarification": request.continuation_feedback,
+                "attempt_id": request.attempt_id,
+            }
+            try:
+                reply = gateway.generate(
+                    SUPERVISOR_INSTRUCTIONS + PROMPT_BOUNDARY + ordered_context(context),
+                    SUPERVISOR_SCHEMA,
+                    "supervisor",
+                    control,
+                    max_output=12000,
+                )
+                decision = copy.deepcopy(reply.data)
+                validate_decision(decision, adaptive, planned)
+                if decision["action"] == "revise_plan":
+                    new_plan = json.loads(decision["plan_json"])
+                    if (
+                        new_plan["format"] != plan.data["format"]
+                        or {f["path"] for f in new_plan["files"]} - planned
+                    ):
+                        raise ValueError("Plan change exceeds the approved runtime or file scope")
+                    revise_design(adaptive, game.data, new_plan)
+                    plan = BuildPlan(new_plan)
+                    state["plan"] = plan.data
+                    capabilities = (
+                        plan.expand_dependencies(set(request.changed_files))
+                        if request.changed_files
+                        else planned
+                    )
+                    workspace.allowed_paths = capabilities
+                decision.update(
+                    id=digest(decision),
+                    plan_id=adaptive["design"]["id"],
+                    source_id=digest(workspace.files),
+                    problem_id=digest(
+                        {
+                            "trigger": adaptive["supervisor_due"],
+                            "defects": sorted(
+                                {
+                                    f
+                                    for o in adaptive["observations"][-24:]
+                                    if o["action"] in ("browser_check", "independent_validation")
+                                    for f in o["defects"]
+                                }
+                            ),
+                        }
+                    ),
+                )
+                adaptive["decisions"].append(decision)
+                observation("supervisor", {"status": "passed", "criteria": decision})
+            except (ValueError, ProviderError) as exc:
+                if isinstance(exc, ProviderError) and structured_diagnostic(exc) is None:
+                    raise
+                observation("supervisor", {"status": "rejected", "error": str(exc)[:1500]})
+                checkpoint()
+                if adaptive["stall"].get("supervisor", {}).get("repeats", 0) >= 3:
+                    raise GenerationPaused(
+                        "Советы планировщика не проходят проверку. Причина и черновик сохранены."
+                    ) from exc
+                return
+            adaptive["supervisor_due"] = ""
+            same = [
+                d
+                for d in adaptive["decisions"]
+                if d["action"] == decision["action"]
+                and d.get("problem_id") == decision["problem_id"]
+            ]
+            state["feedback"].append(
+                {
+                    "op": "supervisor",
+                    "decision": decision,
+                    "instruction": "Follow this diagnosis, preserving protected expectations.",
+                }
+            )
+            if decision["action"] not in ("continue", "retry_validation"):
+                # Persist the correction phase together with the accepted decision.
+                # A restart must never reuse a ready verdict for an obsolete plan.
+                state["phase"] = "author"
+            checkpoint()
+            if decision["action"] in ("pause", "request_user", "regenerate") or len(same) >= 3:
+                raise GenerationPaused(decision["reason"])
+            if decision["action"] == "retry_validation":
+                result = browser_check(retry=True)
+                state["feedback"].append({"op": "browser_check", **result})
+                checkpoint()
+
         if not current_spec()["mechanics_acceptance"]:
             state["phase"] = "author"
             state["feedback"].append(
@@ -493,8 +723,148 @@ class GenerationHarness:
                 }
             )
         checkpoint()
-        while state["phase"] != "ready":
+        if state.pop("pending_submit", False):
+            # Resume the saved operation before paying for another author reply.
+            result = browser_check(retry=True)
+            state["feedback"] = [{"op": "browser_check", **result}]
+            if result.get("status") == "passed":
+                state.update(phase="review", review_attempt=0, review_feedback=[])
+            elif result.get("scope") == "infrastructure":
+                state["pending_submit"] = True
+                checkpoint()
+                raise GenerationStopped("Isolated browser diagnostics unavailable; draft saved")
+            checkpoint()
+        while state["phase"] != "ready" or (adaptive is not None and adaptive["supervisor_due"]):
             control.guard()
+            if adaptive is not None and adaptive["supervisor_due"]:
+                supervise()
+                continue
+            if state["phase"] == "rendered_review":
+                try:
+                    from .coverage import INSTRUCTIONS as COVERAGE_INSTRUCTIONS
+                    from .coverage import review_schema, validate_coverage
+
+                    assert adaptive is not None
+                    coverage = state["requirement_reviews"]
+                    if (
+                        not coverage
+                        or coverage[-1]["source_sha256"] != digest(workspace.files)
+                        or coverage[-1]["build_plan_sha256"] != plan.sha256
+                    ):
+                        response = gateway.generate(
+                            COVERAGE_INSTRUCTIONS
+                            + PROMPT_BOUNDARY
+                            + ordered_context(
+                                {
+                                    "requirements": adaptive["requirements"],
+                                    "files": workspace.files,
+                                    "build_plan": plan.data,
+                                    "review_feedback": state["review_feedback"],
+                                    "attempt_id": request.attempt_id,
+                                }
+                            ),
+                            review_schema(adaptive["requirements"]),
+                            "coverage_review",
+                            control,
+                            max_output=9000,
+                        )
+                        status = validate_coverage(
+                            response.data, adaptive["requirements"], workspace.files
+                        )
+                        coverage.append(
+                            {
+                                "source_sha256": digest(workspace.files),
+                                "build_plan_sha256": plan.sha256,
+                                "status": status,
+                                "review": response.data,
+                                "receipt": response.invocation_key,
+                            }
+                        )
+                        observation(
+                            "coverage_review",
+                            {
+                                "status": "failed" if status == "needs_revision" else "passed",
+                                "criteria": response.data["requirements"],
+                                "errors": [
+                                    key + ": " + value["explanation"]
+                                    for key, value in response.data["requirements"].items()
+                                    if value["status"] == "missing"
+                                ],
+                            },
+                            plan.sha256,
+                        )
+                        verified = {
+                            item["id"]: item["evidence"]
+                            for item in adaptive["execution"]["payload"]["items"]
+                            if item["state"] == "verified"
+                        }
+                        verified.update(
+                            {
+                                "coverage:" + key: [adaptive["observations"][-1]["id"]]
+                                for key, item in response.data["requirements"].items()
+                                if item["status"] == "implemented"
+                            }
+                        )
+                        revise_execution(adaptive, verified)
+                        checkpoint()
+                    if coverage[-1]["status"] == "needs_revision":
+                        state["phase"] = "author"
+                        state["feedback"] = [{"op": "coverage_review", "review": coverage[-1]}]
+                        checkpoint()
+                        continue
+                    rendered = (
+                        self.on_rendered_check(
+                            dict(workspace.files),
+                            current_spec(),
+                            {**plan.data, "review_feedback": state["review_feedback"]},
+                        )
+                        if self.on_rendered_check
+                        else {
+                            "status": "human_required",
+                            "reason": "Image-capable review is unavailable; explicit human review is required",
+                        }
+                    )
+                    if (
+                        rendered["status"] == "rendered_ready"
+                        and coverage[-1]["status"] == "human_required"
+                    ):
+                        rendered.update(
+                            status="human_required",
+                            reason="Requirement coverage needs explicit human assessment",
+                        )
+                    rendered.update(
+                        source_sha256=digest(workspace.files), build_plan_sha256=plan.sha256
+                    )
+                    state["rendered_reviews"].append(rendered)
+                    observation("rendered_review", rendered, plan.sha256)
+                    if adaptive is not None and rendered["status"] == "rendered_ready":
+                        verified = {
+                            item["id"]: item["evidence"]
+                            for item in adaptive["execution"]["payload"]["items"]
+                            if item["state"] == "verified"
+                        }
+                        verified["art"] = [adaptive["observations"][-1]["id"]]
+                        revise_execution(adaptive, verified)
+                    state["phase"] = "author" if rendered["status"] == "needs_revision" else "ready"
+                    state["feedback"] = [{"op": "rendered_review", "review": rendered}]
+                    state["review_feedback"] = []
+                    if adaptive is not None and state["phase"] == "ready":
+                        adaptive["supervisor_due"] = (
+                            "Candidate ready for independent mechanical acceptance; review remaining requirements"
+                        )
+                    checkpoint()
+                except (ValueError, ProviderError) as exc:
+                    if isinstance(exc, ProviderError) and structured_diagnostic(exc) is None:
+                        raise
+                    observation("rendered_review", {"status": "rejected", "error": str(exc)})
+                    state["review_feedback"] = [
+                        {
+                            "error": str(exc)[:1500],
+                            "instruction": "Correct the review format or cite actual supplied evidence; never waive the assessment.",
+                        }
+                    ]
+                    checkpoint()
+                continue
             if state["phase"] == "review":
                 context = {
                     "request": request.prompt,
@@ -528,6 +898,9 @@ class GenerationHarness:
                         raise
                     state["review_feedback"] = [{"error": "Return valid review JSON", **diagnostic}]
                     state["review_attempt"] += 1
+                    observation(
+                        "visual_review", {"status": "rejected", "error": stable(diagnostic)}
+                    )
                     checkpoint()
                     continue
                 except ValueError:
@@ -538,6 +911,10 @@ class GenerationHarness:
                         }
                     ]
                     state["review_attempt"] += 1
+                    observation(
+                        "visual_review",
+                        {"status": "rejected", "error": "Invalid source review evidence"},
+                    )
                     checkpoint()
                     continue
                 visual_reviews.append(
@@ -548,7 +925,24 @@ class GenerationHarness:
                         "criteria": copy.deepcopy(review.data["criteria"]),
                     }
                 )
-                state["phase"] = "ready" if ready else "author"
+                state["phase"] = (
+                    ("rendered_review" if adaptive is not None else "ready") if ready else "author"
+                )
+                observation(
+                    "visual_review",
+                    {
+                        "status": "passed" if ready else "failed",
+                        "criteria": review.data["criteria"],
+                        "errors": [
+                            name + ": " + str(q["required_change"])
+                            for name, q in review.data["criteria"].items()
+                            if q.get("status") != "ready"
+                        ]
+                        if not ready
+                        else [],
+                    },
+                    plan.sha256,
+                )
                 state["feedback"] = [
                     {"op": "visual_review", "review": visual_reviews[-1], "release_eligible": False}
                 ]
@@ -585,9 +979,32 @@ class GenerationHarness:
             }
             if request.user_feedback:
                 context["user_feedback"] = request.user_feedback
+            if adaptive is not None:
+                context.update(
+                    requirements=adaptive["requirements"],
+                    acceptance_contract=adaptive["acceptance"],
+                    execution_plan=adaptive["execution"],
+                    observations=adaptive["observations"][-6:],
+                )
             try:
                 reply = gateway.generate(
-                    AUTHOR_INSTRUCTIONS + PROMPT_BOUNDARY + ordered_context(context),
+                    (
+                        AUTHOR_INSTRUCTIONS.replace(
+                            "No ES module imports/exports or dynamic import;",
+                            "Static ES module imports/exports within the planned project are allowed. No dynamic import;",
+                        ).replace(
+                            "Define function createGame(ctx)", "Export function createGame(ctx)"
+                        )
+                        if plan.data["format"] == "runtime-modules-v2"
+                        else AUTHOR_INSTRUCTIONS
+                    )
+                    + (
+                        "\nFor runtime-modules-v2: game.js MUST export function createGame(ctx). Import only planned relative modules and local assets; PNG sources are base64 strings. Trusted compiler embeds everything offline; no generated compiler config, packages or dynamic imports.\n"
+                        if plan.data["format"] == "runtime-modules-v2"
+                        else ""
+                    )
+                    + PROMPT_BOUNDARY
+                    + ordered_context(context),
                     OPERATIONS_SCHEMA,
                     "author",
                     control,
@@ -605,6 +1022,7 @@ class GenerationHarness:
                     }
                 ]
                 state["turn"] += 1
+                observation("author", {"status": "rejected", "error": stable(diagnostic)})
                 checkpoint()
                 continue
             except jsonschema.ValidationError:
@@ -614,11 +1032,13 @@ class GenerationHarness:
                     }
                 ]
                 state["turn"] += 1
+                observation("author", {"status": "rejected", "error": "Invalid operations schema"})
                 checkpoint()
                 continue
             state["turn"] += 1
             state["feedback"] = []
             state["summary"] = reply.data["summary"]
+            before_source = digest(workspace.files)
             for operation in reply.data["operations"]:
                 control.guard(check_budget=False)
                 op, path = operation["op"], operation["path"]
@@ -650,22 +1070,16 @@ class GenerationHarness:
                         proposed = json.loads(operation["content"])
                         matrix = proposed.pop("mechanics", None)
                         if matrix is not None:
-                            from prompt2play.contracts.mechanics import validate_mechanics
+                            from prompt2play.contracts.mechanics import (
+                                preserve_mechanics,
+                                validate_mechanics,
+                            )
 
                             matrix = validate_mechanics(
                                 matrix, current_spec()["mechanics_required_actions"]
                             )
-                            previous = {c["id"]: c for c in plan.data.get("mechanics", [])}
-                            updated = {c["id"]: c for c in matrix}
-                            if any(
-                                name not in updated
-                                or not set(case["actions"]) <= set(updated[name]["actions"])
-                                or not set(case["keyboard_keys"])
-                                <= set(updated[name]["keyboard_keys"])
-                                or (case["continuous"] and not updated[name]["continuous"])
-                                for name, case in previous.items()
-                            ):
-                                raise ValueError("Cannot drop planned mechanics or controls")
+                            preserve_mechanics(plan.data.get("mechanics", []), matrix)
+                            preserve_mechanics(state.get("mechanics", []), matrix)
                         scenario = (
                             validate_native_acceptance
                             if self.require_completion
@@ -678,7 +1092,46 @@ class GenerationHarness:
                             {"op": op, "status": "applied", "scenario": scenario}
                         )
                     elif op == "browser_check":
-                        state["feedback"].append({"op": op, **browser_check()})
+                        state["feedback"].append({"op": op, **browser_check(retry=True)})
+                    elif op == "request_plan_change":
+                        if adaptive is None:
+                            raise ValueError("Plan change requests require adaptive-v1")
+                        issue = json.loads(operation["content"])
+                        validate(
+                            issue,
+                            obj(
+                                {
+                                    "task_id": {"type": "string"},
+                                    "problem": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 4000,
+                                    },
+                                    "proposal": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "maxLength": 4000,
+                                    },
+                                }
+                            ),
+                            "Plan change request",
+                        )
+                        if issue["task_id"] not in {
+                            t["id"] for t in adaptive["execution"]["payload"]["items"]
+                        }:
+                            raise ValueError("Unknown execution task")
+                        observation(
+                            "plan_change_request",
+                            {
+                                "status": "unverified",
+                                "scope": "plan_conflict",
+                                "error": stable(issue),
+                            },
+                        )
+                        adaptive["supervisor_due"] = "Author requests a plan change: " + stable(
+                            issue
+                        )
+                        break
                     elif op == "submit":
                         if not workspace.files.get("game.js", "").strip():
                             raise ValueError("Cannot review an empty game")
@@ -687,6 +1140,7 @@ class GenerationHarness:
                             state["feedback"].append({"op": "browser_check", **result})
                             if result["status"] != "passed":
                                 if result.get("scope") == "infrastructure":
+                                    state["pending_submit"] = True
                                     checkpoint()
                                     raise GenerationStopped(
                                         "Isolated browser diagnostics unavailable; draft saved"
@@ -707,13 +1161,45 @@ class GenerationHarness:
                             for item in visual_reviews
                         )
                         state.update(
-                            phase="ready" if already_reviewed else "review",
+                            phase=("rendered_review" if adaptive is not None else "ready")
+                            if already_reviewed
+                            else "review",
                             review_attempt=0,
                             review_feedback=[],
                         )
                         break
                 except (ValueError, KeyError) as exc:
                     state["feedback"].append({"op": op, "path": path, "error": str(exc)[:1200]})
+            errors = [f for f in state["feedback"] if f.get("error")]
+            observation(
+                "author",
+                {
+                    "status": "failed"
+                    if errors
+                    else "unverified"
+                    if before_source == digest(workspace.files) and state["phase"] == "author"
+                    else "applied",
+                    "errors": [f["error"] for f in errors],
+                    **(
+                        {"error": "Author made no source or phase progress"}
+                        if not errors
+                        and before_source == digest(workspace.files)
+                        and state["phase"] == "author"
+                        else {}
+                    ),
+                },
+            )
+            if adaptive is not None and before_source != digest(workspace.files):
+                latest = next(
+                    (
+                        o
+                        for o in reversed(adaptive["observations"])
+                        if o["action"] == "browser_check"
+                    ),
+                    None,
+                )
+                if latest is None or latest["draft_id"] != digest(workspace.files):
+                    revise_execution(adaptive, {})
             checkpoint()
         source = workspace.submit()
         summary = state["summary"]
@@ -735,8 +1221,13 @@ class GenerationHarness:
             visual_quality={
                 "version": QUALITY_VERSION,
                 "reviews": visual_reviews,
-                "rendered_visual_review": "not_performed",
+                "rendered_visual_review": state["rendered_reviews"][-1]["status"]
+                if state["rendered_reviews"]
+                else "not_performed",
+                "rendered_reviews": state["rendered_reviews"],
             },
+            requirement_reviews=state["requirement_reviews"],
+            **({"adaptive": copy.deepcopy(adaptive)} if adaptive is not None else {}),
         )
         return CandidateSubmission(
             source,
@@ -746,7 +1237,7 @@ class GenerationHarness:
             provenance,
             dict(control.usage),
             summary,
-            "runtime-v1",
+            plan.data["format"],
         )
 
     def _four_author(

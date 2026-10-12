@@ -70,6 +70,59 @@ def operation(
     return {"op": op, "path": path, "content": content, "old": old, "new": new}
 
 
+def recorded_browser(calls: list[Any], args: Any) -> dict[str, Any]:
+    calls.append(args)
+    return {"status": "passed"}
+
+
+class AdaptiveGateway(ScriptedGateway):
+    def __init__(self, replies: list[dict[str, Any]], *, advice: str = "continue") -> None:
+        super().__init__(replies)
+        self.advice = advice
+
+    def generate(
+        self,
+        prompt: str,
+        schema: dict[str, Any],
+        role: str,
+        control: GenerationControl,
+        *,
+        max_output: int = 16000,
+    ) -> GatewayReply:
+        if role in ("supervisor", "coverage_review"):
+            data: dict[str, Any]
+            context = json.loads(prompt.rsplit(PROMPT_BOUNDARY, 1)[1])
+            if role == "coverage_review":
+                data = {
+                    "requirements": {
+                        item["id"]: {
+                            "status": "implemented",
+                            "file": "game.js",
+                            "excerpt": "function createGame(ctx)",
+                            "explanation": "Authored source-coverage fixture only",
+                        }
+                        for item in context["requirements"]["payload"]["items"]
+                    }
+                }
+            else:
+                plan = context["build_plan"]
+                plan["visual_design"]["composition"]["mobile"] += " Larger touch targets."
+                data = {
+                    "action": self.advice,
+                    "reason": "Authored diagnostic fixture",
+                    "observation_ids": [context["observations"][-1]["id"]],
+                    "affected_files": ["game.js"],
+                    "task_ids": [],
+                    "plan_json": stable(plan) if self.advice == "revise_plan" else "",
+                }
+            self.prompts.append(prompt)
+            self.roles.append(role)
+            return GatewayReply(
+                data, {"input_tokens": 1, "output_tokens": 2, "total_tokens": 3, "calls": 1}, role
+            )
+        return super().generate(prompt, schema, role, control, max_output=max_output)
+
+
 def fixture() -> tuple[dict[str, Any], str]:
     root = RESOURCE_ROOT / "runtime" / "examples" / "dom"
     design = json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text())
@@ -875,3 +928,402 @@ def test_resume_rejection_does_not_count_the_saved_response_as_a_new_failure() -
     )
     assert checkpoints[0]["repeat_count"] == 2
     assert gateway.roles.count("plan") == 1
+
+
+def test_infrastructure_recovery_retries_saved_submit_without_paid_author_or_plan() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    saved: list[dict[str, Any]] = []
+    request = GenerationRequest("Browser recovery")
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Ready",
+            },
+        ]
+    )
+    with pytest.raises(GenerationStopped, match="browser diagnostics unavailable"):
+        GenerationHarness(
+            on_checkpoint=saved.append,
+            on_browser_check=lambda *_: {"status": "unverified", "scope": "infrastructure"},
+        ).attempt(request, gateway, GenerationControl.bounded())
+    assert saved[-1]["pending_submit"] is True
+    calls: list[Any] = []
+    resumed = ScriptedGateway([])
+    candidate = GenerationHarness(on_browser_check=lambda *a: recorded_browser(calls, a)).attempt(
+        replace(request, resume_state=saved[-1]), resumed, GenerationControl.bounded()
+    )
+    assert len(calls) == 1 and resumed.roles == ["visual_review"]
+    assert candidate.files["game.js"] == source
+
+
+def test_explicit_browser_retry_bypasses_even_a_passing_cached_report() -> None:
+    plan, source = fixture()
+    calls: list[Any] = []
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("create", "game.js", content=source),
+                    operation("browser_check"),
+                    operation("browser_check"),
+                    operation("submit"),
+                ],
+                "summary": "Ready",
+            },
+        ]
+    )
+    GenerationHarness(on_browser_check=lambda *a: recorded_browser(calls, a)).attempt(
+        GenerationRequest("Browser retry"), gateway, GenerationControl.bounded()
+    )
+    assert len(calls) == 2
+
+
+def test_changed_validator_identity_does_not_reuse_previous_diagnostics() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    saved: list[dict[str, Any]] = []
+    request = GenerationRequest("Changed suite")
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("create", "game.js", content=source),
+                    operation("browser_check"),
+                ],
+                "summary": "Tested",
+            },
+        ]
+    )
+    with pytest.raises(GenerationStopped, match="explicit turn"):
+        GenerationHarness(
+            limits=WorkspaceLimits(max_turns=1),
+            on_checkpoint=saved.append,
+            on_browser_check=lambda *_: {"status": "passed"},
+            browser_identity={"image": "old"},
+        ).attempt(request, gateway, GenerationControl.bounded())
+    calls: list[Any] = []
+    GenerationHarness(
+        on_browser_check=lambda *a: recorded_browser(calls, a),
+        browser_identity={"image": "new"},
+    ).attempt(
+        replace(request, resume_state=saved[-1]),
+        ScriptedGateway([{"operations": [operation("submit")], "summary": "Finish"}]),
+        GenerationControl.bounded(),
+    )
+    assert len(calls) == 1
+
+
+def test_adaptive_reviews_requirement_coverage_and_requires_real_pixels_or_human() -> None:
+    plan, source = fixture()
+    gateway = AdaptiveGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Fixture",
+            },
+        ]
+    )
+    candidate = GenerationHarness().attempt(
+        GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+        gateway,
+        GenerationControl.bounded(),
+    )
+    assert gateway.roles == ["plan", "author", "visual_review", "coverage_review", "supervisor"]
+    assert candidate.provenance["visual_quality"]["rendered_visual_review"] == "human_required"
+    assert candidate.provenance["requirement_reviews"][-1]["status"] == "covered"
+    assert (
+        next(
+            t
+            for t in candidate.provenance["adaptive"]["execution"]["payload"]["items"]
+            if t["id"] == "art"
+        )["state"]
+        == "waiting"
+    )
+
+
+def test_adaptive_three_no_op_turns_request_diagnosis_and_pause_without_replanning() -> None:
+    from prompt2play.generation.workspace import GenerationPaused
+
+    plan, _ = fixture()
+    gateway = AdaptiveGateway(
+        [plan, *[{"operations": [operation("check")], "summary": "No progress"} for _ in range(3)]],
+        advice="pause",
+    )
+    snapshots = []
+    with pytest.raises(GenerationPaused, match="diagnostic fixture"):
+        GenerationHarness(on_checkpoint=lambda state: snapshots.append(state)).attempt(
+            GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+            gateway,
+            GenerationControl.bounded(),
+        )
+    assert gateway.roles == ["plan", "author", "author", "author", "supervisor"]
+    assert snapshots[-1]["adaptive"]["decisions"][-1]["action"] == "pause"
+
+
+def test_adaptive_plan_revision_and_correction_phase_are_saved_together() -> None:
+    from prompt2play.generation.draft_state import validate_draft_state
+
+    plan, source = fixture()
+    gateway = AdaptiveGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Fixture",
+            },
+        ],
+        advice="revise_plan",
+    )
+    snapshots: list[dict[str, Any]] = []
+
+    def boundary(state: dict[str, Any]) -> None:
+        validate_draft_state(state)
+        snapshots.append(state)
+        if state.get("adaptive", {}).get("decisions"):
+            raise GenerationStopped("Authored crash after decision checkpoint")
+
+    with pytest.raises(GenerationStopped, match="after decision"):
+        GenerationHarness(on_checkpoint=boundary).attempt(
+            GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+            gateway,
+            GenerationControl.bounded(),
+        )
+    assert snapshots[-1]["phase"] == "author"
+    assert snapshots[-1]["adaptive"]["supervisor_due"] == ""
+    assert snapshots[-1]["plan"]["visual_design"]["composition"]["mobile"].endswith(
+        "Larger touch targets."
+    )
+    assert snapshots[-1]["files"] == {"game.js": source}
+
+
+def test_explicit_upgrade_preserves_immutable_legacy_draft_and_reuses_plan_and_source() -> None:
+    import copy
+
+    plan, source = fixture()
+    old_snapshots: list[dict[str, Any]] = []
+    old_gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Saved old draft",
+            },
+        ]
+    )
+    GenerationHarness(on_checkpoint=lambda state: old_snapshots.append(state)).attempt(
+        GenerationRequest("Fixture"), old_gateway, GenerationControl.bounded()
+    )
+    original = copy.deepcopy(old_snapshots[-1])
+    new_gateway = AdaptiveGateway([])
+    migrated = GenerationHarness().attempt(
+        GenerationRequest(
+            "Fixture",
+            pipeline_version="adaptive-v1",
+            resume_state=old_snapshots[-1],
+            migration_from_sha=original["request_sha256"],
+            continuation_feedback=["Preserve every mechanic."],
+        ),
+        new_gateway,
+        GenerationControl.bounded(),
+    )
+    assert new_gateway.roles == ["coverage_review", "supervisor"]
+    assert migrated.files == {"game.js": source}
+    assert old_snapshots[-1] == original and "adaptive" not in original
+    assert migrated.provenance["visual_quality"]["rendered_visual_review"] == "human_required"
+    with pytest.raises(ValueError, match="different generation request"):
+        GenerationHarness().attempt(
+            GenerationRequest(
+                "Fixture",
+                pipeline_version="adaptive-v1",
+                resume_state=original,
+                migration_from_sha="forged",
+            ),
+            AdaptiveGateway([]),
+            GenerationControl.bounded(),
+        )
+
+
+def test_adaptive_author_plan_change_request_preserves_code_and_pauses_on_supervisor_advice() -> (
+    None
+):
+    from prompt2play.generation.workspace import GenerationPaused
+
+    plan, source = fixture()
+    issue = {
+        "task_id": "mechanic:" + plan["build_plan"]["mechanics"][0]["id"],
+        "problem": "Approved mobile layout conflicts with control placement",
+        "proposal": "Move the control panel while preserving all rules",
+    }
+    gateway = AdaptiveGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("create", "game.js", content=source),
+                    operation("request_plan_change", content=stable(issue)),
+                    operation("delete", "game.js"),
+                ],
+                "summary": "Request diagnosis",
+            },
+        ],
+        advice="request_user",
+    )
+    snapshots: list[dict[str, Any]] = []
+    with pytest.raises(GenerationPaused):
+        GenerationHarness(on_checkpoint=lambda state: snapshots.append(state)).attempt(
+            GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+            gateway,
+            GenerationControl.bounded(),
+        )
+    assert gateway.roles == ["plan", "author", "supervisor"]
+    assert snapshots[-1]["files"] == {"game.js": source}
+    assert snapshots[-1]["adaptive"]["observations"][0]["category"] == "plan_conflict"
+
+
+def test_adaptive_bad_supervisor_evidence_pauses_after_repeated_rejection() -> None:
+    from prompt2play.generation.workspace import GenerationPaused
+
+    class InventedAdvice(AdaptiveGateway):
+        def generate(
+            self,
+            prompt: str,
+            schema: dict[str, Any],
+            role: str,
+            control: GenerationControl,
+            *,
+            max_output: int = 16000,
+        ) -> GatewayReply:
+            reply = super().generate(prompt, schema, role, control, max_output=max_output)
+            if role == "supervisor":
+                reply.data["observation_ids"] = ["invented"]
+            return reply
+
+    plan, _ = fixture()
+    gateway = InventedAdvice(
+        [plan, *[{"operations": [operation("check")], "summary": "No progress"} for _ in range(3)]]
+    )
+    with pytest.raises(GenerationPaused, match="не проходят проверку"):
+        GenerationHarness().attempt(
+            GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+            gateway,
+            GenerationControl.bounded(),
+        )
+    assert gateway.roles.count("supervisor") == 3 and gateway.roles.count("plan") == 1
+
+
+def test_rendered_review_repair_receives_the_previous_error_and_updates_art_evidence() -> None:
+    from prompt2play.generation.draft_state import validate_draft_state
+
+    plan, source = fixture()
+    calls: list[dict[str, Any]] = []
+
+    def rendered(
+        _files: dict[str, str], _spec: dict[str, Any], current_plan: dict[str, Any]
+    ) -> dict[str, Any]:
+        calls.append(current_plan)
+        if len(calls) == 1:
+            raise ValueError("Cited frame is unavailable")
+        assert current_plan["review_feedback"][0]["error"] == "Cited frame is unavailable"
+        return {
+            "status": "rendered_ready",
+            "reason": "Authored transport fixture, no actual image judgement",
+        }
+
+    gateway = AdaptiveGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Fixture",
+            },
+        ]
+    )
+    snapshots: list[dict[str, Any]] = []
+
+    def save(state: dict[str, Any]) -> None:
+        validate_draft_state(state)
+        snapshots.append(state)
+
+    candidate = GenerationHarness(on_rendered_check=rendered, on_checkpoint=save).attempt(
+        GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+        gateway,
+        GenerationControl.bounded(),
+    )
+    assert len(calls) == 2 and gateway.roles.count("coverage_review") == 1
+    assert (
+        next(
+            t
+            for t in candidate.provenance["adaptive"]["execution"]["payload"]["items"]
+            if t["id"] == "art"
+        )["state"]
+        == "verified"
+    )
+
+
+def test_adaptive_verifies_each_mechanic_on_both_devices_before_code_change_invalidates() -> None:
+    from prompt2play.generation.draft_state import validate_draft_state
+
+    plan, source = fixture()
+    checks = [
+        {
+            "name": f"mechanics:{width}",
+            "status": "passed",
+            "evidence": {
+                "cases": [
+                    {"id": c["id"], "passed": True, "visible_changed": True}
+                    for c in plan["build_plan"]["mechanics"]
+                ]
+            },
+        }
+        for width in (1280, 390)
+    ]
+    gateway = AdaptiveGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("create", "game.js", content=source),
+                    operation("browser_check"),
+                ],
+                "summary": "Checked",
+            },
+            {
+                "operations": [
+                    operation("replace", "game.js", content=source + "\n// revised"),
+                    operation("submit"),
+                ],
+                "summary": "New source",
+            },
+        ]
+    )
+    snapshots: list[dict[str, Any]] = []
+
+    def save(state: dict[str, Any]) -> None:
+        validate_draft_state(state)
+        snapshots.append(state)
+
+    candidate = GenerationHarness(
+        on_browser_check=lambda *_: {"status": "passed", "checks": checks}, on_checkpoint=save
+    ).attempt(
+        GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+        gateway,
+        GenerationControl.bounded(),
+    )
+    task = "mechanic:" + plan["build_plan"]["mechanics"][0]["id"]
+    assert (
+        next(
+            t
+            for t in candidate.provenance["adaptive"]["execution"]["payload"]["items"]
+            if t["id"] == task
+        )["state"]
+        == "verified"
+    )
+    assert candidate.provenance["adaptive"]["observations"][-1]["action"] == "supervisor"

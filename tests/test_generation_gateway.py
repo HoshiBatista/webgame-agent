@@ -330,3 +330,72 @@ def test_default_generation_uses_no_timer_but_retains_cancellation(
         gateway.generate("next", {}, "author", control)
     assert gateway.provider.calls == 1
     assert ProviderGateway("openai", "fixture").provider.timeout is None
+
+
+def png(value: int = 0) -> bytes:
+    import struct
+    import zlib
+
+    def chunk(kind: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+        )
+
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(bytes([0, value, value, value, 255])))
+        + chunk(b"IEND", b"")
+    )
+
+
+def test_image_pixels_bind_invocation_identity_and_are_delivered_without_log_data() -> None:
+    import base64
+
+    from prompt2play.generation.images import ImageInput
+
+    class ImageProvider(ReplyProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Reply:
+            assert base64.b64decode(kwargs["images"][0]["base64"]) in (png(), png(30))
+            assert "messages" not in kwargs and "session_id" not in kwargs
+            return super().generate(*args, **kwargs)
+
+    gateway = ProviderGateway("codex", "explicit", journal=Journal())
+    gateway.provider = ImageProvider()
+    control = GenerationControl.bounded(token_limit=1_000_000)
+    first = gateway.generate(
+        "image fixture",
+        {},
+        "rendered_review",
+        control,
+        images=[ImageInput("start-1280.png", png())],
+    )
+    second = gateway.generate(
+        "image fixture",
+        {},
+        "rendered_review",
+        control,
+        images=[ImageInput("start-1280.png", png(30))],
+    )
+    assert first.invocation_key != second.invocation_key
+    assert control.usage["calls"] == 2
+    assert base64.b64encode(png()).decode() not in str(gateway.records)
+
+
+def test_invalid_duplicate_or_corrupt_png_inputs_never_dispatch() -> None:
+    from prompt2play.generation.images import ImageInput
+
+    gateway = ProviderGateway("codex", "explicit", journal=Journal())
+    provider = ReplyProvider()
+    gateway.provider = provider
+    for images in (
+        [ImageInput("../secret.png", png())],
+        [ImageInput("a.png", png()[:-1])],
+        [ImageInput("a.png", png())] * 7,
+        [ImageInput("a.png", png())] * 2,
+    ):
+        with pytest.raises(ValueError):
+            gateway.generate(
+                "fixture", {}, "rendered_review", GenerationControl.bounded(), images=images
+            )
+    assert provider.calls == 0

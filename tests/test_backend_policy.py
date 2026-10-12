@@ -20,7 +20,7 @@ def test_local_and_dependency_repair_scope() -> None:
     assert repair_route(report, ["game.js", "style.css"]).strategy == "structural"
 
 
-def test_contract_replan_and_repeated_failure_regeneration() -> None:
+def test_contract_replan_and_repeated_failure_preserves_draft() -> None:
     report: dict[str, object] = {
         "review": {
             "issues": [
@@ -36,7 +36,7 @@ def test_contract_replan_and_repeated_failure_regeneration() -> None:
     route = repair_route(report, ["game.js", "style.css"])
     assert route.strategy == "replan"
     repeated = repair_route(report, ["game.js", "style.css"], route.fingerprint)
-    assert repeated.strategy == "regenerate"
+    assert repeated.strategy == "stop"
     assert repeated.files == ("game.js", "style.css")
 
 
@@ -84,3 +84,47 @@ def test_optional_completion_never_relaxes_other_required_checks() -> None:
     report["completion_required"] = False
     next(c for c in report["checks"] if c["name"] == "input:1280")["status"] = "skipped"
     assert decide(report, 1, 2).outcome == "unverified"
+
+
+def test_failed_mechanics_have_distinct_stable_identities() -> None:
+    import copy
+    from typing import Any
+
+    report: dict[str, Any] = {
+        "checks": [
+            {
+                "name": "mechanics:1280",
+                "status": "failed",
+                "message": "failed",
+                "evidence": {
+                    "cases": [
+                        {
+                            "id": "arrows",
+                            "actions": ["MOVE"],
+                            "passed": False,
+                            "observations": [
+                                {
+                                    "path": "/x",
+                                    "op": "greater",
+                                    "after_step": 2,
+                                    "before_step": 1,
+                                    "passed": False,
+                                    "actual": 5,
+                                    "expected": 5,
+                                }
+                            ],
+                        }
+                    ]
+                },
+            }
+        ]
+    }
+    first = repair_route(report, ["game.js"])
+    changed = copy.deepcopy(report)
+    changed["checks"][0]["evidence"]["cases"][0]["id"] = "weapon"
+    second = repair_route(changed, ["game.js"], first.fingerprint)
+    assert first.fingerprint != second.fingerprint and second.strategy != "stop"
+    changed = copy.deepcopy(report)
+    changed["checks"][0]["evidence"]["cases"][0]["observations"][0]["actual"] = 99
+    changed["checks"][0]["message"] = "different diagnostic wording"
+    assert repair_route(changed, ["game.js"], first.fingerprint).strategy == "stop"

@@ -166,11 +166,14 @@ ACCEPTANCE_SCHEMA = obj(
 BUILD_PLAN_SCHEMA = obj(
     {
         "schema_version": {"type": "integer", "enum": [1]},
-        "format": {"type": "string", "enum": ["runtime-v1", "legacy-four-module-v1"]},
+        "format": {
+            "type": "string",
+            "enum": ["runtime-v1", "runtime-modules-v2", "legacy-four-module-v1"],
+        },
         "files": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 16,
+            "maxItems": 32,
             "items": obj({"path": STRING, "purpose": STRING, "dependencies": STRINGS}),
         },
         "acceptance_criteria": {**STRINGS, "minItems": 1},
@@ -298,11 +301,23 @@ class BuildPlan:
         object.__setattr__(self, "data", normalized)
         validate(self.data, BUILD_PLAN_SCHEMA, "BuildPlan")
         paths = {item["path"] for item in self.data["files"]}
+        if self.data["format"] in ("runtime-v1", "runtime-modules-v2"):
+            from prompt2play.generation.workspace import normalized_path
+
+            for path in paths:
+                normalized_path(path, allow_assets=self.data["format"] == "runtime-modules-v2")
+                if (
+                    path.rsplit("/", 1)[-1] in ("package.json", "tsconfig.json", "jsconfig.json")
+                    or ".config." in path
+                ):
+                    raise ContractError(
+                        "Compiler config and dependencies are not generated project files"
+                    )
         if len(paths) != len(self.data["files"]):
             raise ContractError("BuildPlan file paths must be unique")
         if any(not set(item["dependencies"]).issubset(paths) for item in self.data["files"]):
             raise ContractError("Dependencies must name planned files")
-        if self.data["format"] == "runtime-v1" and "game.js" not in paths:
+        if self.data["format"] in ("runtime-v1", "runtime-modules-v2") and "game.js" not in paths:
             raise ContractError("runtime-v1 requires game.js")
         for surface in ("desktop", "touch"):
             acceptance = self.data["input_acceptance"][surface]

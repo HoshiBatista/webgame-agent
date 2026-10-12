@@ -119,7 +119,9 @@ class OpenAIProvider:
                 "OPENAI_API_KEY is not configured on this runner", usage=empty_usage()
             )
 
-    def generate(self, prompt, schema, role, cancel, max_output=6000, model="", messages=None):
+    def generate(
+        self, prompt, schema, role, cancel, max_output=6000, model="", messages=None, images=None
+    ):
         self.preflight()
         model = model or self.model
         if not model:
@@ -128,15 +130,21 @@ class OpenAIProvider:
                 usage=empty_usage(),
             )
         check_cancel(cancel)
-        return asyncio.run(self._guarded(prompt, schema, role, cancel, max_output, model, messages))
+        return asyncio.run(
+            self._guarded(prompt, schema, role, cancel, max_output, model, messages, images)
+        )
 
-    async def _guarded(self, prompt, schema, role, cancel, max_output, model, messages=None):
+    async def _guarded(
+        self, prompt, schema, role, cancel, max_output, model, messages=None, images=None
+    ):
         # A terminal response can arrive before the transport finishes closing.
         # Keep its accounting outside the cancellable task so a later timeout
         # cannot turn reported spend into an unknown full-call reservation.
         account = {"usage": None}
         task = asyncio.create_task(
-            self._generate(prompt, schema, role, cancel, max_output, model, account, messages)
+            self._generate(
+                prompt, schema, role, cancel, max_output, model, account, messages, images
+            )
         )
 
         async def watch_cancel():
@@ -170,7 +178,7 @@ class OpenAIProvider:
             await asyncio.gather(task, watcher, return_exceptions=True)
 
     async def _generate(
-        self, prompt, schema, role, cancel, max_output, model, account, messages=None
+        self, prompt, schema, role, cancel, max_output, model, account, messages=None, images=None
     ):
         instructions, boundary, task_data = prompt.partition(PROMPT_BOUNDARY)
         payload = {
@@ -191,6 +199,23 @@ class OpenAIProvider:
         }
         if boundary:
             payload["instructions"] = instructions
+        if images:
+            payload["input"] = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": task_data if boundary else prompt},
+                        *[
+                            {
+                                "type": "input_image",
+                                "image_url": "data:image/png;base64," + i["base64"],
+                                "detail": "high",
+                            }
+                            for i in images
+                        ],
+                    ],
+                }
+            ]
         known_usage = None
         # The outer task owns the wall deadline and cancellation. Reasoning may
         # legitimately pause between events, so a separate 10s read cap is wrong.
@@ -332,6 +357,7 @@ class CodexProvider:
         session_directory="",
         persist_session=False,
         on_session=None,
+        images=None,
     ):
         check_cancel(cancel)
         self.preflight()
@@ -373,6 +399,12 @@ class CodexProvider:
             chosen = model or self.model
             if chosen:
                 args += ["--model", chosen]
+            for index, item in enumerate(images or []):
+                import base64
+
+                image_path = root / f"image-{index}.png"
+                image_path.write_bytes(base64.b64decode(item["base64"], validate=True))
+                args += ["--image", str(image_path)]
             # The CLI does not document a portable max-output flag. This is a
             # reservation target, never represented as a guaranteed CLI cap.
             args += ["-"]

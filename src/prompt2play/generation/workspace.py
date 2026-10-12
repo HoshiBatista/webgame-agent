@@ -33,6 +33,7 @@ class BudgetExhausted(GenerationStopped):
 
 @dataclass(frozen=True)
 class WorkspaceLimits:
+    project_format: str = "runtime-v1"
     max_files: int = 16
     max_file_bytes: int = 180_000
     max_total_bytes: int = 600_000
@@ -172,7 +173,7 @@ def invocation_reservation(prompt: str, max_output: int) -> int:
     return len(prompt.encode()) + max_output + 1024
 
 
-def normalized_path(path: str) -> str:
+def normalized_path(path: str, *, allow_assets: bool = False) -> str:
     if not isinstance(path, str) or len(path) > 120 or path != unicodedata.normalize("NFC", path):
         raise ValueError("Path must be a bounded NFC name")
     parsed = PurePosixPath(path)
@@ -180,7 +181,12 @@ def normalized_path(path: str) -> str:
         part in ("", ".", "..") or part.startswith(".") for part in path.split("/")
     ):
         raise ValueError("Absolute, traversal, and hidden paths are forbidden")
-    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_./-]*\.(js|css|json|svg)", path):
+    if not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9_./-]*\.(js|css|json|svg|png)"
+        if allow_assets
+        else r"[A-Za-z0-9][A-Za-z0-9_./-]*\.(js|css|json|svg)",
+        path,
+    ):
         raise ValueError("Unsupported source path or extension")
     if any(
         part.lower() in ("runtime", "trusted", "node_modules") for part in parsed.parts
@@ -223,7 +229,9 @@ class DraftWorkspace:
         if self.limits.max_operations is not None and self.operations > self.limits.max_operations:
             raise GenerationStopped("Draft operation budget exceeded")
         if path is not None:
-            path = normalized_path(path)
+            path = normalized_path(
+                path, allow_assets=self.limits.project_format == "runtime-modules-v2"
+            )
             if self.allowed_paths is not None and path not in self.allowed_paths:
                 raise ValueError("Path is outside this attempt's file capability")
         return path
@@ -286,6 +294,8 @@ class DraftWorkspace:
             and self.quick_checks > self.limits.max_quick_checks
         ):
             raise GenerationStopped("Quick-check budget exceeded")
+        if self.limits.project_format == "runtime-modules-v2":
+            return quick_check(self.files, self.control, modules=True)
         return quick_check(self.files, self.control)
 
     def submit(self) -> dict[str, str]:
@@ -296,15 +306,26 @@ class DraftWorkspace:
         return dict(self.files)
 
 
-def quick_check(files: dict[str, str], control: GenerationControl) -> list[dict[str, Any]]:
+def quick_check(
+    files: dict[str, str], control: GenerationControl, *, modules: bool = False
+) -> list[dict[str, Any]]:
     """Shared source policy plus parse-only syntax. A pass cannot approve a game."""
     findings: list[dict[str, Any]] = []
+    if modules:
+        from .project import project_sources
+
+        try:
+            project_sources(files)
+        except (ValueError, TypeError) as exc:
+            findings.append({"code": "project_contract", "scope": "local", "message": str(exc)})
     node = shutil.which("node")
     with tempfile.TemporaryDirectory(prefix="p2p-parse-") as directory:
         for name, source in files.items():
+            if modules and not name.endswith((".js", ".css")):
+                continue
             control.guard(check_budget=False)
             for violation in source_findings(
-                source, javascript=name.endswith(".js"), runtime_managed=True
+                source, javascript=name.endswith(".js"), runtime_managed=True, modules=modules
             ):
                 findings.append(
                     {
@@ -326,7 +347,7 @@ def quick_check(files: dict[str, str], control: GenerationControl) -> list[dict[
                         }
                     )
                     continue
-                path = Path(directory) / Path(name).name
+                path = Path(directory) / (Path(name).name + (".mjs" if modules else ""))
                 path.write_text(source, encoding="utf-8")
                 remaining = max(0.01, min(10, control.deadline - time.monotonic()))
                 try:

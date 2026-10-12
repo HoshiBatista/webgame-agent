@@ -115,7 +115,7 @@ export const api = {
   events: (jobId: string, after = 0, signal?: AbortSignal) => checked(requestJson<JobEvent[]>(`/api/jobs/${id(jobId)}/events/?after=${after}`, { signal }), listOf(value => record(value) && Number.isSafeInteger(value.id) && strings(value, ['job_id', 'message', 'stage', 'level', 'created_at']))),
   cancelJob: (jobId: string) => checked(post<Job>(`/api/jobs/${id(jobId)}/cancel/`), job, true),
   pauseJob: (jobId: string, stage_fence: number) => checked(post<Job>(`/api/jobs/${id(jobId)}/pause/`, {stage_fence}), job, true),
-  resumeJob: (jobId: string, stage_fence: number) => checked(post<Job>(`/api/jobs/${id(jobId)}/resume/`, {stage_fence}), job, true),
+  resumeJob: (jobId: string, stage_fence: number, feedback = '', upgrade_pipeline = false) => checked(post<Job>(`/api/jobs/${id(jobId)}/resume/`, {stage_fence, ...(feedback.trim() ? {feedback} : {}), ...(upgrade_pipeline ? {upgrade_pipeline} : {})}), job, true),
   extendBudget: (jobId: string, stage_fence: number, budget: ({budget_usd: string} | {budget_tokens: number}) & {playthrough_mode?: 'manual' | 'auto'}) => checked(post<Job>(`/api/jobs/${id(jobId)}/budget/`, {stage_fence, ...budget}), job, true),
   runners: (signal?: AbortSignal) => checked(requestJson<Runner[]>('/api/runners/', { signal }), listOf(runner)),
   createRunner: (name: string, role: RunnerRole = 'generator') => checked(post<{ runner: Runner; token: string }>('/api/runners/', { name, role }), value => record(value) && runner(value.runner) && typeof value.token === 'string', true),

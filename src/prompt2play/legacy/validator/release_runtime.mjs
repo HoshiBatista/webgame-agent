@@ -119,7 +119,7 @@ try {
     });
     try {
       await page.goto(url, {waitUntil: 'load', timeout: 10000});
-      const native = request.spec.format === 'runtime-v1';
+      const native = ['runtime-v1','runtime-modules-v2'].includes(request.spec.format);
       const controlsBeforeStart = native ? await inspectNativeControls(page) : null;
       if (controlsBeforeStart && !controlsBeforeStart.rendered) {
         record(`startup:${width}`, false, 'Platform Start, Restart and status must be visibly rendered before starting', {actual_input: false, viewport: {width, height}, controls: controlsBeforeStart});
@@ -130,7 +130,7 @@ try {
       else await page.locator(request.acceptance.start_selector).click();
       await page.waitForFunction(() => typeof window.__GAME_TEST__?.snapshot === 'function');
       const bridge = bridgeAdapter(page);
-      if (request.spec.format === 'runtime-v1') {
+      if (['runtime-v1','runtime-modules-v2'].includes(request.spec.format)) {
         const identity = await page.evaluate(() => {
           const hook = window.__GAME_TEST__, descriptor = Object.getOwnPropertyDescriptor(window, '__GAME_TEST__');
           return {version: hook.identity?.version, digest: hook.identity?.runtimeDigest, frozen: Object.isFrozen(hook), protected: descriptor?.writable === false && descriptor?.configurable === false};
@@ -166,7 +166,7 @@ try {
       const controlPixels = compareImages(controlImageBefore, controlImageAfter);
       const causalControl = canonical(controlBefore) === canonical(controlAfter) && controlPixels.stable;
       record(`controlled_clock:${width}`, causalControl, 'A no-input control under the frozen clock has stable state and game rendering', {state_stable: canonical(controlBefore) === canonical(controlAfter), visible_stable: controlPixels.stable, pixels: controlPixels});
-      const seed = request.spec.format === 'runtime-v1' ? 'release-input-seed' : {seed: 'release-input-seed'};
+      const seed = ['runtime-v1','runtime-modules-v2'].includes(request.spec.format) ? 'release-input-seed' : {seed: 'release-input-seed'};
       const resetFrozen = () => page.evaluate(async seed => {
         const test = window.__GAME_TEST__;
         // Same browser turn: no fresh RAF may advance between reconstruction
@@ -204,7 +204,7 @@ try {
         await resetFrozen();
         for (const step of steps) await runStep(step);
       };
-      let observedInput = false, observedVisible = false, events = 0, timelineControl = !nativeClock;
+      let observedInput = false, observedVisible = false, events = 0, timelineControl = !nativeClock, capturedStates = 0;
       for (const step of scenario.steps) {
         for (let index = 0; index < step.repeat; index++) {
           const before = await bridge.snapshot();
@@ -217,6 +217,9 @@ try {
             events++;
             const stateChanged = canonical(before) !== canonical(after);
             const visibleChanged = compareImages(beforeImage, afterImage).visible_changed;
+            if (stateChanged && visibleChanged && capturedStates < 4) {
+              capturedStates++; save(`interaction-${capturedStates}-${width}.png`, await page.screenshot());
+            }
             if (stateChanged && visibleChanged && !observedInput) {
               if (nativeClock) {
                 // Replay the preceding real controls from an equal seed, then
@@ -254,7 +257,7 @@ try {
         });
         save(`mechanics-${width}.json`, Buffer.from(JSON.stringify(mechanics, null, 2)));
         record(`mechanics:${width}`, mechanics.every(test => test.passed), 'Every required gameplay action must pass its declared real-input assertions', {
-          actual_input: true, cases: mechanics.map(test => ({id: test.id, actions: test.actions, passed: test.passed, visible_changed: test.visible_changed, failed_assertions: test.observations.filter(o => !o.passed).slice(0, 2), ...(test.error ? {error: test.error} : {})})),
+          actual_input: true, cases: mechanics.map(test => ({id: test.id, actions: test.actions, passed: test.passed, visible_changed: test.visible_changed, failed_assertions: test.observations.filter(o => !o.passed), ...(test.error ? {error: test.error} : {})})),
         });
         // Existing completion/storage/restart checks refer to the smoke/playthrough timeline.
         await replay(history);
@@ -291,7 +294,7 @@ try {
         test.reset(seed); const second = JSON.stringify(test.snapshot());
         if (typeof test.setManualMode === 'function') test.setManualMode(false);
         return {equal: first === second};
-      }, request.spec.format === 'runtime-v1');
+      }, ['runtime-v1','runtime-modules-v2'].includes(request.spec.format));
       record(`deterministic_reset:${width}`, deterministic.equal, 'Equal seeds recreate the same immediate gameplay snapshot', deterministic);
       const capabilities = request.spec.capabilities || {};
       const lifecycle = await page.evaluate(() => {

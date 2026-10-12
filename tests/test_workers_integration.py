@@ -114,6 +114,25 @@ def browser_transport_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
         }
 
     monkeypatch.setattr("prompt2play.workers.runner.IsolatedValidator.validate", validate)
+    monkeypatch.setattr("prompt2play.workers.runner.IsolatedValidator.preflight", lambda _self: {})
+
+
+def test_stale_validator_fails_before_provider_or_reservation(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, transport, claim = prepared
+
+    def reject(_self: Any) -> None:
+        raise ValueError("Validator image does not match trusted checking code")
+
+    def forbidden_gateway(*_args: Any, **_kwargs: Any) -> None:
+        raise AssertionError("Provider must not be constructed before the environment check")
+
+    monkeypatch.setattr("prompt2play.workers.runner.IsolatedValidator.preflight", reject)
+    monkeypatch.setattr(worker, "ProviderGateway", forbidden_gateway)
+    with pytest.raises(ValueError, match="does not match"):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    assert not ModelInvocation.objects.filter(job_id=claim["job"]["id"]).exists()
 
 
 @pytest.fixture

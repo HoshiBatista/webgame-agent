@@ -65,6 +65,8 @@ def job_data(job):
 
     result["remaining_seconds"] = remaining_seconds(job)
     result["approval"] = job.stage.removeprefix("review_") if job.status == "waiting" else None
+    result["pipeline_version"] = job.checkpoint.get("pipeline_version", "legacy-v1")
+    result["project_format"] = job.checkpoint.get("project_format", "runtime-v1")
     result["budget_usd"] = str(job.budget_usd) if job.budget_usd is not None else None
     result["pricing"] = job.pricing
     result["cost"] = workflow.cost_summary(job)
@@ -152,9 +154,10 @@ def version_data(version, detail=False):
     )
     result["validation"] = report_for_read(version.validation)
     result["eligible"] = workflow.version_eligible(version)
+    result["visual_review_pending"] = workflow.version_reviewable(version)
     result["candidate_id"] = ident(version.candidate_id)
     result["preview_url"] = None
-    if result["eligible"]:
+    if result["eligible"] or result["visual_review_pending"]:
         from .preview import preview_url
 
         result["preview_url"] = preview_url(version)

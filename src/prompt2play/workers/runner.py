@@ -24,8 +24,13 @@ from prompt2play.generation import (
     GenerationRequest,
     ProviderGateway,
 )
-from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT, is_rejected_response
+from prompt2play.generation.retries import (
+    CODEX_TIMEOUT_RECEIPT,
+    is_rejected_response,
+    structured_diagnostic,
+)
 from prompt2play.generation.workspace import BudgetExhausted, GenerationPaused, GenerationStopped
+from prompt2play.legacy.worker.core import ProviderError
 from prompt2play.validation import IsolatedValidator
 from prompt2play.workers.diagnostics import emit, exception_details, safe_message
 from prompt2play.workers.model_catalog import CodexModelCatalog
@@ -278,6 +283,9 @@ def generation_request(claim: dict[str, Any], mode: str) -> GenerationRequest:
     job = claim["job"]
     candidate = claim.get("candidate") or {}
     base = candidate if job["stage"] == "repair" else (claim.get("base_version") or {})
+    if not base and claim.get("previous_draft"):
+        previous = claim["previous_draft"]
+        base = {"files": previous["files"], "spec": previous["spec"], "plan": previous["plan"]}
     checkpoint = job.get("checkpoint") or {}
     strategy = checkpoint.get("strategy", "structural")
     report = candidate.get("validation", {})
@@ -286,9 +294,14 @@ def generation_request(claim: dict[str, Any], mode: str) -> GenerationRequest:
     return GenerationRequest(
         prompt=job["prompt"],
         resume_state=claim.get("draft") or {},
+        pipeline_version=job.get("pipeline_version", "legacy-v1"),
+        project_format=job.get("project_format", "runtime-v1"),
+        controller_state=claim.get("controller") or {},
         planning_state=claim.get("planning") or {},
         user_feedback=claim.get("user_feedback") or [],
         previous_proposal=claim.get("previous_proposal") or {},
+        continuation_feedback=checkpoint.get("continuation_feedback", []),
+        migration_from_sha=checkpoint.get("pipeline_migration", {}).get("request_sha256", ""),
         kind="repair" if job["stage"] == "repair" else job["kind"],
         mode=mode,
         base_files={}
@@ -320,6 +333,8 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         fence_check=lease.alive,
         usage=dict(lease.job["usage"]),
     )
+    lease.pause_boundary()
+    IsolatedValidator(args.image, lease.remaining(args.validation_timeout)).preflight()
     gateway = ProviderGateway(
         lease.job["provider"],
         lease.job.get("model") or args.model,
@@ -327,8 +342,11 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         executable=args.codex,
         journal=RemoteJournal(lease, control),
     )
-    lease.pause_boundary()
     gateway.preflight()
+    image_transport = (
+        gateway.image_preflight() if lease.job.get("pipeline_version") == "adaptive-v1" else False
+    )
+    latest_images: list[Any] = []
 
     def plan_ready(spec: dict[str, Any], plan: dict[str, Any]) -> None:
         result = lease.write("plan", spec=spec, plan=plan)
@@ -336,7 +354,9 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             raise AwaitingApproval("Plan awaits user approval")
 
     def save_draft(state: dict[str, Any]) -> None:
-        lease.write("draft", draft=state)
+        result = lease.write("draft", draft=state)
+        if result.get("waiting"):
+            raise AwaitingApproval("Revised plan awaits user approval")
         lease.pause_boundary()
 
     def save_planning(state: dict[str, Any]) -> None:
@@ -344,6 +364,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         lease.pause_boundary()
 
     def browser_check(files: dict[str, str], spec: dict[str, Any]) -> dict[str, Any]:
+        from prompt2play.generation.images import ImageInput
         from prompt2play.generation.runtime import assemble_runtime
 
         html = assemble_runtime(files, spec, expected_runtime_digest=spec["runtime"]["sha256"])
@@ -367,15 +388,110 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
                 report=report,
                 evidence_files=evidence_payload(report, directory),
             )
+            latest_images.clear()
+            frames = []
+            for width in (1280, 390):
+                interactions = sorted(directory.glob(f"interaction-*-{width}.png"))
+                frames.extend(
+                    [
+                        f"start-{width}.png",
+                        interactions[-1].name if interactions else f"control-after-{width}.png",
+                        f"final-{width}.png",
+                    ]
+                )
+            for frame in frames:
+                path = directory / frame
+                if path.is_file():
+                    latest_images.append(ImageInput(frame, path.read_bytes()))
+        unavailable = any(
+            c.get("name") == "isolated_browser_runtime" and c.get("status") != "passed"
+            for c in report["checks"]
+        )
         return {
             "status": report["status"],
-            "scope": "infrastructure" if report["status"] == "unverified" else "browser",
+            "scope": "infrastructure"
+            if unavailable
+            else "test_scenario"
+            if report["status"] == "unverified"
+            else "browser",
             "diagnostic_key": saved["key"],
             "artifact": report["artifact"],
             "release_eligible": False,
+            "suite_sha256": report.get("suite_sha256"),
+            "validator_image_sha256": report.get("validator_image_sha256"),
             "passed_checks": [c["name"] for c in report["checks"] if c["status"] == "passed"],
+            "checks": report["checks"],
             "findings": [c for c in report["checks"] if c["status"] != "passed"],
             "warnings": report.get("warnings", []),
+        }
+
+    def rendered_check(
+        files: dict[str, str], spec: dict[str, Any], plan: dict[str, Any]
+    ) -> dict[str, Any]:
+        from prompt2play.contracts.models import digest, stable
+        from prompt2play.generation.images import image_metadata
+        from prompt2play.generation.rendered_quality import (
+            RENDERED_INSTRUCTIONS,
+            RENDERED_SCHEMA,
+            validate_rendered,
+        )
+        from prompt2play.legacy.worker.core import PROMPT_BOUNDARY
+
+        # A resumed worker may have reused a report but no longer hold its pixels.
+        if not image_transport:
+            return {
+                "status": "human_required",
+                "reason": "Image input is unavailable on this provider; explicit human review is required",
+            }
+        report = browser_check(files, spec)
+        if report["status"] != "passed":
+            raise GenerationStopped(
+                "Fresh rendered evidence is unavailable; saved draft can resume"
+            )
+        if len(latest_images) < 4:
+            return {
+                "status": "human_required",
+                "reason": "Desktop and touch screenshots are incomplete",
+            }
+        metadata = image_metadata(latest_images)
+        context = {
+            "request": lease.job["prompt"],
+            "visual_design": plan["visual_design"],
+            "frames": metadata,
+            "artifact": report["artifact"],
+            "attempt_id": lease.job["id"],
+            "review_feedback": plan.get("review_feedback", []),
+        }
+        try:
+            reply = gateway.generate(
+                RENDERED_INSTRUCTIONS + PROMPT_BOUNDARY + stable(context),
+                RENDERED_SCHEMA,
+                "rendered_review",
+                control,
+                max_output=6000,
+                images=latest_images,
+            )
+        except ProviderError as exc:
+            if structured_diagnostic(exc) is not None:
+                raise
+            # Failed/unsupported image transport is not artistic approval. The
+            # ledger retains its receipt or ambiguous reservation; only a human
+            # can release the preserved candidate's explicit assessment gate.
+            return {
+                "status": "human_required",
+                "reason": "Image review could not be completed: " + safe_message(str(exc)),
+                "frames": metadata,
+                "diagnostic_key": report["diagnostic_key"],
+            }
+        status = validate_rendered(reply.data, {i.name for i in latest_images})
+        return {
+            "status": status,
+            "review": reply.data,
+            "frames": metadata,
+            "artifact": report["artifact"],
+            "diagnostic_key": report["diagnostic_key"],
+            "receipt": reply.invocation_key,
+            "review_sha256": digest(reply.data),
         }
 
     try:
@@ -384,6 +500,10 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             on_checkpoint=save_draft,
             on_planning=save_planning,
             on_browser_check=browser_check,
+            on_rendered_check=rendered_check,
+            browser_identity=IsolatedValidator(
+                args.image, args.validation_timeout
+            ).cache_identity(),
             require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
         ).attempt(generation_request(lease.claim, args.mode), gateway, control)
     finally:
@@ -485,6 +605,7 @@ def main(argv: list[str] | None = None) -> int:
             "validator": "docker",
             "interactive_plan_v1": args.role == "generator" and args.mode == "single_author",
             "continuable_authoring_v1": args.role == "generator" and args.mode == "single_author",
+            "adaptive_generation_v1": args.role == "generator" and args.mode == "single_author",
             "continuable_planning_v1": args.role == "generator" and args.mode == "single_author",
             "requires_job_model": ["openai"]
             if args.role == "generator" and args.provider == "openai" and not args.model
@@ -583,11 +704,18 @@ def main(argv: list[str] | None = None) -> int:
                         **exception_details(exc, [lease.token]),
                     )
                     if lease.alive():
-                        lease.write(
-                            "fail",
-                            error=safe_message(f"{type(exc).__name__}: {exc}", [lease.token]),
-                            diagnostic=exception_details(exc, [lease.token]),
-                        )
+                        try:
+                            lease.write(
+                                "fail",
+                                error=safe_message(f"{type(exc).__name__}: {exc}", [lease.token]),
+                                diagnostic=exception_details(exc, [lease.token]),
+                            )
+                        except Exception as report_error:
+                            emit(
+                                "failure_report_unconfirmed",
+                                **context,
+                                **exception_details(report_error, [lease.token]),
+                            )
             active.remove(cancel)
             if args.once:
                 return stage_exit

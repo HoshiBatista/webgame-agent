@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from .artifacts import require_report_binding
 from .models import Version
 from .errors import Conflict
-from .workflow import candidate_payload, version_eligible
+from .workflow import candidate_payload, version_eligible, version_reviewable
 
 SALT = "prompt2play.preview.v1"
 
@@ -40,8 +40,8 @@ def preview(request, pk):
         claims = signing.loads(request.GET.get("token", ""), salt=SALT, max_age=600)
     except signing.BadSignature:
         return HttpResponse("Preview link expired or invalid.", status=403)
-    version = get_object_or_404(Version, pk=pk, eligible=True, candidate__committed=True)
-    if not version_eligible(version):
+    version = get_object_or_404(Version, pk=pk, candidate__committed=True)
+    if not (version_eligible(version) or version_reviewable(version)):
         return HttpResponse("Required validation is unavailable.", status=409)
     if claims != {
         "version": str(version.pk),
