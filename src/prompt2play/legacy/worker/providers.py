@@ -80,11 +80,16 @@ def portable_output_schema(schema):
         "uniqueItems",
     }
     if isinstance(schema, dict):
-        return {
+        result = {
             key: portable_output_schema(value)
             for key, value in schema.items()
             if key not in unsupported
         }
+        if result.get("type") == "object" and isinstance(result.get("properties"), dict):
+            # Strict transports require every declared property. The original
+            # local schema keeps historical optional fields readable on replay.
+            result["required"] = list(result["properties"])
+        return result
     if isinstance(schema, list):
         return [portable_output_schema(value) for value in schema]
     return schema

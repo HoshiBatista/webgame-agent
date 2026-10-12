@@ -43,6 +43,7 @@ DRAFT_SCHEMA["properties"].update(
     packager={"type": "object"},
     requirement_reviews={"type": "array", "items": {"type": "object"}},
     migration={"type": "object"},
+    request_identity_version={"const": 2},
 )
 
 

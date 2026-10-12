@@ -218,6 +218,164 @@ def arguments() -> argparse.Namespace:
     )
 
 
+@pytest.mark.parametrize("user_rule_change", [False, True])
+def test_pro_supervisor_plan_confirmation_reclaims_exact_saved_draft(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+    user_rule_change: bool,
+) -> None:
+    import copy
+
+    from prompt2play.adapters.django.forge import workflow
+    from prompt2play.adapters.django.forge.reviews import decide_review
+    from prompt2play.contracts.models import stable
+
+    _, transport, original = prepared
+    artifact_store = cast(Any, workflow).store()
+    job_id = original["job"]["id"]
+    Job.objects.filter(pk=job_id).update(
+        creation_mode="pro",
+        checkpoint={"pipeline_version": "adaptive-v1", "project_format": "runtime-v1"},
+    )
+    original["job"]["creation_mode"] = "pro"
+    original["job"].update(pipeline_version="adaptive-v1", project_format="runtime-v1")
+    proposal, author, source_review = replies()
+    feedback = "Change MOVE to decrease the counter instead of increasing it."
+
+    class FlowProvider:
+        def __init__(self) -> None:
+            self.roles: list[str] = []
+            self.supervisors = 0
+
+        def preflight(self) -> None:
+            pass
+
+        def generate(
+            self, _prompt: str, _schema: dict[str, Any], role: str, *_args: Any, **_kwargs: Any
+        ) -> Any:
+            self.roles.append(role)
+            job = Job.objects.get(pk=job_id)
+            if role == "plan":
+                data = copy.deepcopy(proposal)
+                if job.review.get("feedback"):
+                    data["build_plan"]["mechanics_changes"] = [
+                        {
+                            "case_id": "move",
+                            "request_excerpt": "decrease the counter instead of increasing it",
+                            "reason": "Apply the new user rule; preserve all other controls and checks.",
+                        }
+                    ]
+                    for device in ("desktop", "touch"):
+                        for assertion in data["build_plan"]["mechanics"][0][device]["assertions"]:
+                            assertion["op"] = "less"
+            elif role == "author":
+                data = copy.deepcopy(author)
+                if self.roles.count("author") > 1:
+                    data["operations"][0].update(
+                        op="replace",
+                        content=data["operations"][0]["content"] + "\n// improved mobile layout",
+                    )
+            elif role == "visual_review":
+                data = source_review
+            else:
+                draft = artifact_store.read_json(job.checkpoint["authoring_draft"]["key"])
+                if role == "coverage_review":
+                    data = {
+                        "requirements": {
+                            r["id"]: {
+                                "status": "implemented",
+                                "file": "game.js",
+                                "excerpt": "function createGame(ctx)",
+                                "explanation": "Authored source fixture",
+                            }
+                            for r in draft["adaptive"]["requirements"]["payload"]["items"]
+                        }
+                    }
+                else:
+                    self.supervisors += 1
+                    updated = copy.deepcopy(draft["plan"])
+                    updated["visual_design"]["composition"]["mobile"] += " Larger touch targets."
+                    data = {
+                        "action": "revise_plan" if self.supervisors == 1 else "continue",
+                        "reason": "Authored technical revision",
+                        "observation_ids": [draft["adaptive"]["observations"][-1]["id"]],
+                        "affected_files": ["game.js"],
+                        "task_ids": [],
+                        "plan_json": stable(updated) if self.supervisors == 1 else "",
+                    }
+            return cast(Any, Reply)(data, dict(USAGE))
+
+    provider = FlowProvider()
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        configured.provider = provider
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    monkeypatch.setattr(ProviderGateway, "image_preflight", lambda _: False)
+    capabilities = {
+        "providers": ["codex"],
+        "continuable_authoring_v1": True,
+        "continuable_planning_v1": True,
+        "adaptive_generation_v1": True,
+        "interactive_plan_v1": True,
+    }
+
+    def approve_and_claim() -> dict[str, Any]:
+        job = Job.objects.get(pk=job_id)
+        cast(Any, decide_review)(
+            job_id, stage_fence=job.stage_fence, action="approve", actor_id=job.created_by_id
+        )
+        return transport.post("api/worker/claim/", {"capabilities": capabilities})
+
+    with pytest.raises(worker.AwaitingApproval, match="Plan awaits"):
+        worker.generate_stage(
+            worker.StageLease(transport, original, threading.Event()), arguments()
+        )
+    claimed = approve_and_claim()
+    with pytest.raises(worker.AwaitingApproval, match="Revised plan awaits"):
+        worker.generate_stage(worker.StageLease(transport, claimed, threading.Event()), arguments())
+    job = Job.objects.get(pk=job_id)
+    saved_key = job.checkpoint["authoring_draft"]["key"]
+    saved = artifact_store.read_json(saved_key)
+    assert saved["adaptive"]["decisions"][-1]["action"] == "revise_plan"
+    if user_rule_change:
+        cast(Any, decide_review)(
+            job_id,
+            stage_fence=job.stage_fence,
+            action="revise",
+            feedback=feedback,
+            actor_id=job.created_by_id,
+        )
+        claimed = transport.post("api/worker/claim/", {"capabilities": capabilities})
+        assert not claimed["draft"] and claimed["previous_draft"] == saved
+        with pytest.raises(worker.AwaitingApproval, match="Plan awaits"):
+            worker.generate_stage(
+                worker.StageLease(transport, claimed, threading.Event()), arguments()
+            )
+        claimed = approve_and_claim()
+    else:
+        claimed = approve_and_claim()
+        assert claimed["draft"] == saved and claimed["previous_proposal"] == {
+            "spec": proposal["game_spec"],
+            "plan": proposal["build_plan"],
+        }
+    worker.generate_stage(worker.StageLease(transport, claimed, threading.Event()), arguments())
+    job.refresh_from_db()
+    assert job.stage == "validate" and Candidate.objects.get().committed
+    assert provider.roles.count("plan") == (2 if user_rule_change else 1)
+    assert provider.roles.count("author") == 2
+    assert artifact_store.read_json(saved_key) == saved
+    if user_rule_change:
+        controller = cast(Any, workflow).candidate_payload(Candidate.objects.get())["provenance"][
+            "adaptive"
+        ]
+        assert controller["requirements"]["payload"]["user_feedback"][-1]["text"] == feedback
+    assert job.usage["calls"] == ModelInvocation.objects.filter(state="completed").count()
+    transport.close()
+
+
 def test_worker_harness_posts_exact_native_candidate_and_persists_usage(
     prepared: tuple[Any, worker.Coordinator, dict[str, Any]], monkeypatch: pytest.MonkeyPatch
 ) -> None:

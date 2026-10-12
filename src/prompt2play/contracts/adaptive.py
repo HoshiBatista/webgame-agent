@@ -16,15 +16,26 @@ def version(kind: str, payload: dict[str, Any], parent: str | None = None) -> di
     return {**value, "id": digest(value)}
 
 
-def initial_contracts(prompt: str, spec: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
+def initial_contracts(
+    prompt: str,
+    spec: dict[str, Any],
+    plan: dict[str, Any],
+    *,
+    user_feedback: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
     requirements = version(
         "Requirements",
         {
             "request": prompt,
             "items": [{"id": "request", "text": prompt}]
             + [{"id": "action:" + a["type"], "text": a["effect"]} for a in spec["actions"]]
-            + [{"id": f"rule:{i}", "text": r} for i, r in enumerate(spec["rules"])],
+            + [{"id": f"rule:{i}", "text": r} for i, r in enumerate(spec["rules"])]
+            + [
+                {"id": f"feedback:{i}", "text": item["text"]}
+                for i, item in enumerate(user_feedback or [])
+            ],
             "spec": spec,
+            **({"user_feedback": copy.deepcopy(user_feedback)} if user_feedback else {}),
         },
     )
     acceptance = version(
@@ -114,6 +125,10 @@ def revise_design(state: dict[str, Any], spec: dict[str, Any], plan: dict[str, A
     if spec != state["requirements"]["payload"]["spec"]:
         raise ValueError("Changing game requirements needs an explicit user decision")
     previous = state["design"]["payload"]["plan"]
+    if plan.get("mechanics_changes", []) != previous.get("mechanics_changes", []):
+        raise ValueError(
+            "Technical plan changes cannot introduce user-authorized mechanics changes"
+        )
     validate_mechanics(plan["mechanics"], [a["type"] for a in spec["actions"]])
     preserve_mechanics(previous["mechanics"], plan["mechanics"])
     design = version(
@@ -161,13 +176,20 @@ def validate_adaptive(state: dict[str, Any], spec: dict[str, Any], plan: dict[st
     if state["requirements"]["payload"]["spec"] != spec:
         raise ValueError("Game requirements changed without user approval")
     first_plan = next(v["payload"]["plan"] for v in versions if v["kind"] == "DesignPlan")
-    expected = initial_contracts(state["requirements"]["payload"]["request"], spec, first_plan)
+    expected = initial_contracts(
+        state["requirements"]["payload"]["request"],
+        spec,
+        first_plan,
+        user_feedback=state["requirements"]["payload"].get("user_feedback"),
+    )
     if (
         state["requirements"] != expected["requirements"]
         or state["acceptance"] != expected["acceptance"]
     ):
         raise ValueError("Requirements or protected acceptance differ from their original design")
     preserve_mechanics(first_plan["mechanics"], plan["mechanics"])
+    if plan.get("mechanics_changes", []) != first_plan.get("mechanics_changes", []):
+        raise ValueError("User-authorized mechanics changes differ from the original revision")
     if (
         state["execution"]["payload"]["design_id"] != state["design"]["id"]
         or state["execution"]["payload"]["acceptance_id"] != state["acceptance"]["id"]

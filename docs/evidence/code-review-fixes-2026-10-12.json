@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-12T16:42:07.937297+00:00",
+  "parent_commit": "ea026663a5a2d38671d5063562b976f6e2290dbb",
+  "status": "Four reproduced pipeline defects repaired; new lifecycle and negative acceptance regressions pass",
+  "fixes": [
+    {
+      "id": "review-1",
+      "problem": "Supervisor revision changes previous_proposal and invalidates saved request checksum at Pro approval",
+      "resolution": "Versioned stable request identity excludes evolving coordinator context; old hashes are recognized only against validated saved design proposals; altered user prompt is rejected",
+      "regressions": [
+        "test_confirming_revised_plan_resumes_saved_source_without_replanning",
+        "test_pro_supervisor_plan_confirmation_reclaims_exact_saved_draft"
+      ]
+    },
+    {
+      "id": "review-2",
+      "problem": "Fresh screenshot browser failure repeatedly stops rendered_review without author or supervisor",
+      "resolution": "Fresh browser reports enter progress and durable checkpoints; game/scenario defects route to supervisor then author; infrastructure recovery preserves source and retries capture; passing recovery clears stale defects and restores matching source coverage",
+      "regressions": [
+        "test_fresh_render_capture_game_failure_is_saved_for_supervisor_and_author",
+        "test_render_capture_environment_recovery_retries_without_paid_author_or_plan"
+      ]
+    },
+    {
+      "id": "review-3",
+      "problem": "New user rule revisions cannot replace old mechanical expectations",
+      "resolution": "Named amendments cite exact saved user request excerpts and are checked by planner, coordinator and candidate submission; unrelated mechanics/actions remain protected; fresh Pro feedback has its own contracts and preserved old history; amendments are shown in plan UI",
+      "regressions": [
+        "test_explicit_rule_revision_changes_only_the_named_mechanics_oracle",
+        "test_user_mechanics_changes_cannot_silence_unrelated_expectations",
+        "test_technical_supervisor_cannot_amend_requirements_by_citing_user_text",
+        "test_coordinator_accepts_only_saved_user_requested_mechanics_changes",
+        "test_amended_counter_mechanic_requires_actual_revised_behavior_on_both_devices"
+      ]
+    },
+    {
+      "id": "review-4",
+      "problem": "Incomplete nested supervisor plan causes uncaught KeyError/TypeError",
+      "resolution": "Validate the entire nested plan before reading fields, then return bounded rejection evidence for correction",
+      "regressions": [
+        "test_incomplete_supervisor_plan_is_rejected_then_corrected"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "python_suite",
+      "passed": 403,
+      "log_sha256": "da069ab2792a05f43652acdd7b689a925620313df8ef7e9377fbb60dcd72b76b"
+    },
+    {
+      "name": "postgresql_workflow",
+      "passed": 92,
+      "log_sha256": "ff192a981da4d5a8a9c17d5508603169c8c5e8764ad90fdd251c43b967bd2957"
+    },
+    {
+      "name": "real_browser_mechanics",
+      "passed": 2,
+      "log_sha256": "096fda9def33e513bbbb9b1a8ab71f5994a2575e4c58d6396069b7776a4941ba"
+    },
+    {
+      "name": "frontend_tests",
+      "passed": 69,
+      "log_sha256": "450e758158fbd38d3e053d9639c0fe29391c97add7f448b8ab843e396ba29276"
+    },
+    {
+      "name": "studio_browser_flow",
+      "passed": true,
+      "scope": "Trusted studio with authored API double; no live model/backend/game execution",
+      "log_sha256": "9fd56747917baa86ce51f463579bb1ac3183186382d6c997605fa28ea9e2b1c6",
+      "result_sha256": "132274e43ca442a910059e8a4515149542a2ff59ea91fadfc79accd5f7ef35cf",
+      "mechanics_amendment_screenshot_sha256": "af5347202f26853309638f1fb1e48e871e84494f62b8eaa61f4f19d987bbb2cc",
+      "mechanics_amendment_details": "Exact user quote and reason asserted in browser and screenshot visually inspected"
+    }
+  ],
+  "python_skipped": 38,
+  "coverage_percent": 86.19,
+  "ruff_format_files": 186,
+  "ruff_lint": "passed",
+  "mypy_source_files": 160,
+  "package_build_log_sha256": "b4e22e1413870178e028e18e2df6e24cc577f9db04e14c37bbbb97761cd34d5c",
+  "frontend_build_log_sha256": "bcb2e150eae2f59b4c35c6053c2e7bdbe0bda58fd074b2bdb6c863e33b3408a0",
+  "validator_image": "sha256:5711d9bcc6aa0c4ef9128d299d963dd362f32b74f0e2fa35fccf64c02635794c",
+  "real_browser_scope": "Desktop and touch actual input; amended behavior passes, original behavior fails; authored fixtures, no live generated game",
+  "live_model_calls": 0,
+  "extra_model_cost_usd": "0.00",
+  "user_game_edited": false,
+  "user_job_resumed": false,
+  "human_art_quality": "not_assessed",
+  "actual_webview": "host_unknown_not_tested",
+  "default_rollout": "legacy-v1 unchanged; broader quality gates remain open",
+  "source_files_sha256": {
+    "src/prompt2play/adapters/django/forge/drafts.py": "80134a456a919fe65eb51c29a0967f2029e12153616da3ed32749c75a1c50a48",
+    "src/prompt2play/adapters/django/forge/reviews.py": "1785d2c8ab31e105a34e16d63cd98dd5831b490b99681c8beee6e76301b302b9",
+    "src/prompt2play/adapters/django/forge/workflow.py": "e7967c46f6654c0930afd85562f8279df700381f1125fde83d8a1ea5b2a5ceae",
+    "src/prompt2play/contracts/adaptive.py": "9bf2e1d41be9dca2b39a641161c21f0690ac5ccd4d77ed03b503b5894d6aa890",
+    "src/prompt2play/contracts/mechanics.py": "75825a6c3c67cfe1814920ace7228398ef79aa6a0d2c2c48198ff9a5c3d262b1",
+    "src/prompt2play/contracts/models.py": "8a9005b9d97002f9f7c8717e22e52e9eeefa7a7a1ec66edb4a9f15c22f4e573e",
+    "src/prompt2play/generation/coverage.py": "e0b352a9e4d7f50e101769e5f40f9404e6c5b8d5e760a14881a9c703baf14443",
+    "src/prompt2play/generation/draft_state.py": "214273e57d74e9661b2dee12b17dd5dd1b37f212468064338ae55bcea0152403",
+    "src/prompt2play/generation/harness.py": "80ee2181df2ac4458961af1b801e5fd41faf733a7bdd6f1e49fc9b6e3f1b74c7",
+    "src/prompt2play/legacy/worker/providers.py": "47c47c960cef937a70bedab563f007ec30ec4a9e6dfc5fb88d180f73644a5cd2",
+    "src/prompt2play/workers/runner.py": "4d1635fe439e6bc8d57c1536f14484e0d9dcdd86fbf864b58c507ac615f4cf8a",
+    "tests/test_adaptive_contracts.py": "fe1aa0e53ec19149e6344859cd136fb4f0a5242fc918880b16894403216b5389",
+    "tests/test_backend_workflow.py": "1353c5aefbab7b593386fdbca1fb60e3f1fd9d17ed4823950325d1286abb9b60",
+    "tests/test_generation_gateway.py": "7e8cfa69d88fcb73487d0c444c4b163d5269c9b426bab94cac91bb161c44e1fe",
+    "tests/test_generation_harness.py": "baeb776930b5ba1b2a9663a929140f6bd1d0a553ac71829b7e34889f2fe1054e",
+    "tests/test_validation_browser.py": "ec03f85b0719c24c7e13e801e3ad83a4305bda9f39af554303fb64cb57ef2725",
+    "tests/test_workers_integration.py": "36f8a9480f06239ac0b6f231971355d5dc327c0c778634c37a3c4460fa5a803e",
+    "web/src/components/CreationReview.tsx": "dd60af214f81bb2b7c0b33d763bd3b4e152da82c34557bc0c696d87aa1795abd",
+    "web/tests/creator-flow.mjs": "11912d6484ed20161918df21ab3b303eb24e9a996282a9c88970fa430812197a"
+  }
+}

@@ -1797,3 +1797,85 @@ def test_paused_pipeline_upgrade_is_fenced_and_preserves_accounting_with_clarifi
     assert services.claim_job(team[2], CAPABILITIES)[0] is None
     with pytest.raises(Conflict):
         cast(Any, resume_paused)(job.pk, {"stage_fence": paused.stage_fence})
+
+
+@pytest.mark.parametrize("uncited", [False, True])
+def test_coordinator_accepts_only_saved_user_requested_mechanics_changes(
+    team: Team, uncited: bool
+) -> None:
+    import copy
+    import json
+
+    from prompt2play.adapters.django.forge.reviews import record_plan
+    from prompt2play.contracts.adaptive import initial_contracts
+    from prompt2play.generation.runtime import assemble_runtime, capture_runtime_identity
+    from prompt2play.paths import RESOURCE_ROOT
+
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    native = json.loads((root / "spec.json").read_text())
+    old_plan = {
+        **json.loads((root / "plan.json").read_text()),
+        **json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text()),
+    }
+    files = {"game.js": (root / "game.js").read_text()}
+    base = Version.objects.create(
+        project=team[1], number=1, spec={**native, "mechanics_acceptance": old_plan["mechanics"]}
+    )
+    prompt = "Change MOVE to decrease the counter instead of increasing it."
+    job = Job.objects.create(
+        project=team[1],
+        created_by=team[0],
+        base_version=base,
+        kind="revise",
+        prompt=prompt,
+        provider="codex",
+        checkpoint={"pipeline_version": "adaptive-v1", "project_format": "runtime-v1"},
+    )
+    job, lease = services.claim_job(team[2], {**CAPABILITIES, "adaptive_generation_v1": True})
+    new_plan = copy.deepcopy(old_plan)
+    new_plan["mechanics_changes"] = [
+        {
+            "case_id": "move",
+            "request_excerpt": "Invented request"
+            if uncited
+            else "decrease the counter instead of increasing it",
+            "reason": "The user changes MOVE; assert decreasing counter after every input.",
+        }
+    ]
+    for device in ("desktop", "touch"):
+        for assertion in new_plan["mechanics"][0][device]["assertions"]:
+            assertion["op"] = "less"
+    values = {
+        "lease_token": lease,
+        "stage_fence": job.stage_fence,
+        "spec": native,
+        "plan": new_plan,
+    }
+    if uncited:
+        with pytest.raises(ValidationError, match="cited user request"):
+            cast(Any, record_plan)(job.pk, team[2], values)
+        assert not Candidate.objects.exists()
+        return
+    cast(Any, record_plan)(job.pk, team[2], values)
+    spec = {
+        **native,
+        "format": "runtime-v1",
+        "runtime": capture_runtime_identity(),
+        "input_acceptance": new_plan["input_acceptance"],
+        "mechanics_required": True,
+        "mechanics_required_actions": [a["type"] for a in native["actions"]],
+        "mechanics_acceptance": new_plan["mechanics"],
+    }
+    candidate = submit(
+        job,
+        lease,
+        team[2],
+        files=files,
+        spec=spec,
+        plan=new_plan,
+        html=assemble_runtime(files, spec),
+        format="runtime-v1",
+        provenance={"adaptive": initial_contracts(prompt, native, new_plan)},
+    )
+    assert candidate.committed and candidate.parent_id == base.pk
+    assert base.spec["mechanics_acceptance"][0]["desktop"]["assertions"][0]["op"] == "greater"

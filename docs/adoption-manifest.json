@@ -303,7 +303,7 @@
       "source": "worker/providers.py",
       "destination": "src/prompt2play/legacy/worker/providers.py",
       "source_sha256": "c6dc28d5cc1e5193a8fc5660d93d64c51090aea5ed282b562065f322fd970db4",
-      "destination_sha256": "06647462071a2791627fee73a98b12d57b9f82d3c37fecbabc1e8c4f6d8fd241",
+      "destination_sha256": "47c47c960cef937a70bedab563f007ec30ec4a9e6dfc5fb88d180f73644a5cd2",
       "modified": true,
       "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness. Codex wire-schema compatibility preserves full local validation; bounded safe schema diagnostics and literal credential-isolated provider setup. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
@@ -1541,7 +1541,8 @@
     "evidence/adaptive-implementation-verification-2026-10-12.json",
     "evidence/adaptive-review-followup-2026-10-12.json",
     "evidence/adaptive-targeted-verification-2026-10-12.json",
-    "evidence/adaptive-comparison-pilot-2026-10-12.json"
+    "evidence/adaptive-comparison-pilot-2026-10-12.json",
+    "evidence/code-review-fixes-2026-10-12.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

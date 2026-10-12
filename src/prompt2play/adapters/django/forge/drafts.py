@@ -54,6 +54,13 @@ def record_draft(job_id, runner, values):
             raise Conflict("Save the plan before the draft.", code="missing_plan")
         changed_plan = digest(proposal) != digest({"spec": draft["spec"], "plan": draft["plan"]})
         controller = draft.get("adaptive")
+        saved_feedback = (
+            controller["requirements"]["payload"].get("user_feedback") if controller else None
+        )
+        if saved_feedback is not None and saved_feedback != job.review.get("feedback", []):
+            raise Conflict(
+                "Requirements contain unsaved user amendments.", code="contract_conflict"
+            )
         decision = controller["decisions"][-1] if controller and controller["decisions"] else None
         if changed_plan:
             if (
@@ -80,10 +87,9 @@ def record_draft(job_id, runner, values):
             )
             if not receipt_found:
                 raise Conflict("A saved supervisor receipt is required.", code="missing_decision")
-        if controller and job.checkpoint.get("authoring_draft"):
-            old = (
-                workflow.store().read_json(job.checkpoint["authoring_draft"]["key"]).get("adaptive")
-            )
+        saved = job.checkpoint.get("authoring_draft", {})
+        if controller and saved.get("scope") == draft_scope(job):
+            old = workflow.store().read_json(saved["key"]).get("adaptive")
             if old and controller["versions"][: len(old["versions"])] != old["versions"]:
                 raise Conflict("Immutable contract history changed.", code="contract_conflict")
         intent, key = workflow.store().prepare(draft)

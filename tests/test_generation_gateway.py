@@ -190,6 +190,17 @@ def test_portable_wire_schema_preserves_strict_objects_and_full_local_bounds() -
         cast(Any, parse_json)('{"name":""}', schema)
 
 
+def test_strict_wire_requires_new_amendment_field_without_changing_historical_plan_schema() -> None:
+    from prompt2play.contracts import PLAN_SCHEMA
+
+    portable: dict[str, Any] = cast(Any, portable_output_schema)(PLAN_SCHEMA)
+    local = PLAN_SCHEMA["properties"]["build_plan"]
+    wire = portable["properties"]["build_plan"]
+    assert "mechanics_changes" not in local["required"]
+    assert set(wire["required"]) == set(wire["properties"])
+    assert "mechanics_changes" in wire["required"]
+
+
 def test_schema_failure_exposes_safe_coordinates_without_payload() -> None:
     schema: dict[str, Any] = {
         "type": "object",

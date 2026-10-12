@@ -21,6 +21,7 @@ from prompt2play.contracts.adaptive import (
     revise_execution,
     validate_adaptive,
 )
+from prompt2play.contracts.mechanics import preserve_requested_mechanics
 from prompt2play.generation.supervisor import validate_decision
 from prompt2play.paths import RESOURCE_ROOT
 
@@ -33,6 +34,44 @@ def contracts() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
         **json.loads((Path(__file__).parent / "fixtures/design-contract.json").read_text()),
     }
     return initial_contracts("Make a detailed game", spec, plan), spec, plan
+
+
+@pytest.mark.parametrize(
+    "fault", ["uncited", "unknown", "duplicate", "removed", "actions", "unrelated"]
+)
+def test_user_mechanics_changes_cannot_silence_unrelated_expectations(fault: str) -> None:
+    _, _, plan = contracts()
+    old = copy.deepcopy(plan["mechanics"])
+    old.append({**copy.deepcopy(old[0]), "id": "unrelated"})
+    new = copy.deepcopy(old)
+    prompt = "Change MOVE to decrease its counter."
+    changes = [
+        {"case_id": "move", "request_excerpt": "decrease its counter", "reason": "New user rule"}
+    ]
+    if fault == "uncited":
+        changes[0]["request_excerpt"] = "Invented user intent"
+    elif fault == "unknown":
+        changes[0]["case_id"] = "invented"
+    elif fault == "duplicate":
+        changes.append(copy.deepcopy(changes[0]))
+    elif fault == "removed":
+        new.pop(0)
+    elif fault == "actions":
+        new[0]["actions"] = ["DIFFERENT"]
+    else:
+        new[1]["desktop"]["assertions"][0]["op"] = "less"
+    with pytest.raises(ValueError):
+        preserve_requested_mechanics(old, new, changes, [prompt])
+
+
+def test_technical_supervisor_cannot_amend_requirements_by_citing_user_text() -> None:
+    state, spec, plan = contracts()
+    updated = copy.deepcopy(plan)
+    updated["mechanics_changes"] = [
+        {"case_id": "move", "request_excerpt": "Make a detailed game", "reason": "Silence failure"}
+    ]
+    with pytest.raises(ValueError, match="Technical plan changes"):
+        revise_design(state, spec, updated)
 
 
 def report(case: str = "move", *, passed: bool = False) -> dict[str, Any]:

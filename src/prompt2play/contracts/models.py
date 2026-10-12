@@ -237,6 +237,11 @@ BUILD_PLAN_SCHEMA["properties"].update(
     visual_design=VISUAL_DESIGN_SCHEMA,
     implementation_design=IMPLEMENTATION_DESIGN_SCHEMA,
     mechanics=MECHANICS_SCHEMA,
+    mechanics_changes={
+        "type": "array",
+        "maxItems": 24,
+        "items": obj({"case_id": STRING, "request_excerpt": STRING, "reason": STRING}),
+    },
 )
 PLANNING_BUILD_PLAN_SCHEMA = copy.deepcopy(BUILD_PLAN_SCHEMA)
 PLANNING_BUILD_PLAN_SCHEMA["required"] += ["visual_design", "implementation_design", "mechanics"]

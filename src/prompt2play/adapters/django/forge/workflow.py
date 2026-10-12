@@ -195,6 +195,9 @@ def submit_candidate(job_id, runner, values):
                 controller = payload["provenance"]["adaptive"]
                 if controller["requirements"]["payload"]["request"] != job.prompt:
                     raise ValueError("Requirements do not contain the original user request")
+                saved_feedback = controller["requirements"]["payload"].get("user_feedback")
+                if saved_feedback is not None and saved_feedback != job.review.get("feedback", []):
+                    raise ValueError("Requirements contain unsaved user amendments")
                 validate_adaptive(
                     controller,
                     {
@@ -206,7 +209,11 @@ def submit_candidate(job_id, runner, values):
             except (KeyError, ValueError, TypeError) as exc:
                 raise ValidationError("Invalid adaptive candidate contracts: " + str(exc)) from exc
         if payload["format"] in ("runtime-v1", "runtime-modules-v2"):
-            from prompt2play.contracts.mechanics import preserve_mechanics, validate_mechanics
+            from prompt2play.contracts.mechanics import (
+                preserve_mechanics,
+                preserve_requested_mechanics,
+                validate_mechanics,
+            )
 
             try:
                 if payload["spec"].get("mechanics_required") is not True:
@@ -219,6 +226,10 @@ def submit_candidate(job_id, runner, values):
                     base_spec = job.base_version.spec
                     required.update(a["type"] for a in base_spec.get("actions", []))
                     previous_cases = base_spec.get("mechanics_acceptance", [])
+                elif job.review.get("feedback") and job.review.get("previous_plan_key"):
+                    previous = store().read_json(job.review["previous_plan_key"])
+                    previous_cases = previous["plan"].get("mechanics", [])
+                    required.update(a["type"] for a in previous["spec"].get("actions", []))
                 if not required <= set(payload["spec"].get("mechanics_required_actions", [])):
                     raise ValueError(
                         "Revision omitted existing or new gameplay actions from required acceptance"
@@ -227,7 +238,17 @@ def submit_candidate(job_id, runner, values):
                     payload["spec"].get("mechanics_acceptance"), sorted(required)
                 )
                 preserve_mechanics(payload["plan"].get("mechanics", []), matrix)
-                preserve_mechanics(previous_cases, matrix)
+                changes = payload["plan"].get("mechanics_changes", [])
+                requests = ([job.prompt] if job.kind == "revise" else []) + [
+                    item["text"] for item in job.review.get("feedback", [])
+                ]
+                if changes:
+                    proposal = store().read_json(job.review["plan_key"])
+                    if payload["plan"] != proposal["plan"]:
+                        raise ValueError(
+                            "Mechanics amendments differ from the saved user revision plan"
+                        )
+                preserve_requested_mechanics(previous_cases, matrix, changes, requests)
             except (ValueError, KeyError, TypeError) as exc:
                 raise ValidationError(str(exc)) from exc
         if job.stage in ("commit", "validate"):

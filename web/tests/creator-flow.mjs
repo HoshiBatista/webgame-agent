@@ -69,6 +69,7 @@ await page.route('**/api/**', async route => {
   else if (path.endsWith('/resume/')) { resumeRequests++; assert.equal(request.postDataJSON().stage_fence, job.stage_fence); job = {...job, status: 'queued', stage: 'plan', can_resume: false, error: '', resume_count: (job.resume_count || 0) + 1, stage_fence: job.stage_fence + 1, updated_at:timestamp(++mutationTime)}; value = job; }
   else if (path.endsWith('/cancel/')) {job = {...job, status: 'cancelled', stage_fence:(job.stage_fence || 0)+1, updated_at:timestamp(++mutationTime)}; value = job;}
   else if (path.endsWith('/events/')) value = [];
+  else if (path.endsWith('/insights/')) value = {job_id: job.id, files: [], summary: '', proposal_current: true, proposal: {spec: {}, plan: {mechanics_changes: [{case_id: 'move', request_excerpt: 'Change the move rule', reason: 'Verify the revised movement and preserve unrelated mechanics.'}]}}, provenance: {}, author_steps: [], validation: null, draft_diagnostic: null, feedback: [], previous_proposal: null};
   else if (path.startsWith('/api/jobs/')) {
     if (job.id === 'job-1' && job.status === 'queued') {
       versions.push(version('version-1', 1, true)); job = {...job, status: 'completed', stage: 'done', progress: 100, result_version_id: 'version-1', updated_at: timestamp(20)};
@@ -126,6 +127,13 @@ try {
   await page.getByRole('button', {name: 'Внести изменения', exact: true}).click();
   await page.getByText('Candidate failed; last playable revision preserved').waitFor();
   assert.match(await page.locator('iframe').getAttribute('src'), /version-1/, 'Failed revision preserves playable preview');
+  await page.getByRole('tab', {name: 'План и этапы', exact: true}).click();
+  await page.getByText('Изменение правил и их проверок по вашему запросу', {exact: true}).click();
+  await page.getByText('Change the move rule', {exact: true}).waitFor();
+  await page.getByText('Verify the revised movement and preserve unrelated mechanics.', {exact: true}).waitFor();
+  await page.screenshot({path: `${evidence}/mechanics-amendment.png`, fullPage: true});
+  await page.getByRole('tab', {name: 'Игра', exact: true}).click();
+  await previewReady();
   await page.getByLabel('Выбранная версия').selectOption('version-2');
   await page.getByText('Игра не прошла проверки', {exact: true}).waitFor();
   assert.equal(await page.locator('iframe').count(), 0, 'Failed diagnostic candidate never executes');

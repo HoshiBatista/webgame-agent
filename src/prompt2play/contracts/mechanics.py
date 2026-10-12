@@ -259,3 +259,38 @@ def assertion_identity(check: dict[str, Any]) -> str:
         separators=(",", ":"),
         allow_nan=False,
     )
+
+
+def preserve_requested_mechanics(
+    previous: list[dict[str, Any]],
+    updated: list[dict[str, Any]],
+    changes: list[dict[str, Any]],
+    requests: list[str],
+) -> None:
+    """Only cited user requests may replace the oracle of a named existing case.
+
+    This is for a new user revision, never a technical repair of that revision.
+    The replacement still needs validated real-input coverage on both devices.
+    """
+    old = {case["id"]: case for case in previous}
+    new = {case["id"]: case for case in updated}
+    authorized: set[str] = set()
+    for change in changes:
+        name, excerpt = change["case_id"], change["request_excerpt"].strip()
+        if (
+            name in authorized
+            or name not in old
+            or name not in new
+            or len(excerpt) < 8
+            or not any(excerpt in request for request in requests)
+            or not change["reason"].strip()
+        ):
+            raise ValueError(
+                "Mechanics changes need a unique existing case and a cited user request"
+            )
+        authorized.add(name)
+    preserve_mechanics([case for case in previous if case["id"] not in authorized], updated)
+    # An amendment replaces expectations, never removes coverage of a retained action.
+    for name in authorized:
+        if not set(old[name]["actions"]) <= set(new[name]["actions"]):
+            raise ValueError("Changed mechanics must still test their gameplay actions: " + name)

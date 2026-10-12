@@ -76,6 +76,29 @@ def test_reviewed_games_real_desktop_and_touch(name: str) -> None:
     assert len(report["evidence_files"]) >= 12
 
 
+@pytest.mark.parametrize("revised_source", [False, True])
+def test_amended_counter_mechanic_requires_actual_revised_behavior_on_both_devices(
+    revised_source: bool,
+) -> None:
+    files, spec, _ = fixture("dom")
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    cases = json.loads((root / "plan.json").read_text())["mechanics"]
+    for device in ("desktop", "touch"):
+        for assertion in cases[0][device]["assertions"]:
+            assertion["op"] = "less"
+    if revised_source:
+        assert "moves++;" in files["game.js"]
+        files["game.js"] = files["game.js"].replace("moves++;", "moves--;")
+    spec.update(
+        mechanics_required=True, mechanics_required_actions=["MOVE"], mechanics_acceptance=cases
+    )
+    report = execute("amended-counter-" + str(revised_source), files, spec)
+    assert report["status"] == ("passed" if revised_source else "failed"), report["errors"]
+    checks = {check["name"]: check for check in report["checks"]}
+    for width in (1280, 390):
+        assert checks[f"mechanics:{width}"]["status"] == ("passed" if revised_source else "failed")
+
+
 @pytest.mark.parametrize("broken", [False, True])
 def test_real_click_on_disabled_control_checks_ignored_action_instead_of_waiting(
     broken: bool,

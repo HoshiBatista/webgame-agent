@@ -35,6 +35,27 @@ def record_plan(job_id, runner, values):
         )
         if job.stage not in ("plan", "repair"):
             raise Conflict("Planning is not the current stage.", code="stage_conflict")
+        from prompt2play.contracts.mechanics import preserve_requested_mechanics
+
+        previous = (
+            job.base_version.spec.get("mechanics_acceptance", []) if job.base_version_id else []
+        )
+        if not previous and job.review.get("feedback") and job.review.get("plan_key"):
+            previous = (
+                workflow.store().read_json(job.review["plan_key"])["plan"].get("mechanics", [])
+            )
+        requests = ([job.prompt] if job.kind == "revise" else []) + [
+            item["text"] for item in job.review.get("feedback", [])
+        ]
+        try:
+            preserve_requested_mechanics(
+                previous,
+                values["plan"].get("mechanics", []),
+                values["plan"].get("mechanics_changes", []),
+                requests,
+            )
+        except (ValueError, KeyError, TypeError) as exc:
+            raise ValidationError(str(exc)) from exc
         intent, key = workflow.store().prepare(payload)
         workflow.store().commit(intent, key)
         review = deepcopy(job.review)
@@ -239,6 +260,9 @@ def decide_review(job_id, *, stage_fence, action, feedback="", actor_id=None):
             # A requested plan correction must go through planning even when a
             # repair would otherwise reuse the previous candidate's plan.
             checkpoint = {**job.checkpoint, "strategy": "replan"}
+            old_controller = checkpoint.pop("controller_state", None)
+            if old_controller:
+                checkpoint.setdefault("previous_controller_states", []).append(old_controller)
             changes.update(
                 status="queued",
                 stage="repair" if job.active_candidate_id else "plan",

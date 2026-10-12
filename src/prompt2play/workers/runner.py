@@ -445,13 +445,12 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             }
         report = browser_check(files, spec)
         if report["status"] != "passed":
-            raise GenerationStopped(
-                "Fresh rendered evidence is unavailable; saved draft can resume"
-            )
+            return {"status": "validation_failed", "validation": report}
         if len(latest_images) < 4:
             return {
                 "status": "human_required",
                 "reason": "Desktop and touch screenshots are incomplete",
+                "validation": report,
             }
         metadata = image_metadata(latest_images)
         context = {
@@ -482,6 +481,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
                 "reason": "Image review could not be completed: " + safe_message(str(exc)),
                 "frames": metadata,
                 "diagnostic_key": report["diagnostic_key"],
+                "validation": report,
             }
         status = validate_rendered(reply.data, {i.name for i in latest_images})
         return {
@@ -492,6 +492,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             "diagnostic_key": report["diagnostic_key"],
             "receipt": reply.invocation_key,
             "review_sha256": digest(reply.data),
+            "validation": report,
         }
 
     try:
