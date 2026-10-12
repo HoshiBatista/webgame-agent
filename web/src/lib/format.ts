@@ -8,16 +8,17 @@ export function date(value: string | null | undefined, full = false): string {
   return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short', ...(full ? { year: 'numeric' as const } : {}), hour: '2-digit', minute: '2-digit' }).format(d);
 }
 export const time = (value: string) => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-export const activeJob = (status?: JobStatus) => status === 'queued' || status === 'running';
-export const jobLabels: Record<JobStatus, string> = { queued: 'В очереди', running: 'Создаётся', completed: 'Готово', failed: 'Ошибка', cancelled: 'Отменено' };
-export const stageLabels: Record<string, string> = { author: 'Код игры', commit: 'Сохранение сборки', plan: 'План игры и дизайн', visual_review: 'Разбор графики и UI', contract: 'Согласование правил', prepare: 'Подготовка авторов', engine: 'Механика', renderer: 'Графика', audio: 'Звук', ui: 'Интерфейс игры', assemble: 'Сборка HTML', validate: 'Проверки', scenarios: 'Игровые сценарии', review: 'Ревью', repair: 'Исправления', done: 'Завершено' };
+export const activeJob = (status?: JobStatus) => status === 'queued' || status === 'running' || status === 'waiting';
+export const jobLabels: Record<JobStatus, string> = { waiting: 'Ждёт решения', queued: 'В очереди', running: 'Создаётся', completed: 'Готово', failed: 'Ошибка', cancelled: 'Отменено' };
+export const stageLabels: Record<string, string> = { review_plan: 'Подтвердите план', review_build: 'Оцените сборку', author: 'Код игры', commit: 'Сохранение сборки', plan: 'План игры и дизайн', visual_review: 'Разбор графики и UI', contract: 'Согласование правил', prepare: 'Подготовка авторов', engine: 'Механика', renderer: 'Графика', audio: 'Звук', ui: 'Интерфейс игры', assemble: 'Сборка HTML', validate: 'Проверки', scenarios: 'Игровые сценарии', review: 'Ревью', repair: 'Исправления', done: 'Завершено' };
 export const settingsKey = 'forge.job_settings.v2';
 export const dollars = (value: number | string) => new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4}).format(Number(value));
-export const defaultSettings: JobSettings = { provider: 'codex', model: '', max_repairs: 2, budget_usd: 10 };
+export const defaultSettings: JobSettings = { creation_mode: 'lite', provider: 'codex', model: '', max_repairs: 2, budget_usd: 10 };
 export function readSettings(): JobSettings {
   try {
     const raw = JSON.parse(localStorage.getItem(settingsKey) || localStorage.getItem('forge.job_settings.v1') || '{}');
     return {
+      creation_mode: raw.creation_mode === 'pro' ? 'pro' : 'lite',
       provider: raw.provider === 'openai' ? 'openai' : 'codex',
       model: typeof raw.model === 'string' ? raw.model.slice(0, 120) : '',
       max_repairs: Number.isInteger(raw.max_repairs) ? Math.min(2, Math.max(0, raw.max_repairs)) : 2,
@@ -27,6 +28,7 @@ export function readSettings(): JobSettings {
 }
 export function rememberSettings(value: JobSettings) { try { localStorage.setItem(settingsKey, JSON.stringify(value)); } catch { /* Optional browser preferences. */ } }
 export function settingsError(value: JobSettings): string | null {
+  if (value.creation_mode !== undefined && !['lite', 'pro'].includes(value.creation_mode)) return 'Выберите режим Lite или Pro.';
   if (!Number.isFinite(value.budget_usd) || value.budget_usd < 0.01 || value.budget_usd > 1000 || Math.abs(value.budget_usd * 100 - Math.round(value.budget_usd * 100)) > 1e-8) return 'Бюджет должен быть от $0.01 до $1,000 с точностью до цента.';
   if (!Number.isInteger(value.max_repairs) || value.max_repairs < 0 || value.max_repairs > 2) return 'Количество исправлений должно быть целым числом от 0 до 2.';
   if (!['codex', 'openai'].includes(value.provider) || typeof value.model !== 'string' || value.model.trim().length > 120) return 'Проверьте провайдера и имя модели (до 120 символов).';

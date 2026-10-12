@@ -16,7 +16,7 @@ def public_projects():
         public_jobs()
         .annotate(
             _active_first=Case(
-                When(status__in=["queued", "running"], then=Value(0)),
+                When(status__in=["queued", "running", "waiting"], then=Value(0)),
                 default=Value(1),
             )
         )

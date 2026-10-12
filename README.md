@@ -197,6 +197,22 @@ contact, the current model operation and elapsed time, and saved call history.
 These come from durable invocation receipts and worker leases; elapsed time is
 not presented as a completion percentage. Usage appears when a request returns.
 
+Creation mode is chosen before launch. **Lite** runs automatically. **Pro** pauses
+before coding to approve the game plan, and after mandatory browser validation
+to accept the proposed version. Both modes use the same quality requirements.
+The Plan and stages tab exposes mechanics, controls, art/UI design, acceptance,
+saved author steps, source critique and validation; it also reads old planner
+receipts while a Lite run is still active.
+
+In Pro, describe corrections in ordinary language. The revised proposal requires
+another confirmation. Pauses have no wall-clock limit and dispatch no new model
+requests; feedback and subsequent revisions retain the original money budget.
+A waiting job remains the project's active job and can be cancelled. The previous
+primary playable version remains selected until acceptance; a passed proposal
+can already be previewed. Checks never become optional. Only a runner advertising
+`interactive_plan_v1` can claim Pro generation. Approval is fenced against stale
+or double submissions and survives coordinator/worker restarts.
+
 New native runs require a detailed art/UI design and a maintainable implementation
 plan before coding: palette, scene composition, actor/object detail, interface
 states, motion, responsive layout and concrete visual criteria. The generator

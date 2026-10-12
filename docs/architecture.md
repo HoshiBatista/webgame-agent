@@ -232,6 +232,32 @@ output limits are only enforced where supported; a Codex reservation estimate is
 not a guaranteed provider cap. Preserve reported usage and conservative unknown
 reservations after interrupted calls.
 
+### Human review in Lite and Pro
+
+`creation_mode` is persisted at launch: Lite is automatic; Pro requires decisions.
+`Job.review` stores proposal CAS keys, the approved key, user feedback and manual
+revision count. A plan hook persists the exact GameSpec/BuildPlan and releases the
+worker lease into `waiting/review_plan`. Non-planning paid calls and candidate
+submission are rejected unless the coordinator has a matching approved plan.
+Approval requeues the same job; completed model receipts are reused, not rebilled.
+Feedback invalidates approval and replans with the previous proposal and notes.
+
+After mandatory validation, a Pro proposal becomes an immutable playable Version,
+but does not update `Project.latest_version` yet. `waiting/review_build` permits
+preview, acceptance or feedback. Acceptance verifies the candidate bytes and
+validation before updating the primary version. Feedback routes another attempt
+through planning/approval and validation using the same budget. User-requested
+revisions are counted separately from the bounded automatic validation repairs.
+Waiting is active for the one-job-per-project invariant and remains cancellable;
+no worker claims a waiting job. Every human decision requires the observed stage
+fence, so concurrent/stale approval cannot release twice or revive cancellation.
+Only native single-author workers advertising `interactive_plan_v1` claim Pro.
+
+The insights endpoint reads plans and bounded step summaries independently of
+committed candidates. Uncommitted source critiques are explicitly marked as draft
+responses. They cannot establish browser validation or a finished build. Lite
+users can inspect the same information without adding approval pauses.
+
 ### Repair policy
 
 Native harness v1.2 requires structured `visual_design` and

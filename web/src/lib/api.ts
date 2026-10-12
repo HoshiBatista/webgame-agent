@@ -1,4 +1,4 @@
-import type { Job, JobEvent, JobInput, PriceCatalog, Project, Runner, RunnerRole, Session, Version, VersionDetail } from '../types';
+import type { Job, JobEvent, JobInput, JobInsights, PriceCatalog, Project, Runner, RunnerRole, Session, Version, VersionDetail } from '../types';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -73,7 +73,7 @@ const invalidResponse = (mutation = false) => new ApiError(mutation ? 'Опер�
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 const strings = (value: Record<string, unknown>, keys: string[]) => keys.every(key => typeof value[key] === 'string');
 const stringArray = (value: unknown) => Array.isArray(value) && value.every(item => typeof item === 'string');
-const job = (value: unknown) => record(value) && strings(value, ['id', 'project_id', 'created_at', 'updated_at', 'stage', 'error']) && ['queued', 'running', 'completed', 'failed', 'cancelled'].includes(String(value.status));
+const job = (value: unknown) => record(value) && strings(value, ['id', 'project_id', 'created_at', 'updated_at', 'stage', 'error']) && ['queued', 'running', 'waiting', 'completed', 'failed', 'cancelled'].includes(String(value.status));
 const project = (value: unknown) => record(value) && strings(value, ['id', 'title', 'prompt', 'created_at', 'updated_at']) && (value.active_job == null || job(value.active_job)) && (value.latest_job == null || job(value.latest_job));
 const runner = (value: unknown) => record(value) && strings(value, ['id', 'name']) && record(value.capabilities) && (value.role === undefined || ['generator', 'validator'].includes(String(value.role)));
 const validation = (value: unknown) => record(value) && ['passed', 'partial', 'failed', 'unverified'].includes(String(value.status)) && Array.isArray(value.checks) && value.checks.every(check => record(check) && strings(check, ['name', 'status', 'message'])) && stringArray(value.errors) && stringArray(value.warnings);
@@ -110,6 +110,8 @@ export const api = {
   version: (versionId: string, signal?: AbortSignal) => checked(requestJson<VersionDetail>(`/api/versions/${id(versionId)}/`, { signal }), value => version(value) && record(value) && typeof value.html === 'string' && record(value.files) && Object.values(value.files).every(source => typeof source === 'string')),
   createJob: (projectId: string, input: JobInput) => checked(post<Job>(`/api/projects/${id(projectId)}/jobs/`, input), job, true),
   job: (jobId: string, signal?: AbortSignal) => checked(requestJson<Job>(`/api/jobs/${id(jobId)}/`, { signal }), job),
+  insights: (jobId: string, signal?: AbortSignal) => checked(requestJson<JobInsights>(`/api/jobs/${id(jobId)}/insights/`, {signal}), value => record(value) && typeof value.job_id === 'string' && (value.proposal === null || record(value.proposal) && record(value.proposal.spec) && record(value.proposal.plan)) && Array.isArray(value.feedback)),
+  review: (jobId: string, stage_fence: number, action: 'approve' | 'revise', feedback = '') => checked(post<Job>(`/api/jobs/${id(jobId)}/review/`, {stage_fence, action, feedback}), job, true),
   events: (jobId: string, after = 0, signal?: AbortSignal) => checked(requestJson<JobEvent[]>(`/api/jobs/${id(jobId)}/events/?after=${after}`, { signal }), listOf(value => record(value) && Number.isSafeInteger(value.id) && strings(value, ['job_id', 'message', 'stage', 'level', 'created_at']))),
   cancelJob: (jobId: string) => checked(post<Job>(`/api/jobs/${id(jobId)}/cancel/`), job, true),
   runners: (signal?: AbortSignal) => checked(requestJson<Runner[]>('/api/runners/', { signal }), listOf(runner)),

@@ -476,3 +476,156 @@ def test_operator_recovery_rejects_unsafe_or_exhausted_replays(
     assert job.resume_count == 0 and job.status != "queued"
     assert ModelInvocation.objects.get(job=job).reserved_tokens == 20000
     transport.close()
+
+
+def test_pro_pauses_before_code_and_approval_reuses_paid_plan(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, transport, claim = prepared
+    job_id = claim["job"]["id"]
+    Job.objects.filter(pk=job_id).update(creation_mode="pro")
+    provider = ScriptedProvider(replies())
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        result = ProviderGateway(*args, **kwargs)
+        result.provider = provider
+        return result
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    lease = worker.StageLease(transport, claim, threading.Event())
+    with pytest.raises(worker.AwaitingApproval):
+        worker.generate_stage(lease, arguments())
+    paused = Job.objects.get(pk=job_id)
+    assert paused.status == "waiting" and paused.stage == "review_plan" and provider.calls == 1
+    assert paused.usage["total_tokens"] == 7 and not Candidate.objects.exists()
+    assert (
+        transport.post(
+            "api/worker/claim/",
+            {"capabilities": {"providers": ["codex"], "interactive_plan_v1": True}},
+        )["job"]
+        is None
+    )
+    client = Client()
+    client.force_login(paused.created_by)
+    assert client.get(f"/api/projects/{paused.project_id}/").json()["active_job"]["id"] == job_id
+    saved = client.get(f"/api/jobs/{job_id}/insights/").json()
+    assert saved["proposal"]["plan"]["visual_design"] and saved["approval"] == "plan"
+    accepted = client.post(
+        f"/api/jobs/{job_id}/review/",
+        {"action": "approve", "stage_fence": paused.stage_fence},
+        content_type="application/json",
+    )
+    assert accepted.status_code == 200 and accepted.json()["status"] == "queued"
+    duplicate = client.post(
+        f"/api/jobs/{job_id}/review/",
+        {"action": "approve", "stage_fence": paused.stage_fence},
+        content_type="application/json",
+    )
+    assert duplicate.status_code == 409
+    # An older worker cannot silently bypass the interactive gate.
+    assert (
+        transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})["job"]
+        is None
+    )
+    claim = transport.post(
+        "api/worker/claim/", {"capabilities": {"providers": ["codex"], "interactive_plan_v1": True}}
+    )
+    worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    assert provider.calls == 3 and Candidate.objects.get().committed
+    assert ModelInvocation.objects.filter(operation="plan").count() == 1
+    transport.close()
+
+
+def test_pro_plan_feedback_is_persisted_and_requires_fresh_confirmation(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from copy import deepcopy
+
+    from prompt2play.adapters.django.forge.reviews import decide_review
+
+    _, transport, claim = prepared
+    job_id = claim["job"]["id"]
+    Job.objects.filter(pk=job_id).update(creation_mode="pro")
+    initial = replies()[0]
+    revised = deepcopy(initial)
+    revised["game_spec"]["rules"].append("User requested new rule")
+    provider = ScriptedProvider([initial, revised])
+    prompts: list[str] = []
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        result = ProviderGateway(*args, **kwargs)
+
+        class RecordingProvider:
+            def preflight(self) -> None:
+                pass
+
+            def generate(self, prompt: str, *args: Any, **kwargs: Any) -> Any:
+                prompts.append(prompt)
+                return provider.generate(prompt, *args, **kwargs)
+
+        result.provider = RecordingProvider()
+        return result
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    with pytest.raises(worker.AwaitingApproval):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    job = Job.objects.get(pk=job_id)
+    cast(Any, decide_review)(
+        job_id, stage_fence=job.stage_fence, action="revise", feedback="Add the requested rule"
+    )
+    claim = transport.post(
+        "api/worker/claim/", {"capabilities": {"providers": ["codex"], "interactive_plan_v1": True}}
+    )
+    with pytest.raises(worker.AwaitingApproval):
+        worker.generate_stage(worker.StageLease(transport, claim, threading.Event()), arguments())
+    assert provider.calls == 2 and "Add the requested rule" in prompts[1]
+    job.refresh_from_db()
+    assert job.status == "waiting" and job.usage["total_tokens"] == 14
+    assert job.review["plan_key"] != job.review["previous_plan_key"]
+    assert "approved_plan_key" not in job.review and not Candidate.objects.exists()
+    services.cancel_job(job_id)
+    with pytest.raises(Exception, match="Предложение уже изменилось"):
+        cast(Any, decide_review)(job_id, stage_fence=job.stage_fence, action="approve")
+    assert Job.objects.get(pk=job_id).status == "cancelled"
+    transport.close()
+
+
+def test_insights_exposes_draft_steps_without_claiming_a_saved_or_validated_game(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+) -> None:
+    from prompt2play.adapters.django.forge import reviews, workflow
+
+    runner, transport, claim = prepared
+    job = Job.objects.get(pk=claim["job"]["id"])
+    for role, data in (
+        (
+            "author",
+            {
+                "summary": "Draft rendering added",
+                "operations": [
+                    {"op": "create", "path": "game.js", "content": "PRIVATE_SOURCE_NOT_IN_INSIGHTS"}
+                ],
+            },
+        ),
+        ("visual_review", replies()[2]),
+    ):
+        intent, key = cast(Any, workflow.store)().prepare({"data": data, "usage": USAGE})
+        cast(Any, workflow.store)().commit(intent, key)
+        ModelInvocation.objects.create(
+            job=job,
+            generator=runner,
+            invocation_key=role + ":fixture",
+            operation=role,
+            prompt_sha256="a" * 64,
+            stage_fence=job.stage_fence,
+            state="completed",
+            reserved_tokens=1000,
+            response_key=key,
+        )
+    detail = cast(Any, reviews.insights)(job)
+    assert detail["author_steps"][0]["summary"] == "Draft rendering added"
+    assert detail["author_steps"][0]["operations"] == [{"op": "create", "path": "game.js"}]
+    assert detail["provenance"]["visual_quality"]["draft_only"] is True
+    assert detail["validation"] is None and detail["files"] == []
+    assert "PRIVATE_SOURCE_NOT_IN_INSIGHTS" not in json.dumps(detail)
+    transport.close()

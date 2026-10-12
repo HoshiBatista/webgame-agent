@@ -31,6 +31,10 @@ from prompt2play.workers.diagnostics import emit, exception_details, safe_messag
 from prompt2play.workers.model_catalog import CodexModelCatalog
 
 
+class AwaitingApproval(Exception):
+    """The coordinator saved a proposal and released the execution lease."""
+
+
 class LeaseRejected(RuntimeError):
     """The coordinator denied this worker's credentials or current fence."""
 
@@ -267,6 +271,8 @@ def generation_request(claim: dict[str, Any], mode: str) -> GenerationRequest:
     changed = checkpoint.get("files") if strategy in ("local", "structural") else None
     return GenerationRequest(
         prompt=job["prompt"],
+        user_feedback=claim.get("user_feedback") or [],
+        previous_proposal=claim.get("previous_proposal") or {},
         kind="repair" if job["stage"] == "repair" else job["kind"],
         mode=mode,
         base_files={}
@@ -306,7 +312,13 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
         journal=RemoteJournal(lease, control),
     )
     gateway.preflight()
-    candidate = GenerationHarness().attempt(
+
+    def plan_ready(spec: dict[str, Any], plan: dict[str, Any]) -> None:
+        result = lease.write("plan", spec=spec, plan=plan)
+        if result.get("waiting"):
+            raise AwaitingApproval("Plan awaits user approval")
+
+    candidate = GenerationHarness(on_plan=plan_ready).attempt(
         generation_request(lease.claim, args.mode), gateway, control
     )
     data = candidate.as_dict()
@@ -401,6 +413,7 @@ def main(argv: list[str] | None = None) -> int:
             "providers": [args.provider],
             "model": args.model,
             "validator": "docker",
+            "interactive_plan_v1": args.role == "generator" and args.mode == "single_author",
             "requires_job_model": ["openai"]
             if args.role == "generator" and args.provider == "openai" and not args.model
             else [],
@@ -471,6 +484,8 @@ def main(argv: list[str] | None = None) -> int:
                         duration_seconds=round(time.monotonic() - started, 3),
                         **context,
                     )
+                except AwaitingApproval:
+                    emit("stage_waiting_for_user", **context)
                 except LeaseRejected as exc:
                     stage_exit = 2
                     emit(

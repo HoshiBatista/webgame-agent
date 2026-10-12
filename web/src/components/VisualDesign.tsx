@@ -12,7 +12,7 @@ function Fields({ value }: { value: unknown }) {
 function Items({ value }: { value: unknown }) {
   return Array.isArray(value) ? <ul>{value.filter(item => typeof item === 'string').map((item, i) => <li key={i}>{item}</li>)}</ul> : null;
 }
-export default function VisualDesign({ plan, provenance }: { plan?: Record<string, unknown>; provenance?: Record<string, unknown> }) {
+export default function VisualDesign({ plan, provenance, showReview = true }: { plan?: Record<string, unknown>; provenance?: Record<string, unknown>; showReview?: boolean }) {
   const design = record(plan?.visual_design), architecture = record(plan?.implementation_design);
   const rounds = records(record(provenance?.visual_quality).reviews);
   return <section className="report-section visual-design"><h4>План и разбор оформления</h4>
@@ -24,7 +24,7 @@ export default function VisualDesign({ plan, provenance }: { plan?: Record<strin
       <details className="contract-item"><summary>Критерии визуального качества</summary><Items value={design.quality_checks}/></details>
       <details className="contract-item"><summary>Основа для последующих доработок</summary><Fields value={architecture}/><h5>Точки расширения</h5><Items value={architecture.extension_points}/><h5>Что нужно сохранить при изменениях</h5><Items value={architecture.revision_invariants}/></details>
     </>}
-    {rounds.length ? <><p>Разбор графики и UI по исходникам: {rounds.length} {rounds.length === 1 ? 'раунд' : 'раунда'}. Замечания и исправления сохранены.</p>{rounds.map((round, i) => <details className="contract-item" key={i}><summary>Раунд {i + 1} · {round.status === 'source_ready' ? 'По исходникам замечания закрыты' : 'Потребовалась доработка'}</summary>{Object.entries(record(round.criteria)).map(([area, raw]) => { const item = record(raw); return <div key={area}><h5>{labels[area] || area}</h5><p>{text(item.observation)}</p>{text(item.required_change) && <p><b>Исправить:</b> {text(item.required_change)}</p>}</div>; })}</details>)}</> : <p>Отдельный разбор графики и UI для этой версии не проводился.</p>}
+    {showReview && (rounds.length ? <><p>Разбор графики и UI по исходникам: {rounds.length} {rounds.length === 1 ? 'раунд' : 'раунда'}. Ответы проверяющего сохранены.</p>{rounds.map((round, i) => <details className="contract-item" key={i}><summary>Раунд {i + 1} · {round.status === 'source_ready' ? 'По исходникам замечания закрыты' : 'Потребовалась доработка'}</summary>{Object.entries(record(round.criteria)).map(([area, raw]) => { const item = record(raw); return <div key={area}><h5>{labels[area] || area}</h5><p>{text(item.observation)}</p>{text(item.required_change) && <p><b>Исправить:</b> {text(item.required_change)}</p>}</div>; })}</details>)}</> : <p>Отдельный разбор графики и UI для этой версии не проводился.</p>)}
     <p className="report-explanation">План и анализ кода не подтверждают качество отрисованной картинки. Художественное качество оценивается отдельно при просмотре игры.</p>
   </section>;
 }

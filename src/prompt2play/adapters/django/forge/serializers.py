@@ -75,6 +75,7 @@ class ProjectUpdateSerializer(serializers.Serializer):
 
 
 class JobCreateSerializer(serializers.Serializer):
+    creation_mode = serializers.ChoiceField(choices=["lite", "pro"], default="lite")
     kind = serializers.ChoiceField(choices=["generate", "revise"])
     prompt = serializers.CharField(max_length=12000)
     provider = serializers.ChoiceField(choices=["codex", "openai"])
@@ -152,6 +153,8 @@ class ClaimSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Недоступный каталог должен быть пустым.")
         if value.get("validator", "static") not in ["static", "docker"]:
             raise serializers.ValidationError("validator: static или docker.")
+        if "interactive_plan_v1" in value and type(value["interactive_plan_v1"]) is not bool:
+            raise serializers.ValidationError("interactive_plan_v1 must be boolean.")
         requires = value.get("requires_job_model", [])
         if (
             not isinstance(requires, list)
@@ -472,3 +475,20 @@ class CandidateValidationSerializer(FencedSerializer):
 
     def validate_evidence_files(self, value):
         return bounded_object(value, 48 * MIB, "evidence_files")
+
+
+class PlanProposalSerializer(FencedSerializer):
+    spec = serializers.JSONField()
+    plan = serializers.JSONField()
+
+    def validate_spec(self, value):
+        return bounded_object(value, 512 * 1024, "spec")
+
+    def validate_plan(self, value):
+        return bounded_object(value, 512 * 1024, "plan")
+
+
+class ReviewDecisionSerializer(serializers.Serializer):
+    stage_fence = serializers.IntegerField(min_value=1)
+    action = serializers.ChoiceField(choices=["approve", "revise"])
+    feedback = serializers.CharField(max_length=12000, default="", allow_blank=True)

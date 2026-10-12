@@ -42,3 +42,15 @@ test('legacy token settings retain model preferences without pretending to conve
     assert.equal(JSON.parse(saved).budget_tokens, undefined);
   } finally { if (previous) Object.defineProperty(globalThis, 'localStorage', previous); else Reflect.deleteProperty(globalThis, 'localStorage'); }
 });
+
+test('creation mode defaults to Lite and Pro is an explicit persisted choice', () => {
+  const original = globalThis.localStorage;
+  let saved = '{}';
+  Object.defineProperty(globalThis, 'localStorage', {configurable:true, value:{getItem:()=>saved, setItem:(_key:string, value:string)=>{saved=value;}}});
+  try {
+    assert.equal(readSettings().creation_mode, 'lite');
+    rememberSettings({...defaultSettings, creation_mode:'pro'});
+    assert.equal(readSettings().creation_mode, 'pro');
+    saved = '{"creation_mode":"unknown"}'; assert.equal(readSettings().creation_mode, 'lite');
+  } finally { Object.defineProperty(globalThis, 'localStorage', {configurable:true, value:original}); }
+});

@@ -912,3 +912,102 @@ def test_studio_run_has_no_wall_deadline_even_after_reclaim(team: Team) -> None:
         assert reclaimed.execution_expires_at is None
     services.cancel_job(job.pk)
     assert Job.objects.get(pk=job.pk).status == "cancelled"
+
+
+@pytest.mark.parametrize("action", ["approve", "revise", "cancel"])
+def test_pro_build_waits_for_human_and_preserves_previous_version(team: Team, action: str) -> None:
+    from prompt2play.adapters.django.forge.reviews import decide_review
+
+    first, lease = job_for(team)
+    previous = validate(team, submit(first, lease, team[2]))
+    job, lease = job_for(team, kind="revise")
+    candidate = submit(job, lease, team[2])
+    Job.objects.filter(pk=job.pk).update(creation_mode="pro")
+    version = validate(team, candidate)
+    job.refresh_from_db()
+    team[1].refresh_from_db()
+    assert job.status == "waiting" and job.stage == "review_build"
+    assert job.result_version_id == version.pk and team[1].latest_version_id == previous.pk
+    assert workflow.version_eligible(version), "Only the validated proposal can be previewed"
+    assert services.claim_job(team[2], {**CAPABILITIES, "interactive_plan_v1": True})[0] is None
+    with pytest.raises(Conflict, match="активное"):
+        services.create_job(
+            team[1], team[0], {"kind": "generate", "prompt": "other", "provider": "codex"}
+        )
+    before = (job.usage, job.cost_nano, job.budget_usd, job.budget_tokens)
+    if action == "cancel":
+        services.cancel_job(job.pk)
+    else:
+        cast(Any, decide_review)(
+            job.pk, stage_fence=job.stage_fence, action=action, feedback="Improve the map"
+        )
+    job.refresh_from_db()
+    team[1].refresh_from_db()
+    assert (job.usage, job.cost_nano, job.budget_usd, job.budget_tokens) == before
+    assert team[1].latest_version_id == (version.pk if action == "approve" else previous.pk)
+    if action == "revise":
+        assert job.stage == "repair" and job.review["manual_revisions"] == 1
+        assert (
+            job.active_candidate_id == candidate.pk
+            and job.review["feedback"][-1]["text"] == "Improve the map"
+        )
+    elif action == "approve":
+        assert job.status == "completed"
+    else:
+        assert job.status == "cancelled"
+
+
+def test_pro_server_rejects_paid_author_and_candidate_without_approval(team: Team) -> None:
+    job, lease = job_for(team)
+    Job.objects.filter(pk=job.pk).update(creation_mode="pro")
+    with pytest.raises(Conflict, match="Подтвердите план"):
+        workflow.reserve_invocation(
+            job.pk,
+            team[2],
+            {
+                "lease_token": lease,
+                "stage_fence": job.stage_fence,
+                "invocation_key": "unauthorized-author",
+                "operation": "author",
+                "prompt_sha256": "a" * 64,
+                "reserved_tokens": 1000,
+            },
+        )
+    with pytest.raises(Conflict, match="Подтвердите план"):
+        submit(job, lease, team[2])
+    assert not ModelInvocation.objects.filter(job=job).exists()
+    assert not Candidate.objects.filter(job=job).exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_postgresql_double_approval_releases_only_once(team: Team) -> None:
+    if connection.vendor != "postgresql":
+        pytest.skip("Concurrent approval requires PostgreSQL.")
+    from threading import Barrier
+
+    from prompt2play.adapters.django.forge.reviews import decide_review
+
+    job, _ = job_for(team)
+    Job.objects.filter(pk=job.pk).update(
+        creation_mode="pro",
+        status="waiting",
+        stage="review_plan",
+        review={"plan_key": "authored-fixture-key"},
+    )
+    barrier = Barrier(2)
+
+    def approve(_: int) -> str:
+        close_old_connections()
+        try:
+            barrier.wait(timeout=5)
+            cast(Any, decide_review)(job.pk, stage_fence=job.stage_fence, action="approve")
+            return "accepted"
+        except Conflict:
+            return "stale"
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(approve, [1, 2])) == ["accepted", "stale"]
+    job.refresh_from_db()
+    assert job.status == "queued" and job.stage_fence == 2

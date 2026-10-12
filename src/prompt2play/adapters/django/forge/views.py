@@ -334,11 +334,14 @@ class ClaimView(WorkerView):
         job, lease = services.claim_job(request.user, **values)
         if job is None:
             return Response({"job": None})
+        from .reviews import worker_review_context
+
         worker_job = job_data(job)
         worker_job["checkpoint"] = job.checkpoint
         return Response(
             {
                 "job": worker_job,
+                **worker_review_context(job),
                 "lease_token": lease,
                 "lease_seconds": settings.FORGE_LEASE_SECONDS,
                 "checkpoint": job.checkpoint,
@@ -461,3 +464,31 @@ def frontend(request):
     response["Content-Security-Policy"] = PARENT_CSP
     response["Cache-Control"] = "no-cache"
     return response
+
+
+class JobInsightsView(TeamView):
+    def get(self, request, pk):
+        from .reviews import insights
+
+        return Response(insights(get_object_or_404(Job, pk=pk)))
+
+
+class JobReviewView(TeamView):
+    def post(self, request, pk):
+        from .reviews import decide_review
+        from .serializers import ReviewDecisionSerializer
+
+        get_object_or_404(Job, pk=pk)
+        return Response(
+            job_data(decide_review(pk, **validated(ReviewDecisionSerializer, request.data)))
+        )
+
+
+class PlanProposalView(WorkerView):
+    def post(self, request, pk):
+        from .reviews import record_plan
+        from .serializers import PlanProposalSerializer
+
+        return Response(
+            record_plan(pk, request.user, validated(PlanProposalSerializer, request.data))
+        )

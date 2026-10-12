@@ -1,6 +1,6 @@
 export type RunnerRole = 'generator' | 'validator';
 export type Provider = 'codex' | 'openai';
-export type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type JobStatus = 'queued' | 'running' | 'waiting' | 'completed' | 'failed' | 'cancelled';
 export interface User { id: string | number; username: string; is_staff: boolean }
 export interface Session { authenticated: boolean; user: User | null; csrf_token?: string }
 export interface Usage { input_tokens: number; cached_input_tokens: number; output_tokens: number; total_tokens: number; calls: number }
@@ -31,6 +31,7 @@ export interface Job {
   id: string; project_id: string; kind: 'generate' | 'revise'; prompt: string; provider: Provider; model: string;
   status: JobStatus; stage: string; progress: number; base_version_id: string | null; result_version_id: string | null;
   runner_id: string | null; created_at: string; updated_at: string; error: string; max_repairs: number; budget_tokens: number; usage: Usage;
+  creation_mode?: 'lite' | 'pro'; approval?: 'plan' | 'build' | null;
   activity?: JobActivity; stage_fence?: number; resume_count?: number;
   budget_usd?: string | null; cost?: Cost | null; pricing?: { model: string; as_of: string; source: string };
 }
@@ -45,5 +46,6 @@ export interface JobEvent { id: number; job_id: string; stage: string; level: 'i
 export interface Runner { id: string; name: string; role?: RunnerRole; created_at: string; last_seen: string | null; online: boolean; revoked: boolean; capabilities: Record<string, unknown> }
 export interface PriceCatalog { as_of: string; service_tier: string; source: string; models: Record<string, {input: string; cached_input: string; cache_write: string; output: string}> }
 export interface Cost { estimated_usd: string; upper_usd: string; reserved_usd: string; remaining_usd: string; over_budget: boolean }
-export interface JobSettings { provider: Provider; model: string; max_repairs: number; budget_usd: number }
+export interface JobInsights { author_steps?: {summary: string; operations: {op: string; path: string}[]}[]; proposal_current?: boolean; job_id: string; proposal: {spec: Record<string, unknown>; plan: Record<string, unknown>} | null; summary: string; files: string[]; provenance: Record<string, unknown>; validation: Validation | null; feedback: {stage: string; text: string}[]; approval: 'plan' | 'build' | null; version_id: string | null }
+export interface JobSettings { creation_mode?: 'lite' | 'pro'; provider: Provider; model: string; max_repairs: number; budget_usd: number }
 export interface JobInput extends JobSettings { kind: 'generate' | 'revise'; prompt: string; base_version_id?: string | null }

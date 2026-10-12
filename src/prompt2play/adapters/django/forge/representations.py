@@ -34,6 +34,7 @@ def job_data(job):
             "usage",
             "stage_fence",
             "resume_count",
+            "creation_mode",
             "attempts",
         )
     }
@@ -59,6 +60,7 @@ def job_data(job):
     from .services import remaining_seconds
 
     result["remaining_seconds"] = remaining_seconds(job)
+    result["approval"] = job.stage.removeprefix("review_") if job.status == "waiting" else None
     result["budget_usd"] = str(job.budget_usd) if job.budget_usd is not None else None
     result["pricing"] = job.pricing
     result["cost"] = workflow.cost_summary(job)
@@ -104,10 +106,10 @@ def job_data(job):
 def project_data(project):
     if hasattr(project, "_recent_jobs"):
         latest = next(iter(project._recent_jobs), None)
-        active = latest if latest and latest.status in ["queued", "running"] else None
+        active = latest if latest and latest.status in ["queued", "running", "waiting"] else None
     else:
         jobs = public_jobs().filter(project_id=project.pk)
-        active = jobs.filter(status__in=["queued", "running"]).first()
+        active = jobs.filter(status__in=["queued", "running", "waiting"]).first()
         latest = active or jobs.order_by("-created_at", "-id").first()
     return {
         "id": ident(project.id),

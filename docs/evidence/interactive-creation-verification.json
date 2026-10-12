@@ -1,0 +1,48 @@
+{
+  "recorded_at": "2026-10-12",
+  "scope": "Lite/Pro controls, durable human gates and inspection of stored plans and draft model-step summaries",
+  "checks": {
+    "ruff_format": "passed",
+    "ruff_lint": "passed",
+    "mypy_source_files": 129,
+    "pytest": {
+      "passed": 243,
+      "skipped": 23,
+      "coverage_percent": 90.59
+    },
+    "postgresql_workflow_and_worker_tests": 51,
+    "frontend_tests": 65,
+    "frontend_build": "passed",
+    "package_build": "passed"
+  },
+  "browser": {
+    "fixture": "Separate localhost:8010 SQLite installation, authored plan, no model invocations",
+    "observed": [
+      "Pro automatically opens proposal and approval controls",
+      "User feedback requeues the same job and labels old plan as superseded",
+      "Updated authored plan returns to awaiting confirmation",
+      "Confirming queues continuation once",
+      "Live user project exposes its already completed RTS plan without replaying inference"
+    ],
+    "provider_calls_for_ui_fixture": 0
+  },
+  "runtime_limits": {
+    "generation_wall_timeout": null,
+    "human_pause_timeout": null,
+    "money_budget_preserved": true,
+    "mandatory_validation": true
+  },
+  "current_user_run_observation": {
+    "recovered_timeout": true,
+    "plan_reused": true,
+    "author_retry_completed_after_seconds": 519,
+    "later_failure": "Provider returned invalid structured JSON; maxItems at /operations",
+    "finished_game": false,
+    "additional_paid_restart_for_ui_work": false
+  },
+  "limits": [
+    "Authored UI fixture and scripted provider tests are not live Pro model quality evidence",
+    "A pending validated proposal is previewable but not the primary project version until user acceptance",
+    "The current RTS run ended before candidate submission; source critique is a draft response, not browser validation"
+  ]
+}

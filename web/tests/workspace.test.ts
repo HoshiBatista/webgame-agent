@@ -151,3 +151,18 @@ test('only an explicit newer timeout recovery can revive a failed job', () => {
   const completed = {...failed, status:'completed' as const};
   assert.equal(reconcileJob(completed, resumed), completed);
 });
+
+test('a verified Pro proposal can be selected before accepting it as the current version', () => {
+  const tracker = new ResultSelection(); tracker.watch(job());
+  const waiting = job({status:'waiting', approval:'build', result_version_id:'proposal'});
+  tracker.complete(waiting);
+  assert.equal(tracker.takePreferred([{id:'previous'}, {id:'proposal'}]), 'proposal');
+  const planned = job({status:'waiting', approval:'plan', result_version_id:'proposal'});
+  tracker.complete(planned); assert.equal(tracker.takePreferred([{id:'proposal'}]), undefined);
+});
+
+test('a delayed pre-approval status cannot overwrite a newer human decision', () => {
+  const queued = job({stage_fence:4, updated_at:'2026-10-10T10:00:00Z'});
+  const stale = job({status:'waiting', approval:'plan', stage_fence:3, updated_at:'2026-10-10T12:00:00Z'});
+  assert.equal(reconcileJob(queued, stale), queued);
+});

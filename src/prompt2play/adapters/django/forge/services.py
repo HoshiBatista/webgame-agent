@@ -85,7 +85,9 @@ def create_job(project, user, values):
         with transaction.atomic():
             # First database operation is a write: serializes SQLite writers too.
             Project.objects.filter(pk=project.pk).update(updated_at=timezone.now())
-            if Job.objects.filter(project=project, status__in=["queued", "running"]).exists():
+            if Job.objects.filter(
+                project=project, status__in=["queued", "running", "waiting"]
+            ).exists():
                 raise Conflict("У проекта уже есть активное задание.", code="active_job")
             # A previous completion may have advanced latest_version since the
             # view loaded Project. Resolve the default only after serialization.
@@ -123,7 +125,7 @@ def create_job(project, user, values):
 
 def cancel_job(job_id):
     with transaction.atomic():
-        changed = Job.objects.filter(pk=job_id, status__in=["queued", "running"]).update(
+        changed = Job.objects.filter(pk=job_id, status__in=["queued", "running", "waiting"]).update(
             status="cancelled",
             lease_expires_at=None,
             stage_fence=F("stage_fence") + 1,
@@ -189,6 +191,8 @@ def claim_job(runner, capabilities, name=None):
         )
     else:
         compatible &= ~Q(stage__in=["validate", "commit"])
+        if capabilities.get("interactive_plan_v1") is not True:
+            compatible &= Q(creation_mode="lite")
     candidates = list(
         Job.objects.filter(eligible, compatible).values_list("id", "budget_seconds")[:50]
     )

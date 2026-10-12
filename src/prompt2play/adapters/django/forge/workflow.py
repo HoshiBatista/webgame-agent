@@ -164,6 +164,16 @@ def submit_candidate(job_id, runner, values):
             ).exists()
         ):
             raise Conflict("Model invocation has not settled.", code="invocation_pending")
+        if job.creation_mode == "pro":
+            from .reviews import require_approved_plan
+
+            approved = require_approved_plan(job)
+            if payload["plan"] != approved["plan"] or any(
+                payload["spec"].get(name) != value for name, value in approved["spec"].items()
+            ):
+                raise Conflict(
+                    "Candidate differs from the approved plan.", code="approval_required"
+                )
         usage = usage or job.usage
         services.require_monotonic_usage(job.usage, usage)
         candidate = Candidate.objects.create(
@@ -235,6 +245,10 @@ def reserve_invocation(job_id, runner, values):
                     "Invocation key reused for another request.", code="invocation_conflict"
                 )
             return invocation
+        if job.creation_mode == "pro" and values["operation"] != "plan":
+            from .reviews import require_approved_plan
+
+            require_approved_plan(job)
         reserved_cost = 0
         if job.budget_usd is not None:
             from prompt2play.pricing import cost_bounds, nano_usd
@@ -488,13 +502,14 @@ def validate_candidate(job_id, runner, values):
         except (ValueError, TypeError, KeyError, UnicodeError, AttributeError) as exc:
             raise ValidationError(str(exc)) from exc
         report["evidence_files"] = store_evidence(report, values.get("evidence_files", {}))
-        decision = decide(report, candidate.attempt, job.max_repairs)
+        semantic_attempt = max(1, candidate.attempt - job.review.get("manual_revisions", 0))
+        decision = decide(report, semantic_attempt, job.max_repairs)
         if decision.outcome == "passed" and len(report["evidence_files"]) < 2:
             report["status"] = "unverified"
             report.setdefault("warnings", []).append(
                 "Desktop and mobile evidence bytes are required."
             )
-            decision = decide(report, candidate.attempt, job.max_repairs)
+            decision = decide(report, semantic_attempt, job.max_repairs)
         report["status"] = decision.outcome
         report["submission_sha256"] = submission_sha256
         services.require_deadline(job)
@@ -518,7 +533,15 @@ def validate_candidate(job_id, runner, values):
             files={},
             html="",
         )
-        if decision.action == "promote":
+        if decision.action == "promote" and job.creation_mode == "pro":
+            changes = {
+                "status": "waiting",
+                "stage": "review_build",
+                "progress": 95,
+                "result_version": version,
+                "error": "",
+            }
+        elif decision.action == "promote":
             services.require_deadline(job)
             Project.objects.filter(pk=project.pk).update(
                 latest_version=version, updated_at=timezone.now()
@@ -560,7 +583,9 @@ def validate_candidate(job_id, runner, values):
         )
         services.event(
             job,
-            decision.reason,
+            "Сборка прошла обязательные проверки. Ожидаем ваше подтверждение или замечания."
+            if changes["stage"] == "review_build"
+            else decision.reason,
             stage=changes["stage"],
             level="info" if decision.action == "promote" else "warning",
             data={

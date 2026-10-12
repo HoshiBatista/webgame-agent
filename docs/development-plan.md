@@ -188,6 +188,16 @@ has no invented audio/storage obligations. Runtime changes cannot alter old
 revisions. Compare live results against G0 with the same suite and budgets;
 record any regressions before making the new path the default.
 
+## Interactive creation delivery — Lite / Pro
+
+Implemented after the combined baseline: Lite preserves automatic creation;
+Pro adds durable plan approval and acceptance of a validated build. Existing
+plans and saved model-step summaries are inspectable while generation runs.
+User feedback replans in the same budget, completed receipts are reused, waiting
+jobs are cancellable, and stale/double confirmations are fenced. The primary
+playable version changes only on acceptance. These controls do not establish
+artistic quality and do not change mandatory browser/WebView acceptance gates.
+
 ## Phase 3 — improve editing and choose the generation strategy
 
 **Depends on:** G2; can prepare measurement tooling while G1/G2 are implemented.

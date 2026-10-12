@@ -34,6 +34,7 @@ export function reconcileJob(current: Job | null, incoming: Job | null | undefin
   if (!current) return incoming;
   if (incoming.project_id !== current.project_id) return current;
   if (incoming.id === current.id) {
+    if ((incoming.stage_fence ?? 0) < (current.stage_fence ?? 0)) return current;
     const resumed = current.status === 'failed' &&
       (incoming.resume_count ?? 0) > (current.resume_count ?? 0) &&
       (incoming.stage_fence ?? 0) > (current.stage_fence ?? 0);
@@ -64,7 +65,7 @@ export class ResultSelection {
     }
   }
   preferred(job: Job) {
-    return job.status === 'completed' && this.watching?.job === job.id && this.watching.epoch === this.epoch ? job.result_version_id || undefined : undefined;
+    return (job.status === 'completed' || (job.status === 'waiting' && job.approval === 'build')) && this.watching?.job === job.id && this.watching.epoch === this.epoch ? job.result_version_id || undefined : undefined;
   }
   complete(job: Job) {
     const version = this.preferred(job);

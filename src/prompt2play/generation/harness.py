@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any, cast
@@ -33,7 +34,7 @@ from .workspace import (
     WorkspaceLimits,
 )
 
-HARNESS_VERSION = "generation-harness-v1.2"
+HARNESS_VERSION = "generation-harness-v1.3"
 PLANNING_INSTRUCTIONS = (
     QUALITY_BRIEF
     + """Plan the requested complete offline HTML5 game for continued development. Return GameSpec (what the game does) and BuildPlan (visual design, maintainable implementation and acceptance) separately.
@@ -91,6 +92,8 @@ class GenerationRequest:
     parent_id: str | None = None
     attempt_id: str = ""
     replan: bool = False
+    user_feedback: list[dict[str, str]] = field(default_factory=list)
+    previous_proposal: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -126,8 +129,10 @@ class GenerationHarness:
         limits: WorkspaceLimits | None = None,
         plan_output_tokens: int = 12000,
         code_output_tokens: int = 24000,
+        on_plan: Callable[[dict[str, Any], dict[str, Any]], None] | None = None,
     ) -> None:
         self.limits = limits or WorkspaceLimits()
+        self.on_plan = on_plan
         self.plan_output_tokens, self.code_output_tokens = plan_output_tokens, code_output_tokens
 
     def attempt(
@@ -185,6 +190,9 @@ class GenerationHarness:
             ),
             "attempt_id": request.attempt_id,
         }
+        if request.user_feedback:
+            context["user_feedback"] = request.user_feedback
+            context["previous_proposal"] = request.previous_proposal
         reply = gateway.generate(
             PLANNING_INSTRUCTIONS
             + "\nFull authoritative planning schema, including every local size/range bound:\n"
@@ -204,6 +212,9 @@ class GenerationHarness:
     ) -> CandidateSubmission:
         runtime_identity = capture_runtime_identity()
         game, plan = self._plan(request, gateway, control)
+        if self.on_plan is not None:
+            self.on_plan(game.data, plan.data)
+        control.guard()
         if plan.data["format"] != "runtime-v1":
             raise ValueError("Single-author native harness requires runtime-v1")
         planned = {item["path"] for item in plan.data["files"]}
@@ -246,6 +257,8 @@ class GenerationHarness:
                 ),
                 "attempt_id": request.attempt_id,
             }
+            if request.user_feedback:
+                context["user_feedback"] = request.user_feedback
             reply = gateway.generate(
                 AUTHOR_INSTRUCTIONS + PROMPT_BOUNDARY + stable(context),
                 OPERATIONS_SCHEMA,
