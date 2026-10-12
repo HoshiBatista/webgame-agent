@@ -24,6 +24,7 @@ from prompt2play.legacy.validator.evidence import artifact_manifest as legacy_ar
 from prompt2play.legacy.validator.evidence import canonical_json as legacy_canonical_json
 from prompt2play.legacy.validator.evidence import check_record as legacy_check_record
 from prompt2play.legacy.worker.core import check_cancel as legacy_check_cancel
+from prompt2play.validation.progress import ProgressWatchdog
 
 canonical_json = cast(Callable[[Any], str], legacy_canonical_json)
 artifact_manifest = cast(
@@ -314,10 +315,10 @@ def evidence_payload(directory: Path, report: dict[str, Any]) -> dict[str, str]:
 
 
 class IsolatedValidator:
-    """One bounded container invocation; missing execution is always unverified."""
+    """Resource-isolated execution with an idle watchdog, not a total time limit."""
 
     def __init__(self, image: str = "prompt2play-validator:local", timeout: float = 90) -> None:
-        if not image or len(image) > 250 or timeout <= 0 or timeout > 180:
+        if not image or len(image) > 250 or timeout <= 0 or not math.isfinite(timeout):
             raise ValueError("Invalid validator configuration")
         self.image = image
         self.timeout = timeout
@@ -345,6 +346,7 @@ class IsolatedValidator:
             "image": image_id,
             "image_tag": self.image,
             "timeout": self.timeout,
+            "timeout_policy": "completed-progress-idle-v1",
             "browser_contract": BROWSER_CONTRACT_VERSION,
             "harness_files": {
                 p.name: hashlib.sha256(p.read_bytes()).hexdigest()
@@ -371,6 +373,7 @@ class IsolatedValidator:
         *,
         release_scenarios: dict[str, Any] | None = None,
         require_completion: bool = True,
+        on_progress: Callable[[dict[str, Any]], None] | None = None,
     ) -> dict[str, Any]:
         check_cancel(cancel)
         manifest: dict[str, Any] = artifact_manifest(files, html, spec)
@@ -522,7 +525,10 @@ class IsolatedValidator:
                     return _failure(
                         manifest, "Could not start isolated validator", unavailable=True
                     )
-                started = time.monotonic()
+                watchdog = ProgressWatchdog(
+                    hashlib.sha256(request_bytes).hexdigest(), time.monotonic()
+                )
+                last_notification = float("-inf")
                 try:
                     while process.poll() is None:
                         check_cancel(cancel)
@@ -530,10 +536,15 @@ class IsolatedValidator:
                             return _failure(
                                 manifest, "Isolated validator exceeded its output bound"
                             )
-                        if time.monotonic() - started > self.timeout:
-                            return _failure(
-                                manifest, "Isolated validator exceeded its wall-clock deadline"
+                        now = time.monotonic()
+                        progressed = watchdog.observe(evidence_dir, now)
+                        if progressed and on_progress and now - last_notification >= 10:
+                            on_progress(
+                                {"completed_operations": watchdog.completed, **watchdog.active}
                             )
+                            last_notification = now
+                        if watchdog.stalled(now, self.timeout):
+                            return self._stalled_report(manifest, watchdog, evidence_dir, request)
                         cancel.wait(0.05)
                     stderr.seek(0)
                     diagnostic = stderr.read(256_000)
@@ -620,6 +631,57 @@ class IsolatedValidator:
     @property
     def runtime_path(self) -> Path:
         return Path(__file__).resolve().parents[1] / "legacy" / "validator" / "release_runtime.mjs"
+
+    def _stalled_report(
+        self,
+        manifest: dict[str, Any],
+        watchdog: ProgressWatchdog,
+        directory: Path,
+        request: dict[str, Any],
+    ) -> dict[str, Any]:
+        game = watchdog.active["kind"] == "game"
+        message = (
+            "Browser game operation stopped making progress; inspect the recorded step and repair the game or scenario"
+            if game
+            else "Isolated browser infrastructure stopped making progress; saved draft can be retried"
+        )
+        evidence = {
+            "idle_timeout_seconds": self.timeout,
+            "completed_operations": watchdog.completed,
+            "active": watchdog.active,
+            "incomplete": True,
+        }
+        checks = watchdog.findings(directory, manifest["html_sha256"])
+        checks.append(
+            check_record(
+                "browser_progress_stalled" if game else "isolated_browser_runtime",
+                "failed",
+                message,
+                manifest,
+                check_kind="browser",
+                evidence=evidence,
+            )
+        )
+        report = {
+            **_failure(manifest, message),
+            "checks": checks,
+            "errors": [str(check.get("message", "Browser check failed")) for check in checks],
+            "request_sha256": watchdog.request_hash,
+            **{
+                key: request[key]
+                for key in ("suite_sha256", "validator_image_sha256", "harness_files_sha256")
+            },
+            "warnings": ["Validation is incomplete. No unexecuted check is claimed as passed."],
+        }
+        # Exclusive, host-owned immutable snapshot. Mutable progress files are never uploaded.
+        data = canonical_json({"progress": evidence, "report": report}).encode()
+        name = f"stalled-{uuid.uuid4().hex}.json"
+        with (directory / name).open("xb") as output:
+            output.write(data)
+        report["evidence_files"] = [
+            {"path": name, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+        ]
+        return report
 
     @staticmethod
     def _static(

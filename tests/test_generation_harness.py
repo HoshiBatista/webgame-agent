@@ -961,6 +961,68 @@ def test_infrastructure_recovery_retries_saved_submit_without_paid_author_or_pla
     assert candidate.files["game.js"] == source
 
 
+def test_resumed_submit_delivers_game_defects_to_author_without_replanning() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    saved: list[dict[str, Any]] = []
+    request = GenerationRequest("Browser recovery with repair")
+    gateway = ScriptedGateway(
+        [
+            plan,
+            {
+                "operations": [operation("create", "game.js", content=source), operation("submit")],
+                "summary": "Ready",
+            },
+        ]
+    )
+    with pytest.raises(GenerationStopped, match="browser diagnostics unavailable"):
+        GenerationHarness(
+            on_checkpoint=saved.append,
+            on_browser_check=lambda *_: {"status": "unverified", "scope": "infrastructure"},
+        ).attempt(request, gateway, GenerationControl.bounded())
+    repaired = source + "\n/* Authored regression fixture repair. */\n"
+    resumed = ScriptedGateway(
+        [
+            {
+                "operations": [
+                    operation("patch", "game.js", old=source, new=repaired),
+                    operation("submit"),
+                ],
+                "summary": "Repair recorded defect",
+            }
+        ]
+    )
+    inputs: list[str] = []
+
+    def check(files: dict[str, str], _spec: dict[str, Any]) -> dict[str, Any]:
+        inputs.append(files["game.js"])
+        if len(inputs) == 1:
+            return {
+                "status": "failed",
+                "scope": "browser",
+                "findings": [
+                    {
+                        "name": "mechanics:390",
+                        "message": "Sell button missing: #sell-all-iron",
+                    },
+                    {"name": "browser_progress_stalled", "message": "Game step stalled"},
+                ],
+            }
+        return {"status": "passed"}
+
+    candidate = GenerationHarness(on_browser_check=check).attempt(
+        replace(request, resume_state=saved[-1]),
+        resumed,
+        GenerationControl.bounded(),
+    )
+    assert inputs == [source, repaired]
+    assert resumed.roles == ["author", "visual_review"]
+    assert "#sell-all-iron" in resumed.prompts[0]
+    assert "browser_progress_stalled" in resumed.prompts[0]
+    assert candidate.files["game.js"] == repaired
+
+
 def test_explicit_browser_retry_bypasses_even_a_passing_cached_report() -> None:
     plan, source = fixture()
     calls: list[Any] = []

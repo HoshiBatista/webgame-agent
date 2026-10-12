@@ -48,11 +48,13 @@ def execute(
     acceptance: dict[str, Any] | None = None,
     *,
     require_completion: bool = True,
+    idle_timeout: float = 90,
 ) -> dict[str, Any]:
     root = Path(os.environ.get("P2P_BROWSER_EVIDENCE", "/tmp/prompt2play-browser-regressions"))
     directory = root / name
     report = IsolatedValidator(
-        image=os.environ.get("P2P_VALIDATOR_IMAGE", "prompt2play-validator:local")
+        image=os.environ.get("P2P_VALIDATOR_IMAGE", "prompt2play-validator:local"),
+        timeout=idle_timeout,
     ).validate(
         files,
         assemble_runtime(files, spec),
@@ -65,6 +67,45 @@ def execute(
     root.mkdir(parents=True, exist_ok=True)
     (root / f"{name}-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
     return report
+
+
+def test_progressing_wait_outlives_idle_interval() -> None:
+    files, spec, acceptance = fixture("dom")
+    for device in ("desktop", "touch"):
+        acceptance[device]["steps"].insert(1, {"kind": "wait", "ms": 12000})
+    report = execute("progressing-wait", files, spec, acceptance, idle_timeout=10)
+    assert report["status"] == "passed", report["errors"]
+
+
+def test_hung_game_retains_defects_for_repair() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["game.js"] = files["game.js"].replace(
+        "ctx.input.key(key => {",
+        'ctx.input.key(key => { if (key === "h") { while (true) {} }',
+    )
+    cases = json.loads((RESOURCE_ROOT / "runtime/examples/dom/plan.json").read_text())["mechanics"]
+    hung = json.loads(json.dumps(cases[0]))
+    hung["id"] = "hung-input"
+    hung["keyboard_keys"] = ["h"]
+    for step in hung["desktop"]["steps"]:
+        step["key"] = "h"
+    for assertion in cases[0]["desktop"]["assertions"]:
+        assertion["op"] = "less"
+    spec.update(
+        mechanics_required=True,
+        mechanics_required_actions=["MOVE"],
+        mechanics_acceptance=[*cases, hung],
+    )
+    report = execute("hung-game", files, spec, acceptance, idle_timeout=10)
+    assert report["status"] == "failed"
+    names = [check["name"] for check in report["checks"]]
+    assert "browser_progress_stalled" in names
+    assert "isolated_browser_runtime" not in names
+    failed = next(check for check in report["checks"] if check["name"] == "mechanic_case:1280:move")
+    assert failed["evidence"]["failed_assertions"]
+    stalled = report["checks"][-1]["evidence"]["active"]
+    assert stalled["case_id"] == "hung-input" and stalled["key"] == "h"
+    assert report["evidence_files"]
 
 
 @pytest.mark.parametrize("name", ["canvas", "dom"])

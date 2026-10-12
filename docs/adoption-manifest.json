@@ -1543,7 +1543,8 @@
     "evidence/adaptive-targeted-verification-2026-10-12.json",
     "evidence/adaptive-comparison-pilot-2026-10-12.json",
     "evidence/code-review-fixes-2026-10-12.json",
-    "evidence/optional-game-title-2026-10-12.json"
+    "evidence/optional-game-title-2026-10-12.json",
+    "evidence/browser-progress-watchdog-2026-10-12.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

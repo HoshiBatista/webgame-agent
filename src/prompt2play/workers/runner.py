@@ -379,6 +379,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
                 lease.cancel,
                 directory,
                 require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
+                on_progress=lambda value: browser_progress(lease, value),
             )
             saved = lease.write(
                 "diagnostics",
@@ -528,6 +529,36 @@ def evidence_payload(report: dict[str, Any], directory: Path) -> dict[str, str]:
     return result
 
 
+def browser_progress(lease: StageLease, value: dict[str, Any]) -> None:
+    device = "телефон" if value.get("viewport") == 390 else "компьютер"
+    case = value.get("case_id")
+    phase = {
+        "launch": "запуск браузера",
+        "context": "подготовка устройства",
+        "startup": "запуск игры",
+        "input": "управление",
+        "wait": "ожидание в игре",
+        "advance_clock": "симуляция игрового времени",
+        "scenario": "игровые действия",
+        "replay": "повторная проверка действий",
+        "mechanics": "основные механики",
+        "restart": "перезапуск игры",
+        "collect_browser_errors": "анализ ошибок",
+        "save_trace": "сохранение записи проверки",
+        "close_context": "завершение проверки устройства",
+        "close_browser": "завершение проверки",
+    }.get(value.get("phase", ""), "проверка поведения игры")
+    detail = f"сценарий {case}, шаг {value.get('step', 0)}" if case else phase
+    lease.write(
+        "events",
+        stage=lease.job["stage"],
+        progress=lease.job.get("progress", 0),
+        level="info",
+        message=f"Проверка игры: {device}, {detail}. Проверка продвигается.",
+        data={"event": "browser_validation_progress", **value},
+    )
+
+
 def validate_stage(lease: StageLease, args: argparse.Namespace) -> None:
     lease.pause_boundary()
     candidate = lease.claim["candidate"]
@@ -546,6 +577,7 @@ def validate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             directory,
             release_scenarios=acceptance,
             require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
+            on_progress=lambda value: browser_progress(lease, value),
         )
         lease.write(
             "validate",
@@ -574,7 +606,14 @@ def parser() -> argparse.ArgumentParser:
         help="Optional provider wall limit; disabled by default",
     )
     result.add_argument("--image", default="prompt2play-validator:local")
-    result.add_argument("--validation-timeout", type=float, default=90)
+    result.add_argument(
+        "--validation-idle-timeout",
+        "--validation-timeout",
+        dest="validation_timeout",
+        type=float,
+        default=90,
+        help="Maximum inactivity between completed browser operations; no total validation time limit",
+    )
     result.add_argument(
         "--acceptance", help="Trusted JSON map of project IDs to real-input scenarios"
     )

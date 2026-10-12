@@ -237,7 +237,13 @@ remain a separate setting. Catalog discovery never starts an inference turn.
 Studio generation has **no wall-clock timeout**: a slow model request continues
 until it returns or the user cancels. New jobs store no execution deadline, and
 the native worker applies no run or model-call timer by default. Money admission,
-manual cancellation, worker heartbeat/fencing and isolated validation limits remain.
+manual cancellation, worker heartbeat/fencing and isolated validation resource limits remain.
+Browser validation has no total time limit either: `--validation-idle-timeout`
+(default 90 seconds; `--validation-timeout` remains an alias) only detects a lack
+of completed work. Real input steps and simulation batches renew it. Status
+heartbeats alone do not. Validation events expose device, scenario and step;
+partial findings survive a stall. Game/scenario failures return to the author
+for correction; container startup or transport failures preserve the resumable draft.
 Explicit time limits are retained for bounded CLI experiments and older jobs;
 measured historical evidence is not rewritten.
 

@@ -11,6 +11,7 @@ import { installAudioProbe } from './audio_probe.mjs';
 import { installStorageProbe } from './storage_probe.mjs';
 import { checkMechanics } from './mechanics_probe.mjs';
 import { installLifecycleProbe } from './lifecycle_probe.mjs';
+import { createProgress } from './progress.mjs';
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const requestBytes = fs.readFileSync('/input/request.json');
@@ -20,6 +21,9 @@ const manifest = request.artifact;
 const requireCompletion = request.completion_required !== false;
 const harnessFiles = Object.fromEntries(fs.readdirSync('/validator').filter(name => name.endsWith('.mjs')).sort().map(name => [name, hash(fs.readFileSync(`/validator/${name}`))]));
 const checks = [], errors = [], warnings = [], evidenceFiles = [];
+const progress = createProgress(hash(requestBytes));
+const partialMechanics = [];
+const checkpoint = () => progress.checkpoint([...checks, ...partialMechanics]);
 const url = 'http://game.invalid/index.html';
 const canonical = value => JSON.stringify(value);
 const save = (path, data) => {
@@ -32,6 +36,8 @@ function record(name, passed, message, evidence = {}, checkKind = 'browser') {
     limitations: ['Observed desktop Chromium or touch emulation; no actual WebView device is claimed'],
     evidence, ...(checkKind === 'scenario' ? {scenario_id: 'release'} : {})});
   if (!passed) errors.push(message);
+  checkpoint();
+  progress.complete();
 }
 function pointer(snapshot, path) {
   let current = snapshot;
@@ -105,7 +111,9 @@ try {
   if (JSON.stringify(request.harness_files_sha256) !== JSON.stringify(harnessFiles)) throw new Error('Validator image source changed; rebuild before execution');
   if (request.browser_contract_version !== 3 || hash(Buffer.from(html)) !== manifest.html_sha256) throw new Error('Input byte or harness contract mismatch');
   browser = await chromium.launch({headless: true, ...(process.env.CHROMIUM_EXECUTABLE ? {executablePath: process.env.CHROMIUM_EXECUTABLE} : {}), args: ['--disable-dev-shm-usage', '--no-sandbox', '--disable-background-networking', '--alsa-output-device=null']});
+  progress.complete();
   for (const width of [1280, 390]) {
+    progress.begin({kind: 'infrastructure', phase: 'context', viewport: width, case_id: '', step: 0});
     const touch = width === 390, height = touch ? 844 : 800;
     const context = await browser.newContext({viewport: {width, height}, isMobile: touch, hasTouch: touch, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block'});
     const consoleLog = [], network = [], runtimeErrors = [];
@@ -139,6 +147,7 @@ try {
       }
     });
     try {
+      progress.begin({kind: 'game', phase: 'startup'});
       await page.goto(url, {waitUntil: 'load', timeout: 10000});
       const native = ['runtime-v1','runtime-modules-v2'].includes(request.spec.format);
       const controlsBeforeStart = native ? await inspectNativeControls(page) : null;
@@ -206,11 +215,19 @@ try {
           let remaining = Math.ceil(ms / (1000 * stepSeconds));
           while (remaining > 0) {
             const batch = Math.min(600, remaining);
-            await bridge.advance(batch); remaining -= batch;
+            await progress.run({phase: 'advance_clock', ticks: batch}, () => bridge.advance(batch)); remaining -= batch;
           }
-        } else await page.waitForTimeout(ms);
+        } else {
+          // An intentional long wait is progress only while the game responds.
+          for (let remaining = ms; remaining > 0; remaining -= 1000) {
+            await progress.run({phase: 'wait'}, async () => {
+              await page.waitForTimeout(Math.min(1000, remaining));
+              await bridge.snapshot();
+            });
+          }
+        }
       };
-      const runStep = async step => {
+      const runStep = async step => progress.run({phase: 'input', input_kind: step.kind, selector: step.selector || '', key: step.key || ''}, async () => {
         if (step.kind === 'wait') await advanceTime(step.ms);
         else if (step.kind === 'key' && nativeClock) {
           await page.keyboard.down(step.key); await bridge.advance(6); await page.keyboard.up(step.key);
@@ -220,14 +237,16 @@ try {
           if (nativeClock) await bridge.advance(6);
           else await page.waitForTimeout(20);
         }
-      };
+      });
       const replay = async steps => {
+        progress.begin({phase: 'replay', case_id: '', step: 0});
         await resetFrozen();
         for (const step of steps) await runStep(step);
       };
       let observedInput = false, observedVisible = false, events = 0, timelineControl = !nativeClock, capturedStates = 0;
       for (const step of scenario.steps) {
         for (let index = 0; index < step.repeat; index++) {
+          progress.begin({phase: 'scenario', step: history.length + 1, case_id: ''});
           const before = await bridge.snapshot();
           const beforeImage = await surface.locator.screenshot({animations: 'disabled'});
           await runStep(step);
@@ -275,6 +294,12 @@ try {
           reset: resetFrozen, runStep, snapshot: () => bridge.snapshot(),
           screenshot: () => surface.locator.screenshot({animations: 'disabled'}), compareImages,
           release: async () => { for (const test of request.mechanics) for (const key of test.keyboard_keys) await page.keyboard.up(key); },
+          onStep: (caseId, step) => progress.begin({phase: 'mechanics', case_id: caseId, step}),
+          onCase: test => {
+            if (!test.passed) partialMechanics.push({name: `mechanic_case:${width}:${test.id}`, status: 'failed', check_kind: 'browser', artifact_sha256: manifest.html_sha256,
+              message: 'A basic gameplay action failed its real-input assertions', evidence: {case_id: test.id, actions: test.actions, visible_changed: test.visible_changed, failed_assertions: test.observations.filter(o => !o.passed), error: test.error || ''}});
+            checkpoint(); progress.complete();
+          },
         });
         save(`mechanics-${width}.json`, Buffer.from(JSON.stringify(mechanics, null, 2)));
         record(`mechanics:${width}`, mechanics.every(test => test.passed), 'Every required gameplay action must pass its declared real-input assertions', {
@@ -283,6 +308,7 @@ try {
         // Existing completion/storage/restart checks refer to the smoke/playthrough timeline.
         await replay(history);
       }
+      progress.begin({phase: 'restart', case_id: '', step: 0});
       const requestedCapabilities = request.spec.capabilities || {};
       const requestedStorage = requestedCapabilities.persistence === true || Array.isArray(requestedCapabilities) && requestedCapabilities.includes('storage') || request.spec.persistence_required === true;
       const completionSave = requestedStorage ? await bridge.exportSave() : null;
@@ -345,21 +371,25 @@ try {
       // Preserve an actual failure screenshot even when startup/interaction failed.
       try {save(`failure-${width}.png`, await page.screenshot({timeout: 2000}));} catch {}
     } finally {
+      progress.begin({kind: 'game', phase: 'collect_browser_errors'});
       record(`javascript_errors:${width}`, runtimeErrors.length === 0, runtimeErrors.length ? runtimeErrors.join('; ').slice(0, 1800) : 'No uncaught errors or blocking dialogs', {count: runtimeErrors.length});
       const cspViolations = await page.evaluate(() => window.__P2P_NETWORK_PROBE__.snapshot()).catch(() => [{blocked: 'probe unavailable', directive: 'unknown'}]);
       network.push(...cspViolations.map(item => ({...item, denied: true, csp: true})));
       record(`external_requests:${width}`, network.length === 0, network.length ? 'Game attempted a denied external request' : 'No external request attempts observed', {count: network.length, network_disabled: true});
       save(`console-${width}.json`, JSON.stringify({console: consoleLog, errors: runtimeErrors}, null, 2));
       save(`network-${width}.json`, JSON.stringify(network, null, 2));
+      progress.begin({kind: 'infrastructure', phase: 'save_trace'});
       await context.tracing.stop({path: `/evidence/trace-${width}.zip`});
       const trace = fs.readFileSync(`/evidence/trace-${width}.zip`);
       evidenceFiles.push({path: `trace-${width}.zip`, sha256: hash(trace), bytes: trace.length});
       record(`evidence:${width}`, true, 'Actual screenshots, console, network and Playwright trace persisted', {files: evidenceFiles.filter(item => item.path.includes(`-${width}.`)).map(item => item.path)});
+      progress.begin({kind: 'infrastructure', phase: 'close_context'});
       await context.close();
+      progress.complete();
     }
   }
 } catch (error) { record('runtime_harness', false, String(error.message).slice(0, 900)); }
-finally {if (browser) await browser.close();}
+finally {if (browser) await progress.run({kind: 'infrastructure', phase: 'close_browser'}, () => browser.close());}
 warnings.push('Native game and bridge share a browser realm: observations are not proof against deliberately falsified game state; human mechanics review remains required.');
 warnings.push('Chromium desktop and touch emulation establish only the recorded scenarios; actual Android/iOS WebView and human quality review remain separate.');
 process.stdout.write(JSON.stringify({schema_version: 2, browser_contract_version: 3, completion_required: requireCompletion, playthrough: requireCompletion ? "automatic" : "human_review_required", artifact: manifest,

@@ -20,15 +20,17 @@ export function assertion(check, states) {
   const passed = check.op === 'equal' ? equal : check.op === 'not_equal' ? !equal : numeric && (check.op === 'greater' ? actual > expected + check.tolerance : actual < expected - check.tolerance);
   return {path: check.path, after_step: check.after_step, before_step: check.before_step, op: check.op, actual, expected, passed};
 }
-export async function checkMechanics({cases, device, reset, runStep, snapshot, screenshot, compareImages, release}) {
+export async function checkMechanics({cases, device, reset, runStep, snapshot, screenshot, compareImages, release, onStep = () => {}, onCase = () => {}}) {
   const results = [];
   for (const test of cases) {
     const observations = [], states = [];
     let visible = false;
     try {
+      onStep(test.id, 0);
       await reset(); states.push(await snapshot());
       let before = await screenshot();
       for (const step of test[device].steps) {
+        onStep(test.id, states.length);
         await runStep(step);
         states.push(await snapshot());
         if (!visible) {
@@ -41,7 +43,11 @@ export async function checkMechanics({cases, device, reset, runStep, snapshot, s
       results.push({id: test.id, actions: test.actions, steps: test[device].steps, observations, visible_changed: visible, passed: visible && observations.every(o => o.passed)});
     } catch (error) {
       results.push({id: test.id, actions: test.actions, steps: test[device].steps, observations, visible_changed: visible, passed: false, error: String(error.message).slice(0, 1000)});
-    } finally { await release(); }
+    } finally {
+      // Persist a completed case before key cleanup or the next case can hang.
+      if (results.length) onCase(results.at(-1));
+      await release();
+    }
   }
   return results;
 }

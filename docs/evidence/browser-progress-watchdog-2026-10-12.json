@@ -1,0 +1,502 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-12T19:35:11.012962+00:00",
+  "change": "Browser validation follows completed-work progress instead of a total 90-second deadline; partial game failures remain repair feedback.",
+  "source_sha256": {
+    "src/prompt2play/validation/progress.py": "f6b5b999fc4451704769e4b22dec59bc466adebed78ed97374b21fb7f0f7a781",
+    "src/prompt2play/validation/runner.py": "a3ff2f95420a3b7c23673a2eff2e74b38c5a4963780ab8fc8b5cd6702090b928",
+    "src/prompt2play/workers/runner.py": "d654f3a3368082b93e2e5f0682f9af2896a15c8f295773268f28c788466dc057",
+    "src/prompt2play/legacy/validator/progress.mjs": "053c4542f8c9d0d512c4f8e980a1d84eb5f4b2e1d3387c614842fd356e70b11e",
+    "src/prompt2play/legacy/validator/mechanics_probe.mjs": "57c576253487c77cf48ce2b0d95aea54e68d186b3c04a61f55fe2d83b6c39484",
+    "src/prompt2play/legacy/validator/release_runtime.mjs": "1e6aa24860b515a4f02e01d98b3e9c05934427a3a0967211b2e6d8e505d79374"
+  },
+  "validator_image": "sha256:1ace4dc1fc6003ce0ba9637e2150d682fc175caf5af6d4d3abf6ed5f6811b0e1",
+  "regressions": {
+    "python": {
+      "passed": 430,
+      "skipped": 40,
+      "coverage_percent": 86.28
+    },
+    "node": {
+      "passed": 71
+    },
+    "ruff_format": "passed",
+    "ruff_lint": "passed",
+    "strict_mypy": "passed",
+    "package_build": "passed",
+    "resume_feedback": "Scripted provider verified pending_submit -> browser defects -> author patch -> browser recheck, with no repeated planning."
+  },
+  "saved_user_draft": {
+    "job_id": "7a425b8d-80af-40b4-996c-47f544c039ae",
+    "artifact": {
+      "files_sha256": {
+        "game.js": "797469b0d397a67828dc3bdbf204280a4be7ba71134c04643bdf32c586d418c4",
+        "style.css": "bb60884914729598ac451e403e75ca3f91729d12572382789d415fee792910de"
+      },
+      "html_bytes": 170282,
+      "html_sha256": "287be414f81659e3a04100a61a9b45fce7c553c1de84c92f1f1ad257972af010",
+      "spec_sha256": "eca8067aafa1f39de318655ba2da8d8fd6495a8d5771726de943aafe52189f7e"
+    },
+    "report_sha256": "7af314cf1131f2ed8cba8fe8852a6c1fc6fd8ec85cf123a923aa71316aee643e",
+    "duration_seconds": 114.14,
+    "idle_timeout_seconds": 90,
+    "validation_status": "failed",
+    "failed_checks": [
+      {
+        "name": "mechanics:1280",
+        "status": "failed",
+        "message": "Every required gameplay action must pass its declared real-input assertions",
+        "check_kind": "browser",
+        "artifact_sha256": "287be414f81659e3a04100a61a9b45fce7c553c1de84c92f1f1ad257972af010",
+        "limitations": [
+          "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+        ],
+        "evidence": {
+          "actual_input": true,
+          "cases": [
+            {
+              "id": "starter_purchase_refit",
+              "actions": [
+                "SELECT",
+                "PURCHASE_SHIP",
+                "REFIT"
+              ],
+              "passed": true,
+              "visible_changed": true,
+              "failed_assertions": []
+            },
+            {
+              "id": "mining_trade_pause",
+              "actions": [
+                "NAVIGATE",
+                "DOCK",
+                "MINE",
+                "TRADE",
+                "PAUSE"
+              ],
+              "passed": false,
+              "visible_changed": true,
+              "failed_assertions": [],
+              "error": "locator.waitFor: Timeout 5000ms exceeded.\nCall log:\n  - waiting for locator('#sell-all-iron') to be visible\n"
+            },
+            {
+              "id": "jump_mission_return",
+              "actions": [
+                "MISSION",
+                "NAVIGATE",
+                "DOCK"
+              ],
+              "passed": true,
+              "visible_changed": true,
+              "failed_assertions": []
+            },
+            {
+              "id": "combat_range_cooldown",
+              "actions": [
+                "COMBAT_ORDER",
+                "MISSION",
+                "REFIT",
+                "NAVIGATE"
+              ],
+              "passed": true,
+              "visible_changed": true,
+              "failed_assertions": []
+            },
+            {
+              "id": "continue_guard",
+              "actions": [
+                "CONTINUE"
+              ],
+              "passed": true,
+              "visible_changed": true,
+              "failed_assertions": []
+            }
+          ]
+        }
+      },
+      {
+        "name": "mechanics:390",
+        "status": "failed",
+        "message": "Every required gameplay action must pass its declared real-input assertions",
+        "check_kind": "browser",
+        "artifact_sha256": "287be414f81659e3a04100a61a9b45fce7c553c1de84c92f1f1ad257972af010",
+        "limitations": [
+          "Observed desktop Chromium or touch emulation; no actual WebView device is claimed"
+        ],
+        "evidence": {
+          "actual_input": true,
+          "cases": [
+            {
+              "id": "starter_purchase_refit",
+              "actions": [
+                "SELECT",
+                "PURCHASE_SHIP",
+                "REFIT"
+              ],
+              "passed": false,
+              "visible_changed": true,
+              "failed_assertions": [],
+              "error": "locator.boundingBox: Timeout 5000ms exceeded.\nCall log:\n  - waiting for locator('#remove-slot-weapon-1')\n"
+            },
+            {
+              "id": "mining_trade_pause",
+              "actions": [
+                "NAVIGATE",
+                "DOCK",
+                "MINE",
+                "TRADE",
+                "PAUSE"
+              ],
+              "passed": false,
+              "visible_changed": true,
+              "failed_assertions": [],
+              "error": "locator.boundingBox: Timeout 5000ms exceeded.\nCall log:\n  - waiting for locator('#sell-all-iron')\n"
+            },
+            {
+              "id": "jump_mission_return",
+              "actions": [
+                "MISSION",
+                "NAVIGATE",
+                "DOCK"
+              ],
+              "passed": false,
+              "visible_changed": true,
+              "failed_assertions": [],
+              "error": "locator.boundingBox: Timeout 5000ms exceeded.\nCall log:\n  - waiting for locator('#jump')\n"
+            },
+            {
+              "id": "combat_range_cooldown",
+              "actions": [
+                "COMBAT_ORDER",
+                "MISSION",
+                "REFIT",
+                "NAVIGATE"
+              ],
+              "passed": false,
+              "visible_changed": true,
+              "failed_assertions": [
+                {
+                  "path": "/telemetry/shotsFired",
+                  "after_step": 16,
+                  "before_step": 14,
+                  "op": "greater",
+                  "actual": 0,
+                  "expected": 0,
+                  "passed": false
+                },
+                {
+                  "path": "/telemetry/damageDealt",
+                  "after_step": 16,
+                  "before_step": 14,
+                  "op": "greater",
+                  "actual": 0,
+                  "expected": 0,
+                  "passed": false
+                },
+                {
+                  "path": "/telemetry/shotsFired",
+                  "after_step": 18,
+                  "before_step": 17,
+                  "op": "greater",
+                  "actual": 0,
+                  "expected": 0,
+                  "passed": false
+                },
+                {
+                  "path": "/telemetry/targetHull",
+                  "after_step": 18,
+                  "before_step": 16,
+                  "op": "less",
+                  "actual": 240,
+                  "expected": 240,
+                  "passed": false
+                },
+                {
+                  "path": "/player/location/x",
+                  "after_step": 21,
+                  "before_step": 20,
+                  "op": "not_equal",
+                  "actual": 730,
+                  "expected": 730,
+                  "passed": false
+                }
+              ]
+            },
+            {
+              "id": "continue_guard",
+              "actions": [
+                "CONTINUE"
+              ],
+              "passed": false,
+              "visible_changed": false,
+              "failed_assertions": [],
+              "error": "Touch target is outside the horizontal viewport"
+            }
+          ]
+        }
+      }
+    ],
+    "progress_samples": [
+      {
+        "completed_operations": 1,
+        "kind": "infrastructure",
+        "phase": "context",
+        "viewport": 1280,
+        "case_id": "",
+        "step": 0
+      },
+      {
+        "completed_operations": 15,
+        "kind": "game",
+        "phase": "advance_clock",
+        "viewport": 1280,
+        "case_id": "",
+        "step": 6,
+        "input_kind": "wait",
+        "selector": "",
+        "key": "",
+        "ticks": 600
+      },
+      {
+        "completed_operations": 63,
+        "kind": "game",
+        "phase": "input",
+        "viewport": 1280,
+        "case_id": "mining_trade_pause",
+        "step": 18,
+        "input_kind": "click",
+        "selector": "#mine-toggle",
+        "key": ""
+      },
+      {
+        "completed_operations": 89,
+        "kind": "game",
+        "phase": "advance_clock",
+        "viewport": 1280,
+        "case_id": "jump_mission_return",
+        "step": 8,
+        "input_kind": "wait",
+        "selector": "",
+        "key": "",
+        "ticks": 600
+      },
+      {
+        "completed_operations": 147,
+        "kind": "game",
+        "phase": "mechanics",
+        "viewport": 1280,
+        "case_id": "continue_guard",
+        "step": 0
+      },
+      {
+        "completed_operations": 179,
+        "kind": "game",
+        "phase": "scenario",
+        "viewport": 390,
+        "case_id": "",
+        "step": 1
+      },
+      {
+        "completed_operations": 202,
+        "kind": "game",
+        "phase": "input",
+        "viewport": 390,
+        "case_id": "starter_purchase_refit",
+        "step": 4,
+        "input_kind": "tap",
+        "selector": "#install-slot-weapon-1",
+        "key": ""
+      },
+      {
+        "completed_operations": 214,
+        "kind": "game",
+        "phase": "advance_clock",
+        "viewport": 390,
+        "case_id": "mining_trade_pause",
+        "step": 6,
+        "input_kind": "wait",
+        "selector": "",
+        "key": "",
+        "ticks": 600
+      },
+      {
+        "completed_operations": 250,
+        "kind": "game",
+        "phase": "mechanics",
+        "viewport": 390,
+        "case_id": "jump_mission_return",
+        "step": 3
+      },
+      {
+        "completed_operations": 258,
+        "kind": "game",
+        "phase": "mechanics",
+        "viewport": 390,
+        "case_id": "combat_range_cooldown",
+        "step": 3
+      },
+      {
+        "completed_operations": 285,
+        "kind": "game",
+        "phase": "mechanics",
+        "viewport": 390,
+        "case_id": "combat_range_cooldown",
+        "step": 20
+      }
+    ],
+    "model_calls": 0,
+    "job_resumed": false,
+    "game_source_changed": false,
+    "note": "Read-only database access; exact saved draft executed only inside the networkless validator container. Failed mechanics remain for the generator to diagnose."
+  },
+  "isolated_fixture_regressions": [
+    {
+      "case": "progressing-wait",
+      "report_sha256": "bdfa16e0cef9816215736c098b3d2c06cab554915383df5e0552f6ee57d395bb",
+      "validation_status": "passed",
+      "failed_checks": [],
+      "evidence_files": [
+        {
+          "path": "start-1280.png",
+          "sha256": "039ec0b6bf393606a7b8d43c0e902bf5dd60a6755fa66034ac9e41537c83b67f",
+          "bytes": 25728
+        },
+        {
+          "path": "control-before-1280.png",
+          "sha256": "3d252c4e20feceffd3fd62a67bf5aec064c2f9c65a714bb65606258c319ef84e",
+          "bytes": 21454
+        },
+        {
+          "path": "control-after-1280.png",
+          "sha256": "81316d9ef49046dd27d4406045ef69e6faf7eed471e93d6702a6e805ae93a0a3",
+          "bytes": 21445
+        },
+        {
+          "path": "interaction-1-1280.png",
+          "sha256": "128d3cd24ef012183c412211cc664644d361c88fa9306d8f14794328ca19092f",
+          "bytes": 27095
+        },
+        {
+          "path": "interaction-2-1280.png",
+          "sha256": "56ea7402be1ed87dd5c2ac848b94a5e5516f095fd5f279a16df6924d78d057ed",
+          "bytes": 28230
+        },
+        {
+          "path": "interaction-3-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "final-1280.png",
+          "sha256": "a356c7fec59a66ade0b7cb4ac864081e9e7fc4bac1271843aa21b82d11fc4ea4",
+          "bytes": 30534
+        },
+        {
+          "path": "scenario-1280.json",
+          "sha256": "f07d965a91e465ae33352f038053df193a2f64cdf730eab490be14de7df2b1b8",
+          "bytes": 1350
+        },
+        {
+          "path": "restart-1280.png",
+          "sha256": "ec8f3091ef055d97ffe2b25a60fcc1c876f91fe59515801bc3f973d32752bb98",
+          "bytes": 25754
+        },
+        {
+          "path": "console-1280.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-1280.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-1280.zip",
+          "sha256": "25010c91a8b448f15dbcc49d4a438e29d867eed2a2b400738227e930d30dfbf4",
+          "bytes": 32430
+        },
+        {
+          "path": "start-390.png",
+          "sha256": "ba483cb666f91fbfb91584364d63d2fd820100969cabb81832d56330bb2da99a",
+          "bytes": 24901
+        },
+        {
+          "path": "control-before-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "control-after-390.png",
+          "sha256": "4081b8b46bfc0f3f7732002cd26f0f5aaa36c6ec8c0ea576c340885ec8177c46",
+          "bytes": 20494
+        },
+        {
+          "path": "interaction-1-390.png",
+          "sha256": "d90fe4db19b007868ad26bff827bf4e22d89e0035abf12821a38f4f41c3028bb",
+          "bytes": 25508
+        },
+        {
+          "path": "interaction-2-390.png",
+          "sha256": "2f2c8a661c00b89ff765ae6cbe80579237f67126f1b825bb5fd3d00bc64f8655",
+          "bytes": 25589
+        },
+        {
+          "path": "interaction-3-390.png",
+          "sha256": "18647c7647cdb1708dcd0a80b260a9ab045b072b150179579ca5ca85626a58bd",
+          "bytes": 27833
+        },
+        {
+          "path": "final-390.png",
+          "sha256": "9d3c9611d623cc0bf639052feec918fa7c8db94454ec5998a892e38076526453",
+          "bytes": 27820
+        },
+        {
+          "path": "scenario-390.json",
+          "sha256": "b8cbee5a0b4a5b8d0d2f58b7ea1e20aeed6521c31d6245d14fa91c6ac31ccea6",
+          "bytes": 1416
+        },
+        {
+          "path": "restart-390.png",
+          "sha256": "fed221b1626f6e6d59e1370577c777ee53c1fd58959745097d2cdaa90de09fdb",
+          "bytes": 24838
+        },
+        {
+          "path": "console-390.json",
+          "sha256": "892d55c897abf217ec4f0f3b3dcf94007548efcb6ee788db9ccc6743a2e17fb1",
+          "bytes": 35
+        },
+        {
+          "path": "network-390.json",
+          "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "bytes": 2
+        },
+        {
+          "path": "trace-390.zip",
+          "sha256": "878612c227cbd1843a81444d9ae0548f89d26a8998e2341bb0591768ab007dee",
+          "bytes": 32735
+        }
+      ]
+    },
+    {
+      "case": "prior-defect-then-hang",
+      "report_sha256": "57d625be3c639f48e81b57d3ecb5a6e106c540e425c439941a78686e00244839",
+      "validation_status": "failed",
+      "failed_checks": [
+        "mechanic_case:1280:move",
+        "browser_progress_stalled"
+      ],
+      "evidence_files": [
+        {
+          "path": "stalled-afa863789bf44a8eb8d55542c580faa9.json",
+          "sha256": "c3d8ce553baf23de47db97776ddd5da358478eee1bf0062b8d6cd360fcd2f0ef",
+          "bytes": 3981
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "No claim of fixed user-game mechanics; paid continuation was not run.",
+    "Desktop Chromium and touch emulation only; actual contest WebView remains unknown."
+  ]
+}
