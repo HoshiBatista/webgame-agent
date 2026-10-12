@@ -9,15 +9,21 @@ The intended experience is simple:
 
 ## Project status
 
-**Python foundation ready; product implementation not started.** The repository
-has a typed Python package, reproducible development dependencies, automated
-quality checks, and a multi-version CI workflow. The API, generation pipeline,
-validator, and web interface are not implemented yet.
+**The hackathon vertical slice is implemented.** The repository now contains a
+React creator UI, FastAPI control plane, PostgreSQL workflow state, Redis/Celery
+workers, OpenAI generation through GPT-6 Luna, immutable content-addressed game
+artifacts, bounded repair, static rules, and Playwright mobile validation.
 
-The target application stack is FastAPI and PostgreSQL, Celery with Redis,
-React/Vite, Playwright, and content-addressed artifacts on a persistent
-filesystem. Model-provider and deployment-vendor choices remain open behind
-project-owned interfaces.
+The implementation deliberately does not use SQLite. Docker Compose starts the
+production-like MVP stack: PostgreSQL 17, Redis with AOF/no-eviction, separate
+model and validation workers, Celery Beat outbox recovery, API, and web UI.
+Provider code remains behind the project-owned `ModelGateway`; the first adapter
+uses the OpenAI Responses API with Structured Outputs and configurable model ID
+`gpt-6-luna`. See the [official model page](https://developers.openai.com/api/docs/models/gpt-6-luna).
+
+The MVP capacity target is 10 simultaneous active generation runs. This is a
+documented, testable envelope; it is not considered proven until the prescribed
+load tests pass.
 
 ## MVP
 
@@ -48,39 +54,87 @@ generation workflow, trust boundaries, artifact contract, and delivery plan.
 The decisions are recorded in
 [ADR 0001](docs/adr/0001-target-architecture.md) and
 [ADR 0002](docs/adr/0002-generation-harness.md), with supporting evidence in
-the [landscape review](docs/research/landscape.md).
+the [landscape review](docs/research/landscape.md). Resource and provider-quota
+requirements are calculated in the
+[MVP capacity plan](docs/capacity.md).
+
+## Implemented product flow
+
+```text
+React/Vite → FastAPI → PostgreSQL outbox → Redis/Celery
+                                           ├─ models: specify/generate/repair → GPT-6 Luna
+                                           └─ validation: static rules + Playwright Chromium
+                                                               ↓
+                                               immutable SHA-256 HTML artifact
+                                                               ↓
+                                             sandboxed iframe + CSP + gallery/share
+```
+
+Games are schema-planned before code generation. A candidate is not exposed as
+playable until static security checks and a mobile Chromium interaction test
+pass. Failed candidates receive at most two model repairs; every candidate is
+an immutable revision with validation evidence.
+
+Implemented bonus features include audience adaptation, touch/responsive
+generation rules, iterative revisions, gallery and share URLs, cross-genre
+specifications, procedural graphics/WebAudio, and aggregate gameplay analytics
+fed into future specifications. See
+[docs/hackathon-requirements.md](docs/hackathon-requirements.md).
 
 ## Repository contents
 
 ```text
 .
 ├── .github/workflows/ci.yml  # Lint, types, tests, and package build
-├── src/prompt2play/          # Installable Python package
-├── tests/                    # Automated Python tests
-├── AGENTS.md            # Repository-wide engineering and agent guidance
-├── CLAUDE.md            # Claude Code-specific working instructions
-├── CONTRIBUTING.md      # Contribution workflow and quality expectations
-├── pyproject.toml        # Package metadata and tool configuration
-├── SECURITY.md          # Security policy and generated-code threat model
-├── uv.lock               # Reproducible dependency resolution
+├── src/prompt2play/          # API, workflow, adapters, validation, Celery
+├── web/                      # React/TypeScript/Vite creator application
+├── alembic/                  # PostgreSQL schema migration
+├── tests/                    # Unit and contract tests
+├── compose.yaml              # Full local MVP stack
+├── Dockerfile                # API/model/validation worker image
+├── AGENTS.md                 # Repository-wide engineering guide
+├── CONTRIBUTING.md           # Contribution workflow
+├── pyproject.toml            # Python metadata and tools
+├── SECURITY.md               # Generated-code threat model
+├── uv.lock                   # Reproducible Python dependency resolution
 ├── docs/
 │   ├── adr/              # Accepted architectural decisions
 │   ├── research/         # Product, implementation, and research analysis
-│   └── architecture.md  # Target architecture and evolution plan
+│   ├── architecture.md  # Target architecture and evolution plan
+│   ├── capacity.md           # MVP throughput and load-test targets
+│   └── hackathon-requirements.md # PDF requirement matrix
 └── README.md
 ```
-
-Application modules will be added with the first working vertical slice. The
-likely boundaries are contracts, an API, generator, validator, artifact store,
-templates, and a web interface. New directories should contain working code,
-not placeholders.
 
 ## Getting started
 
 Prerequisites:
 
-- Python 3.11 or newer; Python 3.13 is the default local version;
-- [uv](https://docs.astral.sh/uv/) for environments, dependencies, and builds.
+- Docker with Compose for the complete stack;
+- an OpenAI API key with access to `gpt-6-luna`;
+- for host-only development: Python 3.11+, uv, Node.js 24 and npm.
+
+Start the complete stack:
+
+```bash
+cp .env.example .env
+# Set OPENAI_API_KEY in .env, then:
+docker compose up --build
+```
+
+Open `http://localhost:5173`. The API and OpenAPI UI are available at
+`http://localhost:8000` and `http://localhost:8000/docs`. The first image build
+installs Playwright Chromium and can take several minutes.
+
+The services are intentionally separate:
+
+- `api` accepts prompts and streams persisted progress;
+- `worker-models` is the only worker that calls OpenAI;
+- `worker-validation` opens untrusted games in Chromium;
+- `beat` recovers unsent PostgreSQL outbox commands;
+- `postgres` owns product state; Redis is delivery infrastructure only.
+
+Host-only quality checks do not require credentials or infrastructure:
 
 Install the package and development tools from the lock file:
 
@@ -96,14 +150,12 @@ uv run ruff check .
 uv run mypy
 uv run pytest
 uv build
+npm --prefix web run build
 ```
 
-There is not yet a runnable API or web application. To contribute at this stage:
-
-1. read [AGENTS.md](AGENTS.md) and [docs/architecture.md](docs/architecture.md);
-2. choose work that advances the first end-to-end vertical slice;
-3. document any new runtime or provider requirement; and
-4. include tests and exact verification results with implementation changes.
+To run services directly on a configured host, apply `uv run alembic upgrade
+head`, then start Uvicorn, Celery workers, and Celery Beat with the commands in
+`compose.yaml`.
 
 GitHub Actions runs formatting, linting, strict type checking, package building,
 and tests on Python 3.11, 3.12, 3.13, and 3.14.

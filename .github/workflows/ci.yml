@@ -56,6 +56,17 @@ jobs:
       - name: Build distributions
         run: uv build
 
+      - name: Set up Node
+        uses: actions/setup-node@1e60f620b9541dca1515405162d3b8becc25230e # v6.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build creator UI
+        working-directory: web
+        run: npm ci && npm run build
+
   tests:
     name: Tests / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

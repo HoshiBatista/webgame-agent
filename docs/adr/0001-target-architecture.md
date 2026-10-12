@@ -79,8 +79,9 @@ digest through a project-owned `ArtifactStore` interface.
 ### 7. Put model infrastructure behind a project port
 
 Application code calls `ModelGateway` with typed requests and response models.
-PydanticAI is the preferred adapter for provider portability and structured
-outputs. Provider SDKs and model identifiers do not leak into domain code.
+The hackathon adapter uses the official OpenAI SDK with native Pydantic
+Structured Outputs and a configurable `gpt-6-luna` identifier, as recorded in
+ADR 0003. Provider SDKs and model identifiers do not leak into domain code.
 
 ### 8. Keep validation deterministic where possible
 
@@ -95,7 +96,7 @@ cannot override deterministic failures.
 | Control plane | Modular monolith | Premature microservices |
 | Orchestration | PostgreSQL state machine + Celery | Temporal, result graph as truth, autonomous swarm |
 | Task broker | Dedicated Redis with AOF and no eviction | Database polling as the only queue |
-| Model layer | Project port with PydanticAI adapter | Provider SDKs throughout the codebase |
+| Model layer | Project port with OpenAI Responses adapter | Provider SDKs throughout the codebase |
 | Game generation | Versioned template hooks | Unconstrained one-shot source generation |
 | Default runtime | Canvas2D; local assets | Remote CDN framework dependencies |
 | Complex 2D runtime | Evaluated, locally bundled Phaser profile | Mandatory framework for every game |

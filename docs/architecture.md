@@ -17,7 +17,10 @@ be isolated for security. [ADR 0001](adr/0001-target-architecture.md) records th
 system-level decisions, and
 [ADR 0002](adr/0002-generation-harness.md) fixes the generation-harness
 boundary. [The landscape review](research/landscape.md) explains the external
-systems and research behind them.
+systems and research behind them. [The MVP capacity plan](capacity.md) derives
+resource, quota, metric, and load-test requirements for 10 simultaneous active
+generation runs. [ADR 0003](adr/0003-openai-luna-mvp.md) selects OpenAI GPT-6
+Luna for the hackathon's first provider adapter.
 
 ## Architectural thesis
 
@@ -104,10 +107,11 @@ The Python control plane contains:
 - revision, artifact, and validation metadata; and
 - an event stream projected from persisted run state.
 
-Use PydanticAI behind the project-owned `ModelGateway` port for structured
-outputs, provider adapters, usage data, and typed tool calls. Application code
-must not import provider SDKs outside that adapter. The workflow remains ours;
-PydanticAI is not the global architecture and does not decide stage order.
+Use a project-owned `ModelGateway` port for structured outputs and usage data.
+The first adapter uses the official OpenAI SDK and Responses API with
+`gpt-6-luna`; application code does not import the provider SDK outside that
+adapter. The workflow remains ours and no provider framework decides stage
+order.
 
 ### Execution plane
 
@@ -158,7 +162,7 @@ src/prompt2play/
 ├── generation/             # Spec, planning, harness, templates, repair policy
 ├── validation/             # Static rules and validation-plan construction
 ├── adapters/
-│   ├── models/             # PydanticAI/provider adapters
+│   ├── models/             # Provider adapters (OpenAI first)
 │   ├── persistence/        # PostgreSQL repositories
 │   ├── artifacts/          # Content-addressed filesystem store
 │   ├── tasks/              # Celery dispatch, routing, and task definitions
@@ -703,6 +707,30 @@ Baseline Celery policy:
 | Concurrent redelivery | Lease plus monotonic execution fence on every commit |
 | Scheduled recovery | One Celery Beat scheduler plus idempotent jobs |
 
+## MVP capacity baseline
+
+The initial capacity envelope is 10 active generation runs, including a burst
+of 10 admissions in one second. This means active end-to-end workflows, not 10
+idle browser sessions. At the 180-second mean-latency objective, a closed group
+of 10 users can drive 3.33 completed runs per minute.
+
+The derived baseline is:
+
+- 20 run-admission write RPS and 50 mixed dynamic API RPS;
+- 10 SSE connections carrying no more than 50 persisted progress events/s;
+- 10 model-worker slots backed by provider quota of at least 45 RPM, 400k input
+  TPM, 60k output TPM, and 12 simultaneous provider requests;
+- five isolated browser-validation slots;
+- an application-wide PostgreSQL budget of 40 connections and capacity for 50
+  short write transactions/s; and
+- 150 static preview RPS plus 20 MiB/s artifact delivery outside FastAPI.
+
+These are calculated hypotheses, not proof of capacity. Admission closes before
+model, browser, storage, or provider queues exceed their bounded thresholds.
+Workers release database connections before external waits. The complete
+assumptions, formulas, harness budgets, required metrics, alert thresholds, and
+release-gate load tests are defined in [the MVP capacity plan](capacity.md).
+
 ## API surface
 
 Initial versioned endpoints:
@@ -767,6 +795,11 @@ OpenTelemetry. A trace follows one run across every plane. Record:
 - browser queue time and sandbox resource use; and
 - quality score by golden prompt and rubric.
 
+The capacity plan defines the required harness, provider-quota, queue,
+duplicate-spend, fencing, sandbox-resource, database, and filesystem metrics.
+Run, user, project, prompt, and file identifiers belong in traces or structured
+logs, never metric labels.
+
 Do not attach full prompts, generated source, screenshots, or model responses to
 telemetry by default. Store sensitive evidence under the project's retention
 and access policy.
@@ -830,9 +863,12 @@ without network or model credentials.
 - Two-repair workflow, SSE progress, revision history.
 - Separate local validation worker and dedicated preview origin.
 - Five golden prompts across desktop and mobile.
+- Production-like load tests for 10 active runs, provider quotas, five browser
+  slots, cancellation, redelivery, and storage recovery.
 
 Exit criterion: at least 80% of the fixed golden suite is playable after bounded
-repair, with every failure explained by structured findings.
+repair, every failure is explained by structured findings, and the capacity
+release gates pass without exceeding budgets or SLOs.
 
 ### Phase 2 — production trust boundary
 

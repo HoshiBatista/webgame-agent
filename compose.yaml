@@ -1,0 +1,100 @@
+name: prompt2play
+
+x-app: &app
+  build: .
+  env_file: .env
+  environment:
+    P2P_DATABASE_URL: postgresql+psycopg://prompt2play:prompt2play@postgres:5432/prompt2play
+    P2P_REDIS_URL: redis://redis:6379/0
+    P2P_ARTIFACT_ROOT: /data/artifacts
+  volumes:
+    - artifacts:/data/artifacts
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: prompt2play
+      POSTGRES_USER: prompt2play
+      POSTGRES_PASSWORD: prompt2play
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prompt2play"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  api:
+    <<: *app
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker-models:
+    <<: *app
+    command:
+      ["celery", "-A", "prompt2play.tasks:celery_app", "worker", "-Q", "models,workflow", "--concurrency=4", "--loglevel=INFO"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker-validation:
+    <<: *app
+    command:
+      ["celery", "-A", "prompt2play.tasks:celery_app", "worker", "-Q", "validation", "--concurrency=2", "--loglevel=INFO"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  beat:
+    <<: *app
+    command: ["celery", "-A", "prompt2play.tasks:celery_app", "beat", "--loglevel=INFO"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build: ./web
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  artifacts:
+  postgres:
+  redis:
