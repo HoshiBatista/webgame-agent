@@ -428,6 +428,9 @@ def _run_case(
         outcome = "failed"
     finally:
         timer.cancel()
+        close = getattr(gateway, "close", None)
+        if callable(close):
+            close()
     metrics = journal.operation_metrics()
     metrics["attempted_provider_operations_this_session"] = (
         metrics["attempted_provider_operations"] - prior_metrics["attempted_provider_operations"]

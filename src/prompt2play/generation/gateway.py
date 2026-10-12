@@ -4,16 +4,24 @@ from __future__ import annotations
 
 import hashlib
 import math
+import tempfile
 import threading
 import time
 from dataclasses import dataclass
 from typing import Any, Protocol, cast
 
 from prompt2play.contracts.models import stable
-from prompt2play.legacy.worker.core import CodexCallTimeout, ProviderError
+from prompt2play.legacy.worker.core import (
+    PROMPT_BOUNDARY,
+    CodexCallTimeout,
+    ProviderError,
+    usage_record,
+)
 from prompt2play.legacy.worker.providers import CodexProvider, OpenAIProvider
 from prompt2play.pricing import reservation_usage
+from prompt2play.workers.diagnostics import emit
 
+from .context import ContextConversations, ContextRequest
 from .retries import (
     CODEX_TIMEOUT_RECEIPT,
     TIMEOUT_RETRY_SUFFIX,
@@ -88,6 +96,83 @@ class ProviderGateway:
         )
         self.records: list[dict[str, Any]] = []
         self.lock = threading.RLock()
+        self.contexts = ContextConversations()
+        self.session_directory: tempfile.TemporaryDirectory[str] | None = None
+
+    def close(self) -> None:
+        self.contexts.sessions.clear()
+        if self.session_directory is not None:
+            self.session_directory.cleanup()
+            self.session_directory = None
+
+    def _invoke(
+        self,
+        prompt: str,
+        schema: dict[str, Any],
+        role: str,
+        control: GenerationControl,
+        max_output: int,
+        context: ContextRequest | None,
+    ) -> Any:
+        kwargs: dict[str, Any] = {"max_output": max_output, "model": self.model}
+        if context is not None:
+            if self.name == "codex":
+                if self.session_directory is None:
+                    self.session_directory = tempfile.TemporaryDirectory(prefix="p2p-context-")
+                kwargs.update(
+                    session_id=context.conversation.session_id if context.continuation else "",
+                    session_directory=self.session_directory.name,
+                    persist_session=True,
+                    on_session=lambda value: setattr(context.conversation, "session_id", value),
+                )
+                prompt = (
+                    context.text
+                    if context.continuation
+                    else (context.instructions + PROMPT_BOUNDARY + context.text)
+                )
+            else:
+                kwargs["messages"] = context.messages
+                prompt = context.instructions + PROMPT_BOUNDARY + context.text
+
+        def incremental(usage: dict[str, int] | None) -> dict[str, int] | None:
+            if usage is None or context is None or self.name != "codex":
+                return usage
+            if usage.get("calls") == 0:
+                return usage
+            # Codex exec resume reports thread totals, including previous paid turns.
+            previous = context.conversation.cumulative_usage if context.continuation else {}
+            delta = {
+                key: usage[key] - previous.get(key, 0)
+                for key in ("input_tokens", "cached_input_tokens", "output_tokens")
+            }
+            try:
+                if delta["cached_input_tokens"] > delta["input_tokens"]:
+                    return None
+                return cast(dict[str, int], cast(Any, usage_record)(delta))
+            except ProviderError:
+                # A changed CLI accounting protocol must never double charge or invent savings.
+                return None
+
+        try:
+            reply = self.provider.generate(prompt, schema, role, control.cancel, **kwargs)
+        except Exception as exc:
+            if context is not None:
+                exc.usage = incremental(getattr(exc, "usage", None))  # type: ignore[attr-defined]
+                self.contexts.discard(context)
+            raise
+        if context is not None:
+            cumulative = reply.usage
+            reply.usage = incremental(cumulative)
+            if reply.usage is None:
+                self.contexts.discard(context)
+                raise cast(Any, ProviderError)("Codex conversation usage could not be reconciled")
+            context.conversation.cumulative_usage = cumulative
+            context.conversation.last_usage = reply.usage
+            if self.name != "codex" or context.conversation.session_id:
+                self.contexts.commit(context, reply.data)
+            else:
+                self.contexts.discard(context)
+        return reply
 
     def preflight(self) -> None:
         self.provider.preflight()
@@ -150,8 +235,11 @@ class ProviderGateway:
             ).encode()
         ).hexdigest()
         key = role + ":" + request_sha + (TIMEOUT_RETRY_SUFFIX if retry else "")
-        reservation = control.estimate(prompt, max_output, stable(schema))
-        journal_tokens = invocation_reservation(prompt, max_output)
+        context = self.contexts.prepare(prompt, schema, role, self.model)
+        context_metrics = context.metrics() if context is not None else {"mode": "snapshot"}
+        reservation_prompt = context.reservation_prompt if context is not None else prompt
+        reservation = control.estimate(reservation_prompt, max_output, stable(schema))
+        journal_tokens = invocation_reservation(reservation_prompt, max_output)
         reused = None
         if self.journal:
             if control.cost_limit_nano is not None:
@@ -160,7 +248,7 @@ class ProviderGateway:
                     journal_tokens,
                     role,
                     request_sha,
-                    estimate=reservation_usage(prompt, max_output, stable(schema)),
+                    estimate=reservation_usage(reservation_prompt, max_output, stable(schema)),
                 )
             else:
                 reused = self.journal.reserve(key, journal_tokens, role, request_sha)
@@ -183,6 +271,7 @@ class ProviderGateway:
                         "usage": cached_usage,
                         "seconds": 0,
                         "status": "reused",
+                        "context": {"mode": "receipt_replay"},
                     }
                 )
             return GatewayReply(data, cached_usage, key, reused=True)
@@ -219,6 +308,13 @@ class ProviderGateway:
                     )
             raise
         started = time.monotonic()
+        emit(
+            "model_context_prepared",
+            provider=self.name,
+            role=role,
+            request_sha256=request_sha,
+            context=context_metrics,
+        )
         expired = threading.Event()
 
         def deadline() -> None:
@@ -232,9 +328,7 @@ class ProviderGateway:
             timer.start()
         usage: dict[str, int] | None = None
         try:
-            reply = self.provider.generate(
-                prompt, schema, role, control.cancel, max_output=max_output, model=self.model
-            )
+            reply = self._invoke(prompt, schema, role, control, max_output, context)
             usage = cast(dict[str, int], reply.usage)
             control.settle(key, usage)
             if self.journal:
@@ -249,6 +343,7 @@ class ProviderGateway:
                         "usage": usage,
                         "seconds": time.monotonic() - started,
                         "status": "completed",
+                        "context": context_metrics,
                     }
                 )
             return GatewayReply(cast(dict[str, Any], reply.data), usage, key)
@@ -283,12 +378,24 @@ class ProviderGateway:
                         "usage": usage,
                         "seconds": time.monotonic() - started,
                         "status": "failed",
+                        "context": context_metrics,
                     }
                 )
             if expired.is_set():
                 raise GenerationStopped("Run deadline exceeded during model call") from exc
             raise
         finally:
+            emit(
+                "model_context_finished",
+                provider=self.name,
+                role=role,
+                request_sha256=request_sha,
+                context=context_metrics,
+                usage=usage,
+                cached_input_ratio=(usage["cached_input_tokens"] / usage["input_tokens"])
+                if usage and usage["input_tokens"]
+                else None,
+            )
             if timer is not None:
                 timer.cancel()
 

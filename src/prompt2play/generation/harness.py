@@ -19,6 +19,7 @@ from prompt2play.legacy.worker.core import COMPONENT_SCHEMA, PLAN_OUTPUT_SCHEMA,
 from prompt2play.paths import LEGACY_ROOT
 from prompt2play.validation.runner import validate_acceptance, validate_native_acceptance
 
+from .context import ordered_context
 from .draft_state import validate_draft_state
 from .gateway import ModelGateway, ProviderError
 from .knowledge import KNOWLEDGE_VERSION, select_lessons
@@ -38,7 +39,7 @@ from .workspace import (
     WorkspaceLimits,
 )
 
-HARNESS_VERSION = "generation-harness-v1.6"
+HARNESS_VERSION = "generation-harness-v1.7"
 PLANNING_INSTRUCTIONS = (
     QUALITY_BRIEF
     + """Plan the requested complete offline HTML5 game for continued development. Return GameSpec (what the game does) and BuildPlan (visual design, maintainable implementation and acceptance) separately.
@@ -220,7 +221,7 @@ class GenerationHarness:
             + "\nFull authoritative planning schema, including every local size/range bound:\n"
             + stable(PLAN_SCHEMA)
             + PROMPT_BOUNDARY
-            + stable(context),
+            + ordered_context(context),
             PLAN_SCHEMA,
             "plan",
             control,
@@ -364,7 +365,7 @@ class GenerationHarness:
                         + "\nAuthoritative source review schema:\n"
                         + stable(SOURCE_REVIEW_SCHEMA)
                         + PROMPT_BOUNDARY
-                        + stable(context),
+                        + ordered_context(context),
                         SOURCE_REVIEW_SCHEMA,
                         "visual_review",
                         control,
@@ -418,6 +419,7 @@ class GenerationHarness:
                 "lessons": lessons,
                 "release_findings": request.findings,
                 "tool_results": state["feedback"],
+                "previous_author_summary": state["summary"],
                 "turn": state["turn"] + 1,
                 "remaining_turns": self.limits.max_turns - state["turn"]
                 if self.limits.max_turns is not None
@@ -434,7 +436,7 @@ class GenerationHarness:
                 context["user_feedback"] = request.user_feedback
             try:
                 reply = gateway.generate(
-                    AUTHOR_INSTRUCTIONS + PROMPT_BOUNDARY + stable(context),
+                    AUTHOR_INSTRUCTIONS + PROMPT_BOUNDARY + ordered_context(context),
                     OPERATIONS_SCHEMA,
                     "author",
                     control,

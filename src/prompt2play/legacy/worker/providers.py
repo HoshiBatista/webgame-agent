@@ -119,7 +119,7 @@ class OpenAIProvider:
                 "OPENAI_API_KEY is not configured on this runner", usage=empty_usage()
             )
 
-    def generate(self, prompt, schema, role, cancel, max_output=6000, model=""):
+    def generate(self, prompt, schema, role, cancel, max_output=6000, model="", messages=None):
         self.preflight()
         model = model or self.model
         if not model:
@@ -128,15 +128,15 @@ class OpenAIProvider:
                 usage=empty_usage(),
             )
         check_cancel(cancel)
-        return asyncio.run(self._guarded(prompt, schema, role, cancel, max_output, model))
+        return asyncio.run(self._guarded(prompt, schema, role, cancel, max_output, model, messages))
 
-    async def _guarded(self, prompt, schema, role, cancel, max_output, model):
+    async def _guarded(self, prompt, schema, role, cancel, max_output, model, messages=None):
         # A terminal response can arrive before the transport finishes closing.
         # Keep its accounting outside the cancellable task so a later timeout
         # cannot turn reported spend into an unknown full-call reservation.
         account = {"usage": None}
         task = asyncio.create_task(
-            self._generate(prompt, schema, role, cancel, max_output, model, account)
+            self._generate(prompt, schema, role, cancel, max_output, model, account, messages)
         )
 
         async def watch_cancel():
@@ -169,11 +169,13 @@ class OpenAIProvider:
             watcher.cancel()
             await asyncio.gather(task, watcher, return_exceptions=True)
 
-    async def _generate(self, prompt, schema, role, cancel, max_output, model, account):
+    async def _generate(
+        self, prompt, schema, role, cancel, max_output, model, account, messages=None
+    ):
         instructions, boundary, task_data = prompt.partition(PROMPT_BOUNDARY)
         payload = {
             "model": model,
-            "input": task_data if boundary else prompt,
+            "input": messages if messages is not None else task_data if boundary else prompt,
             "store": False,
             "stream": True,
             "max_output_tokens": max_output,
@@ -317,7 +319,20 @@ class CodexProvider:
                 "Codex CLI not found; install it and run codex login locally", usage=empty_usage()
             )
 
-    def generate(self, prompt, schema, role, cancel, max_output=6000, model=""):
+    def generate(
+        self,
+        prompt,
+        schema,
+        role,
+        cancel,
+        max_output=6000,
+        model="",
+        *,
+        session_id="",
+        session_directory="",
+        persist_session=False,
+        on_session=None,
+    ):
         check_cancel(cancel)
         self.preflight()
         executable = shutil.which(self.executable)
@@ -332,11 +347,16 @@ class CodexProvider:
             args = [
                 executable,
                 "exec",
-                "--json",
                 "--sandbox",
                 "read-only",
+                "--cd",
+                session_directory or directory,
+            ]
+            if session_id:
+                args += ["resume", session_id]
+            args += [
+                "--json",
                 "--skip-git-repo-check",
-                "--ephemeral",
                 "--ignore-user-config",
                 "--ignore-rules",
                 "-c",
@@ -347,9 +367,9 @@ class CodexProvider:
                 str(schema_file),
                 "--output-last-message",
                 str(output),
-                "--cd",
-                directory,
             ]
+            if not persist_session:
+                args += ["--ephemeral"]
             chosen = model or self.model
             if chosen:
                 args += ["--model", chosen]
@@ -394,7 +414,7 @@ class CodexProvider:
                         stdout=events,
                         stderr=errors,
                         env=child_env,
-                        cwd=directory,
+                        cwd=session_directory or directory,
                         start_new_session=(os.name != "nt"),
                     )
                 except OSError as exc:
@@ -450,6 +470,10 @@ class CodexProvider:
             # Read the bounded, flushed event log after process cleanup even on
             # cancellation. A completed turn may already have reported usage.
             usage = codex_usage(events_file)
+            if on_session is not None:
+                session = codex_session_id(events_file)
+                if session:
+                    on_session(session)
             if interrupted is not None:
                 interrupted.usage = usage
                 raise interrupted
@@ -479,6 +503,27 @@ class CodexProvider:
                 raise ProviderError(
                     "Codex structured output could not be read as UTF-8 JSON", usage=usage
                 ) from exc
+
+
+def codex_session_id(path):
+    """Only a validated thread ID leaves the private process log."""
+    import uuid
+
+    try:
+        with path.open("rb") as stream:
+            data = stream.read(8_000_001)
+        if len(data) > 8_000_000:
+            return ""
+        for line in data.splitlines():
+            try:
+                event = json.loads(line)
+                if isinstance(event, dict) and event.get("type") == "thread.started":
+                    return str(uuid.UUID(event["thread_id"]))
+            except (ValueError, KeyError, TypeError, AttributeError):
+                continue
+    except OSError:
+        pass
+    return ""
 
 
 def codex_usage(path):

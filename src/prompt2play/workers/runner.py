@@ -362,12 +362,16 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             "warnings": report.get("warnings", []),
         }
 
-    candidate = GenerationHarness(
-        on_plan=plan_ready,
-        on_checkpoint=save_draft,
-        on_browser_check=browser_check,
-        require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
-    ).attempt(generation_request(lease.claim, args.mode), gateway, control)
+    try:
+        candidate = GenerationHarness(
+            on_plan=plan_ready,
+            on_checkpoint=save_draft,
+            on_browser_check=browser_check,
+            require_completion=lease.job.get("playthrough_mode", "auto") == "auto",
+        ).attempt(generation_request(lease.claim, args.mode), gateway, control)
+    finally:
+        gateway.close()
+
     data = candidate.as_dict()
     identity = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
     lease.write("candidates", idempotency_key=identity, **data)

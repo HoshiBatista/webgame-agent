@@ -303,7 +303,7 @@
       "source": "worker/providers.py",
       "destination": "src/prompt2play/legacy/worker/providers.py",
       "source_sha256": "c6dc28d5cc1e5193a8fc5660d93d64c51090aea5ed282b562065f322fd970db4",
-      "destination_sha256": "05d40c190cd09b5afd48538dcedbda0c80cb84ac6bd660a698a66817c1a83dfc",
+      "destination_sha256": "55eb766cddcc31bd9de1bfdf4e4ef25c53d55d4c7c314378414402455c38690e",
       "modified": true,
       "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness. Codex wire-schema compatibility preserves full local validation; bounded safe schema diagnostics and literal credential-isolated provider setup."
     },

@@ -232,6 +232,49 @@ output limits are only enforced where supported; a Codex reservation estimate is
 not a guaranteed provider cap. Preserve reported usage and conservative unknown
 reservations after interrupted calls.
 
+### Model context and prefix reuse
+
+The native harness sends stable instructions, approved design and relevant lessons
+before source and transient feedback. Canonical artifact hashing remains unchanged;
+prompt ordering has its own serializer. `context-v1` preserves one conversation per
+attempt/model/schema/instruction set and role. The author and source reviewer never
+share a conversation. Planning and historical four-author calls remain independent.
+
+The first call contains a full authoritative snapshot. Subsequent user messages
+append only actual state changes and tool results: file additions/deletions, unique
+exact-text replacements or full replacement where an unambiguous patch is not smaller.
+A create/replace already present in the previous assistant reply is referenced only
+after byte equality with the application's current source. Proposed operations are
+never assumed successful. `read` still returns complete authoritative file content.
+Approved plans, lessons and current source are not truncated to achieve a cache target.
+
+Codex uses explicit `exec resume <session-id>`, a stable private working directory,
+read-only sandbox, disabled shell/search, ignored user configuration and rules.
+These scoped CLI sessions use Codex's normal local session storage; its retention
+policy applies to those transcripts. The application does not put raw transcripts
+in worker diagnostics or adopt them as canonical game state. Responses uses explicit
+user/assistant message history with `store:false`, keeping data out of instructions.
+
+When retained visible history plus the next delta exceeds the larger of 64 KB and
+twice the current snapshot, start a fresh conversation with the full latest snapshot,
+last author summary and feedback. This refreshes context without ending generation
+or imposing a turn count. Errors discard the affected conversation. Worker restarts,
+budget continuation and approval boundaries reconstruct from the immutable draft;
+they never depend on a stale external conversation or execute a proposed patch twice.
+
+Admission reserves the entire retained conversation, including an observed prior
+input/output floor for provider-added context, without assuming a cache hit. Codex
+resume receipts are cumulative: subtract the previous successfully observed thread
+totals before charging the invocation. Responses receipts remain per-call. Unknown
+or regressing totals retain uncertain reservations. Receipt replay is distinct from
+provider prefix caching. Structured diagnostics record snapshot/message hashes,
+context sizes, refresh reasons and reported cache usage, with no raw source text.
+
+Prefix reuse follows the [official prompt-caching contract](https://developers.openai.com/api/docs/guides/prompt-caching).
+Preserving the message prefix enables reuse; it does not guarantee a particular hit
+rate across models, expiration, cold starts or changed design. Evaluate actual cost
+and quality as well as the cached-token percentage.
+
 ### Human review in Lite and Pro
 
 `creation_mode` is persisted at launch: Lite is automatic; Pro requires decisions.

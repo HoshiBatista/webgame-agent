@@ -156,6 +156,17 @@ reservation (Codex exposes no portable hard output cap); record the overrun and
 stop subsequent calls. Unreported usage retains its reservation even after
 cancellation or restart. Repeated receipts never charge twice.
 
+Authoring and source review now retain separate conversations within each attempt.
+The next turn sends confirmed file changes and feedback instead of rebuilding the
+entire game context. Codex resumes an explicit local CLI session; Responses retains
+message history with `store:false`. Oversized history is refreshed from the complete
+current draft, plan and last author summary, without stopping generation. Restarted
+workers also recover from that draft. No plan/source truncation or new turn limit is
+used to increase cache hits. CLI transcripts follow the local Codex retention policy.
+Worker logs include context sizes, refresh reasons and actual cached-input ratios;
+resume accounting subtracts prior cumulative Codex receipts. See
+[context reuse and its measured scope](docs/evidence/context-reuse-verification.json).
+
 After a budget stop, the job monitor offers **Increase limit and continue**.
 Enter the new **total** USD limit (or token total for legacy runs). The same job
 continues from its saved draft with its original model, tariff, paid receipts,
