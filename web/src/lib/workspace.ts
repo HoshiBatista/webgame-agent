@@ -34,7 +34,11 @@ export function reconcileJob(current: Job | null, incoming: Job | null | undefin
   if (!current) return incoming;
   if (incoming.project_id !== current.project_id) return current;
   if (incoming.id === current.id) {
-    if (terminal(current) && !terminal(incoming)) return current;
+    const resumed = current.status === 'failed' &&
+      (incoming.resume_count ?? 0) > (current.resume_count ?? 0) &&
+      (incoming.stage_fence ?? 0) > (current.stage_fence ?? 0);
+    if (terminal(current) && !terminal(incoming) && !resumed) return current;
+    if ((incoming.resume_count ?? 0) < (current.resume_count ?? 0)) return current;
     return compareTime(incoming.updated_at, current.updated_at) >= 0 ? incoming : current;
   }
   return compareTime(incoming.created_at, current.created_at) > 0 ? incoming : current;

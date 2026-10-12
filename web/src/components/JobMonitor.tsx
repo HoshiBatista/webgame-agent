@@ -21,8 +21,9 @@ export default function JobMonitor({ job, runners, onUpdate, onTerminal }: { job
   useEffect(() => { after.current = 0; notified.current = ''; setEvents([]); follow.current = true; }, [job.id]);
   const acceptStatus = useCallback((fresh: Job) => {
     setLastUpdate(Date.now()); onUpdate(fresh);
-    if (!activeJob(fresh.status) && notified.current !== fresh.id) {
-      notified.current = fresh.id; onTerminal(fresh);
+    const completionKey = `${fresh.id}:${fresh.resume_count ?? 0}`;
+    if (!activeJob(fresh.status) && notified.current !== completionKey) {
+      notified.current = completionKey; onTerminal(fresh);
     }
   }, [onUpdate, onTerminal]);
   useEffect(() => {

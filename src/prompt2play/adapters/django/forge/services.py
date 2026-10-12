@@ -158,6 +158,8 @@ def remaining_seconds(job):
         max(0.0, (job.execution_expires_at - timezone.now()).total_seconds())
         if job.execution_expires_at
         else float(job.budget_seconds)
+        if job.budget_seconds is not None
+        else None
     )
 
 
@@ -202,7 +204,10 @@ def claim_job(runner, capabilities, name=None):
                 stage_fence=F("stage_fence") + 1,
                 execution_expires_at=Coalesce(
                     F("execution_expires_at"),
-                    Value(now + timedelta(seconds=seconds)),
+                    Value(
+                        now + timedelta(seconds=seconds) if seconds is not None else None,
+                        output_field=Job._meta.get_field("execution_expires_at"),
+                    ),
                 ),
                 updated_at=now,
             )

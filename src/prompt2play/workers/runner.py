@@ -24,6 +24,7 @@ from prompt2play.generation import (
     GenerationRequest,
     ProviderGateway,
 )
+from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT
 from prompt2play.generation.workspace import GenerationStopped
 from prompt2play.validation import IsolatedValidator
 from prompt2play.workers.diagnostics import emit, exception_details, safe_message
@@ -100,9 +101,12 @@ class StageLease:
             and time.monotonic() - self.last_ack < self.seconds - 5
         )
 
-    def remaining(self, limit: float) -> float:
+    def remaining(self, limit: float | None) -> float:
         """Every stage inherits the original run budget, including reclaimed work."""
-        return min(limit, max(0, self.run_expires - time.monotonic()))
+        return min(
+            limit if limit is not None else float("inf"),
+            max(0, self.run_expires - time.monotonic()),
+        )
 
     def write(self, action: str, **payload: Any) -> dict[str, Any]:
         if not self.alive():
@@ -145,7 +149,7 @@ class StageLease:
 
 
 class RemoteJournal:
-    """Uncertain responses stay charged and never trigger automatic replay."""
+    """Unknown spend stays held; only a recorded local timeout allows one retry."""
 
     def __init__(self, lease: StageLease, control: GenerationControl):
         self.lease, self.control = lease, control
@@ -193,6 +197,8 @@ class RemoteJournal:
                 if not isinstance(response, dict) or not {"data", "usage"} <= response.keys():
                     raise GenerationStopped("Completed invocation response is unavailable")
                 return response
+            if result["state"] == "ambiguous" and result.get("response") == CODEX_TIMEOUT_RECEIPT:
+                return dict(CODEX_TIMEOUT_RECEIPT)
             if (
                 result["state"] != "reserved"
                 or result["stage_fence"] != self.lease.fence
@@ -216,7 +222,13 @@ class RemoteJournal:
             payload: dict[str, Any] = {
                 "invocation_id": self.invocations[key],
                 "state": "completed" if status == "completed" else "ambiguous",
-                "response": {"data": data, "usage": usage} if status == "completed" else {},
+                "response": (
+                    {"data": data, "usage": usage}
+                    if status == "completed"
+                    else dict(CODEX_TIMEOUT_RECEIPT)
+                    if status == "timed_out"
+                    else {}
+                ),
             }
             if usage is not None:
                 payload["usage"] = self.control.snapshot()["usage"]
@@ -349,8 +361,15 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--model", default="")
     result.add_argument("--codex", default="codex")
     result.add_argument("--mode", choices=("single_author", "four_author"), default="single_author")
-    result.add_argument("--deadline", type=float, default=600)
-    result.add_argument("--call-timeout", type=float, default=300)
+    result.add_argument(
+        "--deadline", type=float, default=None, help="Optional operator wall limit; unset in Studio"
+    )
+    result.add_argument(
+        "--call-timeout",
+        type=float,
+        default=None,
+        help="Optional provider wall limit; disabled by default",
+    )
     result.add_argument("--image", default="prompt2play-validator:local")
     result.add_argument("--validation-timeout", type=float, default=90)
     result.add_argument(
@@ -363,7 +382,9 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
-    if args.deadline <= 0 or args.call_timeout <= 0 or args.poll <= 0:
+    if any(
+        value is not None and value <= 0 for value in (args.deadline, args.call_timeout, args.poll)
+    ):
         raise ValueError("Worker time limits must be positive")
     coordinator = Coordinator(args.server, os.environ.get(args.token_env, ""))
     stopping = threading.Event()

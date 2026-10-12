@@ -225,7 +225,7 @@ operations which the application validates and applies; do not enable unrestrict
 CLI tools to simulate the target interface. Adapters advertise capabilities and
 reject unsupported modes explicitly.
 
-Check cancellation, fence, deadline, turns, the selected run budget policy,
+Check cancellation, fence, turns, the selected run budget policy,
 file count, bytes, and quick-check budgets before operations. Bound retries and
 stop on repeated identical calls, no-op writes, or unchanged failures. Provider
 output limits are only enforced where supported; a Codex reservation estimate is
@@ -248,7 +248,7 @@ against these plans in seven areas. Each result cites an exact source excerpt;
 the harness validates coverage and citations and binds the result to source and
 plan hashes. `needs_revision` returns findings to the author; acceptance requires
 a fresh critique of changed source. Three critiques at most share the attempt's
-existing accounting, cancellation, lease and deadline. Invalid evidence or
+existing accounting, cancellation and lease. Invalid evidence or
 remaining findings stop submission. This is a draft tool round trip, not a
 second application repair or promotion loop. Provenance explicitly records
 `rendered_visual_review: not_performed`; no source review becomes browser or
@@ -262,9 +262,9 @@ be replaced rather than repeatedly patching incompatible modules.
 
 Default to at most two additional semantic candidate attempts per run, shared
 across repair, replan, and regeneration. Replanning also consumes its own model
-budget; it cannot reset the counter or run-wide deadline. Infrastructure retries
+budget; it cannot reset the counter or monetary accounting. Infrastructure retries
 do not consume semantic attempts. Stop when the same finding survives two targeted
-patches, admission headroom is exhausted, or the deadline expires. Record the
+patches or admission headroom is exhausted. Record the
 selected strategy and reason.
 
 Each submitted attempt becomes a child candidate, including failed candidates.
@@ -280,7 +280,7 @@ Evolve them incrementally toward:
 | --- | --- |
 | Project | Team/owner, title, current playable revision |
 | GenerationRun | Request, state, cancellation, budgets, terminal reason |
-| StageRun | Expected state, operation identity, deadline, execution fence |
+| StageRun | Expected state, operation identity, renewable lease, execution fence |
 | GenerationAttempt | Parent, mode, submission, usage, outcome |
 | Revision | Immutable spec/plan/source references and lineage |
 | ArtifactCommit | Pending storage promotion and recovery intent |
@@ -299,6 +299,21 @@ model-result acceptance, submission, commit, and stage completion checks the
 current fence; a lease alone does not authorize late writes. Losing contact with
 the coordinator stops new calls and commits. In-flight provider work may still
 incur cost, which is recorded without making its stale output current.
+
+Studio generation does not enforce a wall-clock deadline, at either run or model
+call level. The user may cancel a long request. Heartbeats still establish worker
+liveness; isolated validation keeps its resource limits. Optional explicit limits
+remain for bounded experiments and historical jobs. Their saved evidence is immutable.
+
+A durable `codex_wall_timeout` receipt is written only after the local Codex
+process cleanup; it does not establish zero remote cost. The gateway allows one
+retry using the original request hash plus `:retry:1`, with a new reservation.
+Completed plan/author/review receipts are reused across restarts. Generic ambiguous
+requests, cancellation, lost fences and depleted budgets cannot trigger this retry.
+A guarded operator recovery of an eligible legacy failed timeout clears its wall
+limit and increments `resume_count`; it preserves all money/token receipts,
+uncertain reserves, attempts, inputs and model settings. Recovery is logged, and
+the UI accepts a failed-to-live transition only with a newer recovery count/fence.
 
 A provider invocation is reserved before dispatch. Reuse completed matching
 responses where policy permits; never blindly replay an ambiguous paid request.

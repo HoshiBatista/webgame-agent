@@ -89,7 +89,9 @@ class JobCreateSerializer(serializers.Serializer):
         max_value=Decimal("1000.00"),
         required=False,
     )
-    budget_seconds = serializers.IntegerField(min_value=1, max_value=600, default=600)
+    budget_seconds = serializers.IntegerField(
+        min_value=1, max_value=3600, default=None, allow_null=True
+    )
 
     def validate(self, attrs):
         if "budget_usd" in self.initial_data and "budget_tokens" in self.initial_data:

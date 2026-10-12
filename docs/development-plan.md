@@ -198,8 +198,9 @@ errors or incompatible plans.
 Tasks:
 
 1. Add a capability-scoped draft workspace and typed read/create/patch/delete/
-   quick-check/submit operations. Enforce path, file, byte, turn, and deadline
-   limits, runtime immutability, cancellation, and current fences on every step.
+   quick-check/submit operations. Enforce path, file, byte and turn limits,
+   runtime immutability, cancellation and current fences on every step. Studio
+   generation has no wall-clock timeout; bounded experiments may opt into one.
 2. Adapt providers explicitly to the allowed operations. A structured-output
    adapter can return operations for the application to validate and apply;
    enabling unrestricted shell/file access is not an acceptable shortcut.

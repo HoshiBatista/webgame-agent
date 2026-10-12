@@ -292,3 +292,21 @@ def test_evidence_upload_binds_exact_bytes_and_rejects_escape(tmp_path: Path) ->
     report["evidence_files"][0]["path"] = "../escape.png"
     with pytest.raises(ValueError, match="escapes"):
         evidence_payload(report, tmp_path)
+
+
+def test_default_worker_keeps_lease_watch_without_generation_timeout() -> None:
+    import math
+
+    from prompt2play.workers.runner import parser
+
+    args = parser().parse_args(["--role", "generator"])
+    assert args.deadline is None and args.call_timeout is None
+    values = claim()
+    values["job"]["remaining_seconds"] = None
+    with httpx.Client(base_url="http://localhost") as client:
+        lease = StageLease(
+            Coordinator("http://localhost", "fixture", client=client), values, threading.Event()
+        )
+        assert math.isinf(lease.remaining(args.deadline)) and lease.alive()
+        lease.cancel.set()
+        assert not lease.alive()

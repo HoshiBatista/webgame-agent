@@ -18,6 +18,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from prompt2play.adapters.artifacts.store import ArtifactStore, canonical
 from prompt2play.application.policy import decide, repair_route
+from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT, TIMEOUT_RETRY_SUFFIX
 
 from . import services
 from .artifacts import artifact_manifest, require_report_binding
@@ -274,6 +275,14 @@ def reserve_invocation(job_id, runner, values):
                 raise Conflict(
                     "Token budget exhausted or held by uncertain calls.", code="budget_exhausted"
                 )
+        if values["invocation_key"].endswith(TIMEOUT_RETRY_SUFFIX):
+            services.event(
+                job,
+                "Автопродолжение после тайм-аута: повторяем только оборванный запрос. "
+                "Неизвестный расход предыдущего вызова остаётся в резерве.",
+                level="warning",
+                data={"operation": values["operation"], "retry": 1},
+            )
         return ModelInvocation.objects.create(
             job=job,
             generator=runner,
@@ -323,7 +332,9 @@ def settle_invocation(job_id, runner, values):
             )
         state = values["state"]
         response_key = ""
-        if state == "completed":
+        if state != "completed" and values.get("response") not in ({}, CODEX_TIMEOUT_RECEIPT):
+            raise ValidationError("Only a local timeout marker may accompany an interrupted call.")
+        if state == "completed" or values.get("response") == CODEX_TIMEOUT_RECEIPT:
             intent, response_key = store().prepare(values["response"])
             store().commit(intent, response_key)
         if "usage" in values:
@@ -338,6 +349,14 @@ def settle_invocation(job_id, runner, values):
         ModelInvocation.objects.filter(pk=invocation.pk).update(
             state=state, response_key=response_key, settled_at=timezone.now()
         )
+        if values.get("response") == CODEX_TIMEOUT_RECEIPT and not invocation.response_key:
+            services.event(
+                job,
+                "Запрос Codex превысил время ожидания; локальный процесс остановлен. "
+                "Продолжение возможно в пределах оставшихся времени и бюджета.",
+                level="warning",
+                data={"operation": invocation.operation, "interruption": "codex_wall_timeout"},
+            )
         invocation.refresh_from_db()
         return invocation
 

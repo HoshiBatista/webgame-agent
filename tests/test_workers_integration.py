@@ -344,3 +344,135 @@ def test_usd_restart_replays_saved_responses_without_repricing_or_paid_calls(
     assert after.cost_nano == before.cost_nano and after.cost_upper_nano == before.cost_upper_nano
     assert after.usage == before.usage and Candidate.objects.get().committed
     transport.close()
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_timeout_continuation_reuses_plan_and_preserves_dollar_ledger(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]],
+    monkeypatch: pytest.MonkeyPatch,
+    legacy: bool,
+) -> None:
+    from decimal import Decimal
+
+    from prompt2play.adapters.django.forge import workflow
+    from prompt2play.adapters.django.forge.timeout_recovery import resume_timeout
+    from prompt2play.legacy.worker.core import CodexCallTimeout, ProviderError
+    from prompt2play.pricing import snapshot
+
+    _, transport, claim = prepared
+    Job.objects.filter(pk=claim["job"]["id"]).update(
+        budget_usd=Decimal("10"),
+        pricing=snapshot("gpt-6-astra", "codex"),
+        model="gpt-6-astra",
+        budget_tokens=1,
+    )
+    original_job = Job.objects.get(pk=claim["job"]["id"])
+    claim["job"].update(
+        budget_usd="10", pricing=original_job.pricing, model="gpt-6-astra", budget_tokens=1
+    )
+
+    class InterruptedAuthor(ScriptedProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Any:
+            if self.calls == 1:
+                self.calls += 1
+                error = ProviderError if legacy else CodexCallTimeout
+                raise cast(Any, error)("Codex call exceeded wall timeout")
+            return super().generate(*args, **kwargs)
+
+    provider = InterruptedAuthor(replies())
+
+    def gateway(*args: Any, **kwargs: Any) -> ProviderGateway:
+        configured = ProviderGateway(*args, **kwargs)
+        configured.provider = provider
+        return configured
+
+    monkeypatch.setattr(worker, "ProviderGateway", gateway)
+    lease = worker.StageLease(transport, claim, threading.Event())
+    if legacy:
+        with pytest.raises(ProviderError):
+            worker.generate_stage(lease, arguments())
+        lease.write("fail", error="ProviderError: Codex call exceeded wall timeout")
+        before = Job.objects.get(pk=original_job.pk)
+        old_plan = ModelInvocation.objects.get(operation="plan")
+        old_author = ModelInvocation.objects.get(operation="author")
+        resumed = cast(Any, resume_timeout)(before.pk)
+        assert resumed.usage == before.usage and resumed.pricing == before.pricing
+        assert (
+            resumed.budget_usd == before.budget_usd
+            and resumed.cost_upper_nano == before.cost_upper_nano
+        )
+        assert resumed.attempts == before.attempts and resumed.resume_count == 1
+        assert resumed.stage_fence > before.stage_fence
+        assert resumed.budget_seconds is None and resumed.execution_expires_at is None
+        with pytest.raises(Exception, match="unrecovered"):
+            cast(Any, resume_timeout)(before.pk)
+        claim = transport.post("api/worker/claim/", {"capabilities": {"providers": ["codex"]}})
+        lease = worker.StageLease(transport, claim, threading.Event())
+    worker.generate_stage(lease, arguments())
+    job = Job.objects.get(pk=original_job.pk)
+    assert provider.calls == 4 and job.stage == "validate" and job.status == "queued"
+    assert job.usage["total_tokens"] == 21 and job.usage["calls"] == 3
+    assert job.budget_usd == Decimal("10") and job.cost_upper_nano > 0
+    failed = ModelInvocation.objects.get(state="ambiguous")
+    assert failed.actual_usage is None and failed.reserved_cost_nano > 0
+    assert cast(Any, workflow.invocation_data)(failed)["response"] == {
+        "interruption": "codex_wall_timeout"
+    }
+    assert cast(Any, workflow.cost_summary)(job)["reserved_usd"] != "0.000000000"
+    assert ModelInvocation.objects.filter(operation="plan").count() == 1
+    assert (
+        ModelInvocation.objects.filter(
+            invocation_key__endswith=":retry:1", state="completed"
+        ).count()
+        == 1
+    )
+    if legacy:
+        assert ModelInvocation.objects.get(pk=old_plan.pk).response_key == old_plan.response_key
+        assert failed.pk == old_author.pk
+        assert job.events.filter(data__reason="codex_wall_timeout").exists()
+    transport.close()
+
+
+@pytest.mark.parametrize(
+    "blocker", ["cancelled", "completed", "network", "retried", "active", "missing_receipt"]
+)
+def test_operator_recovery_rejects_unsafe_or_exhausted_replays(
+    prepared: tuple[Any, worker.Coordinator, dict[str, Any]], blocker: str
+) -> None:
+    from prompt2play.adapters.django.forge.errors import Conflict
+    from prompt2play.adapters.django.forge.timeout_recovery import resume_timeout
+
+    runner, transport, claim = prepared
+    job = Job.objects.get(pk=claim["job"]["id"])
+    Job.objects.filter(pk=job.pk).update(
+        status=blocker if blocker in ("cancelled", "completed") else "failed",
+        error=(
+            "ProviderError: Network lost"
+            if blocker == "network"
+            else "CodexCallTimeout: Codex call exceeded wall timeout"
+            if blocker == "missing_receipt"
+            else "ProviderError: Codex call exceeded wall timeout"
+        ),
+    )
+    ModelInvocation.objects.create(
+        job=job,
+        generator=runner,
+        invocation_key="author:fixture" + (":retry:1" if blocker == "retried" else ""),
+        operation="author",
+        prompt_sha256="a" * 64,
+        stage_fence=job.stage_fence,
+        state="ambiguous",
+        reserved_tokens=20000,
+    )
+    if blocker == "active":
+        services.create_job(
+            job.project,
+            job.created_by,
+            {"kind": "generate", "prompt": "New request", "provider": "codex"},
+        )
+    with pytest.raises(Conflict):
+        cast(Any, resume_timeout)(job.pk)
+    job.refresh_from_db()
+    assert job.resume_count == 0 and job.status != "queued"
+    assert ModelInvocation.objects.get(job=job).reserved_tokens == 20000
+    transport.close()

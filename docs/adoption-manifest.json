@@ -111,7 +111,7 @@
       "source": "backend/forge/models.py",
       "destination": "src/prompt2play/adapters/django/forge/models.py",
       "source_sha256": "c5d5a0d9d6c2dc6fc5aaa27f3e442d8c2121b2768f382361a48738f0cdffec8d",
-      "destination_sha256": "ca68a6eb94bb6f19d23f40c6359f990f53fe1df3f24577afdf5727f64e0c4be1",
+      "destination_sha256": "a3c084c1bf48fd7c78a430aba5f24a46036ee2759562d5cf231846483db442e0",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -135,7 +135,7 @@
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "87c4778c0f579cf083ed78cfb9a6cac9749a8aa493ad258ec364a6ceea593931",
+      "destination_sha256": "a25010ad0147b1dfdda340afa4113bd1414d1d270a245b0ca79877b1636de867",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -143,7 +143,7 @@
       "source": "backend/forge/serializers.py",
       "destination": "src/prompt2play/adapters/django/forge/serializers.py",
       "source_sha256": "8d8a07894f9b5e4acc3caf49a18f57000e5241b53ac82816401aab15535f3824",
-      "destination_sha256": "61403de6635bc4c8efd2fbc8c90cf6ca4949d341d4e6cbe9d96625174003414a",
+      "destination_sha256": "7518ab3579290ddb0e81640bc3bd095a2a780d0087e769be06df5bd65dfcc5b1",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -151,7 +151,7 @@
       "source": "backend/forge/services.py",
       "destination": "src/prompt2play/adapters/django/forge/services.py",
       "source_sha256": "6a81de265c7c23a6060405d1797703e2cd8b2fd1a2c5226fcef73708f5610568",
-      "destination_sha256": "713150b7fd4322864bd1e5d86e7fd779bdc2969291ec2e381cfdd430343ee3e1",
+      "destination_sha256": "6aeddce56da2cbbba69f3e3050041134c7a69ae84e68eee83bfa9e1eac4a6a3c",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added."
     },
@@ -287,7 +287,7 @@
       "source": "worker/core.py",
       "destination": "src/prompt2play/legacy/worker/core.py",
       "source_sha256": "56434a6955431c91b90c68c6e5b968cdecdf0099ebc51d5d9f900f4e12602427",
-      "destination_sha256": "0f787b82e153043e7b3222a118a96fd6b832f1b0900083db0e0e825a7f298527",
+      "destination_sha256": "ce6c21ce086cb4064a6e5141dd8321d9c9309d09848f3d98a8b8b8c3add0cc8e",
       "modified": true,
       "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness."
     },
@@ -303,7 +303,7 @@
       "source": "worker/providers.py",
       "destination": "src/prompt2play/legacy/worker/providers.py",
       "source_sha256": "c6dc28d5cc1e5193a8fc5660d93d64c51090aea5ed282b562065f322fd970db4",
-      "destination_sha256": "86f97ae47b54cd80b9f7bcccf0f258252e6227b1e0ce0c04f5663a852b7203f9",
+      "destination_sha256": "05d40c190cd09b5afd48538dcedbda0c80cb84ac6bd660a698a66817c1a83dfc",
       "modified": true,
       "adaptation": "Namespaced baseline and provider regressions; resource paths and structured-output schema transport adapted. No second global repair loop in new harness. Codex wire-schema compatibility preserves full local validation; bounded safe schema diagnostics and literal credential-isolated provider setup."
     },
@@ -1255,7 +1255,7 @@
       "source": "frontend/src/components/JobMonitor.tsx",
       "destination": "web/src/components/JobMonitor.tsx",
       "source_sha256": "995299fe3e42f993b71ec38cae70c5683adc28bfadbaa37548e06d4b5a2997f1",
-      "destination_sha256": "8a0698529409a40a90c1b0c64ed465a3f72ae81399ea1d193f477270a5aa16b1",
+      "destination_sha256": "39d1bd92b24466ff43cdf58f1b6cf70a4f18de05b006913bc5c77c8de45d833b",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1359,7 +1359,7 @@
       "source": "frontend/src/lib/workspace.ts",
       "destination": "web/src/lib/workspace.ts",
       "source_sha256": "14594539d402ab9ac59c14d3b8ea5abf90f289ff55ea97f78cdd9555d5a2bf30",
-      "destination_sha256": "4181f42feb63c03b3797a761d16e688d75f58b23f7199f937b7c452c5acd2ff4",
+      "destination_sha256": "2c26ca11814a712b68b633e379fb990b0f4656f17fa3cdd31f7fe76f398328c4",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1407,7 +1407,7 @@
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "a24437caf92ef61836b07ab36c1d6601b54ecc3261ea179a516230b273c2e3b0",
+      "destination_sha256": "85410b4f29fd41285d040bf83496b4369753ee5e21e5f1c8085b77ff427ae541",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1463,7 +1463,7 @@
       "source": "frontend/tests/workspace.test.ts",
       "destination": "web/tests/workspace.test.ts",
       "source_sha256": "f4790ddc4dcbcfc1b613a647a6df770c7bf7308a93fcf9059f8f51811a5ca01a",
-      "destination_sha256": "d2110d54d2398e17157ec08eec68581127bb7df4dcc2140a0987bc798d9ca2de",
+      "destination_sha256": "ee2467d791fe04cdc3d8ade0534db283978cb9e456a9b693127a68099be303b9",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },

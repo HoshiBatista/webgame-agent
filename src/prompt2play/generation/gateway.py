@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import threading
 import time
 from dataclasses import dataclass
 from typing import Any, Protocol, cast
 
 from prompt2play.contracts.models import stable
-from prompt2play.legacy.worker.core import ProviderError
+from prompt2play.legacy.worker.core import CodexCallTimeout, ProviderError
 from prompt2play.legacy.worker.providers import CodexProvider, OpenAIProvider
 from prompt2play.pricing import reservation_usage
 
+from .retries import CODEX_TIMEOUT_RECEIPT, TIMEOUT_RETRY_SUFFIX
 from .workspace import GenerationControl, GenerationStopped, invocation_reservation
 
 
@@ -63,7 +65,7 @@ class ProviderGateway:
         provider: str,
         model: str = "",
         *,
-        timeout: float = 300,
+        timeout: float | None = None,
         executable: str = "codex",
         api_key: str | None = None,
         base_url: str = "https://api.openai.com/v1",
@@ -102,6 +104,28 @@ class ProviderGateway:
         *,
         max_output: int = 16000,
     ) -> GatewayReply:
+        for retry in (False, True):
+            try:
+                return self._generate_once(
+                    prompt, schema, role, control, max_output=max_output, retry=retry
+                )
+            except CodexCallTimeout:
+                if retry or self.name != "codex":
+                    raise
+                # No deadline, cancellation, fence or money limit is reset.
+                control.guard()
+        raise AssertionError("Unreachable retry state")
+
+    def _generate_once(
+        self,
+        prompt: str,
+        schema: dict[str, Any],
+        role: str,
+        control: GenerationControl,
+        *,
+        max_output: int,
+        retry: bool,
+    ) -> GatewayReply:
         control.guard()
         if control.cost_limit_nano is not None and (
             control.pricing.get("model") != self.model
@@ -120,7 +144,7 @@ class ProviderGateway:
                 }
             ).encode()
         ).hexdigest()
-        key = role + ":" + request_sha
+        key = role + ":" + request_sha + (TIMEOUT_RETRY_SUFFIX if retry else "")
         reservation = control.estimate(prompt, max_output, stable(schema))
         journal_tokens = invocation_reservation(prompt, max_output)
         reused = None
@@ -135,6 +159,8 @@ class ProviderGateway:
                 )
             else:
                 reused = self.journal.reserve(key, journal_tokens, role, request_sha)
+        if reused == CODEX_TIMEOUT_RECEIPT:
+            raise cast(Any, CodexCallTimeout)("Recorded Codex call exceeded wall timeout")
         if reused:
             control.guard()
             data = cast(dict[str, Any], reused["data"])
@@ -190,9 +216,11 @@ class ProviderGateway:
             expired.set()
             control.cancel.set()
 
-        timer = threading.Timer(max(0.01, control.deadline - started), deadline)
-        timer.daemon = True
-        timer.start()
+        timer = None
+        if math.isfinite(control.deadline):
+            timer = threading.Timer(max(0.01, control.deadline - started), deadline)
+            timer.daemon = True
+            timer.start()
         usage: dict[str, int] | None = None
         try:
             reply = self.provider.generate(
@@ -224,7 +252,13 @@ class ProviderGateway:
                         key,
                         data=None,
                         usage=usage,
-                        status="interrupted_unknown" if usage is None else "failed",
+                        status=(
+                            "timed_out"
+                            if isinstance(exc, CodexCallTimeout)
+                            else "interrupted_unknown"
+                            if usage is None
+                            else "failed"
+                        ),
                     )
             with self.lock:
                 self.records.append(
@@ -241,7 +275,8 @@ class ProviderGateway:
                 raise GenerationStopped("Run deadline exceeded during model call") from exc
             raise
         finally:
-            timer.cancel()
+            if timer is not None:
+                timer.cancel()
 
 
 __all__ = ["GatewayReply", "InvocationJournal", "ModelGateway", "ProviderError", "ProviderGateway"]

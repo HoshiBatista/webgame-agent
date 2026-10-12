@@ -16,6 +16,7 @@ import jsonschema
 from .core import (
     Reply,
     ProviderError,
+    CodexCallTimeout,
     Cancelled,
     check_cancel,
     usage_record,
@@ -103,7 +104,9 @@ def response_text(response):
 class OpenAIProvider:
     name = "openai"
 
-    def __init__(self, model=None, api_key=None, timeout=180, base_url="https://api.openai.com/v1"):
+    def __init__(
+        self, model=None, api_key=None, timeout=None, base_url="https://api.openai.com/v1"
+    ):
         self.model = model or os.environ.get("OPENAI_MODEL", "")
         self.key = api_key or os.environ.get("OPENAI_API_KEY", "")
         self.timeout = timeout
@@ -190,7 +193,7 @@ class OpenAIProvider:
         # The outer task owns the wall deadline and cancellation. Reasoning may
         # legitimately pause between events, so a separate 10s read cap is wrong.
         async with httpx.AsyncClient(
-            timeout=httpx.Timeout(self.timeout, connect=min(10, self.timeout)),
+            timeout=httpx.Timeout(self.timeout, connect=10, write=30, pool=30),
             follow_redirects=False,
         ) as client:
             for attempt in range(3):
@@ -303,7 +306,7 @@ async def response_events(response):
 class CodexProvider:
     name = "codex"
 
-    def __init__(self, model=None, timeout=300, executable="codex"):
+    def __init__(self, model=None, timeout=None, executable="codex"):
         self.model = model or os.environ.get("CODEX_MODEL", "")
         self.timeout = timeout
         self.executable = executable
@@ -415,8 +418,8 @@ class CodexProvider:
                 try:
                     while proc.poll() is None:
                         check_cancel(cancel)
-                        if time.monotonic() - start > self.timeout:
-                            raise ProviderError("Codex call exceeded wall timeout")
+                        if self.timeout is not None and time.monotonic() - start > self.timeout:
+                            raise CodexCallTimeout("Codex call exceeded wall timeout")
                         if (
                             events_file.stat().st_size > 8_000_000
                             or stderr_file.stat().st_size > 1_000_000

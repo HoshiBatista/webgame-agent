@@ -57,8 +57,10 @@ class GenerationControl:
     lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
 
     @classmethod
-    def bounded(cls, seconds: float = 600, **kwargs: Any) -> GenerationControl:
-        return cls(deadline=time.monotonic() + seconds, **kwargs)
+    def bounded(cls, seconds: float | None = None, **kwargs: Any) -> GenerationControl:
+        return cls(
+            deadline=time.monotonic() + seconds if seconds is not None else float("inf"), **kwargs
+        )
 
     def guard(self) -> None:
         if self.cancel.is_set():

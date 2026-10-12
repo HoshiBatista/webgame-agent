@@ -31,7 +31,7 @@ export interface Job {
   id: string; project_id: string; kind: 'generate' | 'revise'; prompt: string; provider: Provider; model: string;
   status: JobStatus; stage: string; progress: number; base_version_id: string | null; result_version_id: string | null;
   runner_id: string | null; created_at: string; updated_at: string; error: string; max_repairs: number; budget_tokens: number; usage: Usage;
-  activity?: JobActivity; stage_fence?: number;
+  activity?: JobActivity; stage_fence?: number; resume_count?: number;
   budget_usd?: string | null; cost?: Cost | null; pricing?: { model: string; as_of: string; source: string };
 }
 export interface Project { id: string; title: string; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }

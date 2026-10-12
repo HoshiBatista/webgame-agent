@@ -138,3 +138,16 @@ test('live activity distinguishes author work from the orchestration plan and te
   assert.equal(elapsed('2026-10-12T00:00:00Z', Date.parse('2026-10-12T00:03:27Z')), '3 мин 27 с');
   assert.equal(elapsed('bad'), '—');
 });
+
+test('only an explicit newer timeout recovery can revive a failed job', () => {
+  const failed = job({status:'failed', stage_fence:2, resume_count:0});
+  const resumed = job({status:'running', stage_fence:4, resume_count:1, updated_at:'2026-10-10T11:00:00Z'});
+  assert.equal(reconcileJob(failed, resumed), resumed);
+  assert.equal(reconcileJob(resumed, {...failed, updated_at:'2026-10-10T12:00:00Z'}), resumed, 'a delayed old error cannot hide recovery');
+  assert.equal(reconcileJob(failed, {...resumed, resume_count:0}), failed);
+  assert.equal(reconcileJob(failed, {...resumed, stage_fence:2}), failed);
+  const cancelled = {...failed, status:'cancelled' as const};
+  assert.equal(reconcileJob(cancelled, resumed), cancelled);
+  const completed = {...failed, status:'completed' as const};
+  assert.equal(reconcileJob(completed, resumed), completed);
+});

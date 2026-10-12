@@ -23,6 +23,7 @@ from prompt2play.generation import (
     GenerationRequest,
     ProviderGateway,
 )
+from prompt2play.generation.retries import CODEX_TIMEOUT_RECEIPT
 from prompt2play.generation.workspace import GenerationStopped
 from prompt2play.legacy.validator.evidence import report_matches
 from prompt2play.paths import PACKAGE_ROOT, RESOURCE_ROOT
@@ -92,7 +93,7 @@ class FileJournal:
                 attempted = entry["state"] != "not_started" and (
                     entry.get("started") is True
                     or reported > 0
-                    or entry["state"] == "interrupted_unknown"
+                    or entry["state"] in ("interrupted_unknown", "timed_out")
                 )
                 metrics["attempted_provider_operations"] += int(attempted)
                 metrics["known_reported_requests"] += reported
@@ -129,6 +130,8 @@ class FileJournal:
                     existing["reused_response_reads"] = existing.get("reused_response_reads", 0) + 1
                     write_json(self.path, self.records)
                     return {"data": existing["data"], "usage": existing["usage"]}
+                if existing["state"] == "timed_out":
+                    return dict(CODEX_TIMEOUT_RECEIPT)
                 raise GenerationStopped(
                     "Uncertain call is preserved; explicit reconciliation required"
                 )

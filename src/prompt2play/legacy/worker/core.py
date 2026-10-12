@@ -33,6 +33,10 @@ class ProviderError(Exception):
         self.usage = usage
 
 
+class CodexCallTimeout(ProviderError):
+    """Local Codex wall timeout; raised only after its process group is stopped."""
+
+
 def empty_usage():
     return dict.fromkeys(USAGE_KEYS, 0)
 

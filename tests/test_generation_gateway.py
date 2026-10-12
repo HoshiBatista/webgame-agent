@@ -218,3 +218,115 @@ def test_frozen_rate_model_mismatch_cannot_dispatch(journal: Journal | None) -> 
     with pytest.raises(GenerationStopped, match="tariff"):
         gateway.generate("fixture", {}, "plan", control)
     assert provider.calls == 0
+
+
+@pytest.mark.parametrize("known_usage", [False, True])
+def test_local_timeout_retries_once_and_keeps_original_cost(known_usage: bool) -> None:
+    from prompt2play.legacy.worker.core import CodexCallTimeout
+
+    journal = Journal()
+    gateway = ProviderGateway("codex", "fixture", journal=journal)
+    provider = ReplyProvider(
+        error=cast(Any, CodexCallTimeout)(
+            "Codex call exceeded wall timeout",
+            usage={
+                "input_tokens": 3,
+                "cached_input_tokens": 0,
+                "output_tokens": 4,
+                "total_tokens": 7,
+                "calls": 1,
+            }
+            if known_usage
+            else None,
+        )
+    )
+    gateway.provider = provider
+    control = GenerationControl.bounded()
+    with pytest.raises(CodexCallTimeout):
+        gateway.generate("prompt", {}, "author", control)
+    assert provider.calls == 2
+    assert journal.requests[1] == journal.requests[0] + ":retry:1"
+    assert [entry["status"] for entry in journal.settlements] == ["timed_out", "timed_out"]
+    assert control.usage["total_tokens"] == (14 if known_usage else 0)
+    assert bool(control.uncertain_tokens) != known_usage
+
+
+@pytest.mark.parametrize("stop", ["cancel", "fence", "deadline", "budget"])
+def test_timeout_cannot_bypass_stopping_constraints(stop: str) -> None:
+    import time
+
+    from prompt2play.legacy.worker.core import CodexCallTimeout
+
+    current = [True]
+    control = GenerationControl.bounded(fence_check=lambda: current[0])
+
+    class TimeoutProvider(ReplyProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Reply:
+            self.calls += 1
+            if stop == "cancel":
+                control.cancel.set()
+            elif stop == "fence":
+                current[0] = False
+            elif stop == "deadline":
+                control.deadline = time.monotonic() - 1
+            else:
+                control.token_limit = sum(control.reservations.values())
+            raise cast(Any, CodexCallTimeout)("Codex call exceeded wall timeout")
+
+    provider = TimeoutProvider()
+    gateway = ProviderGateway("codex", "fixture", journal=Journal())
+    gateway.provider = provider
+    with pytest.raises(GenerationStopped):
+        gateway.generate("prompt", {}, "author", control)
+    assert provider.calls == 1
+    assert control.uncertain_tokens > 0
+
+
+def test_saved_timeout_and_retry_receipts_survive_evaluator_restart(tmp_path: Any) -> None:
+    from prompt2play.evaluation import FileJournal
+    from prompt2play.legacy.worker.core import CodexCallTimeout
+
+    class TimeoutOnce(ReplyProvider):
+        def generate(self, *args: Any, **kwargs: Any) -> Reply:
+            if self.calls == 0:
+                self.calls += 1
+                raise cast(Any, CodexCallTimeout)("Codex call exceeded wall timeout")
+            return super().generate(*args, **kwargs)
+
+    path = tmp_path / "calls.json"
+    first = ProviderGateway("codex", "fixture", journal=FileJournal(path))
+    first.provider = TimeoutOnce()
+    reply = first.generate("prompt", {}, "author", GenerationControl.bounded())
+    assert first.provider.calls == 2 and reply.invocation_key.endswith(":retry:1")
+    journal = FileJournal(path)
+    usage, uncertain = journal.accounting()
+    assert usage["total_tokens"] == 7 and uncertain > 0
+    second = ProviderGateway("codex", "fixture", journal=journal)
+    second.provider = ReplyProvider()
+    reused = second.generate(
+        "prompt", {}, "author", GenerationControl.bounded(usage=usage, uncertain_tokens=uncertain)
+    )
+    assert reused.reused and second.provider.calls == 0
+    assert journal.accounting() == (usage, uncertain)
+
+
+def test_default_generation_uses_no_timer_but_retains_cancellation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import math
+
+    def forbidden_timer(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("An unlimited generation must not install a wall timer")
+
+    monkeypatch.setattr("prompt2play.generation.gateway.threading.Timer", forbidden_timer)
+    control = GenerationControl.bounded()
+    assert math.isinf(control.deadline)
+    gateway = ProviderGateway("codex", "fixture")
+    assert gateway.provider.timeout is None
+    gateway.provider = ReplyProvider()
+    gateway.generate("prompt", {}, "author", control)
+    control.cancel.set()
+    with pytest.raises(GenerationStopped, match="cancelled"):
+        gateway.generate("next", {}, "author", control)
+    assert gateway.provider.calls == 1
+    assert ProviderGateway("openai", "fixture").provider.timeout is None

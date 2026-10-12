@@ -176,6 +176,22 @@ manual entry available. Add `--model YOUR_AVAILABLE_MODEL` to set an explicit
 runner default, or select a model for each game in the studio. API model names
 remain a separate setting. Catalog discovery never starts an inference turn.
 
+Studio generation has **no wall-clock timeout**: a slow model request continues
+until it returns or the user cancels. New jobs store no execution deadline, and
+the native worker applies no run or model-call timer by default. Money admission,
+manual cancellation, worker heartbeat/fencing and isolated validation limits remain.
+Explicit time limits are retained for bounded CLI experiments and older jobs;
+measured historical evidence is not rewritten.
+
+A recorded local Codex timeout may dispatch one additional request with a distinct
+invocation identity, retaining unknown spend and reusing completed answers.
+Cancellation, exhausted budget, lost leases and ambiguous network failures do not
+allow blind replay. `prompt2play manage resume_timeout JOB_ID` is a separate,
+guarded operator action for an eligible old failed timeout: it removes that run's
+time limit, preserves its money budget/receipts and records the recovery event.
+It refuses cancelled/completed jobs, an active successor or an exhausted retry.
+The ordinary `manage recover` command still only finalizes artifact commits.
+
 The job monitor polls every 1.5 seconds while a run is active. It shows worker
 contact, the current model operation and elapsed time, and saved call history.
 These come from durable invocation receipts and worker leases; elapsed time is
@@ -191,7 +207,7 @@ have explicit ownership even when packaged in one JavaScript file.
 Before submission a separate `visual_review` model call critiques the exact source
 against that plan. Material findings return to the author for changes; unchanged
 rejected source cannot be submitted. At most three critiques fit inside the same
-attempt and its original dollar/time budget. A remaining issue, invalid source
+attempt and its original dollar budget. A remaining issue, invalid source
 citation or exhausted budget stops the attempt instead of silently accepting a
 placeholder. Plans and review rounds are visible on the Checks tab. This is a
 source critique, not a screenshot review or proof of artistic quality. Browser

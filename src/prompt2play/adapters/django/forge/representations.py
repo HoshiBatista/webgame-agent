@@ -33,6 +33,7 @@ def job_data(job):
             "budget_seconds",
             "usage",
             "stage_fence",
+            "resume_count",
             "attempts",
         )
     }

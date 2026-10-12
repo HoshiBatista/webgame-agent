@@ -817,7 +817,7 @@ def test_expired_pending_candidate_recovers_bytes_without_restarting(team: Team)
 
 
 def test_job_api_rejects_extended_or_zero_wall_budget() -> None:
-    for seconds in (0, 601):
+    for seconds in (0, 3601):
         serializer = cast(Any, JobCreateSerializer)(
             data={
                 "kind": "generate",
@@ -893,3 +893,22 @@ def test_public_activity_exposes_current_call_and_contact_without_source(team: T
     result = job_data(job)
     assert result["activity"]["worker_contact_at"] is None
     assert result["activity"]["worker_connected"] is False
+
+
+def test_studio_run_has_no_wall_deadline_even_after_reclaim(team: Team) -> None:
+    serializer = cast(Any, JobCreateSerializer)(
+        data={"kind": "generate", "prompt": "Fixture", "provider": "codex"}
+    )
+    assert serializer.is_valid(), serializer.errors
+    assert serializer.validated_data["budget_seconds"] is None
+    job, _ = job_for(team)
+    assert job.budget_seconds is None and job.execution_expires_at is None
+    future = timezone.now() + timedelta(days=1)
+    with patch.object(timezone, "now", return_value=future):
+        assert services.expire_jobs() == 0
+        assert job_data(job)["remaining_seconds"] is None
+        reclaimed, _ = services.claim_job(team[2], CAPABILITIES)
+        assert reclaimed.pk == job.pk
+        assert reclaimed.execution_expires_at is None
+    services.cancel_job(job.pk)
+    assert Job.objects.get(pk=job.pk).status == "cancelled"
