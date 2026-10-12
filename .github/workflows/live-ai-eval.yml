@@ -1,0 +1,85 @@
+name: Live Luna evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      case_limit:
+        description: Maximum golden cases (cost control)
+        required: true
+        default: "3"
+      minimum_pass_rate:
+        description: Required pass rate from 0 to 1
+        required: true
+        default: "0.80"
+  schedule:
+    - cron: "43 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-luna-evaluation
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    name: GPT-6 Luna / bounded golden evaluation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ai-evals
+    env:
+      UV_PYTHON: "3.13"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      P2P_OPENAI_MODEL: gpt-6-luna
+      CASE_LIMIT: ${{ inputs.case_limit || '3' }}
+      MINIMUM_PASS_RATE: ${{ inputs.minimum_pass_rate || '0.80' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.11.30"
+          enable-cache: true
+
+      - name: Require the protected API secret
+        run: test -n "${OPENAI_API_KEY}"
+
+      - name: Install locked dependencies and Chromium
+        run: |
+          uv sync --locked --all-groups
+          uv run playwright install --with-deps chromium
+
+      - name: Evaluate generated games against golden rubrics
+        run: >-
+          uv run python scripts/run_live_evals.py
+          --limit "${CASE_LIMIT}"
+          --minimum-pass-rate "${MINIMUM_PASS_RATE}"
+          --browser
+
+      - name: Add the aggregate report to the workflow summary
+        if: always()
+        run: |
+          if test -f eval-results/live-eval.json; then
+            echo '```json' >> "${GITHUB_STEP_SUMMARY}"
+            python -c 'import json; p=json.load(open("eval-results/live-eval.json")); p.pop("results", None); print(json.dumps(p, indent=2))' >> "${GITHUB_STEP_SUMMARY}"
+            echo '```' >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      - name: Upload secret-free evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: luna-evaluation-${{ github.run_id }}
+          path: eval-results/live-eval.json
+          if-no-files-found: warn
+          retention-days: 30

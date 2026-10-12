@@ -22,6 +22,9 @@ out/
 coverage/
 htmlcov/
 artifacts/
+coverage.json
+coverage.xml
+eval-results/
 
 # Python
 __pycache__/

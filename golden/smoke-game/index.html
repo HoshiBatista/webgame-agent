@@ -26,11 +26,15 @@
         canvas.height = innerHeight * ratio;
         context.setTransform(ratio, 0, 0, ratio, 0, 0);
       }
+      function emit(event) {
+        parent.postMessage({ source: "prompt2play-game", type: "game_event", event }, "*");
+      }
       function start() {
         state.phase = "playing";
         state.score += 1;
         state.objective += 1;
         button.textContent = "Заново";
+        emit("game_start");
       }
       button.addEventListener("pointerdown", start);
       addEventListener("resize", resize);
@@ -49,6 +53,7 @@
         reset: async () => {
           Object.assign(state, { phase: "ready", score: 0, level: 1, lives: 3, objective: 0 });
           button.textContent = "Начать игру";
+          emit("restart");
           return { ...state };
         },
         dispatch: async () => { start(); return { ...state }; },

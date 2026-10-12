@@ -17,6 +17,20 @@ const STAGES = [
 ] as const;
 
 const TERMINAL = new Set(["succeeded", "failed", "cancelled"]);
+const GAME_EVENTS = new Set(["game_start", "win", "lose", "restart"]);
+
+function isGameEvent(
+  value: unknown,
+): value is { source: "prompt2play-game"; event: string } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "source" in value &&
+    value.source === "prompt2play-game" &&
+    "event" in value &&
+    typeof value.event === "string"
+  );
+}
 
 function App() {
   const [prompt, setPrompt] = useState(EXAMPLES[0]);
@@ -30,24 +44,34 @@ function App() {
   const sessionId = useRef(crypto.randomUUID());
 
   const activeRevision = useMemo(
-    () => project?.revisions.find((item) => item.id === project.current_revision_id) ?? null,
+    () =>
+      project?.revisions.find(
+        (item) => item.id === project.current_revision_id,
+      ) ?? null,
     [project],
   );
+  const runId = run?.id;
+  const runState = run?.state;
+  const activeRevisionId = activeRevision?.id;
 
   const loadProjects = useCallback(async () => {
     try {
       setProjects(await api.projects());
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Не удалось загрузить галерею");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Не удалось загрузить галерею",
+      );
     }
   }, []);
 
   useEffect(() => void loadProjects(), [loadProjects]);
 
   useEffect(() => {
-    if (!run || TERMINAL.has(run.state)) return;
+    if (!runId || !runState || TERMINAL.has(runState)) return;
     const timer = window.setInterval(async () => {
-      const next = await api.run(run.id);
+      const next = await api.run(runId);
       setRun(next);
       if (TERMINAL.has(next.state)) {
         const nextProject = await api.project(next.project_id);
@@ -57,11 +81,11 @@ function App() {
       }
     }, 1200);
     return () => window.clearInterval(timer);
-  }, [run?.id, run?.state, loadProjects]);
+  }, [runId, runState, loadProjects]);
 
   useEffect(() => {
-    if (!run || TERMINAL.has(run.state)) return;
-    const stream = new EventSource(`${API_URL}/v1/runs/${run.id}/events`);
+    if (!runId || !runState || TERMINAL.has(runState)) return;
+    const stream = new EventSource(`${API_URL}/v1/runs/${runId}/events`);
     const names = [
       "accepted",
       "specifying",
@@ -75,27 +99,33 @@ function App() {
       "failed",
       "cancelled",
     ];
-    const receive = (raw: MessageEvent) => {
-      const item = JSON.parse(raw.data) as TimelineEvent;
+    const receive = (raw: Event) => {
+      if (!(raw instanceof MessageEvent)) return;
+      const item = JSON.parse(String(raw.data)) as TimelineEvent;
       setEvents((current) =>
-        current.some((old) => old.id === item.id) ? current : [...current, item],
+        current.some((old) => old.id === item.id)
+          ? current
+          : [...current, item],
       );
     };
-    names.forEach((name) => stream.addEventListener(name, receive as EventListener));
+    names.forEach((name) => stream.addEventListener(name, receive));
     return () => stream.close();
-  }, [run?.id, run?.state]);
+  }, [runId, runState]);
 
   useEffect(() => {
-    const receive = (message: MessageEvent) => {
-      if (!activeRevision || message.data?.source !== "prompt2play-game") return;
-      const event = message.data?.event;
-      if (["game_start", "win", "lose", "restart"].includes(event)) {
-        void api.analytics(activeRevision.id, sessionId.current, event);
+    const receive = (message: MessageEvent<unknown>) => {
+      if (!activeRevisionId || !isGameEvent(message.data)) return;
+      if (GAME_EVENTS.has(message.data.event)) {
+        void api.analytics(
+          activeRevisionId,
+          sessionId.current,
+          message.data.event,
+        );
       }
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
-  }, [activeRevision?.id]);
+  }, [activeRevisionId]);
 
   async function startGeneration() {
     if (prompt.trim().length < 8) return;
@@ -108,7 +138,11 @@ function App() {
       setRun(await api.run(created.run_id));
     } catch (reason) {
       setBusy(false);
-      setError(reason instanceof Error ? reason.message : "Не удалось запустить генерацию");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Не удалось запустить генерацию",
+      );
     }
   }
 
@@ -123,16 +157,18 @@ function App() {
       setRun(await api.run(created.run_id));
     } catch (reason) {
       setBusy(false);
-      setError(reason instanceof Error ? reason.message : "Не удалось создать ревизию");
+      setError(
+        reason instanceof Error ? reason.message : "Не удалось создать ревизию",
+      );
     }
   }
 
   async function publish() {
-    if (!activeRevision) return;
+    if (!activeRevision || !project) return;
     const { share_url } = await api.publish(activeRevision.id);
     await navigator.clipboard.writeText(share_url);
     await api.analytics(activeRevision.id, sessionId.current, "share");
-    const nextProject = await api.project(activeRevision.id ? project!.id : "");
+    const nextProject = await api.project(project.id);
     setProject(nextProject);
   }
 
@@ -149,34 +185,65 @@ function App() {
       : run?.state === "repairing"
         ? "generating"
         : run?.state;
-  const stageIndex = Math.max(0, STAGES.findIndex(([state]) => state === currentStage));
+  const stageIndex = Math.max(
+    0,
+    STAGES.findIndex(([state]) => state === currentStage),
+  );
 
   return (
     <main>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="Prompt2Play, на главную">
-          <span className="brand-mark" aria-hidden="true">P2</span>
+          <span className="brand-mark" aria-hidden="true">
+            P2
+          </span>
           <span>Prompt2Play</span>
         </a>
-        <div className="model-pill"><i /> OpenAI · GPT-6 Luna</div>
+        <div className="model-pill">
+          <i /> OpenAI · GPT-6 Luna
+        </div>
       </header>
 
       <section className="hero" id="top">
         <div className="eyebrow">ВАЙБКОДИНГ ИГР · HTML5</div>
-        <h1>Опиши идею.<br /><span>Получи игру.</span></h1>
-        <p className="lead">Luna спроектирует механику, напишет self-contained HTML и отправит игру на автоматический playtest в мобильном Chromium.</p>
+        <h1>
+          Опиши идею.
+          <br />
+          <span>Получи игру.</span>
+        </h1>
+        <p className="lead">
+          Luna спроектирует механику, напишет self-contained HTML и отправит
+          игру на автоматический playtest в мобильном Chromium.
+        </p>
 
         <div className="prompt-card">
           <label htmlFor="prompt">Какую игру делаем?</label>
-          <textarea id="prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={4000} disabled={busy} />
+          <textarea
+            id="prompt"
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            maxLength={4000}
+            disabled={busy}
+          />
           <div className="prompt-footer">
             <div className="examples">
               {EXAMPLES.map((item, index) => (
-                <button key={item} onClick={() => setPrompt(item)} disabled={busy}>0{index + 1}</button>
+                <button
+                  key={item}
+                  onClick={() => setPrompt(item)}
+                  disabled={busy}
+                >
+                  0{index + 1}
+                </button>
               ))}
             </div>
-            <button className="primary" onClick={startGeneration} disabled={busy || prompt.trim().length < 8}>
-              {busy ? "Создаём…" : "Сгенерировать игру"}<span>→</span>
+            <button
+              className="primary"
+              onClick={() => void startGeneration()}
+              disabled={busy || prompt.trim().length < 8}
+            >
+              {busy ? "Создаём…" : "Сгенерировать игру"}
+              <span>→</span>
             </button>
           </div>
         </div>
@@ -186,18 +253,46 @@ function App() {
       {run && (
         <section className="run-panel" aria-live="polite">
           <div className="section-head">
-            <div><span className="kicker">LIVE PIPELINE</span><h2>{TERMINAL.has(run.state) ? "Результат генерации" : "Игра собирается"}</h2></div>
-            <span className={`state state-${run.state}`}>{run.state.replaceAll("_", " ")}</span>
+            <div>
+              <span className="kicker">LIVE PIPELINE</span>
+              <h2>
+                {TERMINAL.has(run.state)
+                  ? "Результат генерации"
+                  : "Игра собирается"}
+              </h2>
+            </div>
+            <span className={`state state-${run.state}`}>
+              {run.state.replaceAll("_", " ")}
+            </span>
           </div>
           <div className="pipeline">
             {STAGES.map(([state, label], index) => (
-              <div className={`stage ${index <= stageIndex ? "done" : ""} ${index === stageIndex ? "active" : ""}`} key={state}>
-                <b>{index < stageIndex || run.state === "succeeded" ? "✓" : index + 1}</b><span>{label}</span>
+              <div
+                className={`stage ${index <= stageIndex ? "done" : ""} ${index === stageIndex ? "active" : ""}`}
+                key={state}
+              >
+                <b>
+                  {index < stageIndex || run.state === "succeeded"
+                    ? "✓"
+                    : index + 1}
+                </b>
+                <span>{label}</span>
               </div>
             ))}
           </div>
           <div className="event-log">
-            {events.slice(-5).map((item) => <p key={item.id}><time>{new Date(item.created_at).toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>{item.message}</p>)}
+            {events.slice(-5).map((item) => (
+              <p key={item.id}>
+                <time>
+                  {new Date(item.created_at).toLocaleTimeString("ru", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}
+                </time>
+                {item.message}
+              </p>
+            ))}
           </div>
           {run.error && <div className="error-banner">{run.error}</div>}
         </section>
@@ -206,45 +301,127 @@ function App() {
       {activeRevision && (
         <section className="studio">
           <div className="preview-column">
-            <div className="preview-bar"><span><i /> LIVE PREVIEW</span><div><button onClick={publish}>Поделиться</button></div></div>
+            <div className="preview-bar">
+              <span>
+                <i /> LIVE PREVIEW
+              </span>
+              <div>
+                <button onClick={() => void publish()}>Поделиться</button>
+              </div>
+            </div>
             <div className="device-shell">
-              <iframe title={activeRevision.title} src={activeRevision.preview_url ?? undefined} sandbox="allow-scripts" allow="fullscreen" />
+              <iframe
+                title={activeRevision.title}
+                src={activeRevision.preview_url ?? undefined}
+                sandbox="allow-scripts"
+                allow="fullscreen"
+              />
             </div>
           </div>
           <aside className="inspector">
             <span className="kicker">VALIDATED REVISION</span>
             <h2>{activeRevision.title}</h2>
             <p>{project?.prompt}</p>
-            <div className="tags"><span>{activeRevision.genre}</span><span>{activeRevision.audience}</span><span>{activeRevision.model_name}</span></div>
+            <div className="tags">
+              <span>{activeRevision.genre}</span>
+              <span>{activeRevision.audience}</span>
+              <span>{activeRevision.model_name}</span>
+            </div>
             <div className="quality-card">
-              <div><b>{activeRevision.validation?.checks.length ?? 0}</b><span>проверок</span></div>
-              <div><b>{activeRevision.validation?.browser_status === "passed" ? "PASS" : "—"}</b><span>mobile playtest</span></div>
-              <div><b>{project?.revisions.length ?? 1}</b><span>ревизий</span></div>
+              <div>
+                <b>{activeRevision.validation?.checks.length ?? 0}</b>
+                <span>проверок</span>
+              </div>
+              <div>
+                <b>
+                  {activeRevision.validation?.browser_status === "passed"
+                    ? "PASS"
+                    : "—"}
+                </b>
+                <span>mobile playtest</span>
+              </div>
+              <div>
+                <b>{project?.revisions.length ?? 1}</b>
+                <span>ревизий</span>
+              </div>
             </div>
             <label htmlFor="revision">Попросить изменение</label>
-            <textarea id="revision" placeholder="Например: сделай кнопки больше и добавь второй уровень" value={revisionText} onChange={(event) => setRevisionText(event.target.value)} />
-            <button className="secondary" onClick={revise} disabled={busy || revisionText.trim().length < 8}>Создать новую ревизию <span>↗</span></button>
-            {activeRevision.share_url && <a className="share-link" href={activeRevision.share_url} target="_blank" rel="noreferrer">Открыть публичную ссылку ↗</a>}
+            <textarea
+              id="revision"
+              placeholder="Например: сделай кнопки больше и добавь второй уровень"
+              value={revisionText}
+              onChange={(event) => setRevisionText(event.target.value)}
+            />
+            <button
+              className="secondary"
+              onClick={() => void revise()}
+              disabled={busy || revisionText.trim().length < 8}
+            >
+              Создать новую ревизию <span>↗</span>
+            </button>
+            {activeRevision.share_url && (
+              <a
+                className="share-link"
+                href={activeRevision.share_url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Открыть публичную ссылку ↗
+              </a>
+            )}
           </aside>
         </section>
       )}
 
       <section className="gallery">
-        <div className="section-head"><div><span className="kicker">ИСТОРИЯ И ГАЛЕРЕЯ</span><h2>Созданные игры</h2></div><span>{projects.length} проектов</span></div>
-        {projects.length === 0 ? <div className="empty">Первая игра появится здесь после генерации.</div> : (
+        <div className="section-head">
+          <div>
+            <span className="kicker">ИСТОРИЯ И ГАЛЕРЕЯ</span>
+            <h2>Созданные игры</h2>
+          </div>
+          <span>{projects.length} проектов</span>
+        </div>
+        {projects.length === 0 ? (
+          <div className="empty">
+            Первая игра появится здесь после генерации.
+          </div>
+        ) : (
           <div className="gallery-grid">
             {projects.map((item, index) => {
-              const current = item.revisions.find((revision) => revision.id === item.current_revision_id);
-              return <button className="game-card" key={item.id} onClick={() => openProject(item)}>
-                <div className={`card-art art-${index % 4}`}><span>{current?.genre.slice(0, 2).toUpperCase() ?? "AI"}</span></div>
-                <div><small>{current?.genre ?? "в генерации"}</small><h3>{item.title}</h3><p>{item.prompt}</p><footer><span>{item.revisions.length} рев.</span><b>Открыть →</b></footer></div>
-              </button>;
+              const current = item.revisions.find(
+                (revision) => revision.id === item.current_revision_id,
+              );
+              return (
+                <button
+                  className="game-card"
+                  key={item.id}
+                  onClick={() => void openProject(item)}
+                >
+                  <div className={`card-art art-${index % 4}`}>
+                    <span>
+                      {current?.genre.slice(0, 2).toUpperCase() ?? "AI"}
+                    </span>
+                  </div>
+                  <div>
+                    <small>{current?.genre ?? "в генерации"}</small>
+                    <h3>{item.title}</h3>
+                    <p>{item.prompt}</p>
+                    <footer>
+                      <span>{item.revisions.length} рев.</span>
+                      <b>Открыть →</b>
+                    </footer>
+                  </div>
+                </button>
+              );
             })}
           </div>
         )}
       </section>
 
-      <footer className="site-footer"><span>Prompt2Play / Hackathon MVP</span><span>Self-contained · Touch-first · Playtested</span></footer>
+      <footer className="site-footer">
+        <span>Prompt2Play / Hackathon MVP</span>
+        <span>Self-contained · Touch-first · Playtested</span>
+      </footer>
     </main>
   );
 }

@@ -48,8 +48,12 @@ Before review, run the complete local check set:
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy
-uv run pytest
+uv run pytest -m "not integration and not browser"
 uv build
+npm --prefix web run format:check
+npm --prefix web run lint
+npm --prefix web run test:coverage
+npm --prefix web run build
 ```
 
 Add runtime dependencies with `uv add <package>` and development dependencies
@@ -60,6 +64,10 @@ Run all checks relevant to your change. In the change description, list the
 exact commands and their outcomes. Clearly label checks that were skipped or
 could not be run. Once browser validation exists, include it for changes that
 affect generated games or previews.
+
+Infrastructure-backed, browser, security and live-model commands are documented
+in [docs/ci.md](docs/ci.md). Never put `OPENAI_API_KEY` into a pull-request
+workflow or repository file.
 
 ## Commit and review expectations
 

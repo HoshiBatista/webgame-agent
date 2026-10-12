@@ -85,7 +85,7 @@ fed into future specifications. See
 
 ```text
 .
-├── .github/workflows/ci.yml  # Lint, types, tests, and package build
+├── .github/workflows/        # CI, CodeQL and bounded live Luna evaluations
 ├── src/prompt2play/          # API, workflow, adapters, validation, Celery
 ├── web/                      # React/TypeScript/Vite creator application
 ├── alembic/                  # PostgreSQL schema migration
@@ -148,8 +148,11 @@ Run the same checks used by CI:
 uv run ruff format --check .
 uv run ruff check .
 uv run mypy
-uv run pytest
+uv run pytest -m "not integration and not browser"
 uv build
+npm --prefix web run format:check
+npm --prefix web run lint
+npm --prefix web run test:coverage
 npm --prefix web run build
 ```
 
@@ -157,8 +160,19 @@ To run services directly on a configured host, apply `uv run alembic upgrade
 head`, then start Uvicorn, Celery workers, and Celery Beat with the commands in
 `compose.yaml`.
 
-GitHub Actions runs formatting, linting, strict type checking, package building,
-and tests on Python 3.11, 3.12, 3.13, and 3.14.
+GitHub Actions runs independent gates for backend quality and packaging, Python
+3.11–3.14 unit tests, PostgreSQL/Redis integration, real mobile Chromium game
+validation, deterministic AI contracts, frontend formatting/lint/coverage/build,
+dependency and source security scanning, reversible migrations, and a full
+Docker Compose smoke test. CodeQL scans Python and TypeScript separately.
+
+Paid model calls are deliberately absent from pull requests. A protected
+`Live Luna evaluation` workflow runs a bounded golden dataset manually or on a
+weekly schedule using the `ai-evals` GitHub environment and its
+`OPENAI_API_KEY` secret. It records pass rate, token counts, latency, static
+findings and browser evidence without retaining prompts or generated HTML. See
+[the CI guide](docs/ci.md) for local commands, required branch rules, service
+tests and live-evaluation setup.
 
 ## Contributing and security
 
