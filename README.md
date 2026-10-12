@@ -159,6 +159,11 @@ Setup asks for the administrator password and creates a private local
 The `--slim` validator build uses a system Chromium image when the larger official
 Playwright image is impractical; reports record the actual image and browser.
 
+The game title is optional. An unnamed project displays as “Новая игра” until
+its first validated plan supplies a title. Explicit names and manual renames
+are preserved, including a rename made while planning is in progress. This
+uses the existing planner response and requires no extra model call.
+
 Studio settings default to **manual playthrough**: automatic launch, input, rendering, restart, mobile layout and error checks remain required. The report explicitly says that victory, defeat and balance need human review. Select automatic playthrough for a reliable game-specific scenario; its failure then blocks delivery. Existing jobs retain their old choice unless explicitly changed when extending the budget.
 
 New Studio runs use a **USD API-equivalent budget** (default $10, editable

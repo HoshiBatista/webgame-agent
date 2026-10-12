@@ -73,6 +73,120 @@ def job_for(team: Team, kind: str = "generate", **values: Any) -> tuple[Any, str
     return claimed, lease
 
 
+@pytest.mark.parametrize("creation_mode", ["lite", "pro"])
+@pytest.mark.parametrize("title_input", [None, "", "   ", "  Моё название  "])
+def test_project_can_take_its_title_from_the_saved_plan(
+    team: Team, creation_mode: str, title_input: str | None
+) -> None:
+    import json
+
+    from prompt2play.paths import RESOURCE_ROOT
+
+    client = Client()
+    client.force_login(team[0])
+    data = {"prompt": "Создай игру про космический сад"}
+    if title_input is not None:
+        data["title"] = title_input
+    response = client.post("/api/projects/", data, content_type="application/json")
+    assert response.status_code == 201, response.content
+    project_id = response.json()["id"]
+    given_title = (title_input or "").strip()
+    assert response.json()["title"] == (given_title or "Новая игра")
+    assert response.json()["title_pending"] == (not given_title)
+    assert Project.objects.get(pk=project_id).title == given_title
+    response = client.post(
+        f"/api/projects/{project_id}/jobs/",
+        {
+            "kind": "generate",
+            "prompt": data["prompt"],
+            "provider": "codex",
+            "creation_mode": creation_mode,
+        },
+        content_type="application/json",
+    )
+    assert response.status_code == 201, response.content
+    job, lease = services.claim_job(team[2], {**CAPABILITIES, "interactive_plan_v1": True})
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    spec = {**json.loads((root / "spec.json").read_text()), "title": "Звёздный сад"}
+    response = Client().post(
+        f"/api/worker/jobs/{job.pk}/plan/",
+        {
+            "lease_token": lease,
+            "stage_fence": job.stage_fence,
+            "spec": spec,
+            "plan": json.loads((root / "plan.json").read_text()),
+        },
+        content_type="application/json",
+        HTTP_AUTHORIZATION="Bearer generator-token",
+    )
+    assert response.status_code == 200, response.content
+    assert response.json()["waiting"] == (creation_mode == "pro")
+    project = client.get(f"/api/projects/{project_id}/").json()
+    assert project["title"] == (given_title or spec["title"])
+    assert not project["title_pending"]
+    assert (
+        client.get(f"/api/jobs/{job.pk}/insights/").json()["proposal"]["spec"]["title"]
+        == spec["title"]
+    )
+
+
+@pytest.mark.parametrize("rename_during_planning", [False, True])
+def test_automatic_title_never_overwrites_a_manual_rename_or_a_previous_plan(
+    team: Team, rename_during_planning: bool
+) -> None:
+    import json
+
+    from prompt2play.adapters.django.forge.reviews import record_plan
+    from prompt2play.paths import RESOURCE_ROOT
+
+    Project.objects.filter(pk=team[1].pk).update(title="")
+    job, lease = job_for(team)
+    client = Client()
+    client.force_login(team[0])
+    if rename_during_planning:
+        response = client.patch(
+            f"/api/projects/{team[1].pk}/", {"title": "Мой сад"}, content_type="application/json"
+        )
+        assert response.status_code == 200
+        assert not response.json()["title_pending"]
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    spec = {**json.loads((root / "spec.json").read_text()), "title": "Звёздный сад"}
+    values = {
+        "lease_token": lease,
+        "stage_fence": job.stage_fence,
+        "spec": spec,
+        "plan": json.loads((root / "plan.json").read_text()),
+    }
+    cast(Any, record_plan)(job.pk, team[2], values)
+    cast(Any, record_plan)(
+        job.pk, team[2], {**values, "spec": {**spec, "title": "Другое предложение"}}
+    )
+    assert client.get(f"/api/projects/{team[1].pk}/").json()["title"] == (
+        "Мой сад" if rename_during_planning else "Звёздный сад"
+    )
+
+
+def test_stale_plan_cannot_name_a_cancelled_project(team: Team) -> None:
+    import json
+
+    from prompt2play.adapters.django.forge.reviews import record_plan
+    from prompt2play.paths import RESOURCE_ROOT
+
+    Project.objects.filter(pk=team[1].pk).update(title="")
+    job, lease = job_for(team)
+    services.cancel_job(job.pk)
+    root = RESOURCE_ROOT / "runtime/examples/dom"
+    values = {
+        "lease_token": lease,
+        "stage_fence": job.stage_fence,
+        "spec": json.loads((root / "spec.json").read_text()),
+        "plan": json.loads((root / "plan.json").read_text()),
+    }
+    with pytest.raises(Conflict, match="Аренда"):
+        cast(Any, record_plan)(job.pk, team[2], values)
+    assert Project.objects.get(pk=team[1].pk).title == ""
+
+
 def submit(job: Any, lease: str, generator: Any, **values: Any) -> Any:
     return workflow.submit_candidate(
         job.pk,

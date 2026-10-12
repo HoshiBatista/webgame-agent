@@ -127,7 +127,8 @@ def project_data(project):
         latest = active or jobs.order_by("-created_at", "-id").first()
     return {
         "id": ident(project.id),
-        "title": project.title,
+        "title": project.title or "Новая игра",
+        "title_pending": not bool(project.title),
         "prompt": project.prompt,
         "created_at": dated(project.created_at),
         "updated_at": dated(project.updated_at),

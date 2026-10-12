@@ -22,7 +22,7 @@ class User(AbstractUser):
 
 class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=180)
+    title = models.CharField(max_length=180, blank=True, default="")
     prompt = models.TextField(max_length=12000)
     created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -38,7 +38,7 @@ export interface Job {
   pause_requested?: boolean; can_resume?: boolean; budget_stopped?: boolean; playthrough_mode?: 'manual' | 'auto';
   budget_usd?: string | null; cost?: Cost | null; pricing?: { model: string; as_of: string; source: string };
 }
-export interface Project { id: string; title: string; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }
+export interface Project { id: string; title: string; title_pending?: boolean; prompt: string; created_at: string; updated_at: string; latest_version_id: string | null; latest_version_number: number | null; active_job: Job | null; latest_job?: Job | null }
 export interface Version {
   visual_review_pending?: boolean;
   id: string; project_id: string; number: number; prompt: string; summary: string; created_at: string; is_reference: boolean;

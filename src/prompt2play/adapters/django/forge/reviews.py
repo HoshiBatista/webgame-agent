@@ -58,6 +58,12 @@ def record_plan(job_id, runner, values):
             raise ValidationError(str(exc)) from exc
         intent, key = workflow.store().prepare(payload)
         workflow.store().commit(intent, key)
+        title = values["spec"]["title"].strip()[: Project._meta.get_field("title").max_length]
+        if title:
+            # The conditional write also preserves a rename made during planning.
+            Project.objects.filter(pk=job.project_id, title="").update(
+                title=title, updated_at=timezone.now()
+            )
         review = deepcopy(job.review)
         changed = review.get("plan_key") != key
         if changed and review.get("plan_key"):

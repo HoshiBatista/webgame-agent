@@ -53,7 +53,8 @@ await page.route('**/api/**', async route => {
   else if (path === '/api/projects/' && request.method() === 'GET') value = projects;
   else if (path === '/api/projects/' && request.method() === 'POST') {
     const body = request.postDataJSON();
-    value = {id: 'project-1', title: body.title, prompt: body.prompt, created_at: timestamp(0), updated_at: timestamp(0), latest_version_id: null, latest_version_number: null, active_job: null}; projects.push(value);
+    assert.equal(body.title, '', 'The form permits an omitted title without inventing one');
+    value = {id: 'project-1', title: 'Новая игра', title_pending: true, prompt: body.prompt, created_at: timestamp(0), updated_at: timestamp(0), latest_version_id: null, latest_version_number: null, active_job: null}; projects.push(value);
   } else if (path === '/api/projects/project-1/jobs/') {job = makeJob(request.postDataJSON()); value = job;}
   else if (path === '/api/projects/project-1/') value = currentProject();
   else if (path === '/api/projects/project-1/versions/') value = versions;
@@ -72,6 +73,7 @@ await page.route('**/api/**', async route => {
   else if (path.endsWith('/insights/')) value = {job_id: job.id, files: [], summary: '', proposal_current: true, proposal: {spec: {}, plan: {mechanics_changes: [{case_id: 'move', request_excerpt: 'Change the move rule', reason: 'Verify the revised movement and preserve unrelated mechanics.'}]}}, provenance: {}, author_steps: [], validation: null, draft_diagnostic: null, feedback: [], previous_proposal: null};
   else if (path.startsWith('/api/jobs/')) {
     if (job.id === 'job-1' && job.status === 'queued') {
+      projects[0] = {...projects[0], title: 'Creator acceptance', title_pending: false};
       versions.push(version('version-1', 1, true)); job = {...job, status: 'completed', stage: 'done', progress: 100, result_version_id: 'version-1', updated_at: timestamp(20)};
     } else if (job.id === 'job-2' && job.status === 'queued' && resumeRequests === 0) {
       versions.push(version('version-2', 2, false, {...validation, status: 'failed', errors: ['Actual browser input gate failed'], checks: [{...checks[0], status: 'failed'}]}));
@@ -84,9 +86,13 @@ await page.route('**/api/**', async route => {
 });
 try {
   await page.goto(studio);
-  await page.getByLabel('Название проекта').fill('Creator acceptance');
+  assert.equal(await page.getByLabel('Название проекта').getAttribute('required'), null);
+  await page.getByRole('button', {name: 'Почтовый дракон', exact: true}).click();
+  assert.equal(await page.getByLabel('Название проекта').inputValue(), '', 'Prompt examples leave the name to the planner');
   await page.getByLabel('Описание игры', {exact: true}).fill('Create an authored test-flow game.');
+  await page.screenshot({path: `${evidence}/optional-title.png`, fullPage: true});
   await page.getByRole('button', {name: 'Создать игру', exact: true}).click();
+  await page.getByRole('heading', {name: 'Creator acceptance', exact: true}).waitFor();
   await page.locator('iframe').waitFor();
   assert.equal(await page.locator('iframe').getAttribute('srcdoc'), null);
   assert.match(await page.locator('iframe').getAttribute('src'), /:8001\/preview\/version-1/);
@@ -175,7 +181,7 @@ try {
   await page.getByText('Browser acceptance', {exact: true}).waitFor();
   assert.deepEqual(errors, []);
   await page.screenshot({path: `${evidence}/creator-flow.png`, fullPage: true});
-  fs.writeFileSync(`${evidence}/result.json`, JSON.stringify({passed: true, browser: browser.version(), scope: 'Trusted studio with authored API double; no live model/backend/game execution', expired_preview_requests: expiredPreviewRequests, checks: ['submit', 'scoped preview', 'expired URL refreshed on restart, stop/start and reopening', 'refresh failure bounded and no stale URL fallback', 'running preview stable during workspace polling', 'failed revise preserves playable', 'failed candidate diagnostics', 'source selection', 'pause and resume same job', 'cancel', 'admin validator role registration', 'one-time token hidden after dismissal']}, null, 2));
+  fs.writeFileSync(`${evidence}/result.json`, JSON.stringify({passed: true, browser: browser.version(), scope: 'Trusted studio with authored API double; no live model/backend/game execution', expired_preview_requests: expiredPreviewRequests, checks: ['submit without title', 'examples preserve empty title', 'planned title appears in workspace', 'scoped preview', 'expired URL refreshed on restart, stop/start and reopening', 'refresh failure bounded and no stale URL fallback', 'running preview stable during workspace polling', 'failed revise preserves playable', 'mechanics amendment details', 'failed candidate diagnostics', 'source selection', 'pause and resume same job', 'cancel', 'admin validator role registration', 'one-time token hidden after dismissal']}, null, 2));
   process.stdout.write('Creator browser flow passed (authored API double).\n');
 } finally {
   await context.tracing.stop({path: `${evidence}/creator-flow.zip`});

@@ -66,7 +66,7 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ProjectCreateSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=180)
+    title = serializers.CharField(max_length=180, allow_blank=True, default="")
     prompt = serializers.CharField(max_length=12000)
 
 

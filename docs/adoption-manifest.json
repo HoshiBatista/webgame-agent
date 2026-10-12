@@ -111,7 +111,7 @@
       "source": "backend/forge/models.py",
       "destination": "src/prompt2play/adapters/django/forge/models.py",
       "source_sha256": "c5d5a0d9d6c2dc6fc5aaa27f3e442d8c2121b2768f382361a48738f0cdffec8d",
-      "destination_sha256": "be28827c4454c3e3c69a86a47e5aa1226479528e98dd7317c56355be6e6fb245",
+      "destination_sha256": "41c689c77313463a7141aee22fd367e0d524e57728726f48f039e7bbd2b44034",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
@@ -135,7 +135,7 @@
       "source": "backend/forge/representations.py",
       "destination": "src/prompt2play/adapters/django/forge/representations.py",
       "source_sha256": "7b1b5598c7da9b7179e2817c3799d20e544650150b058398a058519c68022baa",
-      "destination_sha256": "57293d7ad8ddfdf09c09f291c9dcff6fcf3e6b51e1e7eb07a530f23e9bbb8102",
+      "destination_sha256": "b71c85866905c7ba9bc0b3d3600b305d035d2410ec7dc0785c025007b7066518",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
@@ -143,7 +143,7 @@
       "source": "backend/forge/serializers.py",
       "destination": "src/prompt2play/adapters/django/forge/serializers.py",
       "source_sha256": "8d8a07894f9b5e4acc3caf49a18f57000e5241b53ac82816401aab15535f3824",
-      "destination_sha256": "e4ed45cfed36bebcfa9ea29cdce32f71f6ac579e5667bfab166461ee66e01f12",
+      "destination_sha256": "f1bcaba871f7274ebb8dc2264a37f3461b91ad0f2940f4d346e4bf4d5b9cacc6",
       "modified": true,
       "adaptation": "Django adapter namespaced; role-scoped stages, immutable CAS, conditional fences, durable accounting/deadline and isolated preview added. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
@@ -1375,7 +1375,7 @@
       "source": "frontend/src/pages/Projects.tsx",
       "destination": "web/src/pages/Projects.tsx",
       "source_sha256": "1d4cc374ab35ad07d0de201b0e9b8c48b48f854b0c302438014e63e0a8eb1a60",
-      "destination_sha256": "6f1f75c26efacd4f11c5e7d5e1b78299fdf2740210abc483aaecdc1ed46c24fa",
+      "destination_sha256": "733433fafc147eba6276ca4e3d51db25a50e669050eee7c214254bc377b8fb29",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration."
     },
@@ -1391,7 +1391,7 @@
       "source": "frontend/src/pages/Workspace.tsx",
       "destination": "web/src/pages/Workspace.tsx",
       "source_sha256": "361a81c4a93bd4528479768df3324f39dec505403f9982fcebfd951faddc3d9f",
-      "destination_sha256": "86cfcadb8758d63d704dec6f8fc3b663e2ef457c6ee621bb0389497f82a77749",
+      "destination_sha256": "bfa51dff24ac14530fed1039baa0528d5f145a9f92bfed28dbd46163e31adc28",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable."
     },
@@ -1407,7 +1407,7 @@
       "source": "frontend/src/types.ts",
       "destination": "web/src/types.ts",
       "source_sha256": "b8dfc739c2ce1a879174aafeebf0ae037c1cced6c1075f83db9c7b806a7703f0",
-      "destination_sha256": "467e06196c7febdf39c30e8f13671a90491833e94ea5dc57117c177cadce5100",
+      "destination_sha256": "b9f6aad4ccca06e85260848aff19e2cefd60f9f2a535d51cffd3b7db3bf611dd",
       "modified": true,
       "adaptation": "Adopted studio with gated separate-origin preview, failed-edit preservation, role registration and bounded repair configuration. Cooperative job pause/resume, retained planning corrections, or aligned mechanics validation updated where applicable. R0–R6: adaptive recovery, protected acceptance, fenced supervision, rendered review and modular packaging where applicable."
     },
@@ -1542,7 +1542,8 @@
     "evidence/adaptive-review-followup-2026-10-12.json",
     "evidence/adaptive-targeted-verification-2026-10-12.json",
     "evidence/adaptive-comparison-pilot-2026-10-12.json",
-    "evidence/code-review-fixes-2026-10-12.json"
+    "evidence/code-review-fixes-2026-10-12.json",
+    "evidence/optional-game-title-2026-10-12.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

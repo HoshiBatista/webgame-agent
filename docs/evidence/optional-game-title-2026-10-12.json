@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-12T17:00:16.072280+00:00",
+  "parent_commit": "b5b10366b585b9af7abbbdf61b3f76d6ba96e3a2",
+  "behavior": "Game title may be omitted; the first saved validated plan names the project. Explicit names, subsequent proposals and manual renames are preserved. Placeholder exists only in representations. Uses the original planner reply with no additional model call.",
+  "checks": {
+    "python_passed": 414,
+    "python_skipped": 38,
+    "coverage_percent": 86.19,
+    "postgresql_title_checks_passed": 11,
+    "frontend_tests_passed": 69,
+    "studio_browser_flow_passed": true,
+    "ruff_format_files": 187,
+    "ruff_lint": "passed",
+    "mypy_source_files": 161,
+    "frontend_build": "passed",
+    "package_build": "passed"
+  },
+  "browser_scope": "Trusted studio with authored API double; no live model/backend/game execution",
+  "browser_assertions": [
+    "submit without title",
+    "examples preserve empty title",
+    "planned title appears in workspace",
+    "scoped preview",
+    "expired URL refreshed on restart, stop/start and reopening",
+    "refresh failure bounded and no stale URL fallback",
+    "running preview stable during workspace polling",
+    "failed revise preserves playable",
+    "mechanics amendment details",
+    "failed candidate diagnostics",
+    "source selection",
+    "pause and resume same job",
+    "cancel",
+    "admin validator role registration",
+    "one-time token hidden after dismissal"
+  ],
+  "optional_title_screenshot_visually_inspected": true,
+  "optional_title_screenshot_sha256": "6450eb8d275604e75df52d013eed3c54c013c4f48aee6b0c522dbc5b09fa09cd",
+  "log_sha256": {
+    "python_suite": "bfc233db1e091379feb637b7d4a300b0e8dbf5bd578904e79dcfcb437b2f0098",
+    "postgresql_title_checks": "f6b4d781c57432a6ba5171692d171c03d8aa9ed1260fa1ba780cafd271849d52",
+    "frontend_tests": "10ddbdd444f3d2748b6838e356f45570b2942fc5a6ddb3e170f156e83c32d2fc",
+    "studio_browser_flow": "9fd56747917baa86ce51f463579bb1ac3183186382d6c997605fa28ea9e2b1c6",
+    "frontend_build": "6c65bc0b8430143c90ff64541d6c7a07247dd27c5bc8ad090389d23570a2614a",
+    "package_build": "b4e22e1413870178e028e18e2df6e24cc577f9db04e14c37bbbb97761cd34d5c"
+  },
+  "source_file_sha256": {
+    "src/prompt2play/adapters/django/forge/models.py": "41c689c77313463a7141aee22fd367e0d524e57728726f48f039e7bbd2b44034",
+    "src/prompt2play/adapters/django/forge/representations.py": "b71c85866905c7ba9bc0b3d3600b305d035d2410ec7dc0785c025007b7066518",
+    "src/prompt2play/adapters/django/forge/reviews.py": "441e2e3ef8e07dce38f07513b9331efe1c50d28226e4fc8ef813228c80ed3b27",
+    "src/prompt2play/adapters/django/forge/serializers.py": "f1bcaba871f7274ebb8dc2264a37f3461b91ad0f2940f4d346e4bf4d5b9cacc6",
+    "tests/test_backend_workflow.py": "2ecf50286d6392e372831e0224b2800ef8b91fb72e6256cba094a1f34883b5a5",
+    "web/src/pages/Projects.tsx": "733433fafc147eba6276ca4e3d51db25a50e669050eee7c214254bc377b8fb29",
+    "web/src/pages/Workspace.tsx": "bfa51dff24ac14530fed1039baa0528d5f145a9f92bfed28dbd46163e31adc28",
+    "web/src/types.ts": "b9f6aad4ccca06e85260848aff19e2cefd60f9f2a535d51cffd3b7db3bf611dd",
+    "web/tests/creator-flow.mjs": "e051c93fac9fe52b993652bd4e0187623c7dcac5b51a14d3032d5e60c5c3167f",
+    "src/prompt2play/adapters/django/forge/migrations/0011_optional_project_title.py": "99664aecaf63fc1177b4a699d28c1d07ca3ae958a467cefed7d1561767804b48"
+  },
+  "live_model_calls": 0,
+  "user_game_edited": false,
+  "user_job_resumed": false
+}
