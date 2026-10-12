@@ -15,6 +15,28 @@ def defect_ids(report: Mapping[str, Any]) -> list[str]:
     checks = report.get("checks", report.get("findings", []))
     review = report.get("review", {})
     issues = (review.get("issues") or []) if isinstance(review, dict) else []
+    structured_criteria = False
+    for container in (report, review):
+        if not isinstance(container, dict):
+            continue
+        for group in ("criteria", "requirements"):
+            criteria = container.get(group, {})
+            if not isinstance(criteria, dict):
+                continue
+            for name, item in criteria.items():
+                if not isinstance(item, dict) or item.get("status") not in (
+                    "ready",
+                    "implemented",
+                    "needs_revision",
+                    "missing",
+                    "unverified",
+                ):
+                    continue
+                structured_criteria = True
+                if item["status"] not in ("ready", "implemented"):
+                    # Review prose, source excerpts and frame hashes change after an edit.
+                    # Only resolving the same criterion establishes review progress.
+                    result.add(digest({"review_group": group, "criterion": name}))
     for check in [*(checks if isinstance(checks, list) else []), *issues]:
         if not isinstance(check, dict) or check.get("status") in ("passed", "skipped"):
             continue
@@ -42,9 +64,34 @@ def defect_ids(report: Mapping[str, Any]) -> list[str]:
                 )
         else:
             result.add(digest({**base, "message": stable_error(check.get("message", ""))}))
-    for error in report.get("errors", []):
-        result.add(digest({"error": stable_error(error)}))
+    if not structured_criteria:
+        for error in report.get("errors", []):
+            result.add(digest({"error": stable_error(error)}))
     return sorted(result)
+
+
+def supervisor_problem(state: Mapping[str, Any]) -> str:
+    relevant = {
+        "browser_check",
+        "independent_validation",
+        "visual_review",
+        "coverage_review",
+        "rendered_review",
+    }
+    latest = {}
+    progress_epoch = 0
+    for observation in state["observations"]:
+        if observation["action"] in relevant:
+            latest[observation["action"]] = observation
+            if observation["progress"] == "measured":
+                progress_epoch = observation["sequence"]
+    return digest(
+        {
+            "trigger": state["supervisor_due"],
+            "defects": sorted({f for o in latest.values() for f in o["defects"]}),
+            "progress_epoch": progress_epoch,
+        }
+    )
 
 
 def stable_error(value: Any) -> str:
@@ -90,14 +137,19 @@ def observe(
     comparable = prior is not None
     resolved = sorted(set(prior["defects"]) - set(defects)) if prior else []
     added = sorted(set(defects) - set(prior["defects"])) if prior else defects
-    terminal = report.get("status") in ("passed", "failed")
+    successful = ("passed", "rendered_ready", "source_ready", "covered")
+    terminal = report.get("status") in (*successful, "failed", "needs_revision")
     # A changed test, a source hash, or a cached report cannot be counted as improvement.
     measured = (
         terminal
         and not report.get("cached")
         and (
             bool(resolved)
-            or (prior is not None and prior["status"] != "passed" and report["status"] == "passed")
+            or (
+                prior is not None
+                and prior["status"] not in successful
+                and report["status"] in successful
+            )
         )
     )
     value = {
@@ -147,7 +199,7 @@ def observe(
     unsuccessful = bool(
         defects
         or report.get("error")
-        or report.get("status") in ("failed", "unverified", "rejected")
+        or report.get("status") in ("failed", "unverified", "rejected", "needs_revision")
     )
     repeats = (
         (stall.get("repeats", 0) + 1 if stall.get("fingerprint") == fingerprint else 1)

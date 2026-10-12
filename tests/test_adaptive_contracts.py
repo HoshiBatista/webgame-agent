@@ -9,7 +9,12 @@ from typing import Any
 
 import pytest
 
-from prompt2play.application.progress import defect_ids, failure_category, observe
+from prompt2play.application.progress import (
+    defect_ids,
+    failure_category,
+    observe,
+    supervisor_problem,
+)
 from prompt2play.contracts.adaptive import (
     initial_contracts,
     revise_design,
@@ -94,6 +99,68 @@ def test_same_defect_requests_diagnosis_without_a_global_operation_limit() -> No
     for i in range(3):
         observe(state, "browser", report(), source_id=str(i), suite_id="one", cost={})
     assert "without verified progress" in state["supervisor_due"]
+
+
+def test_repeated_rendered_findings_trigger_supervision_despite_reworded_feedback() -> None:
+    state, _, _ = contracts()
+    for i in range(3):
+        value = {
+            "status": "needs_revision",
+            "review": {
+                "criteria": {
+                    "composition": {
+                        "status": "needs_revision",
+                        "observation": f"Different explanation {i}",
+                        "required_change": f"Rework scene {i}",
+                        "frame_id": f"different-source-{i}",
+                    }
+                }
+            },
+        }
+        observe(state, "rendered_review", value, source_id=str(i), suite_id="plan", cost={})
+    assert state["stall"]["rendered_review"]["repeats"] == 3
+    assert "Repeated rendered_review" in state["supervisor_due"]
+
+
+def test_visual_criteria_resolve_individually_and_readiness_proves_progress() -> None:
+    state, _, _ = contracts()
+    value: dict[str, Any] = {
+        "status": "needs_revision",
+        "criteria": {
+            "composition": {"status": "needs_revision"},
+            "interface": {"status": "needs_revision"},
+        },
+    }
+    first = observe(state, "rendered_review", value, source_id="a", suite_id="plan", cost={})
+    value["criteria"]["interface"]["status"] = "ready"
+    partial = observe(state, "rendered_review", value, source_id="b", suite_id="plan", cost={})
+    assert len(first["defects"]) == 2 and len(partial["defects"]) == 1
+    assert partial["progress"] == "measured" and len(partial["resolved"]) == 1
+    value["criteria"]["composition"]["status"] = "ready"
+    value["status"] = "rendered_ready"
+    ready = observe(state, "rendered_review", value, source_id="c", suite_id="plan", cost={})
+    assert ready["progress"] == "measured" and not ready["defects"]
+    assert state["stall"]["rendered_review"]["repeats"] == 0
+
+
+def test_requirement_defects_keep_identity_when_missing_becomes_unverified() -> None:
+    missing = {"criteria": {"req-1": {"status": "missing", "explanation": "No code"}}}
+    unverified = {"criteria": {"req-1": {"status": "unverified", "explanation": "Maybe"}}}
+    assert defect_ids(missing) and defect_ids(missing) == defect_ids(unverified)
+    assert not defect_ids({"criteria": {"req-1": {"status": "implemented"}}})
+
+
+def test_supervisor_problem_uses_current_failures_and_resets_after_verified_progress() -> None:
+    state, _, _ = contracts()
+    observe(state, "browser_check", report(), source_id="a", suite_id="suite", cost={})
+    state["supervisor_due"] = "Repeated failure"
+    original = supervisor_problem(state)
+    observe(state, "browser_check", report(), source_id="b", suite_id="suite", cost={})
+    assert supervisor_problem(state) == original
+    observe(state, "browser_check", report(passed=True), source_id="c", suite_id="suite", cost={})
+    assert supervisor_problem(state) != original
+    observe(state, "browser_check", report(), source_id="d", suite_id="suite", cost={})
+    assert supervisor_problem(state) != original, "Previous resolved problems cannot force a pause"
 
 
 @pytest.mark.parametrize(

@@ -1186,6 +1186,14 @@ def test_adaptive_author_plan_change_request_preserves_code_and_pauses_on_superv
     assert gateway.roles == ["plan", "author", "supervisor"]
     assert snapshots[-1]["files"] == {"game.js": source}
     assert snapshots[-1]["adaptive"]["observations"][0]["category"] == "plan_conflict"
+    supervisor_prompt = gateway.prompts[-1]
+    context = json.loads(supervisor_prompt.rsplit(PROMPT_BOUNDARY, 1)[1])
+    assert context["current_files"] == {"game.js": source}
+    assert context["runtime"] == snapshots[-1]["runtime"]
+    assert context["allowed_paths"] == ["game.js"]
+    assert context["test_scenario"] == snapshots[-1]["plan"]["input_acceptance"]
+    assert "Input automatically pauses before Start" in supervisor_prompt
+    assert "source files already supplied" in supervisor_prompt
 
 
 def test_adaptive_bad_supervisor_evidence_pauses_after_repeated_rejection() -> None:
@@ -1217,6 +1225,54 @@ def test_adaptive_bad_supervisor_evidence_pauses_after_repeated_rejection() -> N
             GenerationControl.bounded(),
         )
     assert gateway.roles.count("supervisor") == 3 and gateway.roles.count("plan") == 1
+
+
+def test_supervisor_cannot_expand_a_local_style_revision_to_frozen_rule_code() -> None:
+    from prompt2play.generation.workspace import GenerationPaused
+
+    plan, source = fixture()
+    plan["build_plan"]["files"].append(
+        {"path": "style.css", "purpose": "Appearance", "dependencies": []}
+    )
+    files = {"game.js": source, "style.css": "article{color:red}"}
+    gateway = AdaptiveGateway(
+        [
+            {
+                "operations": [
+                    operation(
+                        "request_plan_change",
+                        content=stable(
+                            {
+                                "task_id": "mechanic:" + plan["build_plan"]["mechanics"][0]["id"],
+                                "problem": "Color contrast needs correction",
+                                "proposal": "Change the approved palette",
+                            }
+                        ),
+                    )
+                ],
+                "summary": "Diagnose style",
+            }
+        ],
+        advice="repair_code",
+    )
+    snapshots: list[dict[str, Any]] = []
+    with pytest.raises(GenerationPaused, match="не проходят проверку"):
+        GenerationHarness(on_checkpoint=snapshots.append).attempt(
+            GenerationRequest(
+                "Improve contrast",
+                kind="revise",
+                pipeline_version="adaptive-v1",
+                base_files=files,
+                base_spec=plan["game_spec"],
+                base_plan=plan["build_plan"],
+                changed_files=frozenset({"style.css"}),
+            ),
+            gateway,
+            GenerationControl.bounded(),
+        )
+    assert gateway.roles.count("supervisor") == 3
+    assert snapshots[-1]["files"] == files
+    assert not snapshots[-1]["adaptive"]["decisions"]
 
 
 def test_rendered_review_repair_receives_the_previous_error_and_updates_art_evidence() -> None:
@@ -1266,6 +1322,56 @@ def test_rendered_review_repair_receives_the_previous_error_and_updates_art_evid
         )["state"]
         == "verified"
     )
+
+
+def test_repeated_rendered_defect_preserves_draft_and_calls_supervisor_before_more_edits() -> None:
+    from prompt2play.generation.workspace import GenerationPaused
+
+    plan, source = fixture()
+    calls = 0
+
+    def rendered(*_args: Any) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        return {
+            "status": "needs_revision",
+            "review": {
+                "criteria": {
+                    "detail": {
+                        "status": "needs_revision",
+                        "frame": f"frame-{calls}",
+                        "observation": f"Unfinished silhouette, review {calls}",
+                        "required_change": f"Add recognisable layers, iteration {calls}",
+                    }
+                }
+            },
+        }
+
+    replies = [plan]
+    for i in range(3):
+        replies.append(
+            {
+                "operations": [
+                    operation(
+                        "create" if i == 0 else "replace", "game.js", content=source + f"\n// {i}"
+                    ),
+                    operation("submit"),
+                ],
+                "summary": "Source changed but art defect persists",
+            }
+        )
+    gateway = AdaptiveGateway(replies, advice="pause")
+    snapshots: list[dict[str, Any]] = []
+    with pytest.raises(GenerationPaused):
+        GenerationHarness(on_rendered_check=rendered, on_checkpoint=snapshots.append).attempt(
+            GenerationRequest("Fixture", pipeline_version="adaptive-v1"),
+            gateway,
+            GenerationControl.bounded(),
+        )
+    assert calls == 3 and gateway.roles.count("plan") == 1
+    assert gateway.roles.count("author") == 3 and gateway.roles[-1] == "supervisor"
+    assert snapshots[-1]["files"]["game.js"] == source + "\n// 2"
+    assert snapshots[-1]["adaptive"]["stall"]["rendered_review"]["repeats"] == 3
 
 
 def test_adaptive_verifies_each_mechanic_on_both_devices_before_code_change_invalidates() -> None:

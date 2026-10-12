@@ -12,7 +12,7 @@ from typing import Any, cast
 
 import jsonschema
 
-from prompt2play.application.progress import observe
+from prompt2play.application.progress import observe, supervisor_problem
 from prompt2play.contracts import PLAN_SCHEMA, BuildPlan, GameSpec, split_legacy_plan
 from prompt2play.contracts.adaptive import initial_contracts, revise_design, revise_execution
 from prompt2play.contracts.models import digest, obj, stable, validate
@@ -116,6 +116,18 @@ pointerup and pointercancel listeners. Match the supplied runtime identity exact
 """
 )
 AUTHOR_INSTRUCTIONS += """\nProtected acceptance: set_test_scenario can correct selectors and preparation steps, but cannot change expected paths, comparisons, literals or tolerances, delete assertions or change snapshot/literal baselines. To dispute a planned expectation in adaptive-v1, use request_plan_change(content) with JSON {task_id,problem,proposal}; source is saved and the controller reviews the conflict. Never repeatedly rebuild the complete plan to silence an error.\n"""
+
+
+def author_contract(project_format: str) -> str:
+    if project_format != "runtime-modules-v2":
+        return AUTHOR_INSTRUCTIONS
+    return (
+        AUTHOR_INSTRUCTIONS.replace(
+            "No ES module imports/exports or dynamic import;",
+            "Static ES module imports/exports within the planned project are allowed. No dynamic import;",
+        ).replace("Define function createGame(ctx)", "Export function createGame(ctx)")
+        + "\nFor runtime-modules-v2: game.js MUST export function createGame(ctx). Import only planned relative modules and local assets; PNG sources are base64 strings. Trusted compiler embeds everything offline; no generated compiler config, packages or dynamic imports.\n"
+    )
 
 
 OPERATION_SCHEMA = obj(
@@ -627,6 +639,13 @@ class GenerationHarness:
                 "acceptance": adaptive["acceptance"],
                 "build_plan": plan.data,
                 "execution_plan": adaptive["execution"],
+                "game_spec": current_spec(),
+                "runtime": runtime_identity,
+                "completion_required": self.require_completion,
+                "test_scenario": state.get("test_scenario") or plan.data["input_acceptance"],
+                "current_files": dict(workspace.files),
+                "allowed_paths": sorted(capabilities),
+                "browser_diagnostics_available": self.on_browser_check is not None,
                 "observations": adaptive["observations"][-24:],
                 "previous_decisions": adaptive["decisions"][-6:],
                 "trigger": adaptive["supervisor_due"],
@@ -635,14 +654,18 @@ class GenerationHarness:
             }
             try:
                 reply = gateway.generate(
-                    SUPERVISOR_INSTRUCTIONS + PROMPT_BOUNDARY + ordered_context(context),
+                    author_contract(plan.data["format"])
+                    + "\nThe preceding contract describes the author and trusted runtime. Your role is solely to advise as the supervisor; return the supervisor schema below, never author operations.\n"
+                    + SUPERVISOR_INSTRUCTIONS
+                    + PROMPT_BOUNDARY
+                    + ordered_context(context),
                     SUPERVISOR_SCHEMA,
                     "supervisor",
                     control,
                     max_output=12000,
                 )
                 decision = copy.deepcopy(reply.data)
-                validate_decision(decision, adaptive, planned)
+                validate_decision(decision, adaptive, capabilities)
                 if decision["action"] == "revise_plan":
                     new_plan = json.loads(decision["plan_json"])
                     if (
@@ -663,19 +686,7 @@ class GenerationHarness:
                     id=digest(decision),
                     plan_id=adaptive["design"]["id"],
                     source_id=digest(workspace.files),
-                    problem_id=digest(
-                        {
-                            "trigger": adaptive["supervisor_due"],
-                            "defects": sorted(
-                                {
-                                    f
-                                    for o in adaptive["observations"][-24:]
-                                    if o["action"] in ("browser_check", "independent_validation")
-                                    for f in o["defects"]
-                                }
-                            ),
-                        }
-                    ),
+                    problem_id=supervisor_problem(adaptive),
                 )
                 adaptive["decisions"].append(decision)
                 observation("supervisor", {"status": "passed", "criteria": decision})
@@ -783,7 +794,11 @@ class GenerationHarness:
                         observation(
                             "coverage_review",
                             {
-                                "status": "failed" if status == "needs_revision" else "passed",
+                                "status": "failed"
+                                if status == "needs_revision"
+                                else "unverified"
+                                if status == "human_required"
+                                else "passed",
                                 "criteria": response.data["requirements"],
                                 "errors": [
                                     key + ": " + value["explanation"]
@@ -988,21 +1003,7 @@ class GenerationHarness:
                 )
             try:
                 reply = gateway.generate(
-                    (
-                        AUTHOR_INSTRUCTIONS.replace(
-                            "No ES module imports/exports or dynamic import;",
-                            "Static ES module imports/exports within the planned project are allowed. No dynamic import;",
-                        ).replace(
-                            "Define function createGame(ctx)", "Export function createGame(ctx)"
-                        )
-                        if plan.data["format"] == "runtime-modules-v2"
-                        else AUTHOR_INSTRUCTIONS
-                    )
-                    + (
-                        "\nFor runtime-modules-v2: game.js MUST export function createGame(ctx). Import only planned relative modules and local assets; PNG sources are base64 strings. Trusted compiler embeds everything offline; no generated compiler config, packages or dynamic imports.\n"
-                        if plan.data["format"] == "runtime-modules-v2"
-                        else ""
-                    )
+                    author_contract(plan.data["format"])
                     + PROMPT_BOUNDARY
                     + ordered_context(context),
                     OPERATIONS_SCHEMA,
