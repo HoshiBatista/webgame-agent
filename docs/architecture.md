@@ -665,8 +665,9 @@ wall-clock or operation-count limits are introduced.
 
 ## Adaptive generation implementation
 
-This section describes the opt-in R1–R6 implementation. Default rollout remains
-gated by R7 live measurements and explicit human artistic assessment. PostgreSQL remains the only workflow owner. A supervisor is another
+This section describes the R1–R6 implementation, enabled by default for new jobs
+at the user's request. R7 comparisons and human artistic assessment remain separate
+release criteria. PostgreSQL remains the only workflow owner. A supervisor is another
 structured model role behind `ModelGateway`; it has no independent scheduler,
 host tools, publication permission or authority over budget and trusted checks.
 
@@ -681,6 +682,27 @@ typed defects, evidence identity and cost. A deterministic policy continues clea
 productive work or identifies a decision requiring supervision. Invoke the model
 for contradictions, lack of progress, scope changes and readiness milestones;
 do not pay for supervision after every file read or patch.
+
+Browser diagnostic access is part of the author contract. `read_diagnostic` reads
+only text/JSON entries in the current job's immutable browser report, authenticated
+by the generator's active lease and stage fence. It cannot read arbitrary storage
+objects or modify evidence. Empty path lists the evidence; a JSON Pointer selects
+a state or step, and explicit character pagination bounds each response to 16,000
+characters. Stale report keys return an operation result, never another job's data
+or a spurious lease failure. Saved reports remain readable after pause/restart.
+
+Both author and supervisor receive the artifact identity, inventory and bounded
+failure previews; the author can request precise details without rerunning the
+browser. `inputs-<viewport>.json` records scenario and mechanics steps, before/after
+state projections, touch geometry and actual hit target, and operation errors.
+Replay operations are excluded. Snapshot truncation and dropped old records are
+explicit; assertions always use full states, never these diagnostic projections.
+Each viewport log is capped at 2 MB. On interruption, request-bound input records
+are copied into immutable evidence alongside the partial findings. Historical
+reports can lack these newer observations; one new check captures them. Screenshots
+and trace archives remain stored; this text operation does not claim image review.
+Read-only inspection is neutral evidence acquisition, not a failed author repair
+or verified gameplay improvement.
 
 The supervisor proposes a typed decision with evidence and an expected improvement.
 The coordinator validates the current plan/draft/fence, allowed scope, acceptance

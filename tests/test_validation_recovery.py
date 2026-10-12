@@ -52,6 +52,21 @@ class ContainerFixture:
                 }
             )
         )
+        (target / "inputs-390.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "request_sha256": "stale" if mode == "stale" else request_hash,
+                    "records": [
+                        {
+                            "step": 4,
+                            "status": "running",
+                            "before": {"snapshot": {"ui": {"selected": "ship"}}},
+                        }
+                    ],
+                }
+            )
+        )
         evidence = []
         for width in (1280, 390):
             for kind, extension in (
@@ -223,8 +238,15 @@ def test_abnormal_exit_keeps_only_bound_findings_and_attached_diagnostic(
     assert (process.finding in report["checks"]) is (mode != "stale")
     assert report["checks"][-1]["name"] == "isolated_browser_runtime"
     assert report["checks"][-1]["evidence"]["active"]["step"] == 4
-    assert len(evidence_payload(tmp_path, report)) == 1
+    assert len(evidence_payload(tmp_path, report)) == (1 if mode == "stale" else 2)
     saved = json.loads((tmp_path / report["evidence_files"][0]["path"]).read_text())
     assert saved["container_stderr"]
     assert len(saved["container_stderr"]) <= 256_000
     assert saved["report"]["checks"] == report["checks"]
+    if mode != "stale":
+        entry = report["evidence_files"][1]
+        assert entry["path"] != "inputs-390.json", (
+            "Interrupted input records must be frozen into host-owned evidence"
+        )
+        inputs = json.loads((tmp_path / entry["path"]).read_text())
+        assert inputs["records"][0]["before"]["snapshot"]["ui"]["selected"] == "ship"

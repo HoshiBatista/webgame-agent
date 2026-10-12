@@ -595,6 +595,16 @@ class DraftDiagnosticView(WorkerView):
         )
 
 
+class DraftDiagnosticReadView(WorkerView):
+    def post(self, request, pk):
+        from .diagnostics import read_diagnostic
+        from .serializers import DiagnosticReadSerializer
+
+        return Response(
+            read_diagnostic(pk, request.user, validated(DiagnosticReadSerializer, request.data))
+        )
+
+
 class JobPauseView(TeamView):
     def post(self, request, pk):
         from .pauses import pause_job

@@ -47,9 +47,15 @@ export async function tapReachable(page, selector) {
     const viewport = page.viewportSize();
     const center = {x: box.x+box.width/2, y: box.y+box.height/2};
     if (center.x >= 0 && center.x < viewport.width && center.y >= 4 && center.y < viewport.height-4) {
+      const hit = await page.locator(selector).evaluate((element, point) => {
+        const node = document.elementFromPoint(point.x, point.y);
+        return {target: {tag: element.tagName, id: element.id, disabled: Boolean(element.disabled)},
+          hit: node ? {tag: node.tagName, id: node.id, text: (node.textContent || '').slice(0, 160)} : null,
+          target_hit: node === element || element.contains(node), scroll: {x: scrollX, y: scrollY}};
+      }, center);
       // Coordinates are already in the viewport: no locator auto-scroll.
       await page.touchscreen.tap(center.x, center.y);
-      return swipes;
+      return {selector, swipes, box, point: center, ...hit, actual_touch: true};
     }
     if (center.x < 0 || center.x >= viewport.width) throw new Error('Touch target is outside the horizontal viewport');
     const swipe = await swipeDocument(page, center.y >= viewport.height ? 'down' : 'up');

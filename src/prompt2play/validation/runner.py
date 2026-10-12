@@ -724,6 +724,19 @@ class IsolatedValidator:
         report["evidence_files"] = [
             {"path": name, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
         ]
+        from .progress import read_object
+
+        for width in (1280, 390):
+            inputs = read_object(directory / f"inputs-{width}.json", 2_000_000)
+            if inputs.get("request_sha256") != watchdog.request_hash:
+                continue
+            data = canonical_json(inputs).encode()
+            name = f"inputs-{width}-{uuid.uuid4().hex}.json"
+            with (directory / name).open("xb") as output:
+                output.write(data)
+            report["evidence_files"].append(
+                {"path": name, "sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data)}
+            )
         return report
 
     @staticmethod

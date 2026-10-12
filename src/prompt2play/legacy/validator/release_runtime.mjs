@@ -12,6 +12,7 @@ import { installStorageProbe } from './storage_probe.mjs';
 import { checkMechanics } from './mechanics_probe.mjs';
 import { installLifecycleProbe } from './lifecycle_probe.mjs';
 import { createProgress } from './progress.mjs';
+import { createInputEvidence } from './input_evidence.mjs';
 
 const hash = value => crypto.createHash('sha256').update(value).digest('hex');
 const requestBytes = fs.readFileSync('/input/request.json');
@@ -53,7 +54,17 @@ function completed(snapshot, condition) {
 async function clickDesktop(page, selector) {
   const target = page.locator(selector);
   await target.waitFor({state: 'visible'});
-  if (await target.isEnabled()) return target.click();
+  if (await target.isEnabled()) {
+    await target.scrollIntoViewIfNeeded();
+    const geometry = await target.evaluate(element => {
+      const box = element.getBoundingClientRect(), point = {x: box.x + box.width / 2, y: box.y + box.height / 2};
+      const hit = document.elementFromPoint(point.x, point.y);
+      return {box: {x: box.x, y: box.y, width: box.width, height: box.height}, point,
+        target_hit: hit === element || element.contains(hit), hit: hit ? {id: hit.id, tag: hit.tagName} : null};
+    });
+    await target.click();
+    return {selector, transport: 'locator.click', geometry_before_click: geometry};
+  }
   // A real user can attempt a disabled control. Playwright's enabled-state wait
   // would turn a correct ignored action into a scenario timeout.
   await target.scrollIntoViewIfNeeded();
@@ -68,6 +79,7 @@ async function clickDesktop(page, selector) {
   }, point);
   if (!reachable) throw new Error('Desktop target is covered by another element');
   await page.mouse.click(point.x, point.y);
+  return {selector, box, point, target_hit: reachable, disabled: true};
 }
 async function input(page, step, touch, advanceTime = ms => page.waitForTimeout(ms)) {
   if (step.kind === 'wait') return page.waitForTimeout(step.ms);
@@ -117,6 +129,8 @@ try {
     const touch = width === 390, height = touch ? 844 : 800;
     const context = await browser.newContext({viewport: {width, height}, isMobile: touch, hasTouch: touch, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block'});
     const consoleLog = [], network = [], runtimeErrors = [];
+    const inputEvidencePath = `inputs-${width}.json`;
+    const inputEvidence = createInputEvidence(text => fs.writeFileSync(`/evidence/${inputEvidencePath}`, text), hash(requestBytes));
     // Authenticated PNGs already capture the actual game states. Screencast frames
     // duplicate them and can hide mechanic failures by overflowing evidence quotas.
     await context.tracing.start({screenshots: false, snapshots: true, sources: false});
@@ -227,26 +241,39 @@ try {
           }
         }
       };
+      let traceContext = null;
       const runStep = async step => progress.run({phase: 'input', input_kind: step.kind, selector: step.selector || '', key: step.key || ''}, async () => {
-        if (step.kind === 'wait') await advanceTime(step.ms);
-        else if (step.kind === 'key' && nativeClock) {
-          await page.keyboard.down(step.key); await bridge.advance(6); await page.keyboard.up(step.key);
-        }
-        else {
-          await input(page, step, touch, advanceTime);
-          if (nativeClock) await bridge.advance(6);
-          else await page.waitForTimeout(20);
+        const entry = traceContext ? inputEvidence.begin(traceContext, step, await bridge.snapshot()) : null;
+        let observedInput;
+        try {
+          if (step.kind === 'wait') await advanceTime(step.ms);
+          else if (step.kind === 'key' && nativeClock) {
+            await page.keyboard.down(step.key); await bridge.advance(6); await page.keyboard.up(step.key);
+          }
+          else {
+            observedInput = await input(page, step, touch, advanceTime);
+            if (nativeClock) await bridge.advance(6);
+            else await page.waitForTimeout(20);
+          }
+          if (entry) inputEvidence.finish(entry, await bridge.snapshot(), observedInput);
+        } catch (error) {
+          inputEvidence.finish(entry, undefined, observedInput, error);
+          throw error;
         }
       });
       const replay = async steps => {
         progress.begin({phase: 'replay', case_id: '', step: 0});
-        await resetFrozen();
-        for (const step of steps) await runStep(step);
+        const previous = traceContext; traceContext = null;
+        try {
+          await resetFrozen();
+          for (const step of steps) await runStep(step);
+        } finally {traceContext = previous;}
       };
       let observedInput = false, observedVisible = false, events = 0, timelineControl = !nativeClock, capturedStates = 0;
       for (const step of scenario.steps) {
         for (let index = 0; index < step.repeat; index++) {
           progress.begin({phase: 'scenario', step: history.length + 1, case_id: ''});
+          traceContext = {phase: 'scenario', case_id: '', step: history.length + 1};
           const before = await bridge.snapshot();
           const beforeImage = await surface.locator.screenshot({animations: 'disabled'});
           await runStep(step);
@@ -294,7 +321,10 @@ try {
           reset: resetFrozen, runStep, snapshot: () => bridge.snapshot(),
           screenshot: () => surface.locator.screenshot({animations: 'disabled'}), compareImages,
           release: async () => { for (const test of request.mechanics) for (const key of test.keyboard_keys) await page.keyboard.up(key); },
-          onStep: (caseId, step) => progress.begin({phase: 'mechanics', case_id: caseId, step}),
+          onStep: (caseId, step) => {
+            traceContext = {phase: 'mechanics', case_id: caseId, step};
+            progress.begin(traceContext);
+          },
           onCase: test => {
             if (!test.passed) partialMechanics.push({name: `mechanic_case:${width}:${test.id}`, status: 'failed', check_kind: 'browser', artifact_sha256: manifest.html_sha256,
               message: 'A basic gameplay action failed its real-input assertions', evidence: {case_id: test.id, actions: test.actions, visible_changed: test.visible_changed, failed_assertions: test.observations.filter(o => !o.passed), error: test.error || ''}});
@@ -371,6 +401,7 @@ try {
       // Preserve an actual failure screenshot even when startup/interaction failed.
       try {save(`failure-${width}.png`, await page.screenshot({timeout: 2000}));} catch {}
     } finally {
+      if (fs.existsSync(`/evidence/${inputEvidencePath}`)) save(inputEvidencePath, fs.readFileSync(`/evidence/${inputEvidencePath}`));
       progress.begin({kind: 'game', phase: 'collect_browser_errors'});
       record(`javascript_errors:${width}`, runtimeErrors.length === 0, runtimeErrors.length ? runtimeErrors.join('; ').slice(0, 1800) : 'No uncaught errors or blocking dialogs', {count: runtimeErrors.length});
       const cspViolations = await page.evaluate(() => window.__P2P_NETWORK_PROBE__.snapshot()).catch(() => [{blocked: 'probe unavailable', directive: 'unknown'}]);

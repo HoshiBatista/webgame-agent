@@ -1869,3 +1869,68 @@ def test_render_capture_environment_recovery_retries_without_paid_author_or_plan
         for item in controller["execution"]["payload"]["items"]
         if item["id"] != "art"
     )
+
+
+def test_author_and_supervisor_can_inspect_saved_diagnostics_after_resume() -> None:
+    from dataclasses import replace
+
+    plan, source = fixture()
+    saved: list[dict[str, Any]] = []
+    key = "a" * 64
+    request = GenerationRequest("Fixture", pipeline_version="adaptive-v1")
+    first = AdaptiveGateway(
+        [
+            plan,
+            {
+                "operations": [
+                    operation("create", "game.js", content=source),
+                    operation("browser_check"),
+                ],
+                "summary": "Inspect defect",
+            },
+        ]
+    )
+    calls: list[Any] = []
+    with pytest.raises(GenerationStopped, match="explicit turn"):
+        GenerationHarness(
+            limits=WorkspaceLimits(max_turns=1),
+            on_checkpoint=saved.append,
+            on_browser_check=lambda *_: {"status": "failed", "diagnostic_key": key},
+        ).attempt(request, first, GenerationControl.bounded())
+    before = saved[-1]["files"].copy()
+    saved[-1]["adaptive"]["supervisor_due"] = "Inspect saved failing browser evidence"
+    read = {
+        "operations": [
+            operation(
+                "read_diagnostic", "inputs-390.json", content='{"pointer":"/records/0/snapshot/ui"}'
+            )
+        ],
+        "summary": "Inspect without changing game",
+    }
+    resumed = AdaptiveGateway(
+        [read, read, read, {"operations": [operation("check")], "summary": "End fixture"}]
+    )
+
+    def diagnostic(query: dict[str, Any]) -> dict[str, Any]:
+        calls.append(query)
+        return {
+            "available": True,
+            "diagnostic_key": key,
+            "content": '{"selected":"ship"}',
+            "failure_previews": [{"error": "touch covered by overlay"}],
+        }
+
+    with pytest.raises(GenerationStopped, match="explicit turn"):
+        GenerationHarness(
+            limits=WorkspaceLimits(max_turns=5),
+            on_checkpoint=saved.append,
+            on_diagnostic_read=diagnostic,
+        ).attempt(replace(request, resume_state=saved[-1]), resumed, GenerationControl.bounded())
+    supervisor = next(
+        p for p, r in zip(resumed.prompts, resumed.roles, strict=True) if r == "supervisor"
+    )
+    assert "touch covered by overlay" in supervisor
+    assert "selected" in resumed.prompts[-1] and len(calls) == 4
+    assert resumed.roles.count("plan") == 0 and resumed.roles.count("supervisor") == 1
+    assert saved[-1]["files"] == before
+    assert saved[-1]["adaptive"]["stall"]["diagnostic_read"]["repeats"] == 0

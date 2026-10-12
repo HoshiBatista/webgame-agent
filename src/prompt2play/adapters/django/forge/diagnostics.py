@@ -10,6 +10,39 @@ from .errors import Conflict
 from .models import Job
 
 
+def read_diagnostic(job_id, runner, values):
+    from prompt2play.validation.diagnostic_read import read_evidence
+
+    workflow.require_role(runner, "generator")
+    with transaction.atomic():
+        job = services.fence(
+            job_id, runner, values["lease_token"], stage_fence=values["stage_fence"]
+        )
+        if job.stage not in ("plan", "repair"):
+            raise Conflict("Draft diagnostics require the generation stage.", code="stage_conflict")
+        key = job.checkpoint.get("browser_diagnostic")
+        if not key:
+            return {"available": False, "reason": "No saved browser diagnostic yet"}
+        if values.get("diagnostic_key") and values["diagnostic_key"] != key:
+            # A stale report is an operation error, not lease revocation.
+            return {
+                "available": False,
+                "diagnostic_key": key,
+                "reason": "Diagnostic changed; read the current inventory first",
+            }
+        artifact_store = workflow.store()
+        report = artifact_store.read_json(key)["report"]
+        try:
+            result = read_evidence(
+                report,
+                artifact_store.read,
+                **{k: values[k] for k in ("path", "pointer", "offset", "limit")},
+            )
+        except (ValueError, KeyError, UnicodeError) as exc:
+            return {"available": False, "diagnostic_key": key, "reason": str(exc)}
+        return {"available": True, "diagnostic_key": key, **result}
+
+
 def record_diagnostic(job_id, runner, values):
     workflow.require_role(runner, "generator")
     with transaction.atomic():

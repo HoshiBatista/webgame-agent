@@ -503,6 +503,7 @@ def generate_stage(lease: StageLease, args: argparse.Namespace) -> None:
             on_checkpoint=save_draft,
             on_planning=save_planning,
             on_browser_check=browser_check,
+            on_diagnostic_read=lambda query: lease.write("diagnostics/read", **query),
             on_rendered_check=rendered_check,
             browser_identity=IsolatedValidator(
                 args.image, args.validation_timeout

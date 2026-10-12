@@ -600,6 +600,16 @@ class DiagnosticSerializer(FencedSerializer):
     validate_evidence_files = CandidateValidationSerializer.validate_evidence_files
 
 
+class DiagnosticReadSerializer(FencedSerializer):
+    diagnostic_key = serializers.RegexField(r"^[a-f0-9]{64}$", required=False)
+    path = serializers.CharField(max_length=200, default="", allow_blank=True)
+    pointer = serializers.CharField(
+        max_length=2000, default="", allow_blank=True, trim_whitespace=False
+    )
+    offset = serializers.IntegerField(min_value=0, max_value=64_000_000, default=0)
+    limit = serializers.IntegerField(min_value=1, max_value=16000, default=12000)
+
+
 class PauseBoundarySerializer(LeaseSerializer):
     stage_fence = serializers.IntegerField(min_value=0)
     reason = serializers.CharField(max_length=1500, required=False, allow_blank=True)

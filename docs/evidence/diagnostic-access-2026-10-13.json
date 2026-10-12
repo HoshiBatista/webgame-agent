@@ -1,0 +1,155 @@
+{
+  "date": "2026-10-13",
+  "scope": "Application diagnostic access; authored regression fixtures, not user game quality or new live-model comparison. No generated user game was edited.",
+  "checks": {
+    "pytest": {
+      "passed": 465,
+      "skipped": 41,
+      "coverage_percent": 86.45
+    },
+    "ruff_format": "passed",
+    "ruff_check": "passed",
+    "strict_mypy": "passed",
+    "package_build": "passed",
+    "isolated_browser": {
+      "passed": 4,
+      "reports": [
+        {
+          "fixture": "diagnostic-obstructed-touch",
+          "report_sha256": "c27e2173f7e72b672e58941ae203e69fea30f7baab9f59ae2a460dcc028d09a1",
+          "status": "failed",
+          "incomplete": false,
+          "expected_game_failure": true,
+          "validator_image_sha256": "sha256:80c519ed5be5b41bd0c63967845ba374617719b090cb0cf6a345b67640551d65",
+          "evidence_files": [
+            "start-1280.png",
+            "control-before-1280.png",
+            "control-after-1280.png",
+            "interaction-1-1280.png",
+            "interaction-2-1280.png",
+            "interaction-3-1280.png",
+            "final-1280.png",
+            "scenario-1280.json",
+            "mechanics-1280.json",
+            "restart-1280.png",
+            "inputs-1280.json",
+            "console-1280.json",
+            "network-1280.json",
+            "trace-1280.zip",
+            "start-390.png",
+            "control-before-390.png",
+            "control-after-390.png",
+            "final-390.png",
+            "scenario-390.json",
+            "mechanics-390.json",
+            "restart-390.png",
+            "inputs-390.json",
+            "console-390.json",
+            "network-390.json",
+            "trace-390.zip"
+          ]
+        },
+        {
+          "fixture": "hung-game",
+          "report_sha256": "4b898a4a4a83666103630757482752f774a463490992a2b6cc63e51d3606cb52",
+          "status": "failed",
+          "incomplete": true,
+          "expected_game_failure": true,
+          "validator_image_sha256": "sha256:80c519ed5be5b41bd0c63967845ba374617719b090cb0cf6a345b67640551d65",
+          "evidence_files": [
+            "interrupted-a0a2b6d5292040b4a53c8b6a20681097.json",
+            "inputs-1280-f586009d7a4f436690f81df5982bb350.json"
+          ]
+        },
+        {
+          "fixture": "dom",
+          "report_sha256": "677e0e0b6b55009f2bfafb045a55ab38ede57592d2ebd2f2ce6ab27309d7ad68",
+          "status": "passed",
+          "incomplete": false,
+          "expected_game_failure": false,
+          "validator_image_sha256": "sha256:80c519ed5be5b41bd0c63967845ba374617719b090cb0cf6a345b67640551d65",
+          "evidence_files": [
+            "start-1280.png",
+            "control-before-1280.png",
+            "control-after-1280.png",
+            "interaction-1-1280.png",
+            "interaction-2-1280.png",
+            "interaction-3-1280.png",
+            "final-1280.png",
+            "scenario-1280.json",
+            "restart-1280.png",
+            "inputs-1280.json",
+            "console-1280.json",
+            "network-1280.json",
+            "trace-1280.zip",
+            "start-390.png",
+            "control-before-390.png",
+            "control-after-390.png",
+            "interaction-1-390.png",
+            "interaction-2-390.png",
+            "interaction-3-390.png",
+            "final-390.png",
+            "scenario-390.json",
+            "restart-390.png",
+            "inputs-390.json",
+            "console-390.json",
+            "network-390.json",
+            "trace-390.zip"
+          ]
+        },
+        {
+          "fixture": "dense-buttons-real-scroll",
+          "report_sha256": "9ceed67e789a27d8af660f3fbf8684ce1c40d0c6537d9ed7772e7a8f3fdefa95",
+          "status": "passed",
+          "incomplete": false,
+          "expected_game_failure": false,
+          "validator_image_sha256": "sha256:80c519ed5be5b41bd0c63967845ba374617719b090cb0cf6a345b67640551d65",
+          "evidence_files": [
+            "start-1280.png",
+            "control-before-1280.png",
+            "control-after-1280.png",
+            "interaction-1-1280.png",
+            "interaction-2-1280.png",
+            "interaction-3-1280.png",
+            "final-1280.png",
+            "scenario-1280.json",
+            "restart-1280.png",
+            "inputs-1280.json",
+            "console-1280.json",
+            "network-1280.json",
+            "trace-1280.zip",
+            "start-390.png",
+            "control-before-390.png",
+            "control-after-390.png",
+            "interaction-1-390.png",
+            "interaction-2-390.png",
+            "interaction-3-390.png",
+            "final-390.png",
+            "scenario-390.json",
+            "restart-390.png",
+            "touch-scroll-before-390.png",
+            "touch-scroll-after-390.png",
+            "inputs-390.json",
+            "console-390.json",
+            "network-390.json",
+            "trace-390.zip"
+          ]
+        }
+      ]
+    }
+  },
+  "established": [
+    "Lease/fence/current-job-scoped read-only access; stale report and traversal denied",
+    "JSON Pointer and UTF-8-preserving pagination",
+    "Author and supervisor receive saved diagnostics after resume without replanning or changing source",
+    "Read-only inspection does not count as failed repair",
+    "Real touch hit target and before/after snapshot capture, including state fields after large world data",
+    "Hung validation freezes request-bound partial input logs",
+    "Ordinary desktop/touch and scroll checks remain functional"
+  ],
+  "limitations": [
+    "Snapshot previews and large record sets have explicit truncation; exact assertions still use complete state",
+    "Text evidence reader does not deliver screenshot pixels or parse trace archives",
+    "No actual competition WebView host qualification or human artistic acceptance"
+  ]
+}

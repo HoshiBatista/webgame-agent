@@ -78,6 +78,53 @@ def test_progressing_wait_outlives_idle_interval() -> None:
     assert report["incomplete"] is False
 
 
+def test_saved_input_diagnostics_explain_obstructed_touch_and_failed_mechanics() -> None:
+    files, spec, acceptance = fixture("dom")
+    files["game.js"] = files["game.js"].replace(
+        "({phase, cells: [...cells], moves})",
+        "({phase, cells: [...cells], moves, world: Array.from({length: 2000}, (_, i) => ({id:i, label:'fixture scenery padding'})), ui: {selected:'beacon'}})",
+    )
+    files["style.css"] = (
+        "@media(max-width:600px){#beacons{position:relative}#beacons::after{content:'Fixture overlay';position:absolute;inset:0;z-index:99;background:#123}}"
+    )
+    cases = json.loads((RESOURCE_ROOT / "runtime/examples/dom/plan.json").read_text())["mechanics"]
+    spec.update(
+        mechanics_required=True, mechanics_required_actions=["MOVE"], mechanics_acceptance=cases
+    )
+    name = "diagnostic-obstructed-touch"
+    report = execute(name, files, spec, acceptance, require_completion=False)
+    assert report["status"] == "failed"
+    root = (
+        Path(os.environ.get("P2P_BROWSER_EVIDENCE", "/tmp/prompt2play-browser-regressions")) / name
+    )
+    traces = {
+        width: json.loads((root / f"inputs-{width}.json").read_text()) for width in (1280, 390)
+    }
+    touch = traces[390]["records"][0]
+    assert touch["input"]["actual_touch"] and touch["input"]["target_hit"] is False
+    assert touch["input"]["hit"]["id"] == "beacons" and touch["input"]["point"]["x"] > 0
+    assert touch["before"]["snapshot"]["moves"] == touch["snapshot"]["moves"] == 0
+    assert touch["snapshot_truncated"] and touch["snapshot"]["ui"]["selected"] == "beacon"
+    assert any(
+        r["case_id"] == "move" and r["snapshot"]["moves"] > 0 for r in traces[1280]["records"]
+    )
+    # Exercise the same immutable diagnostic reader that supplies author/supervisor.
+    from prompt2play.validation.diagnostic_read import read_evidence
+
+    report["evidence_files"] = [
+        {**entry, "object_key": entry["path"]} for entry in report["evidence_files"]
+    ]
+    index = read_evidence(report, lambda key: (root / key).read_bytes())
+    assert any(preview["case_id"] == "move" for preview in index["failure_previews"])
+    selected = read_evidence(
+        report,
+        lambda key: (root / key).read_bytes(),
+        path="inputs-390.json",
+        pointer="/records/0/input/target_hit",
+    )
+    assert selected["content"] == "false"
+
+
 def test_hung_game_retains_defects_for_repair() -> None:
     files, spec, acceptance = fixture("dom")
     files["game.js"] = files["game.js"].replace(

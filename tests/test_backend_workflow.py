@@ -1995,3 +1995,55 @@ def test_coordinator_accepts_only_saved_user_requested_mechanics_changes(
     )
     assert candidate.committed and candidate.parent_id == base.pk
     assert base.spec["mechanics_acceptance"][0]["desktop"]["assertions"][0]["op"] == "greater"
+
+
+def test_diagnostic_reads_are_fenced_and_scoped_to_current_job(team: Team) -> None:
+    import json
+
+    job, lease = job_for(team)
+    raw = json.dumps({"snapshot": {"ui": {"selected": "ship"}}}).encode()
+    entry = {
+        "path": "inputs-390.json",
+        "object_key": workflow.store().put_bytes(raw),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "bytes": len(raw),
+    }
+    intent, key = workflow.store().prepare({"report": {"evidence_files": [entry]}})
+    workflow.store().commit(intent, key)
+    Job.objects.filter(pk=job.pk).update(checkpoint={"browser_diagnostic": key})
+    client = Client()
+    url = f"/api/worker/jobs/{job.pk}/diagnostics/read/"
+    body = {
+        "lease_token": lease,
+        "stage_fence": job.stage_fence,
+        "path": entry["path"],
+        "pointer": "/snapshot/ui/selected",
+    }
+
+    def post(**overrides: Any) -> Any:
+        return client.post(
+            url,
+            {**body, **overrides},
+            content_type="application/json",
+            HTTP_AUTHORIZATION="Bearer generator-token",
+        )
+
+    response = post()
+    assert response.status_code == 200 and json.loads(response.json()["content"]) == "ship"
+    assert response.json()["diagnostic_key"] == key
+    assert post(diagnostic_key="f" * 64).json()["available"] is False
+    assert post(path="../../credentials.json").json()["available"] is False
+    assert post(limit=16001).status_code == 400
+    assert post(stage_fence=job.stage_fence + 1).status_code == 409
+    assert (
+        client.post(
+            url, body, content_type="application/json", HTTP_AUTHORIZATION="Bearer validator-token"
+        ).status_code
+        == 403
+    )
+    # Revoked/other runner credentials cannot obtain even the file inventory.
+    assert client.post(url, body, content_type="application/json").status_code in (401, 403)
+    before = Job.objects.get(pk=job.pk)
+    assert before.checkpoint == {"browser_diagnostic": key} and before.cost_nano == 0
+    Job.objects.filter(pk=job.pk).update(checkpoint={})
+    assert post().json()["available"] is False
