@@ -44,6 +44,25 @@ function pointer(snapshot, path) {
 function completed(snapshot, condition) {
   return condition.one_of.some(value => canonical(value) === canonical(pointer(snapshot, condition.path)));
 }
+async function clickDesktop(page, selector) {
+  const target = page.locator(selector);
+  await target.waitFor({state: 'visible'});
+  if (await target.isEnabled()) return target.click();
+  // A real user can attempt a disabled control. Playwright's enabled-state wait
+  // would turn a correct ignored action into a scenario timeout.
+  await target.scrollIntoViewIfNeeded();
+  const box = await target.boundingBox();
+  const viewport = page.viewportSize();
+  if (!box || box.width <= 0 || box.height <= 0) throw new Error('Desktop target has no rendered geometry');
+  const point = {x: box.x+box.width/2, y: box.y+box.height/2};
+  if (point.x < 0 || point.x >= viewport.width || point.y < 0 || point.y >= viewport.height) throw new Error('Desktop target is outside the viewport');
+  const reachable = await target.evaluate((element, point) => {
+    const hit = document.elementFromPoint(point.x, point.y);
+    return hit === element || element.contains(hit);
+  }, point);
+  if (!reachable) throw new Error('Desktop target is covered by another element');
+  await page.mouse.click(point.x, point.y);
+}
 async function input(page, step, touch, advanceTime = ms => page.waitForTimeout(ms)) {
   if (step.kind === 'wait') return page.waitForTimeout(step.ms);
   if (step.kind === 'key') return page.keyboard.press(step.key);
@@ -51,9 +70,9 @@ async function input(page, step, touch, advanceTime = ms => page.waitForTimeout(
   if (step.kind === 'key_up') return page.keyboard.up(step.key);
   if (step.kind === 'blur') return page.evaluate(() => document.activeElement?.blur());
   if (step.kind === 'focus') return page.locator('#p2p-surface').focus();
-  if (step.kind === 'click') return touch ? tapReachable(page, step.selector) : page.locator(step.selector).click();
+  if (step.kind === 'click') return touch ? tapReachable(page, step.selector) : clickDesktop(page, step.selector);
   if (step.kind === 'tap') {
-    if (step.selector) return touch ? tapReachable(page, step.selector) : page.locator(step.selector).click();
+    if (step.selector) return touch ? tapReachable(page, step.selector) : clickDesktop(page, step.selector);
     return touch ? page.touchscreen.tap(step.x, step.y) : page.mouse.click(step.x, step.y);
   }
   if (step.kind === 'drag') {
@@ -90,7 +109,9 @@ try {
     const touch = width === 390, height = touch ? 844 : 800;
     const context = await browser.newContext({viewport: {width, height}, isMobile: touch, hasTouch: touch, deviceScaleFactor: 1, acceptDownloads: false, serviceWorkers: 'block'});
     const consoleLog = [], network = [], runtimeErrors = [];
-    await context.tracing.start({screenshots: true, snapshots: true, sources: false});
+    // Authenticated PNGs already capture the actual game states. Screencast frames
+    // duplicate them and can hide mechanic failures by overflowing evidence quotas.
+    await context.tracing.start({screenshots: false, snapshots: true, sources: false});
     await context.addInitScript(installAudioProbe);
     await context.addInitScript(installStorageProbe);
     await context.addInitScript(installLifecycleProbe);

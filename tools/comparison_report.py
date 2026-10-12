@@ -143,7 +143,8 @@ def summarize(root: Path, ratings: dict | None = None) -> dict:
         "budget_usd": manifest["budget_usd"],
         "spent_upper_usd": sum(r.get("upper_nano", 0) for r in ledger.values()) / 1e9,
         "reserved_usd": sum(r.get("reserved_nano", 0) for r in ledger.values()) / 1e9,
-        "unscored_setup_spend_upper_usd": sum(r.get("upper_nano", 0) for r in ledger.values()) / 1e9
+        # The shared budget also covers setup failures and targeted follow-up probes.
+        "unscored_spend_upper_usd": sum(r.get("upper_nano", 0) for r in ledger.values()) / 1e9
         - sum(r["cost_upper_usd"] for r in runs),
         "variants": by_variant,
         "accepted_cost_ratio": cost_ratio,

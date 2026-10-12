@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pytest
 
 from prompt2play.validation import REQUIRED_CHECKS, IsolatedValidator, validate_acceptance
-from prompt2play.validation.runner import evidence_payload
+from prompt2play.validation.runner import MAX_EVIDENCE_BYTES, evidence_payload
 
 
 def acceptance() -> dict[str, Any]:
@@ -188,6 +188,17 @@ def test_evidence_traversal_and_symlinks_are_rejected(tmp_path: Path) -> None:
     path.unlink()
     path.symlink_to(tmp_path / "final-390.png")
     with pytest.raises(ValueError, match="Invalid evidence"):
+        IsolatedValidator.checked_report(
+            report, manifest, "c" * 64, "d" * 64, "sha256:" + "e" * 64, tmp_path
+        )
+
+
+def test_trace_fix_does_not_waive_evidence_size_or_byte_binding(tmp_path: Path) -> None:
+    report, manifest = authored_report(tmp_path)
+    next(item for item in report["evidence_files"] if item["path"] == "trace-1280.zip")["bytes"] = (
+        MAX_EVIDENCE_BYTES + 1
+    )
+    with pytest.raises(ValueError, match="Invalid evidence file"):
         IsolatedValidator.checked_report(
             report, manifest, "c" * 64, "d" * 64, "sha256:" + "e" * 64, tmp_path
         )

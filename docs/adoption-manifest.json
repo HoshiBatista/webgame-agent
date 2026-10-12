@@ -1539,7 +1539,9 @@
     "evidence/generation-reliability-verification.json",
     "evidence/planning-pause-verification.json",
     "evidence/adaptive-implementation-verification-2026-10-12.json",
-    "evidence/adaptive-review-followup-2026-10-12.json"
+    "evidence/adaptive-review-followup-2026-10-12.json",
+    "evidence/adaptive-targeted-verification-2026-10-12.json",
+    "evidence/adaptive-comparison-pilot-2026-10-12.json"
   ],
   "dependency_locks": {
     "python": "uv.lock",

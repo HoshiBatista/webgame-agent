@@ -564,10 +564,29 @@ class IsolatedValidator:
                             cast(Callable[..., Any], require_report_binding)(
                                 files, html, spec, value
                             )
-                    except (ValueError, TypeError, KeyError, OSError, RecursionError):
+                    except (ValueError, TypeError, KeyError, OSError, RecursionError) as exc:
+                        reason = str(exc)[:1000]
+                        # Keep the precise contract rejection private and bounded.
+                        # Exclusive creation cannot follow a container-made symlink.
+                        try:
+                            with (evidence_dir / "evidence-rejection.json").open(
+                                "x", encoding="utf-8"
+                            ) as rejection:
+                                json.dump(
+                                    {
+                                        "exception": type(exc).__name__,
+                                        "reason": reason,
+                                        "request_sha256": hashlib.sha256(request_bytes).hexdigest(),
+                                        "suite_sha256": suite,
+                                    },
+                                    rejection,
+                                )
+                        except OSError:
+                            pass
                         return _failure(
                             manifest,
-                            "Invalid, stale, incomplete, or unbound isolated browser evidence",
+                            "Invalid, stale, incomplete, or unbound isolated browser evidence: "
+                            + reason,
                         )
                     value["checks"] = static["checks"] + value["checks"]
                     value["warnings"] = static["warnings"] + value["warnings"]

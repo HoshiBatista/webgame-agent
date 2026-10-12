@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-12T15:21:58.235175+00:00",
+  "status": "Targeted supervisor and browser recovery verified; broad obsolete comparison stopped",
+  "supervisor_probe": {
+    "source_commit": "a7c4569e35f12adeb79c090791ed65c05ed06b48",
+    "parent_run": "adaptive-beacon-puzzle-new",
+    "before_action": "request_user for runtime documentation and current source already available to application",
+    "after_action": "repair_code",
+    "affected_files": [
+      "ui.js",
+      "style.css"
+    ],
+    "plan_rewritten": false,
+    "roles": [
+      "supervisor"
+    ],
+    "usage": {
+      "input_tokens": 65643,
+      "cached_input_tokens": 0,
+      "output_tokens": 441,
+      "total_tokens": 66084,
+      "calls": 1
+    },
+    "cost_usd": "0.168517500",
+    "source_unchanged": true,
+    "no_publication": true,
+    "receipt_result_sha256": "3fa2fbf5458ed41073cee796b67eb73b172f4e0dbdd1086bd8997bae309f8c21"
+  },
+  "browser_recovery": {
+    "parent_run": "adaptive-tower-defense-new",
+    "original_sandbox_seconds": 90,
+    "final_sandbox_seconds": 90,
+    "model_calls": 0,
+    "source_unchanged": true,
+    "requirements_unchanged": true,
+    "acceptance_unchanged": true,
+    "pending_submit": false,
+    "next_phase": "author",
+    "real_input": true,
+    "status": "failed",
+    "failed_checks": [
+      {
+        "name": "mechanics:1280",
+        "status": "failed",
+        "message": "Every required gameplay action must pass its declared real-input assertions"
+      }
+    ],
+    "original_evidence_bytes": 37869338,
+    "final_evidence_bytes": 7263498,
+    "quota_bytes": 32000000,
+    "fixes": [
+      "Trace keeps DOM snapshots and standalone authenticated PNGs without duplicated screencast frames",
+      "Precise evidence rejection reason retained privately and in bounded report diagnostics",
+      "Disabled controls receive a real pointer attempt with visible geometry and hit-test; no synthetic handler or test oracle changes"
+    ],
+    "remaining_game_failure": "Desktop pause does not preserve enemy/combat state as expected; source untouched and returned to author rather than falsely accepted",
+    "report_sha256": "6b826cbbc776cf9f9229199c40a0dfad5c75d06040fc5f4eba281f5e4537bdb8",
+    "negative_controls": "Real enabled-state regression fixture passes only when unavailable actions are ignored; deliberately broken behavior still fails desktop and touch"
+  },
+  "validator_image": "sha256:5711d9bcc6aa0c4ef9128d299d963dd362f32b74f0e2fa35fccf64c02635794c",
+  "checks": [
+    {
+      "name": "python_suite",
+      "log_sha256": "7de44799a222f0ef57601e5096b17ae36fa2c59837d788835e0f67a352a81d9e",
+      "passed": 382,
+      "skipped": 36,
+      "coverage_percent": 86.18
+    },
+    {
+      "name": "isolated_browser_and_packager",
+      "log_sha256": "a9b4be3b18211af2e6b84b7187e39fdf5b86161adbd2135016e384cd10db17e5",
+      "passed": 35,
+      "fresh_evidence": true
+    },
+    {
+      "name": "postgresql_workflow",
+      "log_sha256": "c56e256b8e13a6ce5f67f464470c1fba4242be1cfac9ad6c04eb225acb882954",
+      "passed": 88
+    },
+    {
+      "name": "package_build",
+      "log_sha256": "b4e22e1413870178e028e18e2df6e24cc577f9db04e14c37bbbb97761cd34d5c",
+      "status": "passed"
+    }
+  ],
+  "ruff_format": "185 files passed",
+  "ruff_lint": "passed",
+  "mypy": "160 source files passed",
+  "frontend_sources_changed": false,
+  "previous_frontend_tests_still_applicable": 69,
+  "source_files_sha256": {
+    "src/prompt2play/legacy/validator/release_runtime.mjs": "2eb9117e88f72035fed4e1d16ad96c865651d77d072fe8916e836ca39cee23ed",
+    "src/prompt2play/validation/runner.py": "bb177323dd81cfa2d1d1983acd0ebb230e60fceaacf707666ca8a896a1ca3d48",
+    "tests/test_validation.py": "8a30d478ce66f49184f2c8a8130bbfbb61afdfe4c04d87fc97bf94c5a02ca73f",
+    "tests/test_validation_browser.py": "d210ff91fe3547a2302e0184af9025e9875afdb743fad52633c0b6ddee756ebe",
+    "tools/comparison_report.py": "a04b11d20481b969386f64c1414f65707bdd341fe04d366cb897d6358b3f1fc9"
+  },
+  "user_game_edited": false,
+  "user_job_resumed": false,
+  "human_art_quality": "not_assessed",
+  "actual_webview": "host_unknown_not_tested",
+  "default_rollout": "legacy-v1; improvement thresholds not established"
+}

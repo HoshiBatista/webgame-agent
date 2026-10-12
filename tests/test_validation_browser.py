@@ -76,6 +76,85 @@ def test_reviewed_games_real_desktop_and_touch(name: str) -> None:
     assert len(report["evidence_files"]) >= 12
 
 
+@pytest.mark.parametrize("broken", [False, True])
+def test_real_click_on_disabled_control_checks_ignored_action_instead_of_waiting(
+    broken: bool,
+) -> None:
+    files, spec, _ = fixture("dom")
+    files["game.js"] = """function createGame(ctx) {
+      let phase='ready',moves=0;
+      ctx.root.innerHTML='<h1>Disabled input regression</h1><strong id="count" style="display:block;font-size:64px">0</strong><button id="move">Move</button><button id="blocked" aria-disabled="true">Unavailable</button><button id="native-blocked" disabled>Native unavailable</button>';
+      function render(){ctx.root.querySelector('#count').textContent=String(moves);}
+      function move(){moves++;render();}
+      ctx.input.key(key=>{if(key==='ArrowRight')move();});
+      ctx.input.on(ctx.root.querySelector('#move'),'click',move);
+      ctx.input.on(ctx.root.querySelector('#blocked'),'click',()=>{BROKEN;render();});
+      ctx.input.on(ctx.root.querySelector('#native-blocked'),'click',move);
+      return {snapshot:()=>({phase,moves}),dispatch(a){if(a.type==='START')phase='playing';if(a.type==='MOVE')move();}};
+    }""".replace("BROKEN", "moves++" if broken else "")
+    spec["input_acceptance"] = {
+        "start_selector": "#p2p-start",
+        "restart_selector": "#p2p-restart",
+        "desktop": {
+            "steps": [{"kind": "key", "key": "ArrowRight"}],
+            "completion": {"path": "/phase", "one_of": ["playing"]},
+        },
+        "touch": {
+            "steps": [{"kind": "tap", "selector": "#move"}],
+            "completion": {"path": "/phase", "one_of": ["playing"]},
+        },
+    }
+    assertions = [
+        {
+            "after_step": i,
+            "before_step": -1,
+            "path": "/moves",
+            "op": "equal",
+            "value_json": "2",
+            "tolerance": 0,
+        }
+        for i in (2, 3, 4)
+    ]
+    spec.update(
+        mechanics_required=True,
+        mechanics_required_actions=["MOVE", "BLOCK"],
+        mechanics_acceptance=[
+            {
+                "id": "disabled-attempt",
+                "description": "Physical input must leave unavailable actions unchanged",
+                "actions": ["MOVE", "BLOCK"],
+                "keyboard_keys": ["ArrowRight"],
+                "continuous": False,
+                "desktop": {
+                    "steps": [
+                        {"kind": "key", "key": "ArrowRight"},
+                        {"kind": "key", "key": "ArrowRight"},
+                        {"kind": "click", "selector": "#blocked"},
+                        {"kind": "click", "selector": "#native-blocked"},
+                    ],
+                    "assertions": assertions,
+                },
+                "touch": {
+                    "steps": [
+                        {"kind": "tap", "selector": "#move"},
+                        {"kind": "tap", "selector": "#move"},
+                        {"kind": "tap", "selector": "#blocked"},
+                        {"kind": "tap", "selector": "#native-blocked"},
+                    ],
+                    "assertions": assertions,
+                },
+            }
+        ],
+    )
+    report = execute(f"disabled-click-{broken}", files, spec, require_completion=False)
+    for width in (1280, 390):
+        check = next(c for c in report["checks"] if c["name"] == f"mechanics:{width}")
+        assert check["status"] == ("failed" if broken else "passed"), check
+        case = check["evidence"]["cases"][0]
+        assert not case.get("error"), "A rendered disabled button is a valid real input target"
+        assert len(case["failed_assertions"]) == (2 if broken else 0)
+
+
 def test_native_profile_rejects_smoke_oracle_instead_of_rewriting_it() -> None:
     files, spec, _ = fixture("dom")
     # A smoke oracle must be corrected; never silently reinterpret its input as a playthrough.
