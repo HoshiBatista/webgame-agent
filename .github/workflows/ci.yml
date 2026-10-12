@@ -153,7 +153,7 @@ jobs:
       UV_PYTHON: "3.13"
       P2P_DATABASE_URL: postgresql+psycopg://prompt2play:prompt2play@localhost:5432/prompt2play
       P2P_REDIS_URL: redis://localhost:6379/0
-      P2P_ARTIFACT_ROOT: ${{ runner.temp }}/prompt2play-artifacts
+      P2P_ARTIFACT_ROOT: artifacts-ci
       P2P_BROWSER_VALIDATION: "false"
       P2P_INTEGRATION_TESTS: "1"
     services:
