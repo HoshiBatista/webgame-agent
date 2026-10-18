@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-18",
+  "scope": "repository reset and planning only",
+  "active_document_count": 9,
+  "local_links_checked": 39,
+  "source_copies_verified": 10,
+  "archive_source_hashes_verified": 659,
+  "git_refs_and_index_preserved": true,
+  "git_diff_check": "passed",
+  "new_application_implemented": false,
+  "application_tests_run": false,
+  "model_generations_run": 0,
+  "original_source_files_modified": false,
+  "gamesforgeex_modified": false,
+  "document_sha256": {
+    "README.md": "95b28108a4f631e29a9dd6d726895fccfea32d78224ef3c7c903ec49a6e2bf53",
+    "AGENTS.md": "7515c673bdd19509fd4805c52c9e5fdb6a6282cab0e4ff0ef9b7fff297f5b46f",
+    "CLAUDE.md": "d7e0e54298c2112ab552b45920e0ee99b73b9baf9013916c42238e9bc6c5f808",
+    "docs/architecture.md": "dad2a5220492dbb0b86218982cf2baf6c381fa30d3e91b8bf0e0bd5f7ffa5043",
+    "docs/development-plan.md": "e4f900e9b57eb30128e8fefb769cf9809cba75e960b7a5438c834e44f3347cf5",
+    "docs/game-creation-model.ru.md": "35f4c590a1a3c0c08b66fda9e5094efaf732b6a4f69d3d56bd7defd51559eaa9",
+    "docs/requirements.ru.md": "f00bcf82fd7f495321611907b056a629582c382b0ccd7b798ab11fd16b29a5f4",
+    "docs/source-review.ru.md": "9b5e79b87f2cdfbae22bab732cec1ff12f74aa17b60058189a5b693c52db7b54",
+    "docs/sources/README.md": "7facf1d48821dfc124939c5e955ae3dd650842100c74de651f3bd2992706a936"
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-18",
+  "role": "reference_material_not_active_instructions",
+  "ml_branch": "origin/develop",
+  "ml_commit": "8341af2e1ee22e1274385e9331aa5ff72528800d",
+  "files": [
+    {
+      "path": "docs/sources/organizers/Keys_Bilayn.pdf",
+      "source_path": "/Users/noxlight7/Downloads/Keys_Bilayn.pdf",
+      "sha256": "9c05339cb07acb1504d4f57a93b57f70a9722a681b1189fe177601a4faa93954"
+    },
+    {
+      "path": "docs/sources/organizers/meet_transcript.txt",
+      "source_path": "/Users/noxlight7/Downloads/meet_transcript.txt",
+      "sha256": "91ccbc2a81383483eb9dbe1ed278b710955c1948ec825687556a3887a1d843d5"
+    },
+    {
+      "path": "docs/sources/organizers/hackathon_requirements.md",
+      "source_path": "/Users/noxlight7/Downloads/hackathon_requirements.md",
+      "sha256": "224001470caa767b4652ecd25b49b2a0770179d84fc2c166a06e7dc25a46f6d7"
+    },
+    {
+      "path": "docs/sources/frontend/proposal.ru.md",
+      "source_path": "/Users/noxlight7/Downloads/работа (1).md",
+      "sha256": "ea6568cd510a0c34663e9927ae4718b098def2004b8289d927557c43c4d2672c"
+    },
+    {
+      "path": "docs/sources/ml-engineer/docs/architecture.md",
+      "git_source": "8341af2e1ee22e1274385e9331aa5ff72528800d:docs/architecture.md",
+      "sha256": "0a67230b82a8ff78356c13673508231a4a8eca0c7e54da67cc3365db99581f3c"
+    },
+    {
+      "path": "docs/sources/ml-engineer/docs/capacity.md",
+      "git_source": "8341af2e1ee22e1274385e9331aa5ff72528800d:docs/capacity.md",
+      "sha256": "02e68b87995b7fe628d83ed7a6326a7de9340f44951b66befe39c3d51256a816"
+    },
+    {
+      "path": "docs/sources/ml-engineer/docs/ci.md",
+      "git_source": "8341af2e1ee22e1274385e9331aa5ff72528800d:docs/ci.md",
+      "sha256": "d163c84c58d0cf054b04a406a68d3f4bb662028d2f0486611b9f1f1da8d4998d"
+    },
+    {
+      "path": "docs/sources/ml-engineer/docs/hackathon-requirements.md",
+      "git_source": "8341af2e1ee22e1274385e9331aa5ff72528800d:docs/hackathon-requirements.md",
+      "sha256": "f47ac5d59408f520a0e7c68535c69d17a29d44b74ab1b1395678ab5edc8c2cae"
+    },
+    {
+      "path": "docs/sources/ml-engineer/docs/adr/0003-openai-luna-mvp.md",
+      "git_source": "8341af2e1ee22e1274385e9331aa5ff72528800d:docs/adr/0003-openai-luna-mvp.md",
+      "sha256": "b9c43417994f9069b4295ce7fa95d50ea6695ec5909b20ca889ad9e1bbd57096"
+    },
+    {
+      "path": "docs/sources/ml-engineer/docs/adr/0004-container-trust-boundaries.md",
+      "git_source": "8341af2e1ee22e1274385e9331aa5ff72528800d:docs/adr/0004-container-trust-boundaries.md",
+      "sha256": "8e9443ba0816c7bd4fd0b2703d7ec9cc395f95a407ebae5263db0b3d81590fc3"
+    }
+  ]
+}

@@ -1,1 +1,0 @@
-"""Immutable artifact adapters."""

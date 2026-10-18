@@ -1,62 +1,23 @@
-# Environment and credentials
+.DS_Store
+.idea/
 .env
 .env.*
 !.env.example
-*.pem
-*.key
-
-# Dependencies and virtual environments
-node_modules/
-.pnp.*
 .venv/
-venv/
-__pypackages__/
-
-# Build and generated output
-build/
-dist/
-out/
-.next/
-.nuxt/
-.svelte-kit/
-coverage/
-htmlcov/
-/artifacts/
-.prompt2play/
-*.sqlite3
-
-# Python
 __pycache__/
 *.py[cod]
-*.egg-info/
 .pytest_cache/
-.mypy_cache/
 .ruff_cache/
-.tox/
-.nox/
-.coverage
-.coverage.*
-
-# JavaScript and TypeScript tooling
-*.tsbuildinfo
-.eslintcache
-.parcel-cache/
-.turbo/
-.vite/
-
-# Logs and temporary files
+.mypy_cache/
+.coverage*
+htmlcov/
+node_modules/
+dist/
+build/
+*.egg-info/
+.data/
+.prompt2play/
+.artifacts/
+playwright-report/
+test-results/
 *.log
-*.pid
-*.tmp
-*.swp
-*~
-.cache/
-tmp/
-
-# Editors and operating systems
-.idea/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.DS_Store
-Thumbs.db
