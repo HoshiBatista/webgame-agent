@@ -1945,6 +1945,28 @@ svg {
   border: 0;
   background: #fff;
 }
+.game-viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+.retry-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 16px 0;
+}
+.retry-consent input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 2px 0 0;
+  accent-color: var(--teal);
+}
 .phone-empty {
   display: flex;
   flex-direction: column;

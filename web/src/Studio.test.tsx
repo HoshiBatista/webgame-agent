@@ -70,6 +70,36 @@ beforeEach(() => {
   vi.mocked(request).mockResolvedValue(chat);
 });
 describe('saved work and mutation submission', () => {
+  it('sends explicit unknown-cost consent once and reuses its key if the HTTP response is lost', async () => {
+    vi.mocked(request).mockResolvedValue({
+      ...chat,
+      runs: [
+        {
+          id: 'unknown-run',
+          status: 'unknown',
+          can_retry_unknown: true,
+          attempts: 1,
+          budget: session.budget,
+        },
+      ],
+    });
+    vi.mocked(post).mockRejectedValue(new Error('Соединение потеряно'));
+    setup();
+    const retry = await screen.findByRole('button', { name: 'Повторить запрос' });
+    expect(retry).toBeDisabled();
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(retry);
+    await screen.findByText('Соединение потеряно');
+    const first = vi.mocked(post).mock.calls[0];
+    expect(first).toEqual([
+      '/api/runs/unknown-run/continue/',
+      { prompt: '', accept_unknown_cost: true, idempotency_key: expect.any(String) },
+    ]);
+    fireEvent.click(retry);
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(post).mock.calls[1]).toEqual(first);
+  });
   it('refreshes shared session totals once when a run is terminal rather than polling the session', async () => {
     const refresh = vi.fn().mockResolvedValue(undefined);
     vi.mocked(request).mockResolvedValue({

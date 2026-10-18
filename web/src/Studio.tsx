@@ -208,7 +208,11 @@ export default function Studio() {
       setBusy(false);
     }
   }
-  async function act(action: 'cancel' | 'continue' | 'confirm', note = '') {
+  async function act(
+    action: 'cancel' | 'continue' | 'confirm',
+    note = '',
+    acceptUnknownCost = false,
+  ) {
     if (!latestRun) return;
     setBusy(true);
     setError('');
@@ -218,7 +222,13 @@ export default function Studio() {
         action === 'continue'
           ? {
               prompt: note,
-              idempotency_key: operationKey({ action, run: latestRun.id, prompt: note }),
+              accept_unknown_cost: acceptUnknownCost,
+              idempotency_key: operationKey({
+                action,
+                run: latestRun.id,
+                prompt: note,
+                acceptUnknownCost,
+              }),
             }
           : action === 'confirm'
             ? { confirmed: true }
@@ -433,7 +443,7 @@ export default function Studio() {
               events={events}
               busy={busy}
               onCancel={() => void act('cancel')}
-              onContinue={(note) => void act('continue', note)}
+              onContinue={(note, consent) => void act('continue', note, consent)}
               onConfirm={() => {
                 if (chat?.candidate_revision) setSelectedRevision(chat.candidate_revision.id);
                 setShowConfirm(true);

@@ -44,13 +44,19 @@ def run_data(run, budget=None):
     if run is None:
         return None
     elapsed = ((run.finished_at or timezone.now()) - run.created_at).total_seconds()
+    unknown = run.invocations.filter(state="unknown").exists()
+    message, error = run.message, run.error
+    if run.status == "unknown":
+        message = "Полный результат запроса не подтверждён. Сохранённые данные не потеряны."
+        if error and error.get("code") == "codex_turn_failed":
+            error = {**error, "message": "Codex не передал завершённый ответ. Новый результат не применён."}
     return {
         "id": str(run.id),
         "chat_id": str(run.chat_id),
         "operation": run.operation,
         "status": run.status,
         "stage": run.stage,
-        "message": run.message,
+        "message": message,
         "prompt": run.prompt,
         "created_at": run.created_at.isoformat(),
         "updated_at": run.updated_at.isoformat(),
@@ -58,10 +64,12 @@ def run_data(run, budget=None):
         "base_revision_id": str(run.base_revision_id) if run.base_revision_id else None,
         "candidate_revision_id": str(run.candidate_revision_id) if run.candidate_revision_id else None,
         "result_revision_id": str(run.result_revision_id) if run.result_revision_id else None,
-        "error": run.error,
+        "error": error,
         "can_cancel": run.status in run.ACTIVE,
         "can_continue": run.status in ("needs_attention", "unverified", "failed", "cancelled")
-        and not run.invocations.filter(state="unknown").exists(),
+        and not unknown,
+        "can_retry_unknown": run.status in ("unknown", "cancelled") and unknown
+        and run.chat.current_revision_id == run.base_revision_id,
         "can_confirm": run.status == "unverified" and bool(run.candidate_revision_id),
         "attempts": run.attempts,
         "elapsed_seconds": elapsed,

@@ -318,6 +318,22 @@ def test_codex_interim_usage_does_not_resolve_disconnected_outcome(codex_rpc):
     assert sum(m == "turn/start" for m, _ in codex_rpc["calls"]) == 1
 
 
+@pytest.mark.parametrize("partial", [False, True])
+def test_codex_failed_turn_preserves_unknown_and_reports_only_received_text(codex_rpc, partial):
+    if not partial:
+        codex_rpc["events"].pop(1)
+    codex_rpc["events"][-1]["params"]["turn"] = {
+        "id": "turn-1", "status": "failed", "error": {"message": "stream disconnected"}
+    }
+    with pytest.raises(GenerationError) as error:
+        generate({"provider": "codex"}, on_event=lambda _: None, is_cancelled=lambda: False)
+    assert error.value.outcome_unknown  # Even with interim tokenUsage/updated.
+    assert error.value.usage["input_tokens"] == 100
+    assert bool(error.value.raw_response["partial_response"]) is partial
+    assert ("фрагмент сохранён" in error.value.message) is partial
+    assert sum(m == "turn/start" for m, _ in codex_rpc["calls"]) == 1
+
+
 def test_codex_unexpected_tool_is_rejected(codex_rpc):
     codex_rpc["events"].insert(
         1, {"method": "item/started", "params": {"item": {"type": "commandExecution"}}}

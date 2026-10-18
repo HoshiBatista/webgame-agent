@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { GameFrame, PhonePreview, RunStatus } from './components';
 import type { Run } from './types';
@@ -17,6 +17,45 @@ const run = {
   budget,
 } as Run;
 describe('sandbox and preview lifecycle', () => {
+  it('scales the whole validated viewport in a small bezel and keeps the frame on resize/fullscreen', () => {
+    let resize = () => {};
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: () => void) {
+          resize = callback;
+        }
+        observe = observe;
+        disconnect = disconnect;
+      },
+    );
+    const { unmount } = render(<PhonePreview url="http://localhost:8001/p/s" title="Игра" />);
+    const original = screen.getByTitle('Игра');
+    const box = document.querySelector('.phone-screen')!;
+    Object.defineProperties(box, {
+      clientWidth: { value: 251, configurable: true },
+      clientHeight: { value: 475, configurable: true },
+    });
+    act(resize);
+    const viewport = document.querySelector('.game-viewport') as HTMLElement;
+    expect(viewport.style.width).toBe('390px');
+    expect(viewport.style.height).toBe('844px');
+    const scale = Number(viewport.style.transform.slice(6, -1));
+    expect(390 * scale).toBeLessThanOrEqual(251);
+    expect(844 * scale).toBeLessThanOrEqual(475);
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть игру на весь экран' }));
+    expect(viewport.style.width).toBe('100%');
+    expect(viewport.style.transform).toBe('');
+    expect(screen.getByTitle('Игра')).toBe(original);
+    fireEvent.click(screen.getByRole('button', { name: 'Вернуться' }));
+    expect(screen.getByTitle('Игра')).toBe(original);
+    expect(viewport.style.height).toBe('844px');
+    unmount();
+    expect(disconnect).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
+  });
   it('opens a private player shell in a separate tab without exposing the signed frame as its parent', () => {
     render(
       <PhonePreview url="http://localhost:8001/p/signed" title="Игра" playUrl="/play/revision" />,
@@ -78,6 +117,24 @@ describe('sandbox and preview lifecycle', () => {
   });
 });
 describe('honest run controls', () => {
+  it('requires explicit cost consent for a new attempt and resets it for another run', () => {
+    const onContinue = vi.fn();
+    const props = {
+      run: { ...run, can_retry_unknown: true },
+      events: [],
+      busy: false,
+      onCancel: vi.fn(),
+      onContinue,
+      onConfirm: vi.fn(),
+    };
+    const { rerender } = render(<RunStatus {...props} />);
+    expect(screen.getByRole('button', { name: 'Повторить запрос' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: 'Повторить запрос' }));
+    expect(onContinue).toHaveBeenCalledExactlyOnceWith('', true);
+    rerender(<RunStatus {...props} run={{ ...props.run, id: 'another' }} />);
+    expect(screen.getByRole('button', { name: 'Повторить запрос' })).toBeDisabled();
+  });
   it('never offers a blind retry for an unknown billed result', () => {
     render(
       <RunStatus
@@ -120,7 +177,7 @@ describe('honest run controls', () => {
         onConfirm={vi.fn()}
       />,
     );
-    expect(screen.getByText('Расход уточняется')).toBeInTheDocument();
+    expect(screen.getByText('Неуточнённый расход')).toBeInTheDocument();
     expect(screen.getByText('В работе')).toBeInTheDocument();
     expect(screen.getByText('Подтверждённый расход')).toBeInTheDocument();
   });

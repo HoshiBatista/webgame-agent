@@ -229,6 +229,53 @@ class DomainTests(TestCase):
             409,
         )
 
+    def test_explicit_unknown_retry_preserves_liability_and_is_idempotent(self):
+        base = Revision.objects.create(chat=self.chat, number=1, accepted=True,
+                                       verification="automatic", **artifact())
+        self.chat.current_revision = base
+        self.chat.save(update_fields=["current_revision"])
+        run = self.make_run(prompt="Improve the controls")
+        run.status = "unknown"
+        run.save(update_fields=["status"])
+        inv = Invocation.objects.create(run=run, attempt=1, state="unknown", request={},
+                                        reservation_usd=Decimal("0.314"))
+        Budget.objects.get_or_create(pk=1)
+        data = self.client.get(f"/api/runs/{run.id}/").json()
+        self.assertTrue(data["can_retry_unknown"])
+        self.assertFalse(data["can_continue"])
+        path = f"/api/runs/{run.id}/continue/"
+        for consent in (None, False, "true"):
+            self.assertEqual(self.client.post(path, {"accept_unknown_cost": consent},
+                                             content_type="application/json").status_code, 409)
+        body = {"accept_unknown_cost": True, "idempotency_key": "explicit-retry"}
+        first = self.client.post(path, body, content_type="application/json")
+        second = self.client.post(path, body, content_type="application/json")
+        self.assertEqual(first.status_code, 202, first.content)
+        self.assertEqual(first.json()["id"], second.json()["id"])
+        self.assertEqual(budget_snapshot()["unknown_usd"], 0.314)
+        inv.refresh_from_db()
+        self.assertEqual(inv.state, "unknown")
+        self.assertIsNone(inv.cost_usd)
+        self.assertEqual(self.chat.runs.count(), 2)
+        with patch("generation.service.generate", return_value=response()) as model, \
+             patch("generation.artifacts.materialize", return_value=artifact()), \
+             patch("validation.service.validate", return_value=PASS):
+            process_run(first.json()["id"])
+        self.assertEqual(model.call_args.args[0]["operation"], "edit")
+        self.assertEqual(model.call_args.args[0]["base_revision"], str(base.id))
+        self.assertEqual(model.call_args.args[0]["prompt"], run.prompt)
+        base.refresh_from_db()
+        self.assertEqual(base.html, HTML)
+        run.refresh_from_db()
+        self.assertEqual(run.status, "unknown")
+        self.assertEqual(budget_snapshot()["unknown_usd"], 0.314)
+        # A fresh retry must not reapply an old instruction to a newer working game.
+        body["idempotency_key"] = "another-retry"
+        rejected = self.client.post(path, body, content_type="application/json")
+        self.assertEqual(rejected.status_code, 409)
+        self.assertEqual(rejected.json()["error"]["code"], "retry_base_changed")
+        self.assertFalse(self.client.get(f"/api/runs/{run.id}/").json()["can_retry_unknown"])
+
     def test_infrastructure_continue_rechecks_without_model(self):
         run = self.make_run()
         with (

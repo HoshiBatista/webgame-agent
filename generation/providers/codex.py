@@ -448,9 +448,12 @@ def generate(request, *, on_event, is_cancelled):
                         code = "cancelled" if turn.get("status") == "interrupted" else "codex_turn_failed"
                         raise GenerationError(
                             code,
-                            "Codex не завершил ответ; доступный фрагмент сохранён.",
+                            "Codex не завершил ответ. " + (
+                                "Полученный фрагмент сохранён, но не применён к игре."
+                                if text else "Код ответа не получен; изменений игры нет."
+                            ),
                             usage=usage,
-                            outcome_unknown=usage is None,
+                            outcome_unknown=True,
                             raw_response={"partial_response": text, "provider_error": turn.get("error")},
                         )
                     break

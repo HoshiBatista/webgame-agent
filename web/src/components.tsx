@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -108,7 +108,7 @@ export function BudgetDetails({ budget }: { budget: Budget }) {
         <strong>{formatMoney(budget.reserved_usd)}</strong>
       </div>
       <div>
-        <span>Расход уточняется</span>
+        <span>Неуточнённый расход</span>
         <strong>{formatMoney(budget.unknown_usd)}</strong>
       </div>
       <div>
@@ -171,6 +171,29 @@ export function PhonePreview({
 }) {
   const [expanded, setExpanded] = useState(forceFullscreen);
   const stageRef = useRef<HTMLDivElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
+  const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    const element = screenRef.current;
+    if (!element) return;
+    const measure = () =>
+      setScreenSize({ width: element.clientWidth, height: element.clientHeight });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  // Same logical mobile viewport as validation/contracts.py; the bezel only scales it.
+  const scale = Math.min(screenSize.width / 390, screenSize.height / 844);
+  const viewportStyle = expanded
+    ? { width: '100%', height: '100%' }
+    : {
+        width: 390,
+        height: 844,
+        transform: `scale(${scale})`,
+        left: (screenSize.width - 390 * scale) / 2,
+        top: (screenSize.height - 844 * scale) / 2,
+      };
   useEffect(() => {
     setExpanded(forceFullscreen);
   }, [forceFullscreen]);
@@ -283,7 +306,14 @@ export function PhonePreview({
         )}
         <div className="phone-device" key="device">
           <div className="phone-speaker" aria-hidden="true" />
-          <div className="phone-screen">{screen}</div>
+          <div className="phone-screen" ref={screenRef}>
+            <div
+              className="game-viewport"
+              style={url ? viewportStyle : { width: '100%', height: '100%' }}
+            >
+              {screen}
+            </div>
+          </div>
           <div className="phone-home" aria-hidden="true" />
         </div>
         <span className="preview-caption">
@@ -303,7 +333,7 @@ export const runLabels: Record<Run['status'], string> = {
   unverified: 'Нужна проверка человеком',
   failed: 'Не получилось завершить',
   cancelled: 'Задание отменено',
-  unknown: 'Уточняем результат запроса',
+  unknown: 'Ответ не получен полностью',
 };
 export function RunStatus({
   run,
@@ -316,11 +346,13 @@ export function RunStatus({
   run: Run;
   events: RunEvent[];
   onCancel: () => void;
-  onContinue: (prompt: string) => void;
+  onContinue: (prompt: string, acceptUnknownCost?: boolean) => void;
   onConfirm: () => void;
   busy: boolean;
 }) {
   const [comment, setComment] = useState('');
+  const [acceptUnknownCost, setAcceptUnknownCost] = useState(false);
+  useEffect(() => setAcceptUnknownCost(false), [run.id]);
   const active = ['queued', 'generating', 'checking'].includes(run.status);
   const latest = events.at(-1);
   return (
@@ -344,9 +376,22 @@ export function RunStatus({
       {run.error && <p className="run-error">{run.error.message}</p>}
       {run.status === 'unknown' && (
         <p>
-          Запрос мог быть выполнен моделью. Мы сохранили данные и не запускаем платный повтор
-          вслепую.
+          Сохранённые версии и данные запроса не потеряны. Неизвестный расход остаётся в бюджете;
+          автоматической сверки сейчас нет. Мы не запускаем платный повтор вслепую.
         </p>
+      )}
+      {run.can_retry_unknown && (
+        <label className="retry-consent">
+          <input
+            type="checkbox"
+            checked={acceptUnknownCost}
+            onChange={(event) => setAcceptUnknownCost(event.target.checked)}
+          />
+          <span>
+            Разрешаю новый запрос с отдельным расходом. Сумма за оборвавшийся запрос пока останется
+            в «Неуточнённый расход».
+          </span>
+        </label>
       )}
       {run.can_continue && (
         <label className="continue-note">
@@ -360,6 +405,15 @@ export function RunStatus({
         </label>
       )}
       <div className="run-actions">
+        {run.can_retry_unknown && (
+          <button
+            className="button button-small"
+            disabled={busy || !acceptUnknownCost}
+            onClick={() => onContinue('', true)}
+          >
+            <Sparkles size={15} /> Повторить запрос
+          </button>
+        )}
         {run.can_cancel && (
           <button className="button button-small button-quiet" disabled={busy} onClick={onCancel}>
             <X size={15} /> Отменить

@@ -84,6 +84,7 @@ export interface Run {
   error: ApiErrorData | null;
   can_cancel: boolean;
   can_continue: boolean;
+  can_retry_unknown?: boolean;
   can_confirm: boolean;
   attempts: number;
   elapsed_seconds: number;

@@ -216,6 +216,9 @@ def create_run(chat, data, *, continued_from=None):
         "model": model,
         "continued_from": str(continued_from.id) if continued_from else None,
     }
+    accept_unknown_cost = data.get("accept_unknown_cost") is True
+    if accept_unknown_cost:
+        payload["accept_unknown_cost"] = True
     previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
     if previous:
         if previous.request_fingerprint != fingerprint(payload):
@@ -228,14 +231,25 @@ def create_run(chat, data, *, continued_from=None):
         "unverified",
         "failed",
         "cancelled",
+        "unknown",
     ):
         raise DomainError("cannot_continue", "Задание не ожидает продолжения.", 409)
-    if continued_from and continued_from.invocations.filter(state="unknown").exists():
+    unknown = bool(continued_from and continued_from.invocations.filter(state="unknown").exists())
+    if unknown and not accept_unknown_cost:
         raise DomainError(
             "outcome_unknown",
-            "Исход запроса модели неизвестен. Сначала нужно сверить расход и ответ; повтор может списать бюджет дважды.",
+            "Итоговый расход неизвестен. Для нового запроса отдельно подтвердите расход; прежняя сумма останется в учёте.",
             409,
         )
+    if continued_from and (unknown or continued_from.status == "unknown"):
+        if not unknown or not accept_unknown_cost:
+            raise DomainError("cannot_continue", "Сначала нужно уточнить состояние запроса.", 409)
+        if chat.current_revision_id != continued_from.base_revision_id:
+            raise DomainError(
+                "retry_base_changed",
+                "После этого запроса рабочая версия изменилась. Отправьте новое описание к текущей игре.",
+                409,
+            )
     base = chat.current_revision
     candidate = continued_from.candidate_revision if continued_from else None
     operation = "repair" if candidate or continued_from else ("edit" if base else "create")
@@ -256,6 +270,9 @@ def create_run(chat, data, *, continued_from=None):
     chat.save(update_fields=["audience", "updated_at"])
     Message.objects.create(chat=chat, run=run, role="user", content=prompt.strip())
     event(run, "queued", "Запрос принят. Ожидаем свободное место для генерации.")
+    if unknown:
+        event(run, "explicit_retry", "Новый запрос подтверждён пользователем; прежний неизвестный расход сохранён.",
+              {"previous_run_id": str(continued_from.id)})
     schedule(run)
     return run
 
