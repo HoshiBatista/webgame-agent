@@ -1,0 +1,36 @@
+# GameForge mini-games interface
+
+React + TypeScript + SCSS. The application uses the Django session API described in
+[`../docs/api.md`](../docs/api.md); no model credentials are sent to the browser.
+
+```sh
+npm ci
+npm run dev
+npm run lint
+npm test
+npm run build
+```
+
+Development uses Vite on localhost and proxies `/api` to `127.0.0.1:8000`. Production
+builds to `dist/`; Django/nginx serves the same root routes `/`, `/chats/:id`, `/games/:id`.
+`/play/:revisionId` is an authenticated personal player for opening an immutable revision
+in a separate tab. It keeps game execution inside the isolated sandbox, not the app origin.
+The signed preview origin must be running separately and allow the configured application
+origin in its frame policy. The normal local application address is `http://127.0.0.1:8000/`.
+
+Games use `sandbox="allow-scripts"` without `allow-same-origin`. Fullscreen expands the
+existing frame so its game state survives. Rotating signed URLs do not reload an unchanged
+artifact. Only one live hover preview is mounted in the feed. Candidate versions are visibly
+separate from accepted versions; manual confirmation is explicit, and publication uses a
+captured accepted revision.
+
+Tests cover CSRF and error transport, no automatic mutation retry, preserved idempotency
+after a lost response, candidate/manual-review selection, immutable preview lifecycle,
+fullscreen frame identity, history without generation, and feed hover/like behavior.
+Component tests use fixtures and do not count as live model evidence. Real browser and model
+evidence belongs in the repository's integration report.
+
+Settings include an explicitly labelled synthetic analytics example (three invented touch
+metrics). It is not collected player data. An opt-in action adds one editable recommendation
+to preferences through the existing API and makes no model request. Genre and implementation
+remain the model's choice; the recommendation is context, not a mandatory game template.

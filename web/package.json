@@ -1,0 +1,39 @@
+{
+  "name": "gameforge-mini-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "preview": "vite preview --host 127.0.0.1",
+    "lint": "eslint src vite.config.ts && prettier --check src vite.config.ts",
+    "format": "prettier --write src vite.config.ts"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.39.5",
+    "jsdom": "^25.0.1",
+    "prettier": "^3.9.10",
+    "sass": "^1.83.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^6.0.5",
+    "vitest": "^4.1.12"
+  }
+}

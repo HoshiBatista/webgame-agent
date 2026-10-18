@@ -1,0 +1,116 @@
+import os
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+if not SECRET_KEY or SECRET_KEY == "replace-with-a-random-secret":
+    raise ImproperlyConfigured("Set a private random DJANGO_SECRET_KEY in .env before starting GameForge.")
+DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "studio",
+]
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+ROOT_URLCONF = "gameforge.urls"
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "web" / "dist"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ]
+        },
+    }
+]
+WSGI_APPLICATION = "gameforge.wsgi.application"
+_db = urlparse(os.environ.get("DATABASE_URL", "postgresql:///gameforge_mini"))
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": _db.path.lstrip("/") or "gameforge_mini",
+        "USER": unquote(_db.username or ""),
+        "PASSWORD": unquote(_db.password or ""),
+        "HOST": _db.hostname or "",
+        "PORT": _db.port or "",
+        "CONN_MAX_AGE": 60,
+    }
+}
+AUTH_USER_MODEL = "studio.User"
+AUTHENTICATION_BACKENDS = ["studio.auth.CaseInsensitiveBackend"]
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}}
+]
+LANGUAGE_CODE = "ru-ru"
+TIME_ZONE = "UTC"
+USE_TZ = True
+STATIC_URL = "/assets/"
+STATIC_ROOT = BASE_DIR / ".data" / "static"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = os.environ.get("DJANGO_SECURE_COOKIES", "0") == "1"
+CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://127.0.0.1:8000,http://localhost:8000,http://127.0.0.1:5173,http://localhost:5173",
+).split(",")
+CSRF_FAILURE_VIEW = "studio.views.csrf_failure"
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "EXCEPTION_HANDLER": "studio.views.exception_handler",
+    "UNAUTHENTICATED_USER": None,
+}
+CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:56379/0")
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_IGNORE_RESULT = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_PUBLISH_RETRY = False
+CELERY_BROKER_CONNECTION_TIMEOUT = 2
+CELERY_BEAT_SCHEDULE = {
+    "outbox": {"task": "studio.tasks.dispatch_outbox", "schedule": 2.0, "options": {"expires": 2}},
+    "recover": {"task": "studio.tasks.recover_expired", "schedule": 15.0, "options": {"expires": 15}},
+}
+GAMEFORGE_PROVIDER = os.environ.get("GAMEFORGE_PROVIDER", "fake")
+GAMEFORGE_MODEL = os.environ.get("GAMEFORGE_MODEL") or (
+    "fixture"
+    if GAMEFORGE_PROVIDER == "fake"
+    else os.environ.get("GAMEFORGE_VLLM_MODEL", "")
+    if GAMEFORGE_PROVIDER == "vllm"
+    else "gpt-6-luna"
+)
+GAMEFORGE_PREVIEW_ORIGIN = os.environ.get("GAMEFORGE_PREVIEW_ORIGIN", "http://localhost:8001").rstrip("/")
+GAMEFORGE_APP_ORIGIN = os.environ.get("GAMEFORGE_APP_ORIGIN", "http://127.0.0.1:8000").rstrip("/")
+GAMEFORGE_BUDGET_USD = os.environ.get("GAMEFORGE_BUDGET_USD", "50")
+GAMEFORGE_PROVIDER_CONCURRENCY = int(os.environ.get("GAMEFORGE_PROVIDER_CONCURRENCY", "1"))
+GAMEFORGE_LEASE_SECONDS = int(os.environ.get("GAMEFORGE_LEASE_SECONDS", "45"))
+GAMEFORGE_LOCAL_ONLY = os.environ.get("GAMEFORGE_LOCAL_ONLY", "1") == "1"
+GAMEFORGE_RUN_INLINE = os.environ.get("GAMEFORGE_RUN_INLINE", "0") == "1"
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024

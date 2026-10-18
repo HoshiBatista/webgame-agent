@@ -1,0 +1,112 @@
+name: gameforge-mini
+x-app: &app
+  build: .
+  image: gameforge-mini:current
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  environment: &environment
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
+    DATABASE_URL: postgresql://gameforge:${POSTGRES_PASSWORD:-local-mini-development}@db:5432/gameforge
+    REDIS_URL: redis://redis:6379/0
+    DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost,app,preview
+    GAMEFORGE_PROVIDER: ${CONTAINER_PROVIDER:-fake}
+    GAMEFORGE_MODEL: ${CONTAINER_MODEL:-}
+    GAMEFORGE_VLLM_MODEL: ${GAMEFORGE_VLLM_MODEL:-}
+    GAMEFORGE_LOCAL_ONLY: '1'
+    GAMEFORGE_APP_ORIGIN: http://127.0.0.1:8080
+    GAMEFORGE_PREVIEW_ORIGIN: http://localhost:8081
+    CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8080,http://localhost:8080
+    GAMEFORGE_BUDGET_USD: ${GAMEFORGE_BUDGET_USD:-50}
+    GAMEFORGE_PRICES_JSON: ${GAMEFORGE_PRICES_JSON:-{}}
+  depends_on:
+    db: {condition: service_healthy}
+    redis: {condition: service_healthy}
+  networks: [backend]
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: gameforge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-mini-development}
+      POSTGRES_DB: gameforge
+    volumes: [database:/var/lib/postgresql]
+    healthcheck: {test: [CMD-SHELL, 'pg_isready -U gameforge'], interval: 3s, timeout: 3s, retries: 20}
+    networks: [backend]
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, 'yes']
+    volumes: [redis:/data]
+    healthcheck: {test: [CMD, redis-cli, ping], interval: 3s, timeout: 3s, retries: 20}
+    networks: [backend]
+  init:
+    <<: *app
+    restart: 'no'
+    command: [sh, -c, 'python manage.py migrate --noinput && python manage.py bootstrap']
+    environment:
+      <<: *environment
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:?Set initial username}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:?Set initial password}
+  app:
+    <<: *app
+    depends_on:
+      init: {condition: service_completed_successfully}
+  preview:
+    <<: *app
+    environment:
+      <<: *environment
+      DJANGO_SETTINGS_MODULE: gameforge.preview_settings
+    depends_on:
+      init: {condition: service_completed_successfully}
+  worker:
+    <<: *app
+    command: [celery, -A, gameforge, worker, --pool=threads, --concurrency=2, --loglevel=WARNING]
+    environment:
+      <<: *environment
+      VALIDATOR_SOCKET: /run/validator/service.sock
+      GAMEFORGE_VLLM_URL: ${GAMEFORGE_VLLM_URL:-http://model-server:8000/v1}
+      GAMEFORGE_VLLM_API_KEY: ${GAMEFORGE_VLLM_API_KEY:-}
+      GAMEFORGE_VLLM_JSON_MODE: ${GAMEFORGE_VLLM_JSON_MODE:-json_object}
+      GAMEFORGE_VLLM_STREAM: ${GAMEFORGE_VLLM_STREAM:-true}
+    volumes: [validator-ipc:/run/validator]
+    depends_on:
+      init: {condition: service_completed_successfully}
+      validator: {condition: service_started}
+    networks: [backend, model]
+  beat:
+    <<: *app
+    command: [celery, -A, gameforge, beat, --schedule, /tmp/celerybeat, --loglevel=WARNING]
+    depends_on:
+      init: {condition: service_completed_successfully}
+  validator:
+    init: true
+    build: {context: ., dockerfile: validation/Dockerfile}
+    image: gameforge-mini-validator:current
+    command: [python, -m, validation.daemon]
+    network_mode: none
+    read_only: true
+    user: '10001:10001'
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 256
+    shm_size: 256m
+    volumes: [validator-ipc:/run/validator]
+  edge:
+    image: nginx:1.28-alpine
+    ports: ['127.0.0.1:8080:8080', '127.0.0.1:8081:8081']
+    volumes: ['./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro']
+    depends_on: [app, preview]
+    networks: [backend, ingress]
+networks:
+  backend: {internal: true}
+  model: {}
+  ingress: {}
+volumes:
+  database: {}
+  redis: {}
+  validator-ipc: {}
