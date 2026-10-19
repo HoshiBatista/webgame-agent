@@ -61,8 +61,11 @@ def validate_html(html: str) -> tuple[list[Finding], list[str]]:
         "START_CONTROL_MISSING": (r"старт|начать|играть|start", "видимая кнопка старта"),
         "RESTART_CONTROL_MISSING": (r"заново|рестарт|ещ[её] раз|restart", "действие рестарта"),
         "TOUCH_INPUT_MISSING": (r"pointer(?:down|up|move)|touchstart", "touch/pointer управление"),
+        "KEYBOARD_INPUT_MISSING": (r"key(?:down|up)", "keyboard управление"),
         "RESPONSIVE_MISSING": (r"devicepixelratio|resize", "адаптивный resize/DPR"),
         "TEST_BRIDGE_MISSING": (r"__prompt2play", "тестовый bridge"),
+        "WIN_SCENARIO_MISSING": (r"force_win", "детерминированный сценарий победы"),
+        "LOSE_SCENARIO_MISSING": (r"force_lose", "детерминированный сценарий поражения"),
         "GAME_LOOP_MISSING": (r"requestanimationframe|setinterval", "игровой цикл"),
     }
     for code, (required_pattern, label) in required.items():

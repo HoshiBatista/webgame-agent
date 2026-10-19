@@ -7,10 +7,19 @@ from uuid import UUID
 
 from celery import Celery  # type: ignore[import-untyped]
 from sqlalchemy import select
+from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import TimeoutError as DatabaseTimeoutError
 
 from prompt2play.adapters.artifacts import ArtifactStore
-from prompt2play.adapters.openai_gateway import OpenAIModelGateway
-from prompt2play.application.workflow import generate_run, specify_run, validate_run
+from prompt2play.adapters.model_gateway import build_model_gateway
+from prompt2play.application.ports import ModelGateway
+from prompt2play.application.workflow import (
+    expire_stale_runs,
+    generate_run,
+    recover_pending_stages,
+    specify_run,
+    validate_run,
+)
 from prompt2play.config import get_settings
 from prompt2play.db import SessionLocal
 from prompt2play.models import OutboxEvent
@@ -37,15 +46,23 @@ celery_app.conf.update(
 )
 
 
-def _gateway() -> OpenAIModelGateway:
-    return OpenAIModelGateway(settings)
+def _gateway() -> ModelGateway:
+    return build_model_gateway(settings)
 
 
 def _artifacts() -> ArtifactStore:
-    return ArtifactStore(settings.artifact_root)
+    return ArtifactStore(settings.artifact_root, settings.validation_root)
 
 
-@celery_app.task(name="prompt2play.specify", acks_late=True)  # type: ignore[untyped-decorator]
+@celery_app.task(  # type: ignore[untyped-decorator]
+    name="prompt2play.specify",
+    acks_late=True,
+    soft_time_limit=240,
+    time_limit=270,
+    autoretry_for=(DBAPIError, DatabaseTimeoutError),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
+)
 def specify_task(run_id: str) -> bool:
     result = specify_run(SessionLocal, _gateway, UUID(run_id))
     dispatch_outbox.delay()
@@ -53,28 +70,46 @@ def specify_task(run_id: str) -> bool:
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]
-    name="prompt2play.generate", acks_late=True, soft_time_limit=240, time_limit=270
+    name="prompt2play.generate",
+    acks_late=True,
+    soft_time_limit=240,
+    time_limit=270,
+    autoretry_for=(DBAPIError, DatabaseTimeoutError),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
 )
 def generate_task(run_id: str) -> bool:
-    result = generate_run(SessionLocal, _gateway, _artifacts(), UUID(run_id))
+    result = generate_run(SessionLocal, _gateway, _artifacts, UUID(run_id))
     dispatch_outbox.delay()
     return result
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]
-    name="prompt2play.repair", acks_late=True, soft_time_limit=240, time_limit=270
+    name="prompt2play.repair",
+    acks_late=True,
+    soft_time_limit=240,
+    time_limit=270,
+    autoretry_for=(DBAPIError, DatabaseTimeoutError),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
 )
 def repair_task(run_id: str) -> bool:
-    result = generate_run(SessionLocal, _gateway, _artifacts(), UUID(run_id), repair=True)
+    result = generate_run(SessionLocal, _gateway, _artifacts, UUID(run_id), repair=True)
     dispatch_outbox.delay()
     return result
 
 
 @celery_app.task(  # type: ignore[untyped-decorator]
-    name="prompt2play.validate", acks_late=True, soft_time_limit=75, time_limit=90
+    name="prompt2play.validate",
+    acks_late=True,
+    soft_time_limit=75,
+    time_limit=90,
+    autoretry_for=(DBAPIError, DatabaseTimeoutError),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 5},
 )
 def validate_task(run_id: str) -> bool:
-    result = validate_run(SessionLocal, _artifacts(), settings, UUID(run_id))
+    result = validate_run(SessionLocal, _artifacts, settings, UUID(run_id))
     dispatch_outbox.delay()
     return result
 
@@ -94,6 +129,10 @@ def dispatch_outbox() -> int:
     """Publish pending stage commands, leaving failures durable for Beat recovery."""
 
     sent = 0
+    with SessionLocal() as session, session.begin():
+        expire_stale_runs(session)
+        recover_pending_stages(session, settings.stage_lease_seconds)
+    # Persist deadlines even when Redis publication fails in the next transaction.
     with SessionLocal() as session, session.begin():
         events = session.scalars(
             select(OutboxEvent)

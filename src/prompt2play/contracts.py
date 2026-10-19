@@ -7,9 +7,12 @@ from enum import StrEnum
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 Prompt = Annotated[str, StringConstraints(strip_whitespace=True, min_length=8, max_length=4000)]
+DisplayTitle = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+]
 
 
 class RunState(StrEnum):
@@ -32,6 +35,19 @@ class RevisionStatus(StrEnum):
     CANDIDATE = "candidate"
     VALIDATED = "validated"
     REJECTED = "rejected"
+
+
+class FeedbackReason(StrEnum):
+    """Stable improvement dimensions understood by the learning-context builder."""
+
+    MUSIC = "music"
+    VISUALS = "visuals"
+    CONTROLS = "controls"
+    DIFFICULTY = "difficulty"
+    GAMEPLAY = "gameplay"
+    PERFORMANCE = "performance"
+    BUGS = "bugs"
+    OTHER = "other"
 
 
 class Rubric(BaseModel):
@@ -84,13 +100,68 @@ class ValidationReport(BaseModel):
     browser_status: Literal["passed", "failed", "unverified"] = "unverified"
     findings: list[Finding] = Field(default_factory=list)
     checks: list[str] = Field(default_factory=list)
-    validator_version: str = "1"
+    validator_version: str = "2"
 
 
 class CreateProjectRequest(BaseModel):
     """Create a project and its initial generation run."""
 
     prompt: Prompt
+
+
+class LoginRequest(BaseModel):
+    """Credentials for an administrator-provisioned creator account."""
+
+    username: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=1, max_length=512)
+
+
+class UserSummary(BaseModel):
+    """Safe identity data returned to the creator UI."""
+
+    id: UUID
+    username: str
+    is_admin: bool
+
+
+class PublicGameUpdateRequest(BaseModel):
+    """Editable presentation metadata; the published artifact remains immutable."""
+
+    title: DisplayTitle
+
+
+class RemixRequest(BaseModel):
+    """Optional name for a private project forked from a public game."""
+
+    title: DisplayTitle | None = None
+
+
+class SubmitFeedbackRequest(BaseModel):
+    """Creator evaluation that becomes bounded context for later generations."""
+
+    rating: int = Field(ge=1, le=5)
+    reasons: list[FeedbackReason] = Field(default_factory=list, max_length=8)
+    comment: Annotated[str | None, StringConstraints(strip_whitespace=True, max_length=500)] = None
+
+    @model_validator(mode="after")
+    def explain_non_perfect_rating(self) -> SubmitFeedbackRequest:
+        """Require an actionable signal when the game is not rated perfectly."""
+
+        if self.rating < 5 and not self.reasons and not self.comment:
+            raise ValueError("A rating below 5 requires a reason or comment")
+        return self
+
+
+class FeedbackSummary(BaseModel):
+    """Persisted evaluation returned to the creator UI."""
+
+    id: UUID
+    revision_id: UUID
+    rating: int
+    reasons: list[FeedbackReason]
+    comment: str | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class ReviseRequest(BaseModel):
@@ -122,7 +193,20 @@ class RevisionSummary(BaseModel):
     created_at: datetime
     preview_url: str | None = None
     share_url: str | None = None
+    public_game_id: UUID | None = None
+    public_title: str | None = None
     validation: ValidationReport | None = None
+
+
+class ChatMessage(BaseModel):
+    """Persisted creator request and its generation outcome."""
+
+    id: UUID
+    text: str
+    state: RunState
+    created_at: datetime
+    revision_id: UUID | None
+    error: str | None
 
 
 class ProjectSummary(BaseModel):
@@ -132,8 +216,34 @@ class ProjectSummary(BaseModel):
     title: str
     prompt: str
     current_revision_id: UUID | None
+    forked_from_revision_id: UUID | None = None
     created_at: datetime
     revisions: list[RevisionSummary] = Field(default_factory=list)
+    messages: list[ChatMessage] = Field(default_factory=list)
+
+
+class PublicGameSummary(BaseModel):
+    """Safe social-feed projection of one explicitly published revision."""
+
+    id: UUID
+    revision_id: UUID
+    title: str
+    author_username: str
+    genre: str
+    audience: str
+    like_count: int
+    liked_by_me: bool
+    is_mine: bool
+    share_url: str
+    published_at: datetime
+    updated_at: datetime
+
+
+class PublishResponse(BaseModel):
+    """Publication identity returned after publishing or updating a project."""
+
+    public_game_id: UUID
+    share_url: str
 
 
 class RunSummary(BaseModel):

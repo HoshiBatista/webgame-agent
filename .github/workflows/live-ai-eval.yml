@@ -1,4 +1,4 @@
-name: Live Luna evaluation
+name: Live model evaluation
 
 on:
   workflow_dispatch:
@@ -11,6 +11,15 @@ on:
         description: Required pass rate from 0 to 1
         required: true
         default: "0.80"
+      model_provider:
+        description: Configured connector
+        type: choice
+        options: [openai, vllm]
+        default: openai
+      model_name:
+        description: Provider model or vLLM served-model name
+        required: true
+        default: "gpt-5.4"
   schedule:
     - cron: "43 4 * * 1"
 
@@ -18,19 +27,23 @@ permissions:
   contents: read
 
 concurrency:
-  group: live-luna-evaluation
+  group: live-model-evaluation
   cancel-in-progress: false
 
 jobs:
   evaluate:
-    name: GPT-6 Luna / bounded golden evaluation
+    name: Configured model / bounded golden evaluation
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ai-evals
     env:
       UV_PYTHON: "3.13"
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      P2P_OPENAI_MODEL: gpt-6-luna
+      P2P_MODEL_PROVIDER: ${{ inputs.model_provider || 'openai' }}
+      P2P_OPENAI_MODEL: ${{ inputs.model_name || 'gpt-5.4' }}
+      P2P_VLLM_BASE_URL: ${{ secrets.VLLM_BASE_URL }}
+      P2P_VLLM_API_KEY: ${{ secrets.VLLM_API_KEY }}
+      P2P_VLLM_MODEL: ${{ inputs.model_name || 'prompt2play-code' }}
       CASE_LIMIT: ${{ inputs.case_limit || '3' }}
       MINIMUM_PASS_RATE: ${{ inputs.minimum_pass_rate || '0.80' }}
 
@@ -51,8 +64,13 @@ jobs:
           version: "0.11.30"
           enable-cache: true
 
-      - name: Require the protected API secret
-        run: test -n "${OPENAI_API_KEY}"
+      - name: Require the selected connector secret
+        run: |
+          if test "${P2P_MODEL_PROVIDER}" = "vllm"; then
+            test -n "${P2P_VLLM_BASE_URL}" && test -n "${P2P_VLLM_API_KEY}"
+          else
+            test -n "${OPENAI_API_KEY}"
+          fi
 
       - name: Install locked dependencies and Chromium
         run: |
@@ -79,7 +97,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: luna-evaluation-${{ github.run_id }}
+          name: model-evaluation-${{ github.run_id }}
           path: eval-results/live-eval.json
           if-no-files-found: warn
           retention-days: 30

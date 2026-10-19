@@ -14,14 +14,15 @@ def load_compose() -> dict[str, Any]:
     return cast(dict[str, Any], yaml.safe_load((ROOT / "compose.yaml").read_text()))
 
 
-def test_only_model_worker_receives_openai_credentials_and_egress() -> None:
+def test_only_model_worker_receives_model_credentials_and_egress() -> None:
     services = cast(dict[str, dict[str, Any]], load_compose()["services"])
-    secret_holders = {
-        name
-        for name, service in services.items()
-        if "OPENAI_API_KEY" in cast(dict[str, object], service.get("environment", {}))
-    }
-    assert secret_holders == {"worker-models"}
+    for secret_name in ("OPENAI_API_KEY", "P2P_VLLM_API_KEY"):
+        secret_holders = {
+            name
+            for name, service in services.items()
+            if secret_name in cast(dict[str, object], service.get("environment", {}))
+        }
+        assert secret_holders == {"worker-models"}
     assert services["worker-models"]["networks"] == ["backend", "model-egress"]
     assert services["worker-validation"]["networks"] == ["backend"]
     assert services["api"]["networks"] == ["backend"]
@@ -45,7 +46,10 @@ def test_runtime_roles_use_separate_targets_and_least_privilege_mounts() -> None
         assert "no-new-privileges:true" in service["security_opt"]
 
     assert services["api"]["volumes"] == ["artifacts:/data/artifacts:ro"]
-    assert services["worker-validation"]["volumes"] == ["artifacts:/data/artifacts:ro"]
+    assert services["worker-validation"]["volumes"] == [
+        "artifacts:/data/artifacts:ro",
+        "validation-evidence:/data/validation",
+    ]
     assert services["worker-models"]["volumes"] == ["artifacts:/data/artifacts"]
 
 

@@ -41,5 +41,6 @@ class ModelGateway(Protocol):
         parent_html: str | None = None,
         revision_instruction: str | None = None,
         findings: str | None = None,
+        feedback_context: str | None = None,
     ) -> ModelResult[GeneratedGame]:
         """Generate or repair one complete self-contained game candidate."""

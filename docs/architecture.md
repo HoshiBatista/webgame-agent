@@ -19,8 +19,9 @@ system-level decisions, and
 boundary. [The landscape review](research/landscape.md) explains the external
 systems and research behind them. [The MVP capacity plan](capacity.md) derives
 resource, quota, metric, and load-test requirements for 10 simultaneous active
-generation runs. [ADR 0003](adr/0003-openai-luna-mvp.md) selects OpenAI GPT-6
-Luna for the hackathon's first provider adapter.
+generation runs. [ADR 0003](adr/0003-openai-luna-mvp.md) records the prototype
+provider choice; [ADR 0005](adr/0005-vllm-model-connector.md) supersedes its
+default with a replaceable vLLM connector.
 [ADR 0004](adr/0004-container-trust-boundaries.md) records the role-specific
 container, network, credential and nginx edge boundaries.
 
@@ -90,7 +91,7 @@ network.
 
 The Python Dockerfile has independent final targets for API, migrations, model
 work, durable outbox dispatch, Beat and browser validation. Only the validation
-target installs Chromium. Only `worker-models` receives a project-scoped OpenAI
+target installs Chromium. Only `worker-models` receives a model-provider
 credential and joins an egress-capable network. The API, workflow, Beat and
 validation roles receive no provider credential; validation joins only the
 internal network and sees artifacts read-only. A separate workflow worker keeps
@@ -120,6 +121,14 @@ sandboxed preview. Use React, TypeScript, and Vite when this plane is
 implemented; it needs a stateful editor experience but not a second server-side
 application framework.
 
+Creator access is closed for the first iteration: there is no registration
+endpoint. An idempotent deployment job provisions the initial administrator.
+Case-folded normalized usernames are unique, passwords use salted PBKDF2, and
+opaque HttpOnly sessions are stored only as token digests. Every private
+project, run, revision, preview, publish and analytics query is filtered by
+project owner; inaccessible identifiers return the same not-found response as
+unknown identifiers. Public share slugs are the only anonymous game route.
+
 Server-to-client progress uses Server-Sent Events. Generation progress is
 one-way, reconnectable, and ordered, so WebSockets add no value initially.
 Commands such as cancel, repair, or revise remain ordinary authenticated HTTP
@@ -140,10 +149,10 @@ The Python control plane contains:
 - an event stream projected from persisted run state.
 
 Use a project-owned `ModelGateway` port for structured outputs and usage data.
-The first adapter uses the official OpenAI SDK and Responses API with
-`gpt-6-luna`; application code does not import the provider SDK outside that
-adapter. The workflow remains ours and no provider framework decides stage
-order.
+The default adapter uses the official OpenAI SDK against vLLM's
+OpenAI-compatible Responses API. A hosted OpenAI adapter is an optional
+fallback. Application code does not import the provider SDK outside adapters;
+the workflow remains ours and no provider framework decides stage order.
 
 ### Execution plane
 
@@ -593,11 +602,11 @@ current release gates again.
 
 ## Executable game contract
 
-The trusted runtime exposes `window.__prompt2play` version 1:
+The trusted runtime exposes `window.__prompt2play` version 2:
 
 ```typescript
-interface Prompt2PlayBridgeV1 {
-  schemaVersion: "1";
+interface Prompt2PlayBridgeV2 {
+  schemaVersion: "2";
   ready(): Promise<void>;
   reset(seed: number): Promise<GameSnapshot>;
   dispatch(action: GameAction): Promise<GameSnapshot>;
@@ -605,6 +614,11 @@ interface Prompt2PlayBridgeV1 {
   capabilities(): readonly string[];
 }
 ```
+
+The release bridge accepts deterministic `start`, `primary`, `force_win`,
+`force_lose`, and `restart` actions. These test actions call the same transition
+functions as real gameplay and expose the canonical `ready`, `playing`, `won`,
+and `lost` phases.
 
 `GameSnapshot` is JSON-serializable and contains only stable, player-observable
 state: phase, score, lives or health, level or wave, key entity positions, and
@@ -769,15 +783,21 @@ Initial versioned endpoints:
 
 ```text
 POST   /v1/projects
+GET    /v1/projects
 GET    /v1/projects/{project_id}
-POST   /v1/projects/{project_id}/runs
 GET    /v1/runs/{run_id}
 GET    /v1/runs/{run_id}/events       # SSE, resumable with event ID
 POST   /v1/runs/{run_id}/cancel
 POST   /v1/revisions/{revision_id}/revise
 GET    /v1/revisions/{revision_id}
-POST   /v1/revisions/{revision_id}/preview-token
+GET    /v1/revisions/{revision_id}/preview
 POST   /v1/revisions/{revision_id}/publish
+GET    /v1/public-games
+PUT    /v1/public-games/{public_game_id}
+PUT    /v1/public-games/{public_game_id}/like
+DELETE /v1/public-games/{public_game_id}/like
+POST   /v1/public-games/{public_game_id}/remix
+GET    /play/{slug}                    # anonymous published artifact
 ```
 
 Mutating requests accept an idempotency key. External identifiers are opaque.
@@ -922,7 +942,8 @@ credentials, and load tests demonstrate backpressure rather than overload.
 
 - Versioned skill and debug-knowledge registry.
 - Canvas, grid, cards, narrative, and Phaser template profiles.
-- Vision review, human feedback, A/B model and prompt evaluation.
+- Extend the implemented bounded creator-feedback memory with vision review,
+  A/B model and prompt evaluation, and only then consider weight fine-tuning.
 - Optional generated image and audio assets with license provenance.
 - Curated remixing and capability-based saves, scores, and leaderboards.
 

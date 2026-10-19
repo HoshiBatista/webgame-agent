@@ -299,9 +299,9 @@ jobs:
       - name: Create CI environment file and validate Compose
         run: |
           cp .env.example .env
-          printf '\nOPENAI_API_KEY=ci-placeholder\n' >> .env
+          printf '\nP2P_ADMIN_PASSWORD=ci-admin-password-123\nP2P_VLLM_API_KEY=ci-placeholder\n' >> .env
           docker compose config --quiet
-          docker compose config --format json | python -c 'import json, sys; services=json.load(sys.stdin)["services"]; holders=sorted(name for name, service in services.items() if "OPENAI_API_KEY" in service.get("environment", {})); assert holders == ["worker-models"], holders'
+          docker compose config --format json | python -c 'import json, sys; services=json.load(sys.stdin)["services"]; holders=sorted(name for name, service in services.items() if "P2P_VLLM_API_KEY" in service.get("environment", {})); assert holders == ["worker-models"], holders'
 
       - name: Build every role-specific image
         run: |
@@ -341,9 +341,9 @@ jobs:
         shell: bash
         run: |
           for service in api worker-workflow worker-validation beat; do
-            docker compose exec -T "${service}" python -c 'import os; assert "OPENAI_API_KEY" not in os.environ'
+            docker compose exec -T "${service}" python -c 'import os; assert "OPENAI_API_KEY" not in os.environ; assert "P2P_VLLM_API_KEY" not in os.environ'
           done
-          docker compose exec -T worker-models python -c 'import os; assert os.environ["OPENAI_API_KEY"] == "ci-placeholder"'
+          docker compose exec -T worker-models python -c 'import os; assert os.environ["P2P_VLLM_API_KEY"] == "ci-placeholder"'
           docker compose exec -T api python -c 'import os; assert not os.access("/app", os.W_OK); assert not os.access("/data/artifacts", os.W_OK)'
           docker compose exec -T worker-models python -c 'import os; assert os.access("/data/artifacts", os.W_OK)'
           if docker compose exec -T worker-validation python -c 'import urllib.request; urllib.request.urlopen("https://example.com", timeout=3)' >/dev/null 2>&1; then

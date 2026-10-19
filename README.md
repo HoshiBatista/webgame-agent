@@ -11,15 +11,16 @@ The intended experience is simple:
 
 **The hackathon vertical slice is implemented.** The repository now contains a
 React creator UI, FastAPI control plane, PostgreSQL workflow state, Redis/Celery
-workers, OpenAI generation through GPT-6 Luna, immutable content-addressed game
+workers, generation through a replaceable LLM connector, immutable content-addressed game
 artifacts, bounded repair, static rules, and Playwright mobile validation.
 
 The implementation deliberately does not use SQLite. Docker Compose starts the
 production-like MVP stack: PostgreSQL 17, Redis with AOF/no-eviction, separate
 model and validation workers, Celery Beat outbox recovery, API, and web UI.
-Provider code remains behind the project-owned `ModelGateway`; the first adapter
-uses the OpenAI Responses API with Structured Outputs and configurable model ID
-`gpt-6-luna`. See the [official model page](https://developers.openai.com/api/docs/models/gpt-6-luna).
+Provider code remains behind the project-owned `ModelGateway`. The default
+adapter uses a remote vLLM OpenAI-compatible Responses endpoint with Structured
+Outputs; a hosted OpenAI adapter remains an optional fallback. Provider, URL,
+credential and served-model ID are configuration rather than workflow code.
 
 The MVP capacity target is 10 simultaneous active generation runs. This is a
 documented, testable envelope; it is not considered proven until the prescribed
@@ -65,7 +66,7 @@ requirements are calculated in the
 ```text
 Browser → nginx :5173 ┬→ React static UI
                       └→ internal FastAPI → PostgreSQL outbox → Redis/Celery
-                                                               ├─ model worker → GPT-6 Luna
+                                                               ├─ model worker → vLLM connector
                                                                ├─ workflow worker
                                                                └─ validation worker → Chromium
                                                                           ↓
@@ -80,16 +81,79 @@ pass. Failed candidates receive at most two model repairs; every candidate is
 an immutable revision with validation evidence.
 
 Implemented bonus features include audience adaptation, touch/responsive
-generation rules, iterative revisions, gallery and share URLs, cross-genre
-specifications, procedural graphics/WebAudio, and aggregate gameplay analytics
-fed into future specifications. See
+generation rules, iterative revisions, a public community feed, likes,
+revision-frozen publishing and one-click remix into a separately owned project.
+Cross-genre specifications, procedural graphics/WebAudio, aggregate gameplay
+analytics, and creator ratings with recurring quality priorities are also fed
+into future specifications. Each generation stores the exact bounded feedback
+context it used, so the behavior is auditable and cannot silently change while
+a run is in flight. This is prompt-level preference learning, not automatic
+fine-tuning of model weights. See
 [docs/hackathon-requirements.md](docs/hackathon-requirements.md).
+
+The creator studio uses a Beeline-inspired black/yellow visual theme with a
+collapsible chat sidebar, persisted requests in the conversation, and a phone
+preview beside the editor. On mobile, the game opens in an in-app full-screen
+player with a visible exit action. The community has newest/popular sorting,
+an author-only filter, editable titles and explicit publication removal.
+
+Each project exposes its revision history. A creator can preview an older
+validated version, make it current, or download its exact HTML / ZIP bundle
+(`index.html` plus specification and validation metadata). Existing ratings
+load when switching versions. Restoring a private revision does not update the
+published game until the creator explicitly publishes again.
+
+Deleting a chat archives the project and cancels unfinished runs. It removes
+private access to the chat while preserving its public game, likes and remix
+lineage. Removing a publication is separate: its share link becomes unavailable,
+but the private chat and existing remixes remain. Archived records are retained
+in storage; chat deletion is not a personal-data erasure operation.
+
+Studio endpoints:
+
+- `POST /v1/revisions/{id}/restore` selects a validated private revision;
+- `GET /v1/revisions/{id}/export?format=html|zip` downloads it;
+- `GET /v1/projects/{id}/feedback` returns the creator's saved revision ratings;
+- `DELETE /v1/projects/{id}` archives a chat;
+- `GET /v1/public-games?sort=newest|popular&mine=true|false` filters the feed;
+- `DELETE /v1/public-games/{id}` removes an owned publication.
+
+Apply migrations through `20261017_0008` with `uv run alembic upgrade head`
+before running this version against an existing database.
+
+Workflow stages now hold a persisted exclusive lease. Duplicate deliveries are
+ignored while the lease is held; completion releases it in the same transaction
+that queues the next stage. Unhandled storage/validation errors fail the run.
+The periodic dispatcher fences expired executions and reports their timeout
+without silently spending another model call. `P2P_STAGE_LEASE_SECONDS` defaults
+to 600 seconds and must exceed the worker's hard task limit. Timeout recovery
+requires the workflow worker and Celery Beat to be running.
+
+Database failures before stage ownership receive five bounded worker retries.
+Old, unclaimed commands with no pending outbox record are redelivered after the
+lease grace interval, so an early failure cannot leave a run silently orphaned.
+Artifact-store initialization happens inside the stage guard. Restores and new
+revision requests advance a project selection counter: a late candidate remains
+in history but cannot replace a newer creator choice.
+
+Artifact reads, browser paths and reuse verify SHA-256, containment and size;
+corrupted stored content is never served under its previous validation status.
+A missing Chromium runtime is reported as unverified and does not consume model
+repair calls. The creator UI retains the logical request key across ambiguous
+failures, separates publication success from clipboard/analytics availability,
+and locks feedback fields while their submitted value is being saved.
+
+Targeted revision validation compares deterministic state-transition traces of
+the parent and candidate in both viewports, as well as their specifications.
+This checks sampled behavior; it does not prove equivalence of every possible
+playthrough. Generated controls expose `data-p2p-action="start|restart"`; older
+games use a matching accessible button name instead of the first visible button.
 
 ## Repository contents
 
 ```text
 .
-├── .github/workflows/        # CI, CodeQL and bounded live Luna evaluations
+├── .github/workflows/        # CI, CodeQL and bounded live model evaluations
 ├── src/prompt2play/          # API, workflow, adapters, validation, Celery
 ├── web/                      # React/TypeScript/Vite creator application
 ├── alembic/                  # PostgreSQL schema migration
@@ -115,16 +179,33 @@ fed into future specifications. See
 Prerequisites:
 
 - Docker with Compose for the complete stack;
-- an OpenAI API key with access to `gpt-6-luna`;
+- access to an OpenAI-compatible vLLM endpoint and its API key, or configured
+  OpenAI fallback credentials;
 - for host-only development: Python 3.11+, uv, Node.js 24 and npm.
 
 Start the complete stack:
 
 ```bash
 cp .env.example .env
-# Set OPENAI_API_KEY in .env, then:
+# Set vLLM connection values and P2P_ADMIN_PASSWORD in .env, then:
 docker compose up --build
 ```
+
+The repository does not start or download a model. Point the model worker at a
+separately operated vLLM server that exposes the Responses API and structured
+JSON output. The served name may be an alias independent of the weights:
+
+```env
+P2P_MODEL_PROVIDER=vllm
+P2P_VLLM_BASE_URL=https://models.internal.example/v1
+P2P_VLLM_MODEL=prompt2play-code
+P2P_VLLM_API_KEY=replace-with-internal-token
+P2P_MODEL_MAX_OUTPUT_TOKENS=64000
+```
+
+For a temporary hosted fallback, set `P2P_MODEL_PROVIDER=openai`,
+`P2P_OPENAI_MODEL` and `OPENAI_API_KEY`. Only the selected adapter validates and
+uses its credential.
 
 Open `http://localhost:5173`. nginx is the only published service: the API and
 OpenAPI UI are available through the same origin at
@@ -133,10 +214,18 @@ internal and is not published. The first validation-worker image build installs
 Playwright Chromium and can take several minutes; the API and model images do
 not contain a browser.
 
+The creator studio has no public registration. On startup, the one-shot
+`bootstrap-admin` job creates or refreshes `P2P_ADMIN_USERNAME`, stores only a
+salted password hash, and assigns legacy ownerless projects to that account.
+Usernames are unique case-insensitively. Login uses an opaque HttpOnly session;
+project history, runs, revisions, previews, publishing and analytics are scoped
+to the authenticated owner. Published `/play/{slug}` links remain public.
+
 The services are intentionally separate:
 
 - `api` accepts prompts and streams persisted progress;
-- `worker-models` is the only service with OpenAI credentials and public egress;
+- `bootstrap-admin` provisions the closed creator account after migrations;
+- `worker-models` is the only service with model credentials and provider egress;
 - `worker-workflow` dispatches durable outbox commands without provider secrets;
 - `worker-validation` opens untrusted games in Chromium on an internal-only
   network with read-only artifacts;
@@ -147,8 +236,7 @@ The services are intentionally separate:
 Runtime containers are non-root, capability-free, read-only and resource
 bounded. In production, terminate TLS at the platform ingress/load balancer and
 forward `X-Forwarded-Proto: https`; nginx then emits HSTS. Use a dedicated
-OpenAI project service account with the narrow `api.responses.write` permission,
-and inject its key only into `worker-models`.
+provider credential scoped to inference and inject it only into `worker-models`.
 
 Host-only quality checks do not require credentials or infrastructure:
 
@@ -182,10 +270,10 @@ validation, deterministic AI contracts, frontend formatting/lint/coverage/build,
 dependency and source security scanning, reversible migrations, and a full
 Docker Compose smoke test. CodeQL scans Python and TypeScript separately.
 
-Paid model calls are deliberately absent from pull requests. A protected
-`Live Luna evaluation` workflow runs a bounded golden dataset manually or on a
-weekly schedule using the `ai-evals` GitHub environment and its
-`OPENAI_API_KEY` secret. It records pass rate, token counts, latency, static
+Live model calls are deliberately absent from pull requests. A protected live
+evaluation workflow runs a bounded golden dataset manually or on a weekly
+schedule using credentials from the `ai-evals` GitHub environment. It records
+pass rate, token counts, latency, static
 findings and browser evidence without retaining prompts or generated HTML. See
 [the CI guide](docs/ci.md) for local commands, required branch rules, service
 tests and live-evaluation setup.

@@ -16,7 +16,8 @@ bypassed a single place for rate limits and security headers.
 Keep one application package and build it into independent Docker targets:
 `api`, `migration`, `model-worker`, `workflow-worker`, `beat` and
 `validation-worker`. Only the validation target installs Chromium. Only the
-model worker receives `OPENAI_API_KEY` and joins the `model-egress` network.
+model worker receives the selected provider credential and joins the
+`model-egress` network.
 Validation, API and workflow roles use the internal backend network; validation
 and API mount artifacts read-only.
 

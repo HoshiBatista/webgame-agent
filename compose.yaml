@@ -4,8 +4,11 @@ x-runtime-environment: &runtime-environment
   P2P_DATABASE_URL: postgresql+psycopg://prompt2play:${P2P_POSTGRES_PASSWORD:-prompt2play}@postgres:5432/prompt2play
   P2P_REDIS_URL: redis://redis:6379/0
   P2P_ARTIFACT_ROOT: /data/artifacts
+  P2P_VALIDATION_ROOT: /data/validation
   P2P_PUBLIC_BASE_URL: ${P2P_PUBLIC_BASE_URL:-http://localhost:5173}
   P2P_CORS_ORIGINS: ${P2P_CORS_ORIGINS:-http://localhost:5173}
+  P2P_SESSION_TTL_HOURS: ${P2P_SESSION_TTL_HOURS:-24}
+  P2P_STAGE_LEASE_SECONDS: ${P2P_STAGE_LEASE_SECONDS:-600}
 
 x-runtime-service: &runtime-service
   init: true
@@ -86,6 +89,24 @@ services:
     cpus: 0.5
     pids_limit: 128
 
+  bootstrap-admin:
+    <<: *runtime-service
+    build:
+      context: .
+      target: migration
+    command: ["python", "-m", "prompt2play.bootstrap_admin"]
+    environment:
+      <<: *runtime-environment
+      P2P_ADMIN_USERNAME: ${P2P_ADMIN_USERNAME:?Set P2P_ADMIN_USERNAME in .env}
+      P2P_ADMIN_PASSWORD: ${P2P_ADMIN_PASSWORD:?Set P2P_ADMIN_PASSWORD in .env}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+
   api:
     <<: *runtime-service
     build:
@@ -97,7 +118,7 @@ services:
     volumes:
       - artifacts:/data/artifacts:ro
     depends_on:
-      migrate:
+      bootstrap-admin:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
@@ -112,8 +133,14 @@ services:
       target: model-worker
     environment:
       <<: *runtime-environment
-      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY in .env}
-      P2P_OPENAI_MODEL: ${P2P_OPENAI_MODEL:-gpt-6-luna}
+      P2P_MODEL_PROVIDER: ${P2P_MODEL_PROVIDER:-vllm}
+      P2P_MODEL_MAX_OUTPUT_TOKENS: ${P2P_MODEL_MAX_OUTPUT_TOKENS:-64000}
+      P2P_VLLM_BASE_URL: ${P2P_VLLM_BASE_URL:-http://vllm-server:8000/v1}
+      P2P_VLLM_MODEL: ${P2P_VLLM_MODEL:-prompt2play-code}
+      P2P_VLLM_API_KEY: ${P2P_VLLM_API_KEY:-}
+      P2P_VLLM_TIMEOUT_SECONDS: ${P2P_VLLM_TIMEOUT_SECONDS:-180}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      P2P_OPENAI_MODEL: ${P2P_OPENAI_MODEL:-}
       P2P_OPENAI_REASONING_EFFORT: ${P2P_OPENAI_REASONING_EFFORT:-medium}
       P2P_OPENAI_TIMEOUT_SECONDS: ${P2P_OPENAI_TIMEOUT_SECONDS:-120}
     volumes:
@@ -169,6 +196,7 @@ services:
       P2P_BROWSER_VALIDATION: "true"
     volumes:
       - artifacts:/data/artifacts:ro
+      - validation-evidence:/data/validation
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=512m
       - /home/prompt2play/.cache:rw,noexec,nosuid,size=256m
@@ -250,6 +278,7 @@ services:
 
 volumes:
   artifacts:
+  validation-evidence:
   postgres:
   redis:
 

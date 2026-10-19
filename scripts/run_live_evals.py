@@ -1,4 +1,4 @@
-"""Run a bounded GPT-6 Luna golden evaluation and emit a secret-free JSON report."""
+"""Run a bounded configured-model evaluation and emit a secret-free JSON report."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from prompt2play.adapters.openai_gateway import OpenAIModelGateway
+from prompt2play.adapters.model_gateway import build_model_gateway
 from prompt2play.config import Settings
 from prompt2play.evaluation import load_golden_cases, score_candidate
 from prompt2play.validation.browser import validate_in_browser
@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     settings = Settings()
-    gateway = OpenAIModelGateway(settings)
+    gateway = build_model_gateway(settings)
     cases = load_golden_cases(args.dataset)[: max(1, args.limit)]
     results: list[dict[str, Any]] = []
     total_input_tokens = 0

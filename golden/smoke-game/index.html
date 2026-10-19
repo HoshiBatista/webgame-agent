@@ -13,7 +13,7 @@
   </style>
 </head>
 <body>
-  <main><canvas id="game"></canvas><button id="start">Начать игру</button></main>
+  <main><canvas id="game"></canvas><button id="start" data-p2p-action="start">Начать игру</button></main>
   <script>
     (() => {
       const canvas = document.querySelector("#game");
@@ -29,14 +29,50 @@
       function emit(event) {
         parent.postMessage({ source: "prompt2play-game", type: "game_event", event }, "*");
       }
+      function updateButton() {
+        button.dataset.p2pAction = state.phase === "ready" ? "start" : state.phase === "playing" ? "primary" : "restart";
+        button.textContent = state.phase === "ready" ? "Начать игру" : state.phase === "playing" ? "Действие" : "Заново";
+      }
       function start() {
         state.phase = "playing";
         state.score += 1;
         state.objective += 1;
-        button.textContent = "Заново";
+        updateButton();
         emit("game_start");
       }
-      button.addEventListener("pointerdown", start);
+      function reset() {
+        Object.assign(state, { phase: "ready", score: 0, level: 1, lives: 3, objective: 0 });
+        updateButton();
+        emit("restart");
+        return { ...state };
+      }
+      function win() {
+        state.phase = "won";
+        state.score += 10;
+        updateButton();
+        emit("win");
+        return { ...state };
+      }
+      function lose() {
+        state.phase = "lost";
+        state.lives = 0;
+        updateButton();
+        emit("lose");
+        return { ...state };
+      }
+      function primary() {
+        if (state.phase === "ready") start();
+        else if (state.phase === "playing") { state.score += 1; state.objective += 1; }
+        else reset();
+        return { ...state };
+      }
+      button.addEventListener("pointerdown", primary);
+      addEventListener("keydown", (event) => {
+        if (["Space", "Enter", "ArrowRight"].includes(event.code)) {
+          event.preventDefault();
+          primary();
+        }
+      });
       addEventListener("resize", resize);
       function frame() {
         context.fillStyle = "#12131b";
@@ -48,17 +84,19 @@
         requestAnimationFrame(frame);
       }
       window.__prompt2play = {
-        schemaVersion: "1",
+        schemaVersion: "2",
         ready: async () => undefined,
-        reset: async () => {
-          Object.assign(state, { phase: "ready", score: 0, level: 1, lives: 3, objective: 0 });
-          button.textContent = "Начать игру";
-          emit("restart");
+        reset: async () => reset(),
+        dispatch: async (action) => {
+          if (action === "start") { start(); return { ...state }; }
+          if (action === "primary") return primary();
+          if (action === "force_win") return win();
+          if (action === "force_lose") return lose();
+          if (action === "restart") return reset();
           return { ...state };
         },
-        dispatch: async () => { start(); return { ...state }; },
         snapshot: () => ({ ...state }),
-        capabilities: () => ["pointer", "touch", "restart"]
+        capabilities: () => ["keyboard", "pointer", "touch", "win", "lose", "restart"]
       };
       resize();
       frame();
