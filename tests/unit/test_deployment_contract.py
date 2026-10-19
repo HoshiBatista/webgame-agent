@@ -1,11 +1,31 @@
 """Deployment boundaries that protect credentials and generated code."""
 
 from pathlib import Path
+from shlex import shlex
 from typing import Any, cast
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).parents[2]
+
+
+@pytest.mark.parametrize(
+    ("service_name", "expected_command"),
+    [("postgres", "pg_isready -U prompt2play"), ("redis", "redis-cli ping")],
+)
+def test_ci_healthcheck_is_one_runner_argument(service_name: str, expected_command: str) -> None:
+    workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
+    service = workflow["jobs"]["integration"]["services"][service_name]
+    # Actions passes options to a process, not a shell: single quotes do not
+    # group arguments. Model double-quote grouping rather than POSIX shlex.split.
+    lexer = shlex(service["options"], posix=True)
+    lexer.quotes = '"'
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    arguments = list(lexer)
+    assert f"--health-cmd={expected_command}" in arguments
+    assert "-U" not in arguments
 
 
 def load_compose() -> dict[str, Any]:

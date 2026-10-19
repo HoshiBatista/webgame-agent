@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 from sqlalchemy import inspect
 
 revision: str = "20261017_0005"
@@ -16,11 +16,13 @@ def upgrade() -> None:
     """Add bounded feedback storage safely for legacy and fresh schemas."""
 
     connection = op.get_bind()
-    run_columns = {item["name"] for item in inspect(connection).get_columns("generation_runs")}
-    if "feedback_snapshot" not in run_columns:
+    offline = context.is_offline_mode()
+    if offline or "feedback_snapshot" not in {
+        item["name"] for item in inspect(connection).get_columns("generation_runs")
+    }:
         op.add_column("generation_runs", sa.Column("feedback_snapshot", sa.JSON(), nullable=True))
 
-    if not inspect(connection).has_table("game_feedback"):
+    if offline or not inspect(connection).has_table("game_feedback"):
         op.create_table(
             "game_feedback",
             sa.Column("id", sa.Uuid(), nullable=False),
@@ -48,8 +50,10 @@ def downgrade() -> None:
     """Remove feedback memory and its run snapshots."""
 
     connection = op.get_bind()
-    if inspect(connection).has_table("game_feedback"):
+    offline = context.is_offline_mode()
+    if offline or inspect(connection).has_table("game_feedback"):
         op.drop_table("game_feedback")
-    run_columns = {item["name"] for item in inspect(connection).get_columns("generation_runs")}
-    if "feedback_snapshot" in run_columns:
+    if offline or "feedback_snapshot" in {
+        item["name"] for item in inspect(connection).get_columns("generation_runs")
+    }:
         op.drop_column("generation_runs", "feedback_snapshot")

@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 
 revision: str = "20261017_0008"
 down_revision: str | None = "20261017_0007"
@@ -18,8 +18,9 @@ def upgrade() -> None:
         ("projects", "selection_version"),
         ("generation_runs", "project_version"),
     ):
-        columns = {item["name"] for item in sa.inspect(op.get_bind()).get_columns(table)}
-        if column not in columns:
+        if context.is_offline_mode() or column not in {
+            item["name"] for item in sa.inspect(op.get_bind()).get_columns(table)
+        }:
             op.add_column(
                 table, sa.Column(column, sa.Integer(), nullable=False, server_default="0")
             )

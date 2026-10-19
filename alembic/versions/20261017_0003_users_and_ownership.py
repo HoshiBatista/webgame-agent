@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 from sqlalchemy import inspect
 
 revision: str = "20261017_0003"
@@ -16,8 +16,8 @@ def upgrade() -> None:
     """Add identity tables safely when migration one created current metadata."""
 
     connection = op.get_bind()
-    inspector = inspect(connection)
-    if not inspector.has_table("users"):
+    offline = context.is_offline_mode()
+    if offline or not inspect(connection).has_table("users"):
         op.create_table(
             "users",
             sa.Column("id", sa.Uuid(), nullable=False),
@@ -33,8 +33,7 @@ def upgrade() -> None:
             "ix_users_username_normalized", "users", ["username_normalized"], unique=True
         )
 
-    inspector = inspect(connection)
-    if not inspector.has_table("auth_sessions"):
+    if offline or not inspect(connection).has_table("auth_sessions"):
         op.create_table(
             "auth_sessions",
             sa.Column("id", sa.Uuid(), nullable=False),
@@ -52,8 +51,9 @@ def upgrade() -> None:
             "ix_auth_sessions_expires_at", "auth_sessions", ["expires_at"], unique=False
         )
 
-    project_columns = {item["name"] for item in inspect(connection).get_columns("projects")}
-    if "owner_id" not in project_columns:
+    if offline or "owner_id" not in {
+        item["name"] for item in inspect(connection).get_columns("projects")
+    }:
         op.add_column("projects", sa.Column("owner_id", sa.Uuid(), nullable=True))
         op.create_foreign_key(
             "fk_projects_owner_id_users",
@@ -70,6 +70,13 @@ def downgrade() -> None:
     """Remove creator ownership and authentication storage."""
 
     connection = op.get_bind()
+    if context.is_offline_mode():
+        op.drop_index("ix_projects_owner_id", table_name="projects")
+        op.drop_constraint("fk_projects_owner_id_users", "projects", type_="foreignkey")
+        op.drop_column("projects", "owner_id")
+        op.drop_table("auth_sessions")
+        op.drop_table("users")
+        return
     project_columns = {item["name"] for item in inspect(connection).get_columns("projects")}
     if "owner_id" in project_columns:
         indexes = {item["name"] for item in inspect(connection).get_indexes("projects")}

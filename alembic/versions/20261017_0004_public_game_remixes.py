@@ -1,10 +1,9 @@
 """Add stable public games, likes, and remix provenance."""
 
 from collections.abc import Sequence
-from uuid import uuid4
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 from sqlalchemy import inspect
 
 revision: str = "20261017_0004"
@@ -17,8 +16,10 @@ def upgrade() -> None:
     """Create community tables and preserve previously shared revisions."""
 
     connection = op.get_bind()
-    project_columns = {item["name"] for item in inspect(connection).get_columns("projects")}
-    if "forked_from_revision_id" not in project_columns:
+    offline = context.is_offline_mode()
+    if offline or "forked_from_revision_id" not in {
+        item["name"] for item in inspect(connection).get_columns("projects")
+    }:
         op.add_column("projects", sa.Column("forked_from_revision_id", sa.Uuid(), nullable=True))
         op.create_foreign_key(
             "fk_projects_forked_from_revision_id_revisions",
@@ -35,8 +36,7 @@ def upgrade() -> None:
             unique=False,
         )
 
-    inspector = inspect(connection)
-    created_public_games = not inspector.has_table("public_games")
+    created_public_games = offline or not inspect(connection).has_table("public_games")
     if created_public_games:
         op.create_table(
             "public_games",
@@ -58,7 +58,7 @@ def upgrade() -> None:
         )
         op.create_index("ix_public_games_author_id", "public_games", ["author_id"], unique=False)
 
-    if not inspect(connection).has_table("public_game_likes"):
+    if offline or not inspect(connection).has_table("public_game_likes"):
         op.create_table(
             "public_game_likes",
             sa.Column("public_game_id", sa.Uuid(), nullable=False),
@@ -70,55 +70,38 @@ def upgrade() -> None:
         )
 
     if created_public_games:
-        candidates = connection.execute(
+        # Revision UUIDs are already unique and provide stable publication IDs.
+        # Keep the data migration server-side so offline SQL includes it too.
+        op.execute(
             sa.text(
                 """
-                SELECT r.id AS revision_id, r.project_id, p.owner_id AS author_id,
-                       r.title, r.public_slug AS slug, r.created_at
+                INSERT INTO public_games
+                    (id, project_id, revision_id, author_id, title, slug, created_at, updated_at)
+                SELECT DISTINCT ON (r.project_id)
+                       r.id, r.project_id, r.id, p.owner_id,
+                       r.title, r.public_slug, r.created_at, r.created_at
                 FROM revisions r
                 JOIN projects p ON p.id = r.project_id
                 WHERE r.public_slug IS NOT NULL AND p.owner_id IS NOT NULL
-                ORDER BY r.project_id, r.created_at DESC
+                ORDER BY r.project_id, r.created_at DESC, r.id DESC
                 """
             )
-        ).mappings()
-        seen_projects: set[object] = set()
-        public_games = sa.table(
-            "public_games",
-            sa.column("id", sa.Uuid()),
-            sa.column("project_id", sa.Uuid()),
-            sa.column("revision_id", sa.Uuid()),
-            sa.column("author_id", sa.Uuid()),
-            sa.column("title", sa.String()),
-            sa.column("slug", sa.String()),
-            sa.column("created_at", sa.DateTime(timezone=True)),
-            sa.column("updated_at", sa.DateTime(timezone=True)),
         )
-        rows: list[dict[str, object]] = []
-        for item in candidates:
-            if item["project_id"] in seen_projects:
-                continue
-            seen_projects.add(item["project_id"])
-            rows.append(
-                {
-                    "id": uuid4(),
-                    "project_id": item["project_id"],
-                    "revision_id": item["revision_id"],
-                    "author_id": item["author_id"],
-                    "title": item["title"],
-                    "slug": item["slug"],
-                    "created_at": item["created_at"],
-                    "updated_at": item["created_at"],
-                }
-            )
-        if rows:
-            op.bulk_insert(public_games, rows)
 
 
 def downgrade() -> None:
     """Remove public feed state while preserving legacy revision slugs."""
 
     connection = op.get_bind()
+    if context.is_offline_mode():
+        op.drop_table("public_game_likes")
+        op.drop_table("public_games")
+        op.drop_index("ix_projects_forked_from_revision_id", table_name="projects")
+        op.drop_constraint(
+            "fk_projects_forked_from_revision_id_revisions", "projects", type_="foreignkey"
+        )
+        op.drop_column("projects", "forked_from_revision_id")
+        return
     if inspect(connection).has_table("public_game_likes"):
         op.drop_table("public_game_likes")
     if inspect(connection).has_table("public_games"):

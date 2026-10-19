@@ -58,8 +58,10 @@ jobs:
       - name: Strict type-check
         run: uv run mypy
 
-      - name: Render the PostgreSQL migration offline
-        run: uv run alembic upgrade head --sql > "${RUNNER_TEMP}/migration.sql"
+      - name: Render PostgreSQL upgrade and downgrade offline
+        run: |
+          uv run alembic upgrade head --sql > "${RUNNER_TEMP}/migration.sql"
+          uv run alembic downgrade head:base --sql > "${RUNNER_TEMP}/migration-downgrade.sql"
 
       - name: Build and validate distributions
         run: |
@@ -166,7 +168,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U prompt2play"
+          --health-cmd="pg_isready -U prompt2play"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
@@ -175,7 +177,7 @@ jobs:
         ports:
           - 6379:6379
         options: >-
-          --health-cmd "redis-cli ping"
+          --health-cmd="redis-cli ping"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20

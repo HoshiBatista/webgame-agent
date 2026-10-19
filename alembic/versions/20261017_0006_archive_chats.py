@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
+from alembic import context, op
 
 revision: str = "20261017_0006"
 down_revision: str | None = "20261017_0005"
@@ -14,8 +14,9 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Keep publication references and fill the legacy archive flag."""
 
-    columns = {item["name"] for item in sa.inspect(op.get_bind()).get_columns("projects")}
-    if "archived" not in columns:
+    if context.is_offline_mode() or "archived" not in {
+        item["name"] for item in sa.inspect(op.get_bind()).get_columns("projects")
+    }:
         op.add_column(
             "projects",
             sa.Column("archived", sa.Boolean(), nullable=False, server_default=sa.false()),
@@ -26,6 +27,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Restore archived chats to the legacy visible history."""
 
-    columns = {item["name"] for item in sa.inspect(op.get_bind()).get_columns("projects")}
-    if "archived" in columns:
+    if context.is_offline_mode() or "archived" in {
+        item["name"] for item in sa.inspect(op.get_bind()).get_columns("projects")
+    }:
         op.drop_column("projects", "archived")

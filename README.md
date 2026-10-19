@@ -121,6 +121,13 @@ Studio endpoints:
 Apply migrations through `20261017_0008` with `uv run alembic upgrade head`
 before running this version against an existing database.
 
+Migration `0001` contains a frozen historical schema, independent of the current
+ORM models. Both directions can be rendered without a database using
+`uv run alembic upgrade head --sql` and
+`uv run alembic downgrade head:base --sql`. Offline SQL also includes the legacy
+publication backfill. CI checks a live PostgreSQL upgrade → downgrade → upgrade;
+never run the destructive downgrade check against a database containing real data.
+
 Workflow stages now hold a persisted exclusive lease. Duplicate deliveries are
 ignored while the lease is held; completion releases it in the same transaction
 that queues the next stage. Unhandled storage/validation errors fail the run.
