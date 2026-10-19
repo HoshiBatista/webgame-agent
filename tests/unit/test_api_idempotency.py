@@ -18,6 +18,14 @@ def test_request_hash_is_stable_and_payload_sensitive() -> None:
     assert first != _request_hash("create_project", "Игра про кота")
 
 
+def test_revision_request_hash_normalizes_uuid_and_preserves_payload_identity() -> None:
+    revision_id = uuid4()
+    first = _request_hash("revise", revision_id, "Добавь второй уровень")
+    assert first == _request_hash("revise", str(revision_id), "Добавь второй уровень")
+    assert first != _request_hash("revise", uuid4(), "Добавь второй уровень")
+    assert first != _request_hash("revise", revision_id, "Улучши музыку")
+
+
 def test_idempotency_keys_are_scoped_to_the_creator() -> None:
     first_user = uuid4()
     second_user = uuid4()

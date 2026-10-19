@@ -126,10 +126,12 @@ def _owned_revision(session: Session, revision_id: UUID, user: User) -> Revision
     return revision
 
 
-def _request_hash(operation: str, *parts: object) -> str:
+def _request_hash(operation: str, *parts: str | UUID) -> str:
     """Return a stable fingerprint without persisting another copy of prompt text."""
 
-    payload = json.dumps([operation, *parts], ensure_ascii=False, separators=(",", ":"))
+    payload = json.dumps(
+        [operation, *(str(part) for part in parts)], ensure_ascii=False, separators=(",", ":")
+    )
     return hashlib.sha256(payload.encode()).hexdigest()
 
 

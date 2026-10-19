@@ -244,10 +244,13 @@ def test_artifact_factory_failure_is_handled_inside_claimed_workflow(
 
 
 @pytest.mark.parametrize("selection_version", [1, 2])
+@pytest.mark.parametrize("browser_default", ["true", "false"])
 def test_candidate_promotion_respects_the_latest_creator_choice(
     monkeypatch: pytest.MonkeyPatch,
     selection_version: int,
+    browser_default: str,
 ) -> None:
+    monkeypatch.setenv("P2P_BROWSER_VALIDATION", browser_default)
     restored = uuid4()
     project = Project(
         id=uuid4(),
@@ -285,14 +288,16 @@ def test_candidate_promotion_respects_the_latest_creator_choice(
         Path(__file__).parents[2] / "golden/smoke-game/index.html"
     ).read_text()
 
-    assert workflow.validate_run(lambda: session, store, Settings(), run.id)
+    assert workflow.validate_run(lambda: session, store, Settings(browser_validation=True), run.id)
     assert run.state == "succeeded"
     assert revision.status == "validated"
     assert project.current_revision_id == (revision.id if selection_version == 1 else restored)
 
 
-def test_missing_browser_runtime_does_not_schedule_model_repair(
+@pytest.mark.parametrize("browser_enabled", [True, False])
+def test_unverified_browser_does_not_schedule_model_repair(
     monkeypatch: pytest.MonkeyPatch,
+    browser_enabled: bool,
 ) -> None:
     project = Project(id=uuid4(), archived=False)
     revision = Revision(
@@ -314,17 +319,17 @@ def test_missing_browser_runtime_does_not_schedule_model_repair(
     session.get.side_effect = [project, revision, project, revision]
     session.scalar.return_value = 0
     monkeypatch.setattr(workflow, "_locked_run", lambda *_args: run)
-    monkeypatch.setattr(
-        workflow,
-        "validate_in_browser",
-        lambda *_args: (None, [], ["browser_unverified: runtime unavailable"]),
-    )
+    browser = Mock(return_value=(None, [], ["browser_unverified: runtime unavailable"]))
+    monkeypatch.setattr(workflow, "validate_in_browser", browser)
     store = Mock(spec=ArtifactStore)
     store.read_html.return_value = (
         Path(__file__).parents[2] / "golden/smoke-game/index.html"
     ).read_text()
 
-    assert not workflow.validate_run(lambda: session, store, Settings(), run.id)
+    assert not workflow.validate_run(
+        lambda: session, store, Settings(browser_validation=browser_enabled), run.id
+    )
+    assert browser.call_count == int(browser_enabled)
     assert run.state == "failed"
     assert run.repair_count == 0
     assert revision.validation_report is not None

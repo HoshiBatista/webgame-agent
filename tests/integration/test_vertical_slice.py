@@ -243,6 +243,19 @@ def test_api_generation_validation_revision_and_analytics(
             headers={"Idempotency-Key": "integration-revise"},
         )
         assert revised.status_code == 202
+        repeated_revision = client.post(
+            f"/v1/revisions/{revision_id}/revise",
+            json={"instruction": "Добавь второй уровень"},
+            headers={"Idempotency-Key": "integration-revise"},
+        )
+        assert repeated_revision.status_code == 202
+        assert repeated_revision.json() == revised.json()
+        conflicting_revision = client.post(
+            f"/v1/revisions/{revision_id}/revise",
+            json={"instruction": "Улучши музыку"},
+            headers={"Idempotency-Key": "integration-revise"},
+        )
+        assert conflicting_revision.status_code == 409
         revised_run_id = UUID(revised.json()["run_id"])
         assert specify_run(SessionLocal, lambda: gateway, revised_run_id)
         assert "музыка и звуковой дизайн" in gateway.learning_contexts[-1]

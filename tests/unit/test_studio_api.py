@@ -13,10 +13,18 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from prompt2play.api.app import create_app, get_current_user
+from prompt2play.api.app import _request_hash, create_app, get_current_user
 from prompt2play.config import Settings, get_settings
 from prompt2play.db import get_session
-from prompt2play.models import GenerationRun, Project, PublicGame, Revision, User, utc_now
+from prompt2play.models import (
+    GenerationRun,
+    IdempotencyRecord,
+    Project,
+    PublicGame,
+    Revision,
+    User,
+    utc_now,
+)
 
 
 @pytest.fixture
@@ -50,6 +58,35 @@ def test_archive_cancels_active_runs_without_deleting_artifacts(
     assert run.cancel_requested is True
     session.delete.assert_not_called()
     session.commit.assert_called_once()
+
+
+def test_revision_endpoint_accepts_uuid_and_replays_only_the_same_request(
+    studio_client: tuple[TestClient, Mock, User],
+) -> None:
+    client, session, user = studio_client
+    revision = Revision(id=uuid4(), project_id=uuid4(), status="validated")
+    run = GenerationRun(id=uuid4(), project_id=revision.project_id)
+    operation = f"revise:{user.id}"
+    record = IdempotencyRecord(
+        operation=operation,
+        request_hash=_request_hash(operation, str(revision.id), "Добавь второй уровень"),
+        project_id=run.project_id,
+        run_id=run.id,
+    )
+    session.scalar.return_value = revision
+    session.get.side_effect = [record, run, record, run, record]
+    headers = {"Idempotency-Key": "retry-revision"}
+    url = f"/v1/revisions/{revision.id}/revise"
+
+    for _attempt in range(2):
+        response = client.post(url, json={"instruction": "Добавь второй уровень"}, headers=headers)
+        assert response.status_code == 202
+        assert response.json() == {"project_id": str(run.project_id), "run_id": str(run.id)}
+
+    conflict = client.post(url, json={"instruction": "Улучши музыку"}, headers=headers)
+    assert conflict.status_code == 409
+    session.add.assert_not_called()
+    session.commit.assert_not_called()
 
 
 @pytest.mark.parametrize("format", ["html", "zip"])
