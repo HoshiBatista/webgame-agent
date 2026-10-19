@@ -291,7 +291,7 @@ export function PhonePreview({
       </div>
       <div
         ref={stageRef}
-        className={`phone-stage ${expanded ? 'fullscreen-preview' : ''}`}
+        className={`phone-stage ${url ? 'has-game' : ''} ${expanded ? 'fullscreen-preview' : ''}`}
         role={expanded ? 'dialog' : undefined}
         aria-label={expanded ? `Игра: ${title}` : undefined}
         aria-modal={expanded ? true : undefined}
@@ -316,9 +316,11 @@ export function PhonePreview({
           </div>
           <div className="phone-home" aria-hidden="true" />
         </div>
-        <span className="preview-caption">
-          Ваш ход. Попробуйте сыграть <ArrowUpRight size={15} />
-        </span>
+        {!url && (
+          <span className="preview-caption">
+            Ваш ход. Попробуйте сыграть <ArrowUpRight size={15} />
+          </span>
+        )}
       </div>
     </>
   );

@@ -103,7 +103,10 @@ CHECK_SCHEMA = obj(
 DESIGN = obj(
     {
         "summary": string(maxLength=1000),
-        "visual": string(maxLength=700),
+        "visual": string(
+            maxLength=700,
+            description="Scene-first visual plan: use of phone/desktop space, essential in-play UI, and placement of instructions. Keep the playable content dominant without distorting mechanic-specific geometry.",
+        ),
         "controls": array(string(maxLength=200), maxItems=12),
         "outcome": string(maxLength=500),
     }

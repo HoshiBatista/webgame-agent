@@ -3465,6 +3465,20 @@ svg {
   }
 }
 
+/* Once a game exists, use the stage height for playing instead of an invitation caption. */
+@media (min-width: 761px) {
+  .preview-pane .phone-stage.has-game:not(.fullscreen-preview) {
+    padding: 8px 20px;
+  }
+  .preview-pane .phone-stage.has-game:not(.fullscreen-preview) .phone-device {
+    // 46px of vertical padding + 4px of border; keep the content at the tested aspect ratio.
+    box-sizing: content-box;
+    height: calc(100% - 50px);
+    max-height: 710px;
+    aspect-ratio: 390/844;
+  }
+}
+
 /* Fullscreen moves the existing frame visually; it never reloads the running game. */
 .mobile-play {
   display: none;
