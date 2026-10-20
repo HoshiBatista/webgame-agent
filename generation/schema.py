@@ -104,8 +104,8 @@ DESIGN = obj(
     {
         "summary": string(maxLength=1000),
         "visual": string(
-            maxLength=700,
-            description="Scene-first visual plan: use of phone/desktop space, essential in-play UI, and placement of instructions. Keep the playable content dominant without distorting mechanic-specific geometry.",
+            maxLength=1200,
+            description="Concrete spatial plan before code: rule-imposed vs flexible geometry; usable CSS width/height after controls on phone and desktop; actual interactive/drawn field dimensions and object/cell size (approximate values or formulas); shared drawing/input/resize mapping. Canvas element size or a claim of filling it is not evidence of useful play space. Preserve geometry required by the rules.",
         ),
         "controls": array(string(maxLength=200), maxItems=12),
         "outcome": string(maxLength=500),
