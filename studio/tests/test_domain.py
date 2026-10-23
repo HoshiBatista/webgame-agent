@@ -163,7 +163,7 @@ class DomainTests(TestCase):
         self.assertEqual(Revision.objects.count(), 1)
         self.assertEqual(run.invocations.get().state, "settled")
 
-    def test_one_auto_repair_then_explicit_continuation(self):
+    def test_bounded_auto_repairs_then_explicit_continuation(self):
         run = self.make_run()
         with (
             patch("generation.service.generate", return_value=response()) as model,
@@ -173,8 +173,9 @@ class DomainTests(TestCase):
             process_run(str(run.id))
         run.refresh_from_db()
         self.assertEqual(run.status, "needs_attention", run.error)
-        self.assertEqual(model.call_count, 2)
-        self.assertEqual([call.args[0]["operation"] for call in model.call_args_list], ["create", "repair"])
+        self.assertEqual(model.call_count, 4)
+        self.assertEqual([call.args[0]["operation"] for call in model.call_args_list],
+                         ["create", "repair", "repair", "repair"])
         candidate = run.candidate_revision
         next_run = create_run(self.chat, {"idempotency_key": "continue"}, continued_from=run)
         with (
@@ -756,6 +757,10 @@ class DomainTests(TestCase):
             {
                 "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
                 "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
+                "pipeline_version": 2,
+                "max_repair_attempts": 3,
+                "reported_findings": 0,
+                "focused_findings": 0,
             },
         )
         regular = json.dumps(self.client.get(f"/api/runs/{run.id}/").json())
@@ -811,7 +816,7 @@ class DomainTests(TestCase):
         ):
             process_run(str(edit.id))
         check.assert_not_called()
-        self.assertEqual(model.call_count, 2)
+        self.assertEqual(model.call_count, 4)
         edit.refresh_from_db()
         self.chat.refresh_from_db()
         self.assertEqual(edit.status, "needs_attention")

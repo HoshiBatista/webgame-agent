@@ -1,5 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, getSession, post, request, setCsrfToken } from './api';
+
+afterEach(() => vi.useRealTimers());
 
 describe('session API transport', () => {
   it('uses the latest session CSRF token and same-origin credentials for mutations', async () => {
@@ -64,5 +66,34 @@ describe('session API transport', () => {
         .mockResolvedValue(new Response('<html>private upstream details</html>', { status: 502 })),
     );
     await expect(request('/api/session/')).rejects.toBeInstanceOf(ApiError);
+  });
+  it('bounds an unresponsive browser request without submitting it again', async () => {
+    vi.useFakeTimers();
+    const fetcher = vi.fn(
+      (_path, options: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          options.signal?.addEventListener('abort', () =>
+            reject(new DOMException('Aborted', 'AbortError')),
+          );
+        }),
+    );
+    vi.stubGlobal('fetch', fetcher);
+    const pending = expect(
+      post('/api/chats/one/runs/', { idempotency_key: 'fixed' }),
+    ).rejects.toMatchObject({ code: 'network' });
+    await vi.advanceTimersByTimeAsync(15000);
+    await pending;
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+  it('treats a response body interrupted after headers as a lost acknowledgement', async () => {
+    const fetcher = vi.fn().mockResolvedValue({
+      status: 202,
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: () => Promise.reject(new TypeError('connection reset')),
+    });
+    vi.stubGlobal('fetch', fetcher);
+    await expect(post('/api/chats/one/runs/')).rejects.toMatchObject({ code: 'network' });
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 });

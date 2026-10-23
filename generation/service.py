@@ -4,10 +4,12 @@ import time
 import uuid
 
 from .errors import GenerationError
-from .providers import codex, fake, vllm
+from .normalization import VERSION as NORMALIZATION_VERSION
+from .normalization import normalize_response
+from .providers import codex, fake, relay, vllm
 from .schema import validate_response
 
-PROVIDERS = {"codex": codex, "vllm": vllm, "fake": fake}
+PROVIDERS = {"codex": codex, "vllm": vllm, "relay": relay, "fake": fake}
 
 
 def generate(request, *, on_event, is_cancelled):
@@ -17,6 +19,14 @@ def generate(request, *, on_event, is_cancelled):
         raise GenerationError("unknown_provider", "Неизвестный провайдер генерации.")
     started = time.monotonic()
     result = provider.generate(request, on_event=on_event, is_cancelled=is_cancelled)
+    original = result["response"]
+    result.setdefault("raw_response", original)
+    result["response"], changes = normalize_response(original)
+    if changes:
+        result["provider_metadata"] = {
+            **(result.get("provider_metadata") or {}),
+            "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
+        }
     try:
         validate_response(result["response"], operation=request.get("operation", "create"))
     except GenerationError as exc:

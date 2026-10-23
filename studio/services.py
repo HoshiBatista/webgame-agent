@@ -102,9 +102,27 @@ def usage_cost(usage, price):
 
 @transaction.atomic
 def reserve_invocation(run, request):
+    if not run.allow_model_calls:
+        raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
     request = {**request, "provider": run.provider, "model": run.model}
+    import uuid
+
+    invocation_id = uuid.uuid4()
+    if run.provider == "relay":
+        from generation.errors import GenerationError
+        from generation.providers.relay import prepare
+
+        try:
+            request["relay"] = prepare(request, str(invocation_id))
+        except GenerationError as exc:
+            raise DomainError(exc.code, exc.message, 409) from exc
     Budget.objects.get_or_create(pk=1, defaults={"limit_usd": Decimal(settings.GAMEFORGE_BUDGET_USD)})
     Budget.objects.select_for_update().get(pk=1)
+    current = Run.objects.get(pk=run.pk)
+    if not current.allow_model_calls:
+        raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
+    if current.invocations.count() >= current.max_model_calls:
+        raise DomainError("repair_exhausted", "Лимит исправлений этого запуска исчерпан. Черновик сохранён.", 409)
     price = tariff(run.provider, run.model)
     if run.provider != "fake" and not price:
         raise DomainError(
@@ -123,7 +141,7 @@ def reserve_invocation(run, request):
             409,
         )
     return Invocation.objects.create(
-        run=run, attempt=run.attempts + 1, request=request, reservation_usd=amount, price=price
+        id=invocation_id, run=run, attempt=run.attempts + 1, request=request, reservation_usd=amount, price=price
     )
 
 
@@ -132,6 +150,7 @@ def settle_invocation(
     invocation_id,
     *,
     response=None,
+    raw_response=None,
     usage=None,
     error=None,
     unknown=False,
@@ -147,6 +166,7 @@ def settle_invocation(
     if inv.finished_at and inv.state not in ("unknown",):
         return inv
     inv.response = response
+    inv.raw_response = raw_response if raw_response is not None else (error or {}).get("raw_response")
     inv.usage = usage
     inv.error = error
     inv.elapsed_seconds = elapsed
@@ -183,16 +203,13 @@ def event(run, kind, message, details=None):
 
 
 def schedule(run):
+    from .tasks import dispatch_run
+
     Outbox.objects.get_or_create(run=run)
-    if settings.GAMEFORGE_RUN_INLINE:
-        from .tasks import process_run
-
-        transaction.on_commit(lambda: process_run(str(run.id)))
-    else:
-        from .tasks import dispatch_run
-
-        # Fast path after the DB commit; durable periodic delivery covers broker failure.
-        transaction.on_commit(lambda: dispatch_run(run.id))
+    # HTTP handlers only persist and enqueue work. A disconnected browser must
+    # never own the model transport, even in a local development configuration.
+    # The outbox/beat also delivers work if this callback never runs.
+    transaction.on_commit(lambda: dispatch_run(run.id))
 
 
 @transaction.atomic
@@ -265,6 +282,7 @@ def create_run(chat, data, *, continued_from=None):
         base_revision=base,
         candidate_revision=candidate,
         continued_from=continued_from,
+        max_repair_attempts=settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS,
     )
     chat.audience = audience
     chat.save(update_fields=["audience", "updated_at"])

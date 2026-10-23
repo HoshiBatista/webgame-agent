@@ -65,7 +65,7 @@ def apply_patches(files, patches):
     original = normalize_files(files)
     result = dict(original)
     by_path: dict[str, list[dict[str, Any]]] = {}
-    for patch in patches:
+    for patch_number, patch in enumerate(patches, 1):
         path = safe_path(patch["path"])
         by_path.setdefault(path, []).append(patch)
         if path not in original:
@@ -78,7 +78,13 @@ def apply_patches(files, patches):
             raise ContractError("stale_file", f"Hash исходного файла {path} не совпал; патч не применён.")
         old = patch["old_text"]
         if not old or original[path].count(old) != 1:
-            raise ContractError("ambiguous_patch", f"Фрагмент в {path} должен совпадать ровно один раз.")
+            count = original[path].count(old) if old else 0
+            raise ContractError(
+                "ambiguous_patch",
+                f"Патч №{patch_number} в {path}: old_text должен совпадать ровно один раз; "
+                f"найдено совпадений: {count}. Скопируйте уникальный фрагмент из переданного исходного файла точно, "
+                "включая пробелы и переносы строк. Ни один патч из ответа не применён.",
+            )
         if PurePosixPath(path).suffix in {".html", ".js"} and old.strip() == original[path].strip():
             raise ContractError(
                 "whole_file_patch", f"Нужна локальная правка {path}, а не замена всего кода игры."

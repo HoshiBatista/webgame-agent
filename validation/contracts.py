@@ -13,7 +13,7 @@ def implementation_hash(root=None):
     """Changing executable checks OR their geometry invalidates prior acceptance."""
     directory = Path(root) if root is not None else Path(__file__).parent
     digest = hashlib.sha256()
-    for name in ("runner.py", "contracts.py", "protocol.py"):
+    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py"):
         digest.update(name.encode())
         digest.update(b"\x00")
         digest.update((directory / name).read_bytes())

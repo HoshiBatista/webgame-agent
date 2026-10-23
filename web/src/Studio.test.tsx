@@ -6,7 +6,8 @@ import { SessionContext } from './context';
 import { post, request } from './api';
 import type { Chat, Revision, Session } from './types';
 
-vi.mock('./api', () => ({
+vi.mock('./api', async (original) => ({
+  ...(await original<typeof import('./api')>()),
   request: vi.fn(),
   post: vi.fn(),
   newKey: () => crypto.randomUUID(),
@@ -157,6 +158,7 @@ describe('saved work and mutation submission', () => {
     expect(first[0]).toBe('/api/chats/one/runs/');
   });
   it('keeps the newly created chat when its first run response is lost', async () => {
+    vi.mocked(request).mockResolvedValue({ ...chat, current_revision: null, revisions: [] });
     setup('/chats/new');
     vi.mocked(post)
       .mockResolvedValueOnce({ ...chat, current_revision: null, revisions: [] })
@@ -166,6 +168,14 @@ describe('saved work and mutation submission', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
     await screen.findByText('Соединение потеряно');
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue(
+        'Собирай звёзды',
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Создать игру' })).not.toBeDisabled(),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(3));
     expect(vi.mocked(post).mock.calls.filter((call) => call[0] === '/api/chats/')).toHaveLength(1);

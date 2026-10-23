@@ -54,6 +54,8 @@ class Run(models.Model):
         "self", null=True, on_delete=models.SET_NULL, related_name="continuations"
     )
     attempts = models.PositiveSmallIntegerField(default=0)
+    max_repair_attempts = models.PositiveSmallIntegerField(default=3)
+    allow_model_calls = models.BooleanField(default=True)
     cancel_requested = models.BooleanField(default=False)
     fence = models.UUIDField(null=True)
     lease_until = models.DateTimeField(null=True)
@@ -66,6 +68,9 @@ class Run(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(max_repair_attempts__lte=3), name="studio_run_repair_limit"
+            ),
             models.UniqueConstraint(fields=["chat", "idempotency_key"], name="studio_run_idempotency"),
             models.UniqueConstraint(
                 fields=["chat"],
@@ -73,6 +78,10 @@ class Run(models.Model):
                 name="studio_one_active_run",
             ),
         ]
+
+    @property
+    def max_model_calls(self):
+        return 1 + self.max_repair_attempts
 
 
 class Message(models.Model):
@@ -118,6 +127,7 @@ class CheckReport(models.Model):
     status = models.CharField(max_length=32)
     findings = models.JSONField(default=list)
     facts = models.JSONField(default=list)
+    stages = models.JSONField(default=list)
     elapsed_seconds = models.FloatField(default=0)
     environment = models.JSONField(default=dict)
     screenshot_base64 = models.TextField(blank=True)
@@ -138,6 +148,7 @@ class Invocation(models.Model):
     state = models.CharField(max_length=20, default="reserved")
     request = models.JSONField()
     response = models.JSONField(null=True)
+    raw_response = models.JSONField(null=True)
     revision = models.ForeignKey(Revision, null=True, on_delete=models.SET_NULL, related_name="+")
     error = models.JSONField(null=True)
     usage = models.JSONField(null=True)

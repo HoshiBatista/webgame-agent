@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowDownToLine,
   ArrowUp,
@@ -24,6 +24,7 @@ import {
 } from './components';
 import { chatsChanged, useSession } from './context';
 import type { Chat, Publication, Revision, Run, RunEvent } from './types';
+import { useSavedChat } from './useSavedChat';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех', icon: '✦' },
@@ -45,8 +46,7 @@ export default function Studio() {
   const isNew = id === 'new';
   const navigate = useNavigate();
   const { session, refresh } = useSession();
-  const [chat, setChat] = useState<Chat | null>(null);
-  const [loading, setLoading] = useState(!isNew);
+  const { chat, loading, connectionError, reload: load } = useSavedChat(isNew ? undefined : id);
   const [error, setError] = useState('');
   const [prompt, setPrompt] = useState('');
   const [audience, setAudience] = useState('everyone');
@@ -71,6 +71,7 @@ export default function Studio() {
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const idempotency = useRef(newKey());
   const lastPayload = useRef('');
+  const submissionChat = useRef('');
   function operationKey(payload: unknown) {
     const fingerprint = JSON.stringify(payload);
     if (lastPayload.current && lastPayload.current !== fingerprint) idempotency.current = newKey();
@@ -80,16 +81,8 @@ export default function Studio() {
   const endRef = useRef<HTMLDivElement>(null);
   const currentId = useRef(id);
   currentId.current = id;
-  const load = useCallback(async () => {
-    if (isNew) return;
-    const data = await request<Chat>(`/api/chats/${id}/`);
-    if (currentId.current === id) setChat(data);
-  }, [id, isNew]);
   useEffect(() => {
-    setChat(null);
-    setError('');
     setEvents([]);
-    setPrompt('');
     setSelectedRevision(null);
     setGameFullscreen(false);
     setFeedbackDone(false);
@@ -97,31 +90,20 @@ export default function Studio() {
     setReasons([]);
     setCustomReason('');
     setShareDone('');
-    setLoading(!isNew);
-    idempotency.current = newKey();
-    lastPayload.current = '';
+    if (submissionChat.current !== id) {
+      setError('');
+      setPrompt('');
+      idempotency.current = newKey();
+      lastPayload.current = '';
+    }
     if (isNew) {
       setAudience('everyone');
       return;
     }
-    let alive = true;
-    request<Chat>(`/api/chats/${id}/`)
-      .then((data) => {
-        if (alive) {
-          setChat(data);
-          setAudience(data.audience);
-        }
-      })
-      .catch((cause) => {
-        if (alive) setError(errorText(cause));
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
   }, [id, isNew]);
+  useEffect(() => {
+    if (chat) setAudience(chat.audience);
+  }, [chat?.id]);
   const latestRun = chat?.active_run ?? chat?.runs[0] ?? null;
   const activeRun = chat?.active_run;
   const refreshedRun = useRef('');
@@ -135,14 +117,6 @@ export default function Studio() {
   useEffect(() => {
     if (chat) chatsChanged();
   }, [chat?.id, chat?.title, chat?.active_run?.id]);
-  useEffect(() => {
-    if (!activeRun) return;
-    const timer = window.setInterval(
-      () => void load().catch((cause) => setError(errorText(cause))),
-      2500,
-    );
-    return () => window.clearInterval(timer);
-  }, [activeRun?.id, load]);
   useEffect(() => {
     if (!activeRun || !('EventSource' in window)) return;
     setEvents([]);
@@ -179,33 +153,41 @@ export default function Studio() {
   const current = chat?.current_revision;
   async function send(event: FormEvent) {
     event.preventDefault();
-    if (!prompt.trim() || busy || activeRun) return;
+    if (!prompt.trim() || busy || activeRun || (!isNew && !chat)) return;
     setBusy(true);
     setError('');
+    const payload = { prompt: prompt.trim(), audience, model };
+    const key = operationKey(payload);
+    let targetId = chat?.id;
     try {
-      let target = chat;
-      if (!target) {
-        target = await post<Chat>('/api/chats/', { audience });
-        setChat(target);
+      if (!targetId) {
+        const target = await post<Chat>('/api/chats/', { audience });
+        targetId = target.id;
+        submissionChat.current = targetId;
+        // Persist the chat URL before starting generation, even if its 202 is lost.
+        navigate(`/chats/${targetId}`, { replace: true });
         chatsChanged();
       }
-      const payload = { prompt: prompt.trim(), audience, model };
-      await post<Run>(`/api/chats/${target.id}/runs/`, {
+      await post<Run>(`/api/chats/${targetId}/runs/`, {
         ...payload,
-        idempotency_key: operationKey(payload),
+        idempotency_key: key,
       });
+      if (currentId.current !== targetId && currentId.current !== id) return;
       idempotency.current = newKey();
       lastPayload.current = '';
       setPrompt('');
       setSelectedRevision(null);
       chatsChanged();
-      if (isNew) navigate(`/chats/${target.id}`);
-      else await load();
       void refresh();
     } catch (cause) {
-      setError(errorText(cause));
+      if (currentId.current === targetId || currentId.current === id) {
+        setError(errorText(cause));
+        setPrompt(payload.prompt);
+      }
     } finally {
       setBusy(false);
+      load();
+      chatsChanged();
     }
   }
   async function act(
@@ -238,13 +220,13 @@ export default function Studio() {
       lastPayload.current = '';
       setShowConfirm(false);
       setSelectedRevision(null);
-      await load();
       chatsChanged();
       void refresh();
     } catch (cause) {
       setError(errorText(cause));
     } finally {
       setBusy(false);
+      load();
     }
   }
   async function restoreRevision() {
@@ -253,7 +235,7 @@ export default function Studio() {
     try {
       await post(`/api/chats/${chat.id}/restore/`, { revision_id: revision.id });
       setSelectedRevision(null);
-      await load();
+      load();
       chatsChanged();
     } catch (cause) {
       setError(errorText(cause));
@@ -402,6 +384,20 @@ export default function Studio() {
             </div>
           )}
           {error && <ErrorNotice message={error} onClose={() => setError('')} />}{' '}
+          {connectionError && (
+            <div className="notice" role="status">
+              <span>{connectionError}</span>
+              <button className="text-button" onClick={load}>
+                Проверить связь
+              </button>
+            </div>
+          )}
+          {activeRun && !connectionError && (
+            <p className="field-help" role="status">
+              Задание выполняется на сервере. Можно закрыть страницу — результат сохранится в этом
+              чате.
+            </p>
+          )}
           {!chat?.messages.length && (
             <div className="chat-welcome">
               <div className="welcome-mark">
@@ -498,7 +494,7 @@ export default function Studio() {
               </span>
               <button
                 className="send-button"
-                disabled={!prompt.trim() || busy || !!activeRun}
+                disabled={!prompt.trim() || busy || !!activeRun || (!isNew && !chat)}
                 aria-label={current ? 'Отправить доработку' : 'Создать игру'}
               >
                 <ArrowUp size={20} />

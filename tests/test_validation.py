@@ -179,7 +179,7 @@ def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
     import validation.contracts as contracts
 
     directory = Path(contracts.__file__).parent
-    for name in ("runner.py", "contracts.py", "protocol.py"):
+    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py"):
         (tmp_path / name).write_bytes((directory / name).read_bytes())
     assert implementation_hash(tmp_path) == implementation_hash()
     original = implementation_hash(tmp_path)
@@ -187,6 +187,74 @@ def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
         (tmp_path / "contracts.py").read_text().replace('"width": 390', '"width": 400')
     )
     assert implementation_hash(tmp_path) != original
+    original = implementation_hash(tmp_path)
+    with (tmp_path / "syntax.py").open("a") as source:
+        source.write("\n# parser version changed\n")
+    assert implementation_hash(tmp_path) != original
+
+
+def test_syntax_parser_keeps_script_bytes_and_source_locations():
+    from validation.syntax import Scripts
+
+    parser = Scripts()
+    parser.feed(
+        "<!-- <script>not executable</script> -->\n"
+        '<script type="application/json">{"not": "javascript"}</script>\n'
+        '<script\n type="text/javascript">const text = "&amp;";\n// keep newline\nstart();</script>'
+    )
+    parser.close()
+    assert parser.scripts == [
+        {
+            "content": 'const text = "&amp;";\n// keep newline\nstart();',
+            "line": 4,
+            "column": 24,
+        }
+    ]
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize(
+    "broken_source",
+    [
+        "function start(){const active=true; // initialize game draw();}",
+        "\nfunction start() {\nconst active = ;\n}\n",
+    ],
+)
+def test_syntax_gate_reports_one_error_and_skips_game_execution(broken_source):
+    # The first script would throw immediately if the parser executed game code.
+    # Both scripts must compile before ANY game page or gameplay check is opened.
+    html = fixture_html().replace(
+        "</script>",
+        "</script><script>throw new Error('game must not execute');</script>"
+        f"<script>{broken_source}</script>",
+    )
+    report = validate(html, fixture_checks(), artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report["status"] == "failed", report
+    assert report["stage"] == "syntax"
+    assert report["stages"] == [{"stage": "syntax", "status": "failed", "scripts": 3}]
+    assert report["facts"] == []
+    assert report["screenshot_base64"] == ""
+    assert len(report["findings"]) == 1
+    finding = report["findings"][0]
+    assert finding["code"] == "javascript_syntax"
+    assert finding["file"] == "index.html"
+    assert finding["script_index"] == 3
+    assert finding["script_line"] == (1 if broken_source.startswith("function") else 3)
+    assert finding["location"] == "bundled_html"
+    assert "Собранный HTML" in finding["message"]
+    assert f'скрипт №3, строка {finding["script_line"]}' in finding["message"]
+    assert finding["line"] >= finding["script_line"]
+    assert finding["column"] > 0
+    assert "SyntaxError" in finding["message"]
+
+
+@pytest.mark.browser
+def test_syntax_gate_ignores_non_javascript_data_blocks():
+    html = fixture_html() + '<script type="application/json">{"example":"function ("}</script>'
+    report = validate(html, fixture_checks(), artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report["status"] == "passed", report["findings"]
+    assert report["stages"][0] == {"stage": "syntax", "status": "passed", "scripts": 1}
+    assert len(report["facts"]) == len(fixture_checks())
 
 
 @pytest.mark.parametrize("probe", [{"environment": "mini-browser-v1:stale:browser"}, [], None])
@@ -339,6 +407,9 @@ def test_real_input_and_offline_surface(broken, network, expected):
     report = validate(html, fixture_checks(), artifact_hash=hashlib.sha256(html.encode()).hexdigest())
     assert report["status"] == expected, report["findings"]
     assert len(report["facts"]) == 3
+    assert report["stage"] == "browser"
+    assert report["stages"][0] == {"stage": "syntax", "status": "passed", "scripts": 1}
+    assert report["stages"][1] == {"stage": "browser", "status": expected}
 
 
 @pytest.mark.browser

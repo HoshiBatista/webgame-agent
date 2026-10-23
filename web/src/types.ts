@@ -35,6 +35,7 @@ export interface Report {
   status: string;
   findings: Array<Finding | string>;
   facts: unknown[];
+  stages?: Array<{ stage: string; status: string }>;
   elapsed_seconds?: number;
 }
 export interface Revision {
@@ -87,6 +88,8 @@ export interface Run {
   can_retry_unknown?: boolean;
   can_confirm: boolean;
   attempts: number;
+  max_repair_attempts?: number;
+  max_model_calls?: number;
   elapsed_seconds: number;
   events_url: string;
   budget: Budget;

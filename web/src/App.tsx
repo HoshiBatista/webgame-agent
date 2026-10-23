@@ -43,16 +43,23 @@ function Shell({
     const load = () =>
       request<{ results: ChatSummary[] }>('/api/chats/')
         .then((data) => {
-          if (alive) setChats(data.results);
+          if (alive) {
+            setChats(data.results);
+            setError('');
+          }
         })
         .catch((cause) => {
           if (alive) setError(errorText(cause));
         });
     void load();
     window.addEventListener('gameforge:chats', load);
+    window.addEventListener('online', load);
+    window.addEventListener('focus', load);
     return () => {
       alive = false;
       window.removeEventListener('gameforge:chats', load);
+      window.removeEventListener('online', load);
+      window.removeEventListener('focus', load);
     };
   }, []);
   useEffect(() => setMobileOpen(false), [location.pathname]);

@@ -1,0 +1,27 @@
+{
+  "receipt": {
+    "ok": true,
+    "result": {
+      "response": {
+        "id": "local-test",
+        "object": "chat.completion",
+        "model": "qwen38",
+        "choices": [
+          {
+            "index": 0,
+            "message": {
+              "role": "assistant",
+              "content": "Привет, мир"
+            },
+            "finish_reason": "stop"
+          }
+        ],
+        "usage": {
+          "prompt_tokens": 5,
+          "completion_tokens": 2
+        }
+      }
+    }
+  },
+  "sha256": "95a6fd2dfc590ac20ca265d2ee6e5bb759b4227a8d9c54a54e39c05244a2960b"
+}

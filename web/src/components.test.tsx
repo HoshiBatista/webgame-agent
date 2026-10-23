@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { GameFrame, PhonePreview, RunStatus } from './components';
-import type { Run } from './types';
+import { GameFrame, PhonePreview, RevisionDetails, RunStatus } from './components';
+import type { Revision, Run } from './types';
 
 const budget = { limit_usd: 50, spent_usd: 1, reserved_usd: 0, unknown_usd: 0, available_usd: 49 };
 const run = {
@@ -117,6 +117,37 @@ describe('sandbox and preview lifecycle', () => {
   });
 });
 describe('honest run controls', () => {
+  it('keeps relay polling distinct from waiting for a free model and preserves terminal status', () => {
+    const props = {
+      run: {
+        ...run,
+        status: 'queued' as const,
+        stage: 'waiting_model',
+        message: 'Модель выполняет сохранённое задание.',
+        can_cancel: true,
+      },
+      events: [],
+      busy: false,
+      onCancel: vi.fn(),
+      onContinue: vi.fn(),
+      onConfirm: vi.fn(),
+    };
+    const { rerender } = render(<RunStatus {...props} />);
+    expect(screen.getByText('Ожидаем ответ модели')).toBeInTheDocument();
+    expect(screen.queryByText('Ожидаем свободную модель')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Отменить' })).toBeEnabled();
+    rerender(<RunStatus {...props} run={{ ...props.run, status: 'generating' }} />);
+    expect(screen.getByText('Ожидаем ответ модели')).toBeInTheDocument();
+    rerender(<RunStatus {...props} run={{ ...props.run, stage: 'waiting_admin' }} />);
+    expect(screen.getByText('Нужна помощь администратора')).toBeInTheDocument();
+    rerender(<RunStatus {...props} run={{ ...props.run, stage: 'queued' }} />);
+    expect(screen.getByText('Ожидаем свободную модель')).toBeInTheDocument();
+    rerender(<RunStatus {...props} run={{ ...props.run, status: 'succeeded' }} />);
+    expect(screen.getByText('Готово, можно играть')).toBeInTheDocument();
+    expect(screen.queryByText('Ожидаем ответ модели')).not.toBeInTheDocument();
+    expect(props.onCancel).not.toHaveBeenCalled();
+    expect(props.onContinue).not.toHaveBeenCalled();
+  });
   it('requires explicit cost consent for a new attempt and resets it for another run', () => {
     const onContinue = vi.fn();
     const props = {
@@ -180,5 +211,45 @@ describe('honest run controls', () => {
     expect(screen.getByText('Неуточнённый расход')).toBeInTheDocument();
     expect(screen.getByText('В работе')).toBeInTheDocument();
     expect(screen.getByText('Подтверждённый расход')).toBeInTheDocument();
+  });
+});
+
+describe('staged generation details', () => {
+  it('shows the repair stage and finite call allowance', () => {
+    render(
+      <RunStatus
+        run={{
+          ...run,
+          status: 'generating',
+          stage: 'repairing',
+          message: 'Исправление 2 из 3.',
+          attempts: 3,
+          max_model_calls: 4,
+        }}
+        events={[]}
+        onCancel={vi.fn()}
+        onContinue={vi.fn()}
+        onConfirm={vi.fn()}
+        busy={false}
+      />,
+    );
+    expect(screen.getByText('Исправляем найденную проблему')).toBeInTheDocument();
+    expect(screen.getByText(/Вызовов модели: 3 из 4/)).toBeInTheDocument();
+  });
+  it('shows syntax failure without claiming gameplay checks ran', () => {
+    const revision = {
+      number: 1,
+      verification: 'none',
+      design: {},
+      report: {
+        status: 'failed',
+        stages: [{ stage: 'syntax', status: 'failed' }],
+        findings: [],
+        facts: [],
+      },
+    } as unknown as Revision;
+    render(<RevisionDetails revision={revision} />);
+    expect(screen.getByText('Синтаксис кода: найдены ошибки')).toBeInTheDocument();
+    expect(screen.queryByText(/Игровые сценарии:/)).not.toBeInTheDocument();
   });
 });

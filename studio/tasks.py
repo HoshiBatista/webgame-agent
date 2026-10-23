@@ -65,7 +65,7 @@ def recover_expired():
     # Requests abandoned during cancellation still retain a liability, never an active reservation forever.
     abandoned = Invocation.objects.filter(
         state__in=["reserved", "sent"], run__status="cancelled", run__lease_until__lt=timezone.now()
-    )
+    ).exclude(run__provider="relay")
     for inv in abandoned:
         settle_invocation(
             inv.id,
@@ -84,7 +84,7 @@ def recover_expired():
             ):
                 continue
             unresolved = run.invocations.filter(state="sent")
-            if unresolved.exists():
+            if unresolved.exists() and run.provider != "relay":
                 unresolved.update(
                     state="unknown",
                     finished_at=timezone.now(),
@@ -99,9 +99,10 @@ def recover_expired():
                 run.finished_at = timezone.now()
                 event(run, "unknown", run.message)
             else:
-                run.invocations.filter(state="reserved").update(
-                    state="failed", cost_usd=0, finished_at=timezone.now()
-                )
+                if run.provider != "relay":
+                    run.invocations.filter(state="reserved").update(
+                        state="failed", cost_usd=0, finished_at=timezone.now()
+                    )
                 # Returned responses and candidates are durable; process_run reuses them.
                 run.status = "queued"
                 run.message = "Восстанавливаем сохранённый шаг после перезапуска."
@@ -110,6 +111,78 @@ def recover_expired():
             run.fence = None
             run.lease_until = None
             run.save()
+
+
+@shared_task(acks_late=False)
+def reconcile_relay_cancellations():
+    """Durable cancellation intent survives lost connections and stopped application workers."""
+    from generation.errors import GenerationError, GenerationPending
+    from generation.providers.relay import fetch, unpack
+
+    rows = Invocation.objects.filter(
+        run__provider="relay", run__status="cancelled", state__in=["reserved", "sent"]
+    ).filter(
+        Q(provider_metadata__relay_cancel_wait__retry_at__isnull=True)
+        | Q(provider_metadata__relay_cancel_wait__retry_at__lte=time.time())
+        | Q(provider_metadata__relay_cancel_wait__operator_required=False)
+    ).order_by("created_at")[:20]
+    for inv in rows:
+        wait = (inv.provider_metadata or {}).get("relay_cancel_wait", {})
+        if wait.get("operator_required") and wait.get("retry_at", 0) > time.time():
+            continue
+        try:
+            result = unpack(fetch(inv.request, cancel=True), str(inv.id))
+            settle_invocation(inv.id, response=result["response"], usage=result.get("usage"),
+                              provider_metadata=result.get("provider_metadata"))
+        except GenerationPending as exc:
+            record_relay_pending(inv, exc, cancel=True)
+            continue
+        except GenerationError as exc:
+            data = error_data(exc)
+            if exc.raw_response is not None:
+                data["raw_response"] = exc.raw_response
+            settle_invocation(inv.id, error=data, usage=exc.usage, unknown=exc.outcome_unknown,
+                              provider_metadata=exc.provider_metadata)
+
+
+@transaction.atomic
+def record_relay_pending(inv, pending, *, cancel=False):
+    inv = Invocation.objects.select_for_update().get(pk=inv.pk)
+    if inv.state not in {"reserved", "sent"}:
+        return
+    key = "relay_cancel_wait" if cancel else "relay_wait"
+    previous = (inv.provider_metadata or {}).get(key, {})
+    details = {"code": pending.code, "operator_required": pending.operator_required,
+               "retry_after": pending.retry_after, **pending.metadata,
+               "checked_at": timezone.now().isoformat(), "retry_at": time.time() + pending.retry_after,
+               "checks": previous.get("checks", 0) + 1}
+    inv.provider_metadata = {**(inv.provider_metadata or {}), "relay_job_id": str(inv.id),
+                             key: details}
+    inv.save(update_fields=["provider_metadata"])
+    if pending.operator_required and previous.get("code") != pending.code:
+        logging.getLogger(__name__).warning("relay_operator_required job=%s code=%s http_status=%s",
+                                           inv.id, pending.code, pending.metadata.get("http_status"))
+
+
+@transaction.atomic
+def defer_relay(run, message, pending=None):
+    current = Run.objects.select_for_update().get(pk=run.id)
+    if current.fence != run.fence or current.cancel_requested or current.status == "cancelled":
+        return
+    changed = current.message != message
+    stage = "waiting_admin" if pending and pending.operator_required else "waiting_model"
+    current.status, current.stage, current.message = "queued", stage, message
+    current.error = ({"code": pending.code, "message": message, "operator_required": True}
+                     if pending and pending.operator_required else {})
+    current.fence, current.lease_until = None, None
+    current.save()
+    # Keep the durable outbox; configuration errors wait five minutes, not five seconds.
+    Outbox.objects.update_or_create(
+        run=current, defaults={"dispatched_at": timezone.now() + timedelta(
+            seconds=(pending.retry_after if pending else 5) - 15)}
+    )
+    if changed:
+        event(current, stage, message, current.error)
 
 
 @transaction.atomic
@@ -138,16 +211,24 @@ def claim_run(run_id):
         return False
     run.fence = uuid.uuid4()
     run.lease_until = timezone.now() + timedelta(seconds=settings.GAMEFORGE_LEASE_SECONDS)
+    resuming_relay = run.provider == "relay" and run.invocations.filter(
+        state__in=["reserved", "sent"]
+    ).exists()
     run.status = "generating"
-    run.stage = "generating"
-    run.message = (
-        "Создаём игру одним запросом."
-        if run.operation == "create"
-        else "Готовим точечные изменения сохранённой игры."
-    )
-    run.metrics = {**run.metrics, "queue_seconds": (timezone.now() - run.created_at).total_seconds()}
+    if not resuming_relay:
+        run.stage = "generating"
+        run.message = (
+            "Создаём компактную игру, затем проверим её по шагам."
+            if run.operation == "create"
+            else "Готовим точечные изменения сохранённой игры."
+        )
+        run.metrics = {**run.metrics, "queue_seconds": (timezone.now() - run.created_at).total_seconds()}
+    if not run.allow_model_calls:
+        run.status = run.stage = "checking"
+        run.message = "Проверяем сохранённый ответ без нового вызова модели."
     run.save()
-    event(run, "generating", run.message)
+    if not resuming_relay:
+        event(run, run.stage, run.message)
     return run
 
 
@@ -210,7 +291,7 @@ def store_candidate(run, materialized, base):
     current.candidate_revision = revision
     current.status = "checking"
     current.stage = "checking"
-    current.message = "Проверяем загрузку, управление и игровой результат."
+    current.message = "Проверяем синтаксис, затем управление и игровые условия."
     current.save()
     event(current, "checking", current.message)
     return revision
@@ -219,7 +300,8 @@ def store_candidate(run, materialized, base):
 def request_for(run, base, findings):
     import hashlib
 
-    from generation.prompts import SYSTEM_PROMPT
+    from generation.feedback import focus_findings
+    from generation.prompts import system_prompt
     from generation.schema import RESPONSE_SCHEMA
 
     request = {
@@ -233,16 +315,20 @@ def request_for(run, base, findings):
         "files": base.files if base else {},
         "design": base.design if base else {},
         "checks": base.checks if base else [],
-        "findings": findings,
+        "findings": focus_findings(findings),
         "provider": run.provider,
         "model": run.model,
-        "generation_contract": {
-            "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
-            "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
-        },
+    }
+    request["generation_contract"] = {
+        "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
+        "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
+        "pipeline_version": 2,
+        "max_repair_attempts": run.max_repair_attempts,
+        "reported_findings": len(findings),
+        "focused_findings": len(request["findings"]),
     }
 
-    if run.provider == "vllm":
+    if run.provider in {"vllm", "relay"}:
         from .services import tariff
 
         price = tariff(run.provider, run.model)
@@ -300,6 +386,9 @@ def process_run(self, run_id):
             _execute(run, lease, generate, materialize, validate)
         except Exception as exc:
             record_exception(run, exc, "pipeline")
+            if run.provider == "relay" and run.invocations.filter(state__in=["reserved", "sent"]).exists():
+                defer_relay(run, "Восстанавливаем получение сохранённого ответа после ошибки обработчика.")
+                return
             # If storage failed after sending, the request may still be billable.
             unresolved = run.invocations.filter(state="sent")
             ambiguous = unresolved.exists()
@@ -327,7 +416,7 @@ def process_run(self, run_id):
 
 
 def _execute(run, lease, generate, materialize, validate):
-    from generation.errors import ContractError
+    from generation.errors import ContractError, GenerationPending
 
     base = run.candidate_revision or run.base_revision
     findings = []
@@ -449,7 +538,7 @@ def _execute(run, lease, generate, materialize, validate):
                 Run.objects.filter(pk=run.id, fence=run.fence).update(
                     status="checking",
                     stage="checking",
-                    message="Проверяем загрузку, управление и игровой результат.",
+                    message="Проверяем синтаксис, затем управление и игровые условия.",
                 )
                 cached = CheckReport.objects.filter(identity=identity, status="passed").first()
                 if cached:
@@ -457,6 +546,7 @@ def _execute(run, lease, generate, materialize, validate):
                         "status": cached.status,
                         "findings": cached.findings,
                         "facts": cached.facts,
+                        "stages": cached.stages,
                         "elapsed_seconds": 0,
                         "environment": cached.environment,
                     }
@@ -477,6 +567,7 @@ def _execute(run, lease, generate, materialize, validate):
                     status=result["status"],
                     findings=result.get("findings", []),
                     facts=result.get("facts", []),
+                    stages=result.get("stages", []),
                     elapsed_seconds=result.get("elapsed_seconds", 0),
                     environment=result.get("environment", {}),
                     screenshot_base64=result.get("screenshot_base64") or "",
@@ -494,7 +585,7 @@ def _execute(run, lease, generate, materialize, validate):
                     revision=pending,
                 )
                 return
-            if report.status == "unverified" and run.attempts >= 2:
+            if report.status == "unverified" and (run.attempts >= run.max_model_calls or not run.allow_model_calls):
                 finish_run(
                     run.id,
                     run.fence,
@@ -524,43 +615,72 @@ def _execute(run, lease, generate, materialize, validate):
             base = pending
             pending = None
         run.refresh_from_db()
-        if run.attempts >= 2:
+        if not run.allow_model_calls:
+            finish_run(
+                run.id, run.fence, "needs_attention",
+                "Ответ восстановлен без новой генерации. В игре или проверках остались проблемы; черновик сохранён.",
+                error={"code": "saved_response_validation", "message": "Требуется проверка восстановленной игры.",
+                       "details": findings},
+            )
+            return
+        resumed = (
+            run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
+            if run.provider == "relay" else None
+        )
+        if run.attempts >= run.max_model_calls and resumed is None:
             finish_run(
                 run.id,
                 run.fence,
                 "needs_attention",
-                "После одной автоправки остались проблемы. Ответ и черновик сохранены; доступно продолжение.",
+                "Лимит исправлений исчерпан. Ответы и черновик сохранены; доступно продолжение.",
                 error={
                     "code": "repair_exhausted",
                     "message": "Остались проблемы применения или проверки.",
                     "details": findings,
+                    "max_repair_attempts": run.max_repair_attempts,
                 },
             )
             return
-        req = request_for(run, base, findings)
         try:
-            with transaction.atomic():
-                inv = reserve_invocation(run, req)
-                run.attempts = inv.attempt
-                Run.objects.filter(pk=run.id, fence=run.fence).update(
-                    attempts=inv.attempt, status="generating", stage="repairing" if findings else "generating"
-                )
+            if resumed:
+                inv = resumed
+            else:
+                req = request_for(run, base, findings)
+                with transaction.atomic():
+                    inv = reserve_invocation(run, req)
+                    run.attempts = inv.attempt
+                    Run.objects.filter(pk=run.id, fence=run.fence).update(
+                        attempts=inv.attempt, status="generating", stage="repairing" if findings else "generating"
+                    )
+            req = inv.request
         except DomainError as exc:
             finish_run(run.id, run.fence, "needs_attention", exc.message, error=error_data(exc))
             return
         if lease.cancelled():
-            settle_invocation(inv.id, error={"code": "cancelled", "message": "Отменено до отправки."})
+            if not inv.sent_at:
+                settle_invocation(inv.id, error={"code": "cancelled", "message": "Отменено до отправки."})
             return
         inv.state = "sent"
-        inv.sent_at = timezone.now()
-        inv.save(update_fields=["state", "sent_at"])
-        event(
-            run,
-            "repairing" if findings else "generating",
-            "Точечно исправляем найденные проблемы."
-            if findings
-            else "Модель создаёт код и короткие проверки игры.",
-        )
+        inv.sent_at = inv.sent_at or timezone.now()
+        if run.provider == "vllm":
+            # Persist correlation before the network call, even if the worker later dies.
+            req = {**req, "transport_trace_id": inv.id.hex}
+            inv.provider_metadata = {**inv.provider_metadata, "trace_id": inv.id.hex}
+        inv.save(update_fields=["state", "sent_at", "provider_metadata"])
+        if not resumed:
+            message = (
+                f"Исправление {inv.attempt - 1} из {run.max_repair_attempts}. Устраняем основную найденную проблему."
+                if inv.attempt > 1 else
+                "Дорабатываем сохранённую игру по результатам проверки."
+                if findings else "Создаём игровую механику и короткие сценарии проверки."
+            )
+            Run.objects.filter(pk=run.id, fence=run.fence).update(message=message)
+            event(
+                run,
+                "repairing" if findings else "generating",
+                message,
+                {"attempt": inv.attempt, "max_model_calls": run.max_model_calls},
+            )
 
         def progress(data):
             if lease.cancelled() or not isinstance(data, dict):
@@ -584,11 +704,17 @@ def _execute(run, lease, generate, materialize, validate):
             settle_invocation(
                 inv.id,
                 response=result["response"],
+                raw_response=result.get("raw_response"),
                 usage=result.get("usage"),
-                elapsed=result.get("elapsed_seconds", 0),
+                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider == "relay"
+                else result.get("elapsed_seconds", 0),
                 provider_id=provider_metadata.get("turn_id") or provider_metadata.get("request_id") or "",
                 provider_metadata=provider_metadata,
             )
+        except GenerationPending as exc:
+            record_relay_pending(inv, exc)
+            defer_relay(run, exc.message, exc)
+            return
         except Exception as exc:
             data = error_data(exc)
             raw = getattr(exc, "raw_response", None)
@@ -600,7 +726,8 @@ def _execute(run, lease, generate, materialize, validate):
                 usage=getattr(exc, "usage", None),
                 error=data,
                 unknown=getattr(exc, "outcome_unknown", True),
-                elapsed=time.monotonic() - model_started,
+                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider == "relay"
+                else time.monotonic() - model_started,
                 provider_id=provider_metadata.get("turn_id") or provider_metadata.get("request_id") or "",
                 provider_metadata=provider_metadata,
             )
@@ -611,11 +738,11 @@ def _execute(run, lease, generate, materialize, validate):
                     run.id,
                     run.fence,
                     "unknown",
-                    "Связь с моделью оборвалась. Игра сохранена; новый запрос требует отдельного подтверждения расхода.",
+                    "Результат вызова модели неизвестен. Доступные данные сохранены; повтор требует подтверждения.",
                     error=error_data(exc),
                 )
                 return
-            if (isinstance(exc, ContractError) or data["code"] == "invalid_json") and run.attempts < 2:
+            if isinstance(exc, ContractError) or data["code"] == "invalid_json":
                 findings = [error_data(exc)]
                 continue
             finish_run(run.id, run.fence, "failed", data["message"], error=error_data(exc))

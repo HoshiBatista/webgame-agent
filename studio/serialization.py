@@ -33,6 +33,7 @@ def revision_data(revision):
             "status": report.status,
             "findings": report.findings,
             "facts": report.facts,
+            "stages": report.stages,
             "elapsed_seconds": report.elapsed_seconds,
         }
         if report
@@ -72,6 +73,8 @@ def run_data(run, budget=None):
         and run.chat.current_revision_id == run.base_revision_id,
         "can_confirm": run.status == "unverified" and bool(run.candidate_revision_id),
         "attempts": run.attempts,
+        "max_repair_attempts": run.max_repair_attempts,
+        "max_model_calls": run.max_model_calls,
         "elapsed_seconds": elapsed,
         "events_url": f"/api/runs/{run.id}/events/",
         "budget": budget if budget is not None else budget_snapshot(),

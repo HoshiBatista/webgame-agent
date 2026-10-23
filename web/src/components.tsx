@@ -329,13 +329,18 @@ export function PhonePreview({
 export const runLabels: Record<Run['status'], string> = {
   queued: 'Ожидаем свободную модель',
   generating: 'Создаём вашу игру',
-  checking: 'Проверяем управление и механику',
+  checking: 'Проверяем код и работу игры',
   succeeded: 'Готово, можно играть',
   needs_attention: 'Нужно ваше решение',
   unverified: 'Нужна проверка человеком',
   failed: 'Не получилось завершить',
   cancelled: 'Задание отменено',
   unknown: 'Ответ не получен полностью',
+};
+const pendingRunLabels: Record<string, string> = {
+  repairing: 'Исправляем найденную проблему',
+  waiting_model: 'Ожидаем ответ модели',
+  waiting_admin: 'Нужна помощь администратора',
 };
 export function RunStatus({
   run,
@@ -356,6 +361,9 @@ export function RunStatus({
   const [acceptUnknownCost, setAcceptUnknownCost] = useState(false);
   useEffect(() => setAcceptUnknownCost(false), [run.id]);
   const active = ['queued', 'generating', 'checking'].includes(run.status);
+  const label = active
+    ? pendingRunLabels[run.stage] || runLabels[run.status]
+    : runLabels[run.status];
   const latest = events.at(-1);
   return (
     <section className={`run-card run-${run.status}`} aria-live="polite">
@@ -370,7 +378,7 @@ export function RunStatus({
           )}
         </span>
         <div>
-          <strong>{runLabels[run.status]}</strong>
+          <strong>{label}</strong>
           <span>{run.message || latest?.message || run.stage}</span>
         </div>
         {run.elapsed_seconds > 0 && <small>{formatDuration(run.elapsed_seconds)}</small>}
@@ -440,7 +448,11 @@ export function RunStatus({
         <summary>
           Что происходит <ChevronDown size={15} />
         </summary>
-        <p>Попыток модели: {run.attempts}. Доработка использует сохранённый результат.</p>
+        <p>
+          Вызовов модели: {run.attempts}
+          {run.max_model_calls ? ` из ${run.max_model_calls}` : ''}. Доработка использует
+          сохранённый результат.
+        </p>
         {events.length > 0 && (
           <ol className="event-list">
             {events.slice(-12).map((event) => (
@@ -516,6 +528,16 @@ export function RevisionDetails({ revision }: { revision: Revision }) {
               } as Record<string, string>
             )[revision.report.status] ?? revision.report.status}
           </p>
+          {revision.report.stages?.map((item) => (
+            <p key={item.stage}>
+              {item.stage === 'syntax' ? 'Синтаксис кода' : 'Игровые сценарии'}:{' '}
+              {item.status === 'passed'
+                ? 'проверено'
+                : item.status === 'failed'
+                  ? 'найдены ошибки'
+                  : 'требует проверки'}
+            </p>
+          ))}
           {revision.report.findings.map((finding, index) => (
             <p className="report-finding" key={index}>
               {typeof finding === 'string' ? finding : (finding.message ?? readable(finding))}

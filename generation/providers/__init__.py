@@ -1,1 +1,1 @@
-"""Explicit provider transports. None performs automatic request retries."""
+"""Explicit transports. Only durable relay delivery/polling retries; never blind inference."""

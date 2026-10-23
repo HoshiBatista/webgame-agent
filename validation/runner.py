@@ -15,6 +15,7 @@ from playwright.sync_api import TimeoutError as BrowserTimeout
 from playwright.sync_api import ViewportSize, sync_playwright
 
 from .contracts import VIEWPORTS, implementation_hash
+from .syntax import check_javascript
 
 ENVIRONMENT = "mini-browser-v1"
 
@@ -233,6 +234,21 @@ def run(payload):
             executable_path=os.environ.get("CHROMIUM_EXECUTABLE"),
             args=["--disable-dev-shm-usage", "--disable-gpu"],
         )
+        syntax_error, script_count = check_javascript(browser, html)
+        if syntax_error:
+            browser.close()
+            return {
+                "status": "failed",
+                "stage": "syntax",
+                "stages": [{"stage": "syntax", "status": "failed", "scripts": script_count}],
+                "findings": [syntax_error],
+                "facts": [],
+                "artifact_hash": artifact_hash,
+                "environment": environment,
+                "elapsed_seconds": round(time.monotonic() - started, 3),
+                "screenshot_base64": "",
+                "screenshot_mime": "image/jpeg",
+            }
         for check in checks:
             size = VIEWPORTS[check.get("viewport", "mobile")]
             viewport: ViewportSize = {"width": size["width"], "height": size["height"]}
@@ -406,6 +422,11 @@ def run(payload):
             status = "unverified"
     return {
         "status": status,
+        "stage": "browser",
+        "stages": [
+            {"stage": "syntax", "status": "passed", "scripts": script_count},
+            {"stage": "browser", "status": status},
+        ],
         "findings": findings,
         "facts": facts,
         "artifact_hash": artifact_hash,
