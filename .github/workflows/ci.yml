@@ -3,7 +3,12 @@ on: [push, pull_request]
 permissions: {contents: read}
 jobs:
   native-validator:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     env:
       DJANGO_SECRET_KEY: ci-only-native-validator-not-a-deployment-secret
       GAMEFORGE_PROVIDER: fake
@@ -18,6 +23,12 @@ jobs:
       - run: .venv/bin/python scripts/native.py prepare
       - run: .venv/bin/pytest tests/test_native_validation.py
       - run: .venv/bin/pytest tests/test_validation.py -m browser -k 'not real_unix_transport and not state_snapshot'
+      - name: Repeated cold starts and fraction input (no retries)
+        run: |
+          for attempt in $(seq 1 10); do
+            echo "Cold-start regression $attempt/10"
+            .venv/bin/pytest tests/test_validation.py -m browser -k fraction_input || exit 1
+          done
   verify:
     runs-on: ubuntu-latest
     services:

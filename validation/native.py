@@ -22,14 +22,22 @@ BROWSERS = ROOT / ".data/native-validator/browsers"
 MAX_RESULT = 4_000_000
 
 
-def browser_path():
-    # Only the project's downloaded, pinned Playwright browser is supported.
+def browser_descriptor():
     import playwright
 
     registry = json.loads((Path(playwright.__file__).parent / "driver/package/browsers.json").read_text())
-    descriptor = next(b for b in registry["browsers"] if b["name"] == "chromium-headless-shell")
-    names = ("chrome-headless-shell", "headless_shell")
-    candidates = [p for p in BROWSERS.glob(f"chromium_headless_shell-{descriptor['revision']}/*/*")
+    # Linux's pinned Headless Shell crashes intermittently before a page opens.
+    # Use the full Chromium build in new headless mode inside the same OS sandbox.
+    name = "chromium" if platform.system() == "Linux" else "chromium-headless-shell"
+    return next(b for b in registry["browsers"] if b["name"] == name)
+
+
+def browser_path():
+    # Only the project's downloaded, pinned Playwright browser is supported.
+    descriptor = browser_descriptor()
+    directory = f"{descriptor['name'].replace('-', '_')}-{descriptor['revision']}"
+    names = ("chrome",) if descriptor["name"] == "chromium" else ("chrome-headless-shell", "headless_shell")
+    candidates = [p for p in BROWSERS.glob(f"{directory}/*/*")
                   if p.name in names and p.is_file()]
     if len(candidates) != 1:
         raise ValueError("Run .venv/bin/python scripts/native.py prepare (one pinned Chromium required)")
@@ -127,9 +135,9 @@ def execute(payload, *, probe=False):
     import typing_extensions
 
     browser = browser_path()
-    registry = json.loads((Path(playwright.__file__).parent / "driver/package/browsers.json").read_text())
-    descriptor = next(b for b in registry["browsers"] if b["name"] == "chromium-headless-shell")
-    if browser.parent.parent.name != f"chromium_headless_shell-{descriptor['revision']}":
+    descriptor = browser_descriptor()
+    directory = f"{descriptor['name'].replace('-', '_')}-{descriptor['revision']}"
+    if browser.parent.parent.name != directory:
         raise ValueError("Chromium revision differs from installed Playwright; rerun native.py prepare")
     reads = runtime_paths(browser)
     source_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
