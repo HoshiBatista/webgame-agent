@@ -159,6 +159,8 @@ docker compose exec worker python manage.py diagnose_invocation
 Нужны Python 3.12, Node 22+, PostgreSQL 18+ и Redis 7+. Всё работает на локальных процессах;
 Chromium изолируется средствами ОС: `sandbox-exec` на macOS, `bubblewrap` на Linux/WSL2.
 **[Полная установка с нуля и диагностика](docs/native-local-setup.ru.md)**.
+Для Ubuntu 24.04 инструкция также содержит точечный профиль AppArmor для `bubblewrap`;
+отключать защиту всей системы не требуется.
 
 После установки системных зависимостей и создания приватного `.env` из `.env.native.example`:
 

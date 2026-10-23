@@ -57,8 +57,8 @@ sudo -u postgres createdb --owner="$(id -un)" gameforge_mini
 `sudo service redis-server start`. На другом дистрибутиве установите эквивалентные пакеты.
 
 Для `bubblewrap` ОС должна разрешать пользовательские namespace. Проверка ниже обнаружит
-запрет ядра/AppArmor. Не отключайте общесистемные механизмы защиты ради запуска: согласуйте
-профиль `bwrap` с администратором или используйте контейнерный вариант из README.
+запрет ядра/AppArmor. Для Ubuntu 24.04 ниже приведён отдельный профиль `bwrap`.
+Отключать общесистемные механизмы защиты ради запуска не требуется.
 
 Для обеих ОС проверьте версии и службы:
 
@@ -101,6 +101,35 @@ npm run build --prefix web
 Ожидаемый результат — `Native OS sandbox and Chromium: OK`. Модель не вызывается.
 Проект не использует личный Chrome-профиль или сохранённые в нём пароли.
 Принцип установки браузера описан в [документации Playwright](https://playwright.dev/python/docs/browsers).
+
+### Если Ubuntu 24.04 запрещает запуск bubblewrap
+
+Ошибка `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted` может возникнуть
+из-за ограничения AppArmor на capabilities внутри пользовательского namespace.
+Проверьте настройку и существующий профиль:
+
+```sh
+sysctl kernel.apparmor_restrict_unprivileged_userns
+sudo grep -R -n 'bwrap' /etc/apparmor.d
+```
+
+Если ограничение включено (`= 1`) и профиля для `/usr/bin/bwrap` **ещё нет**, установите
+поставляемый профиль из корня проекта:
+
+```sh
+sudo test ! -e /etc/apparmor.d/gameforge-bwrap &&
+sudo install -m 644 deploy/apparmor/gameforge-bwrap /etc/apparmor.d/gameforge-bwrap &&
+sudo apparmor_parser -a /etc/apparmor.d/gameforge-bwrap
+.venv/bin/python scripts/native.py check
+```
+
+Если профиль для `bwrap` уже существует, используйте его и согласуйте изменение с
+администратором: второй профиль с тем же путём добавлять не нужно. Эти команды рассчитаны
+на Ubuntu 24.04 с AppArmor ABI 4; на другом дистрибутиве нужна его штатная настройка.
+Профиль разрешает создание namespace только системному `/usr/bin/bwrap`; GameForge затем
+изолирует сеть и файловую систему и снимает capabilities. Глобальные sysctl, setuid и
+параметры `--share-net` менять не нужно. Файл в `/etc/apparmor.d` сохраняется после перезагрузки.
+Основание — [описание ограничений user namespaces в Ubuntu 24.04](https://documentation.ubuntu.com/release-notes/24.04/#unprivileged-user-namespace-restrictions).
 
 ## 3. Создайте свою конфигурацию
 
@@ -216,6 +245,11 @@ TZ=UTC .venv/bin/python scripts/dev.py start
 macOS использует deny-by-default Seatbelt, Linux/WSL2 — отдельные mount/PID/network/user
 namespace [bubblewrap](https://github.com/containers/bubblewrap). Браузер получает только
 среду исполнения и новую временную папку, без токенов/БД/домашнего каталога пользователя.
+На Linux адрес D-Bus задаётся внутри изолированного процесса как несуществующий сокет:
+браузер не наследует desktop-сессию пользователя и не пытается автоматически запускать её.
+Вручную добавлять `DBUS_SESSION_BUS_ADDRESS` в `.env` не требуется.
+Это отключает [автоматическое обнаружение/запуск D-Bus](https://dbus.freedesktop.org/doc/dbus-launch.1.html),
+который не нужен для проверки игры.
 На macOS разрешены необходимые системные библиотеки и установленное ПО Homebrew;
 сеть, личные документы и Keychain не разрешены. Дополнительно действуют ограничения
 страницы, Playwright-маршрутов и времени проверки. Нет fallback без OS sandbox.
@@ -224,6 +258,9 @@ namespace [bubblewrap](https://github.com/containers/bubblewrap). Браузер
 Если есть `Operation not permitted`, ошибка `bwrap`, `sandbox-exec` или зависимостей
 Chromium, сначала устраните её; не удаляйте защитные параметры. Для смены компьютера
 не переносите `.venv` или браузерный кеш — установите их заново под нужную ОС/архитектуру.
-Нативный режим проверен на macOS ARM64 и Ubuntu 22.04 в
-[задании native-validator](https://github.com/HoshiBatista/webgame-agent/actions/runs/39974101956/job/120484098783).
+Нативный режим проверен на macOS ARM64 и в CI на
+[Ubuntu 22.04](https://github.com/HoshiBatista/webgame-agent/actions/runs/39988548578/job/120534012258) и
+[Ubuntu 24.04](https://github.com/HoshiBatista/webgame-agent/actions/runs/39988548578/job/120534012388).
+На каждой версии Ubuntu прошли проверки границ изоляции, 11 браузерных сценариев и
+40 дополнительных запусков Chromium подряд. CI прекращает серию при первом сбое, без повторов до успеха.
 WSL2 отдельно не проверялся; там требуется работающий bubblewrap с разрешёнными namespace.
