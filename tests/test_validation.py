@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+import traceback
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +14,19 @@ import pytest
 from validation.contracts import browser_watchdog_seconds, implementation_hash
 from validation.runner import InvalidCheck, compare
 from validation.service import validate
+
+
+@pytest.fixture(autouse=True)
+def browser_failure_diagnostics(request, monkeypatch):
+    if "browser" not in request.keywords:
+        return
+    # Only synthetic test games run here. Keep detailed errors out of ordinary
+    # product reports, but expose the underlying failure in CI instead of losing
+    # the browser's diagnostic behind the generic infrastructure_error message.
+    def failed(*args):
+        pytest.fail("Isolated test browser failed: " + traceback.format_exc())
+
+    monkeypatch.setattr("validation.service._failure", failed)
 
 
 def test_observations_do_not_accept_counter_when_position_is_unchanged():
