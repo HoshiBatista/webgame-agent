@@ -4,13 +4,14 @@
 доработки, публикация и ремикс. Стек: Django/DRF, PostgreSQL 18, Celery/Redis,
 React/TypeScript/SCSS. Игровую механику генерирует модель; каталог готовых игр её не заменяет.
 
-**Основной путь для команды — локальный Docker Compose и существующее HTTPS-реле.**
+**Для команды доступны два пути: полностью локальный запуск без Docker или Docker Compose.**
 GPU на компьютере разработчика и VPN для этого пути не нужны. GameForge обращается
 к очереди на облачном сервере; исполнитель рядом с vLLM получает задания и возвращает
 сохранённые ответы. Установка реле и GPU-исполнителя не входит в запуск GameForge.
 
 Подробная пошаговая инструкция: **[локальный запуск для команды](docs/team-local-setup.ru.md)**.
-Готовая конфигурация без секретов: [.env.team.example](.env.team.example).
+Без Docker: **[macOS / Linux / WSL2](docs/native-local-setup.ru.md)**, шаблон [.env.native.example](.env.native.example).
+С Docker: [.env.team.example](.env.team.example). В обоих случаях нужен персональный client-токен реле.
 
 ## Фактический статус
 
@@ -33,19 +34,19 @@ GPU на компьютере разработчика и VPN для этого 
 
 ## Получение этой версии
 
-Текущая поставка передаётся команде как **ZIP исходников с каталогом `GameForge/`**.
-Распакуйте его и откройте терминал в этом каталоге: рядом должны находиться `manage.py`,
-`compose.yaml` и `README.md`. Команды ниже выполняются именно оттуда.
+Исходники команда получает из Git; отдельно передаётся только персональный файл доступа к реле.
 
-ZIP создан из зафиксированной версии Git и не содержит `.git`, личный `.env`, `.data`,
-токены, пользовательскую БД или вход Codex. Новые локальные коммиты пока не отправлены
-на GitHub: обычный clone ветки `mini-games` до отдельного push не даст этот снимок.
-После публикации коммита можно использовать Git и сверить полученный commit ID с поставкой.
+```sh
+git clone --branch mini-games https://github.com/HoshiBatista/webgame-agent.git GameForge
+cd GameForge
+```
 
-Архив переносит только исходники. Первичная сборка всё ещё требует интернета для Docker
-images и зависимостей Python/npm; работа через relay требует доступа к облачному HTTPS API.
+Для закрытого репозитория нужен доступ вашего GitHub-аккаунта. Все команды выполняются
+из каталога с `manage.py`, `compose.yaml` и `README.md`. Уже существующую копию обновляйте
+через `git pull --ff-only` после сохранения собственных правок; не перезаписывайте `.env`.
+Первичная установка скачивает зависимости; для генерации нужен исходящий HTTPS к реле.
 
-## Docker Compose: рекомендуемый запуск
+## Запуск через Docker Compose
 
 Нужны работающий Docker Engine/Desktop с Docker Compose, интернет, свободные локальные
 порты **8080 и 8081** и персональный **client-токен реле**, выданный администратором.
@@ -153,78 +154,36 @@ docker compose logs -f --tail=80 worker beat validator
 docker compose exec worker python manage.py diagnose_invocation
 ```
 
-## Нативный запуск на macOS/Linux
+## Локальный запуск без Docker: macOS / Linux / WSL2
 
-Этот вариант нужен для разработки Python/React или локального провайдера Codex.
-Нужны **Python 3.12**, **Node 22+**, PostgreSQL **18+**, Redis **7** и Docker для изолированного
-валидатора. Сервер PostgreSQL должен быть запущен, а ваш пользователь — иметь доступ к
-отдельной БД проекта. Если эти службы ещё не настроены, используйте описанный выше
-Compose: командная инструкция рассчитана на него и не требует установки служб на хост.
+Нужны Python 3.12, Node 22+, PostgreSQL 18+ и Redis 7+. Всё работает на локальных процессах;
+Chromium изолируется средствами ОС: `sandbox-exec` на macOS, `bubblewrap` на Linux/WSL2.
+**[Полная установка с нуля и диагностика](docs/native-local-setup.ru.md)**.
+
+После установки системных зависимостей и создания приватного `.env` из `.env.native.example`:
 
 ```sh
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.lock
 npm ci --prefix web
 npm run build --prefix web
+.venv/bin/python scripts/native.py prepare
+TZ=UTC .venv/bin/python scripts/dev.py start
+TZ=UTC .venv/bin/python scripts/dev.py status
+curl --fail http://127.0.0.1:8000/api/health/
 ```
 
-Подготовьте `.env` по защищённой процедуре выше. Для нативного relay-стенда дополнительно
-проверьте значения:
+`VALIDATOR_BACKEND=native` включает этот способ проверки. `prepare` скачивает закреплённый
+Chromium и проверяет изоляцию; `start` повторяет проверку перед миграциями, bootstrap и
+запуском worker. Если изоляция недоступна, приложение не запускается через этот менеджер;
+скрытого запуска браузера без защиты нет. Уже работающий worker возвращает ошибку
+инфраструктуры при отказе валидатора, не засчитывая игру как рабочую.
 
-```dotenv
-DATABASE_URL=postgresql:///gameforge_mini
-REDIS_URL=redis://127.0.0.1:56379/0
-GAMEFORGE_PROVIDER=relay
-GAMEFORGE_MODEL=qwen38
-GAMEFORGE_APP_ORIGIN=http://127.0.0.1:8000
-GAMEFORGE_PREVIEW_ORIGIN=http://localhost:8001
-DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
-CSRF_TRUSTED_ORIGINS=http://127.0.0.1:8000,http://localhost:8000
-```
-
-`postgresql:///gameforge_mini` использует локальный PostgreSQL и роль текущего пользователя.
-Если БД требует отдельные логин, пароль, host или port, укажите их в `DATABASE_URL`
-с корректным URL-кодированием. Создайте базу один раз, если она ещё не существует:
-
-```sh
-createdb gameforge_mini
-```
-
-Если Redis проекта ещё не установлен и контейнера `gf-mini-redis` нет:
-
-```sh
-docker run -d --name gf-mini-redis -p 127.0.0.1:56379:6379 \
-  -v gf-mini-redis-data:/data \
-  redis:7-alpine redis-server --appendonly yes
-```
-
-Если такой контейнер уже есть, сначала проверьте его через `docker ps -a`; остановленный
-подходящий контейнер запускается `docker start gf-mini-redis`. Не удаляйте чужой контейнер
-или volume ради освобождения имени/порта. При другом Redis исправьте URL в `.env`.
-
-Запустите валидатор и процессы из обычного терминала. Для всех команд управления ниже
-используется одинаковая временная зона: она влияет на проверку времени запуска PID.
-Можно выбрать свою зону, но не менять её между start/status/stop.
-
-```sh
-sh scripts/validator-start.sh
-TZ=Europe/Moscow .venv/bin/python scripts/dev.py start
-TZ=Europe/Moscow .venv/bin/python scripts/dev.py status
-curl --fail --show-error http://127.0.0.1:8000/api/health/
-```
-
-`start` сам выполняет миграции и bootstrap, затем запускает app, preview, Celery worker
-и beat. Приложение — **http://127.0.0.1:8000/**, preview — **http://localhost:8001/**.
-Корень preview также отвечает 404. Нативная и Compose-установки используют разные
-БД и порты: их чаты не появляются друг у друга автоматически.
-
-Логи находятся в `.data/app.log`, `preview.log`, `worker.log`, `beat.log`;
-запись принадлежащих менеджеру процессов — `.data/local-processes.json`.
-
-```sh
-tail -f .data/app.log .data/worker.log .data/beat.log
-.venv/bin/python manage.py diagnose_invocation
-```
+Приложение — **http://127.0.0.1:8000/**, preview — **http://localhost:8001/**.
+Логи: `.data/app.log`, `preview.log`, `worker.log`, `beat.log`. Порты 8000/8001 должны быть свободны.
+Менеджер запускает app, preview, worker и beat; PostgreSQL и Redis запускаются отдельно.
+Для прежнего варианта с контейнерным валидатором оставьте `VALIDATOR_BACKEND=docker`
+(значение по умолчанию) и используйте `sh scripts/validator-start.sh`.
 
 ### Локальный Codex остаётся доступен
 
@@ -271,15 +230,15 @@ docker compose up -d
 Нативные процессы:
 
 ```sh
-TZ=Europe/Moscow .venv/bin/python scripts/dev.py stop
-TZ=Europe/Moscow .venv/bin/python scripts/dev.py status
-TZ=Europe/Moscow .venv/bin/python scripts/dev.py start
+TZ=UTC .venv/bin/python scripts/dev.py stop
+TZ=UTC .venv/bin/python scripts/dev.py status
+TZ=UTC .venv/bin/python scripts/dev.py start
 ```
 
 Если менеджер сообщает, что worker ещё завершает работу, дождитесь остановки и повторите
 status/stop. Не удаляйте PID-файл вручную при живых процессах: это допускает второй worker.
-Redis и валидатор отдельные; `dev.py stop` их не останавливает. При необходимости и после
-остановки заданий: `docker stop gf-mini-redis gf-mini-validator`.
+PostgreSQL и Redis отдельные; `dev.py stop` их не останавливает. Нативный браузер запускается
+на одну проверку и завершается сам. Контейнерный валидатор, если выбран, обслуживается отдельно.
 
 Перед обновлением сделайте резервную копию PostgreSQL и приватной конфигурации. Например,
 для Compose из текущей установки:
@@ -296,14 +255,11 @@ Redis и валидатор отдельные; `dev.py stop` их не оста
 )
 ```
 
-Для поставки ZIP получите новый архив и распакуйте в другой каталог, перенесите свой
-приватный `.env`, сравните его с новым шаблоном. Старую папку и backup сохраните до проверки.
-Используйте **то же имя Compose-проекта**: в `compose.yaml` задано `gameforge-mini`;
-если вы задавали `COMPOSE_PROJECT_NAME` или `-p`, сохраните прежнее значение, иначе получите
-новые пустые volumes. Не запускайте старую и новую копии одновременно. Пароль существующей
-PostgreSQL-БД не меняется от редактирования `POSTGRES_PASSWORD` в `.env`.
+Обновите исходники через `git pull --ff-only`, сохранив собственную конфигурацию и прежнее
+имя Compose-проекта (`gameforge-mini`). Не запускайте две копии одновременно. Пароль
+существующей БД не меняется от редактирования `POSTGRES_PASSWORD` в `.env`.
 
-После остановки старого приложения в новой папке:
+После остановки приложения и обновления исходников:
 
 ```sh
 docker compose config --quiet
@@ -314,10 +270,9 @@ docker compose ps -a
 curl --fail --show-error http://127.0.0.1:8080/api/health/
 ```
 
-Для Git-копии после опубликованного обновления сначала сохраните свои изменения и получите
-согласованную ревизию; остальные действия те же. Для нативной установки после обновления
-кода повторите установку `requirements-dev.lock`, `npm ci`/build, пересоберите валидатор
-через `scripts/validator-start.sh` и запустите `dev.py start`: миграции применятся при запуске.
+Для нативной установки после обновления кода повторите установку `requirements-dev.lock`,
+`npm ci`/build и `scripts/native.py prepare`. Если выбран контейнерный валидатор,
+вместо `prepare` используйте `scripts/validator-start.sh`. Затем `dev.py start` применит миграции.
 Код app/worker и версия валидатора должны совпадать. При переносе в новый путь нативного
 проекта пересоздайте `.venv` и проверьте абсолютный путь файла relay-токена, если он используется.
 
@@ -380,7 +335,15 @@ npm test --prefix web
 npm run build --prefix web
 ```
 
-Браузерные тесты используют отдельный `gf-mini-validator-tests`, чтобы не конкурировать
+Для нативного валидатора после `scripts/native.py prepare`:
+
+```sh
+VALIDATOR_BACKEND=native .venv/bin/pytest tests/test_native_validation.py
+VALIDATOR_BACKEND=native .venv/bin/pytest tests/test_validation.py -m browser \
+  -k 'not real_unix_transport and not state_snapshot'
+```
+
+Контейнерные браузерные тесты используют отдельный `gf-mini-validator-tests`, чтобы не конкурировать
 с текущей генерацией за память одного браузерного контейнера; backend-тесты — PostgreSQL с правом
 создать тестовую БД. CI выполняет эти проверки, сборку контейнеров и не делает платных вызовов.
 Ручной пилот вызывает настоящую модель. Запускайте его только при согласованной нагрузке

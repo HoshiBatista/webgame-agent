@@ -1,10 +1,11 @@
-"""Local trusted-operator Codex setup. No auth is copied into containers."""
+"""Local app/worker processes. Supports either OS-sandboxed or Docker validation."""
 
 import argparse
 import json
 import os
 import shlex
 import signal
+import socket
 import subprocess
 import time
 from pathlib import Path
@@ -22,6 +23,18 @@ def start():
         print("Local process record already exists. Use status/stop before starting another instance.")
         return
     python = str(ROOT / ".venv/bin/python")
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env")
+    # Do not start a competing worker if another local app already owns a port.
+    for port in (8000, 8001):
+        with socket.socket() as listener:
+            try:
+                listener.bind(("127.0.0.1", port))
+            except OSError as exc:
+                raise RuntimeError(f"Local port {port} is occupied; no processes were started") from exc
+    if os.environ.get("VALIDATOR_BACKEND") == "native":
+        subprocess.run([python, str(ROOT / "scripts/native.py"), "check"], cwd=ROOT, check=True)
     subprocess.run([python, str(ROOT / "manage.py"), "migrate", "--noinput"], cwd=ROOT, check=True)
     subprocess.run([python, str(ROOT / "manage.py"), "bootstrap"], cwd=ROOT, check=True)
     processes = {}

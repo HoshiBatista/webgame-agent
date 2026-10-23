@@ -122,7 +122,7 @@ def fixture_report(html, checks):
     }
 
 
-@pytest.mark.parametrize("transport", ["socket", "docker"])
+@pytest.mark.parametrize("transport", ["socket", "docker", "native"])
 @pytest.mark.parametrize(
     "fault",
     [
@@ -156,7 +156,10 @@ def test_all_transports_require_actual_complete_browser_receipts(monkeypatch, tr
         report["artifact_hash"] = "another-candidate"
     elif fault == "findings":
         report["findings"] = [{"code": "effect_mismatch"}]
-    if transport == "socket":
+    monkeypatch.setenv("VALIDATOR_BACKEND", "native" if transport == "native" else "docker")
+    if transport == "native":
+        monkeypatch.setattr("validation.native.execute", lambda *_: report)
+    elif transport == "socket":
         monkeypatch.setenv("VALIDATOR_SOCKET", "/private-test/validator.sock")
         monkeypatch.setattr("validation.service._socket_validate", lambda *_: report)
     else:

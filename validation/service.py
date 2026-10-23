@@ -1,4 +1,4 @@
-"""Trusted controller: pass bytes to a networkless container, never execute game code here."""
+"""Trusted controller: pass bytes to an OS-isolated browser, never execute game code here."""
 
 import hashlib
 import json
@@ -16,6 +16,12 @@ ENVIRONMENT = "mini-browser-v1"
 def environment_identity():
     code_hash = implementation_hash()
     try:
+        if os.environ.get("VALIDATOR_BACKEND", "docker") == "native":
+            from .native import environment_identity as native_identity
+
+            return native_identity()
+        if os.environ.get("VALIDATOR_BACKEND", "docker") != "docker":
+            raise ValueError("unknown validator backend")
         if path := os.environ.get("VALIDATOR_SOCKET"):
             environment = _socket_validate(path, {"probe": True}, 10)["environment"]
             if not isinstance(environment, str) or not environment.startswith(f"{ENVIRONMENT}:{code_hash}:"):
@@ -35,7 +41,7 @@ def environment_identity():
             check=True,
         )
         return f"{ENVIRONMENT}:{code_hash}:{result.stdout.strip()}"
-    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError):
+    except (OSError, ImportError, subprocess.SubprocessError, ValueError, KeyError, TypeError):
         return f"{ENVIRONMENT}:{code_hash}:unavailable"
 
 
@@ -112,6 +118,12 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str) -> dict:
     payload = {"html": html, "checks": checks, "artifact_hash": artifact_hash}
     try:
         max_duration = browser_watchdog_seconds(checks) + 5
+        if os.environ.get("VALIDATOR_BACKEND", "docker") == "native":
+            from .native import execute
+
+            return _validated_report(execute(payload), checks, artifact_hash, started)
+        if os.environ.get("VALIDATOR_BACKEND", "docker") != "docker":
+            raise ValueError("unknown validator backend")
         if socket_path := os.environ.get("VALIDATOR_SOCKET"):
             report = _socket_validate(socket_path, payload, max_duration)
             return _validated_report(report, checks, artifact_hash, started)
@@ -146,5 +158,5 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str) -> dict:
         )
         report = json.loads(result.stdout)
         return _validated_report(report, checks, artifact_hash, started)
-    except (OSError, subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError) as exc:
+    except (OSError, ImportError, subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError) as exc:
         return _failure(f"Изолированный браузер недоступен ({type(exc).__name__}).", artifact_hash, started)

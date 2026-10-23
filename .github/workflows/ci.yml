@@ -2,6 +2,22 @@ name: Mini-games
 on: [push, pull_request]
 permissions: {contents: read}
 jobs:
+  native-validator:
+    runs-on: ubuntu-22.04
+    env:
+      DJANGO_SECRET_KEY: ci-only-native-validator-not-a-deployment-secret
+      GAMEFORGE_PROVIDER: fake
+      VALIDATOR_BACKEND: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: requirements-dev.lock}
+      - run: python -m venv .venv && .venv/bin/python -m pip install -r requirements-dev.lock
+      - run: sudo apt-get update && sudo apt-get install -y bubblewrap
+      - run: .venv/bin/python -m playwright install-deps chromium
+      - run: .venv/bin/python scripts/native.py prepare
+      - run: .venv/bin/pytest tests/test_native_validation.py
+      - run: .venv/bin/pytest tests/test_validation.py -m browser -k 'not real_unix_transport and not state_snapshot'
   verify:
     runs-on: ubuntu-latest
     services:

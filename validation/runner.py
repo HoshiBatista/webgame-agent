@@ -1,4 +1,4 @@
-"""Runs inside the networkless, secretless browser container only."""
+"""Runs only inside a network-isolated, secretless container or native OS sandbox."""
 
 import base64
 import hashlib
@@ -22,13 +22,14 @@ ENVIRONMENT = "mini-browser-v1"
 
 def identity():
     code = implementation_hash()
-    browser = subprocess.run(
+    browser = os.environ.get("CHROMIUM_VERSION") or subprocess.run(
         [os.environ.get("CHROMIUM_EXECUTABLE", "chromium"), "--version"],
         capture_output=True,
         text=True,
         timeout=5,
     ).stdout.strip()
-    return f"{ENVIRONMENT}:{code}:{browser}"
+    suffix = os.environ.get("VALIDATOR_IDENTITY_SUFFIX", "")
+    return f"{ENVIRONMENT}:{code}:{browser}" + (f":{suffix}" if suffix else "")
 
 
 CSP = (
