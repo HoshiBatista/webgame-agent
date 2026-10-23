@@ -13,6 +13,8 @@ GPU на компьютере разработчика и VPN для этого 
 Без Docker: **[macOS / Linux / WSL2](docs/native-local-setup.ru.md)**, шаблон [.env.native.example](.env.native.example).
 С Docker: [.env.team.example](.env.team.example). В обоих случаях нужен персональный client-токен реле.
 
+Облачный стенд: **[развёртывание и эксплуатация](docs/cloud-deployment.ru.md)**.
+
 ## Фактический статус
 
 Реализован ограниченный цикл: компактная генерация → проверка синтаксиса → проверка
@@ -88,7 +90,7 @@ worker-токен GPU, ключ скачивания установщика ил
 ```dotenv
 CONTAINER_PROVIDER=relay
 CONTAINER_MODEL=qwen38
-GAMEFORGE_RELAY_URL=https://129.101.114.59
+GAMEFORGE_RELAY_URL=https://212.57.126.215
 GAMEFORGE_VLLM_JSON_MODE=json_schema
 GAMEFORGE_VLLM_CONTEXT_CHECK=server
 GAMEFORGE_MAX_REPAIR_ATTEMPTS=3

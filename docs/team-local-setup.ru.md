@@ -1,7 +1,7 @@
 # GameForge: инструкция для локального запуска командой
 
 Проверяемая конфигурация на 23 октября 2026 года: локальный GameForge в Docker,
-облачное HTTPS-реле `https://129.101.114.59`, модель `qwen38`.
+облачное HTTPS-реле `https://212.57.126.215`, модель `qwen38`.
 Инструкция и шаблон конфигурации не содержат рабочих паролей или токенов.
 
 ## Что получится
@@ -93,7 +93,7 @@ docker run --rm python:3.12-slim python -c 'import secrets; print("DJANGO_SECRET
 ```dotenv
 CONTAINER_PROVIDER=relay
 CONTAINER_MODEL=qwen38
-GAMEFORGE_RELAY_URL=https://129.101.114.59
+GAMEFORGE_RELAY_URL=https://212.57.126.215
 GAMEFORGE_VLLM_JSON_MODE=json_schema
 GAMEFORGE_VLLM_CONTEXT_CHECK=server
 GAMEFORGE_MAX_REPAIR_ATTEMPTS=3
