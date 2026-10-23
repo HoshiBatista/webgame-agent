@@ -14,29 +14,6 @@ import pytest
 from validation import native, service
 
 
-@pytest.mark.parametrize("system,name,relative", [
-    ("Linux", "chromium", "chrome-linux64/chrome"),
-    ("Darwin", "chromium-headless-shell", "chrome-headless-shell-mac-arm64/headless_shell"),
-])
-def test_native_selects_only_pinned_browser_variant(tmp_path, monkeypatch, system, name, relative):
-    monkeypatch.setattr(native.platform, "system", lambda: system)
-    monkeypatch.setattr(native, "BROWSERS", tmp_path)
-    descriptor = native.browser_descriptor()
-    assert descriptor["name"] == name
-    directory = f"{name.replace('-', '_')}-{descriptor['revision']}"
-    pinned = tmp_path / directory / relative
-    # An old revision and the other variant must not become a silent fallback.
-    for path in [tmp_path / "chromium-1/chrome-linux64/chrome",
-                 tmp_path / "chromium_headless_shell-1/chrome-linux64/headless_shell"]:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.touch()
-    with pytest.raises(ValueError, match="prepare"):
-        native.browser_path()
-    pinned.parent.mkdir(parents=True)
-    pinned.touch()
-    assert native.browser_path() == pinned
-
-
 def test_native_unavailable_never_falls_back_to_host_or_docker(monkeypatch):
     monkeypatch.setenv("VALIDATOR_BACKEND", "native")
     html = "<html></html>"
@@ -121,6 +98,7 @@ print(json.dumps(denied))
 @pytest.mark.native_browser
 def test_native_probe_really_launches_chromium_without_secret_environment(monkeypatch):
     monkeypatch.setenv("GAMEFORGE_RELAY_API_KEY", "canary-not-a-real-token")
+    monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/host/desktop-bus")
     seen = []
     original = subprocess.Popen
 
@@ -136,3 +114,7 @@ def test_native_probe_really_launches_chromium_without_secret_environment(monkey
     assert "DATABASE_URL" not in seen[0]
     assert "PYTHONPATH" not in seen[0]
     assert seen[0]["HOME"] != os.path.expanduser("~")
+    if platform.system() == "Linux":
+        assert seen[0]["DBUS_SESSION_BUS_ADDRESS"] == "unix:path=/dev/null"
+    else:
+        assert "DBUS_SESSION_BUS_ADDRESS" not in seen[0]

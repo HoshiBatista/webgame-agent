@@ -11,16 +11,15 @@ sys.path.insert(0, str(ROOT))
 
 
 def main():
-    from validation.native import BROWSERS, browser_descriptor, environment_identity
+    from validation.native import BROWSERS, environment_identity
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["prepare", "check"])
     args = parser.parse_args()
     if args.action == "prepare":
         BROWSERS.mkdir(parents=True, mode=0o700, exist_ok=True)
-        variant = "--no-shell" if browser_descriptor()["name"] == "chromium" else "--only-shell"
         subprocess.run(
-            [sys.executable, "-m", "playwright", "install", variant, "chromium"],
+            [sys.executable, "-m", "playwright", "install", "--only-shell", "chromium"],
             env={**os.environ, "PLAYWRIGHT_BROWSERS_PATH": str(BROWSERS)}, check=True,
         )
     try:
