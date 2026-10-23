@@ -224,5 +224,6 @@ namespace [bubblewrap](https://github.com/containers/bubblewrap). Браузер
 Если есть `Operation not permitted`, ошибка `bwrap`, `sandbox-exec` или зависимостей
 Chromium, сначала устраните её; не удаляйте защитные параметры. Для смены компьютера
 не переносите `.venv` или браузерный кеш — установите их заново под нужную ОС/архитектуру.
-Нативный режим проверен здесь на macOS ARM64; Linux проверяется отдельным заданием CI.
-Результат CI нужно смотреть для конкретного коммита, он не подразумевается автоматически.
+Нативный режим проверен на macOS ARM64 и Ubuntu 22.04 в
+[задании native-validator](https://github.com/HoshiBatista/webgame-agent/actions/runs/39974101956/job/120484098783).
+WSL2 отдельно не проверялся; там требуется работающий bubblewrap с разрешёнными namespace.
