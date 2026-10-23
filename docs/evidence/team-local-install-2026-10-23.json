@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-23",
+  "code_commit": "1a841d8",
+  "provider": "fake",
+  "model": "fixture",
+  "real_model_calls": 0,
+  "fresh_compose_project": true,
+  "config_token_worker_only": true,
+  "bootstrap_login_csrf": "passed",
+  "django_check": "passed",
+  "run": {
+    "id": "cbe7a4f7-27a0-4bea-a0da-d092d313cdfe",
+    "status": "succeeded",
+    "attempts": 1,
+    "elapsed_seconds": 14.748093
+  },
+  "validation_status": "passed",
+  "stages": [
+    {
+      "stage": "syntax",
+      "status": "passed",
+      "scripts": 1
+    },
+    {
+      "stage": "browser",
+      "status": "passed"
+    }
+  ],
+  "preview_http_status": 200,
+  "export_http_status": 200,
+  "test_stack_removed": true
+}
