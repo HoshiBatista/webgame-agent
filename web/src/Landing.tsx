@@ -87,7 +87,6 @@ export default function Landing() {
     <div className="landing">
       <header className="landing-header">
         <Brand />
-        <span className="landing-header-note">Маленькие игры. Большие идеи.</span>
         <button className="button button-outline" onClick={() => setLogin(true)}>
           Войти <ArrowRight size={17} />
         </button>
@@ -96,7 +95,7 @@ export default function Landing() {
         <section className="hero">
           <div className="hero-copy">
             <span className="eyebrow">
-              <span className="tiny-star">✦</span> От «а что, если» до первого хода
+              <span className="tiny-star">✦</span> От «а что, если...» до первого хода
             </span>
             <h1>
               Придумайте.
@@ -112,9 +111,6 @@ export default function Landing() {
               Создать свою игру <ArrowRight size={20} />
             </button>
             <div className="hero-benefits">
-              <span>
-                <Check size={15} /> Без кода
-              </span>
               <span>
                 <Check size={15} /> В вашем стиле
               </span>
@@ -174,7 +170,7 @@ export default function Landing() {
                 <Plus />
               </div>
               <span>А можно по-своему?</span>
-              <b>Можно всё придумать.</b>
+              <b>Можно всё.</b>
             </div>
             <div className="art-sticker">
               PRESS
@@ -185,11 +181,9 @@ export default function Landing() {
           </div>
         </section>
         <section className="landing-strip">
-          <span>Идея →</span>
-          <span>Пара слов →</span>
-          <span>
-            Ваша игра <Star size={21} />
-          </span>
+          <span>Идея</span>
+          <span>Пара слов</span>
+          <span>Ваша игра</span>
         </section>
         <section className="how-section">
           <div>
@@ -204,13 +198,13 @@ export default function Landing() {
               <span>01</span>
               <h3>Расскажите задумку</h3>
               <p>
-                Про механику, настроение и тех, кто будет играть. Нескольких предложений достаточно.
+                Про механику и тех, кто будет играть. Достаточно нескольких предложений.
               </p>
             </article>
             <article>
               <span>02</span>
               <h3>Сделайте своим</h3>
-              <p>Сыграйте. Поменяйте цвета, темп или добавьте пару уровней — просто сообщением.</p>
+              <p>Сыграйте. Настройте цвета, темп или добавьте пару уровней — одним сообщением.</p>
             </article>
             <article>
               <span>03</span>
