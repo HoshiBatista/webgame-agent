@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorText, post, request } from './api';
 import { Brand, ErrorNotice, PhonePreview, Spinner } from './components';
 import { chatsChanged, useSession } from './context';
-import { Login } from './Landing';
 import type { Chat, Publication } from './types';
 
 export default function PublicGame() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { session } = useSession();
   const [mobileFullscreen] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [game, setGame] = useState<Publication | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [login, setLogin] = useState(false);
   useEffect(() => {
     let alive = true;
     request<Publication>(`/api/publications/${id}/`)
@@ -32,7 +31,7 @@ export default function PublicGame() {
   async function remix() {
     if (busy) return;
     if (!session.user) {
-      setLogin(true);
+      navigate('/login', { state: { from: location.pathname + location.search + location.hash } });
       return;
     }
     setBusy(true);
@@ -86,7 +85,6 @@ export default function PublicGame() {
       ) : (
         !error && <Spinner text="Открываем игру…" />
       )}
-      {login && <Login onClose={() => setLogin(false)} />}
     </div>
   );
 }

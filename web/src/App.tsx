@@ -15,6 +15,7 @@ import { errorText, getSession, post, request } from './api';
 import { Brand, ErrorNotice, Spinner } from './components';
 import { SessionContext, type StudioDraft } from './context';
 import Landing from './Landing';
+import Login, { loginDestination } from './Login';
 import Feed from './Feed';
 import Preferences from './Preferences';
 import PublicGame from './PublicGame';
@@ -275,12 +276,29 @@ function Application() {
         </Routes>
       ) : session.user ? (
         <Routes>
+          <Route
+            path="/login"
+            element={<Navigate to={loginDestination(location.state?.from)} replace />}
+          />
           <Route path="/play/:id" element={<RevisionPlayer />} />
           <Route path="/settings" element={<Preferences />} />
           <Route path="*" element={<Shell session={session} updateSession={updateSession} />} />
         </Routes>
       ) : (
-        <Landing />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to="/login"
+                replace
+                state={{ from: location.pathname + location.search + location.hash }}
+              />
+            }
+          />
+        </Routes>
       )}
     </SessionContext.Provider>
   );

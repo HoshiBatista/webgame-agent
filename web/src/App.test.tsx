@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import App from './App';
 import { getSession, post, request } from './api';
 import type { Session } from './types';
@@ -14,6 +14,10 @@ vi.mock('./api', async (original) => ({
 }));
 vi.mock('./Feed', () => ({ default: () => <h1>Игры сообщества</h1> }));
 vi.mock('./Studio', () => ({ default: () => <h1>Текущий чат</h1> }));
+vi.mock('./components', async (original) => ({
+  ...(await original<typeof import('./components')>()),
+  PhonePreview: () => <div>Игровой предпросмотр</div>,
+}));
 
 const session: Session = {
   user: { id: 'u', username: 'operator', is_staff: false },
@@ -44,6 +48,7 @@ beforeEach(() => {
   vi.mocked(getSession).mockResolvedValue(session);
   vi.mocked(request).mockResolvedValue({ results: [] });
 });
+afterEach(() => vi.unstubAllGlobals());
 
 it('keeps the username static and opens settings at their own URL', async () => {
   setup();
@@ -126,4 +131,122 @@ it('does not let a delayed session refresh undo a saved model choice', async () 
   await act(async () => finishRefresh(initial));
   expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked();
   expect(post).not.toHaveBeenCalled();
+});
+
+const guestSession: Session = { ...session, user: null };
+
+it.each(['Войти', 'Создать свою игру'])('opens the login page from "%s"', async (label) => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  setup('/');
+  const link = await screen.findByRole('link', { name: label });
+  expect(link).toHaveAttribute('href', '/login');
+  fireEvent.click(link);
+  await screen.findByRole('heading', { name: 'С возвращением!', level: 1 });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /Придумайте/ })).not.toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('supports a direct login URL and a return to the landing without signing in', async () => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  setup('/login');
+  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  expect(screen.getByLabelText('Имя пользователя')).toHaveFocus();
+  expect(screen.getByText('Учётную запись выдаёт администратор.')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('link', { name: 'На главную' }));
+  await screen.findByRole('link', { name: 'Создать свою игру' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  expect(post).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['/login', '/', 'Игры сообщества'],
+  ['/chats/one?revision=2#preview', '/chats/one?revision=2#preview', 'Текущий чат'],
+])('signs in from %s and restores the destination', async (entry, destination, heading) => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  let finishLogin!: (value: Session) => void;
+  vi.mocked(post).mockReturnValue(new Promise((resolve) => (finishLogin = resolve)));
+  setup(entry);
+  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
+  fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'test-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
+  await waitFor(() =>
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/login/', {
+      username: 'operator',
+      password: 'test-password',
+    }),
+  );
+  expect(getSession).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole('button', { name: 'Входим…' })).toBeDisabled();
+  await act(async () => finishLogin(session));
+  await screen.findByRole('heading', { name: heading });
+  expect(screen.getByTestId('location').textContent).toBe(destination);
+  expect(screen.queryByRole('form', { name: 'Вход в GameForge' })).not.toBeInTheDocument();
+});
+
+it('keeps the login form usable after rejected credentials', async () => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  vi.mocked(post).mockRejectedValue(new Error('Неверное имя пользователя или пароль.'));
+  setup('/login');
+  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'wrong-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Неверное имя пользователя или пароль.',
+  );
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
+  expect(screen.getByLabelText('Имя пользователя')).toHaveValue('operator');
+  expect(screen.getByRole('button', { name: 'Войти в мастерскую' })).toBeEnabled();
+  expect(post).toHaveBeenCalledTimes(1);
+});
+
+it('redirects a signed-in visitor away from the login page', async () => {
+  setup('/login');
+  await screen.findByRole('heading', { name: 'Игры сообщества' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  expect(screen.queryByRole('form', { name: 'Вход в GameForge' })).not.toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('returns to a public game after cancelling or completing sign-in for a remix', async () => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }),
+  );
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  vi.mocked(post).mockResolvedValue(session);
+  vi.mocked(request).mockResolvedValue({
+    id: 'public-one',
+    title: 'Лунная игра',
+    author: { username: 'creator' },
+    artifact_hash: 'public-hash',
+    preview_url: 'https://preview.example/one',
+  });
+  setup('/games/public-one');
+  fireEvent.click(await screen.findByRole('button', { name: 'Доработать' }));
+  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  fireEvent.click(screen.getByRole('link', { name: 'Вернуться к игре' }));
+  await screen.findByRole('heading', { name: 'Лунная игра' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/games\/public-one$/);
+  expect(post).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Доработать' }));
+  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'test-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
+  await screen.findByRole('heading', { name: 'Лунная игра' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/games\/public-one$/);
+  expect(post).toHaveBeenCalledExactlyOnceWith('/api/login/', {
+    username: 'operator',
+    password: 'test-password',
+  });
 });

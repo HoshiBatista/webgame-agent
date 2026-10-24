@@ -458,7 +458,8 @@ svg {
 }
 
 /* A playful introduction made of HTML and CSS, not a catalog of prebuilt games. */
-.landing {
+.landing,
+.login-page {
   color-scheme: light;
   --bg: #f7f5ef;
   --surface: #fffefa;
@@ -467,6 +468,7 @@ svg {
   --muted: #687166;
   --border: #dfdfd4;
   --coral: #f4775b;
+  --coral-hover: #e56449;
   --teal: #307d76;
   color: var(--ink);
   background: var(--bg);
@@ -857,9 +859,13 @@ svg {
 }
 .landing-strip {
   border-block: 1px solid #dedfd2;
-  display: flex;
+  display: grid;
+  grid-template-columns:
+    max-content clamp(24px, 6vw, 85px) max-content clamp(24px, 6vw, 85px)
+    max-content;
+  align-items: center;
   justify-content: center;
-  gap: 85px;
+  gap: clamp(10px, 2vw, 24px);
   padding: 24px 20px;
   color: #536b5b;
   background: #eef0e6;
@@ -867,10 +873,25 @@ svg {
   font-weight: 550;
   letter-spacing: -0.5px;
 }
-.landing-strip > span:last-child {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.landing-strip-arrow {
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  max-width: 32px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.6;
+}
+.landing-strip-arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: translateY(-50%) rotate(45deg);
 }
 .how-section {
   max-width: 1380px;
@@ -946,8 +967,119 @@ svg {
 .landing-footer .brand-mark svg {
   width: 20px;
 }
-.footer-sign {
-  font-style: italic;
+.login-page {
+  min-height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow-x: clip;
+}
+.login-header {
+  width: 100%;
+  max-width: 1380px;
+  margin: auto;
+  padding: 32px 6%;
+}
+.login-main {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  padding: 24px 24px 32px;
+}
+.login-scenery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image: radial-gradient(#9aab8a40 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(transparent, #000 18%, #000 82%, transparent);
+}
+.login-island {
+  position: absolute;
+  width: clamp(180px, 20vw, 260px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.login-island-left {
+  right: calc(50% + 265px);
+  margin-top: 35px;
+}
+.login-island-right {
+  left: calc(50% + 265px);
+  margin-top: -40px;
+}
+.login-card {
+  width: 100%;
+  max-width: 470px;
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 23px;
+  background: var(--surface);
+  box-shadow: 0 18px 65px #30352b0c;
+}
+.login-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.login-heading h1 {
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+}
+.login-heading .icon-button {
+  flex-shrink: 0;
+}
+.login-intro {
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.login-footer {
+  padding: 20px 24px 32px;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+@media (min-width: 761px) and (max-width: 1000px) {
+  .login-island {
+    width: 160px;
+    opacity: 0.65;
+  }
+  .login-island-left {
+    right: calc(50% + 245px);
+  }
+  .login-island-right {
+    left: calc(50% + 245px);
+  }
+}
+@media (max-width: 760px) {
+  .login-island {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .login-page {
+    grid-template-rows: 1fr;
+  }
+  .login-header,
+  .login-scenery,
+  .login-footer {
+    display: none;
+  }
+  .login-main {
+    padding: 24px 14px;
+  }
+  .login-card {
+    padding: 24px 21px;
+  }
+  .login-heading h1 {
+    font-size: 23px;
+  }
 }
 .login-decoration {
   display: flex;
@@ -2942,15 +3074,8 @@ svg {
     top: 36px;
   }
   .landing-strip {
-    gap: 22px;
     font-size: var(--text-small);
     padding: 20px 15px;
-  }
-  .landing-strip > span:last-child {
-    gap: 10px;
-  }
-  .landing-strip svg {
-    width: 17px;
   }
   .how-section {
     padding: 47px 7% 52px;
@@ -2989,9 +3114,6 @@ svg {
   }
   .landing-footer > span {
     font-size: var(--text-small);
-  }
-  .footer-sign {
-    display: none;
   }
   .landing-footer .brand {
     font-size: var(--text-body);
@@ -3530,10 +3652,6 @@ svg {
     right: 0;
     width: 85px;
     height: 85px;
-  }
-  .landing-strip {
-    gap: 17px;
-    font-size: var(--text-small);
   }
   .game-grid {
     grid-template-columns: 1fr;

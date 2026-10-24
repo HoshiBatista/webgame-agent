@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
 import {
   ArrowRight,
+  ArrowUpRight,
   Check,
   Circle,
   Gamepad2,
@@ -10,92 +10,23 @@ import {
   Star,
   X,
 } from 'lucide-react';
-import { Brand, ErrorNotice, Modal } from './components';
-import { errorText, getSession, post, setCsrfToken } from './api';
-import { useSession } from './context';
-import type { Session } from './types';
+import { Link } from 'react-router-dom';
+import { Brand } from './components';
 
-export function Login({ onClose }: { onClose: () => void }) {
-  const { updateSession } = useSession();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError('');
-    try {
-      await getSession();
-      const data = await post<Session>('/api/login/', { username, password });
-      setCsrfToken(data.csrfToken);
-      updateSession(data);
-      onClose();
-    } catch (cause) {
-      setError(errorText(cause));
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <Modal title="С возвращением!" onClose={onClose}>
-      <div className="login-decoration" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-        <span />
-      </div>
-      <p className="modal-intro">Ваша следующая игра начинается здесь.</p>
-      <form onSubmit={submit} className="form-stack">
-        <label>
-          Имя пользователя
-          <input
-            autoComplete="username"
-            autoFocus
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            required
-            placeholder="Как вас зовут в GameForge"
-          />
-        </label>
-        <label>
-          Пароль
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            placeholder="Ваш пароль"
-          />
-        </label>
-        {error && <ErrorNotice message={error} />}
-        <button className="button button-coral button-block" disabled={busy}>
-          {busy ? 'Входим…' : 'Войти в мастерскую'}
-          <ArrowRight size={18} />
-        </button>
-        <p className="form-footnote">Учётную запись выдаёт администратор вашей команды.</p>
-      </form>
-    </Modal>
-  );
-}
 export default function Landing() {
-  const [login, setLogin] = useState(false);
   return (
     <div className="landing">
       <header className="landing-header">
         <Brand />
-        <button className="button button-outline" onClick={() => setLogin(true)}>
-          Войти <ArrowRight size={17} />
-        </button>
+        <Link className="button button-outline" to="/login">
+          Войти <ArrowUpRight size={17} />
+        </Link>
       </header>
       <main>
         <section className="hero">
           <div className="hero-copy">
             <span className="eyebrow">
-              <span className="tiny-star">✦</span> От «а что, если...» до первого хода
+              <span className="tiny-star">✦</span> От «а что, если…» до «сыграем?»
             </span>
             <h1>
               Придумайте.
@@ -107,9 +38,9 @@ export default function Landing() {
               Опишите мини-игру, попробуйте её и добавьте
               <br className="desktop-break" /> немного своего характера.
             </p>
-            <button className="button button-coral hero-button" onClick={() => setLogin(true)}>
+            <Link className="button button-coral hero-button" to="/login">
               Создать свою игру <ArrowRight size={20} />
-            </button>
+            </Link>
             <div className="hero-benefits">
               <span>
                 <Check size={15} /> В вашем стиле
@@ -182,7 +113,9 @@ export default function Landing() {
         </section>
         <section className="landing-strip">
           <span>Идея</span>
+          <i className="landing-strip-arrow" aria-hidden="true" />
           <span>Пара слов</span>
+          <i className="landing-strip-arrow" aria-hidden="true" />
           <span>Ваша игра</span>
         </section>
         <section className="how-section">
@@ -207,17 +140,17 @@ export default function Landing() {
             <article>
               <span>03</span>
               <h3>Пусть играют все</h3>
-              <p>Поделитесь в ленте или скачайте HTML. Ваша маленькая вселенная готова к гостям.</p>
+              <p>
+                Поделитесь в ленте или скачайте HTML. Ваша маленькая вселенная ждёт своих игроков.
+              </p>
             </article>
           </div>
         </section>
       </main>
       <footer className="landing-footer">
         <Brand />
-        <span>Сделано для идей, в которые хочется играть.</span>
-        <span className="footer-sign">Have a little fun. ✳</span>
+        <span>Маленькие игры. Большие идеи.</span>
       </footer>
-      {login && <Login onClose={() => setLogin(false)} />}
     </div>
   );
 }
