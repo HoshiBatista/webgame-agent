@@ -42,11 +42,13 @@ export interface Finding {
   [key: string]: unknown;
 }
 export interface Report {
+  id?: number;
   status: string;
   findings: Array<Finding | string>;
   facts: unknown[];
   stages?: Array<{ stage: string; status: string }>;
   elapsed_seconds?: number;
+  assessment?: { action: string; outstanding: string[]; corrections: unknown[] };
 }
 export interface Revision {
   id: string;
@@ -101,6 +103,8 @@ export interface Run {
   can_continue: boolean;
   can_retry_unknown?: boolean;
   can_confirm: boolean;
+  can_recheck?: boolean;
+  confirmation?: { artifact_hash: string; report_id: number; requirements: string[] } | null;
   attempts: number;
   max_repair_attempts?: number;
   max_model_calls?: number;

@@ -117,6 +117,38 @@ describe('sandbox and preview lifecycle', () => {
   });
 });
 describe('honest run controls', () => {
+  it('finishes uncertainty without a spinner and offers a model-free recheck', () => {
+    const onRecheck = vi.fn();
+    render(
+      <RunStatus
+        run={{
+          ...run,
+          status: 'unverified',
+          can_confirm: true,
+          can_recheck: true,
+          confirmation: {
+            artifact_hash: 'candidate',
+            report_id: 7,
+            requirements: ['Проверьте победу'],
+          },
+        }}
+        events={[]}
+        busy={false}
+        onCancel={vi.fn()}
+        onContinue={vi.fn()}
+        onConfirm={vi.fn()}
+        onRecheck={onRecheck}
+      />,
+    );
+    expect(screen.getByText('Игра сохранена — нужна ваша проверка')).toBeInTheDocument();
+    expect(screen.getByText('Проверьте победу')).toBeInTheDocument();
+    expect(document.querySelector('.spin')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Продолжить исправление' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Повторить проверку без генерации' }));
+    expect(onRecheck).toHaveBeenCalledOnce();
+  });
   it('keeps relay polling distinct from waiting for a free model and preserves terminal status', () => {
     const props = {
       run: {
@@ -148,24 +180,27 @@ describe('honest run controls', () => {
     expect(props.onCancel).not.toHaveBeenCalled();
     expect(props.onContinue).not.toHaveBeenCalled();
   });
-  it('requires explicit cost consent for a new attempt and resets it for another run', () => {
-    const onContinue = vi.fn();
-    const props = {
-      run: { ...run, can_retry_unknown: true },
-      events: [],
-      busy: false,
-      onCancel: vi.fn(),
-      onContinue,
-      onConfirm: vi.fn(),
-    };
-    const { rerender } = render(<RunStatus {...props} />);
-    expect(screen.getByRole('button', { name: 'Повторить запрос' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: 'Повторить запрос' }));
-    expect(onContinue).toHaveBeenCalledExactlyOnceWith('', true);
-    rerender(<RunStatus {...props} run={{ ...props.run, id: 'another' }} />);
-    expect(screen.getByRole('button', { name: 'Повторить запрос' })).toBeDisabled();
-  });
+  it.each(['unknown', 'needs_attention', 'failed'] as const)(
+    'requires cost consent after %s and resets it for another run',
+    (status) => {
+      const onContinue = vi.fn();
+      const props = {
+        run: { ...run, status, can_retry_unknown: true },
+        events: [],
+        busy: false,
+        onCancel: vi.fn(),
+        onContinue,
+        onConfirm: vi.fn(),
+      };
+      const { rerender } = render(<RunStatus {...props} />);
+      expect(screen.getByRole('button', { name: 'Повторить запрос' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('checkbox'));
+      fireEvent.click(screen.getByRole('button', { name: 'Повторить запрос' }));
+      expect(onContinue).toHaveBeenCalledExactlyOnceWith('', true);
+      rerender(<RunStatus {...props} run={{ ...props.run, id: 'another' }} />);
+      expect(screen.getByRole('button', { name: 'Повторить запрос' })).toBeDisabled();
+    },
+  );
   it('never offers a blind retry for an unknown billed result', () => {
     render(
       <RunStatus

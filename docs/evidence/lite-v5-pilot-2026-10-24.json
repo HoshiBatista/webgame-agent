@@ -1,0 +1,1652 @@
+{
+  "scope": "Six fixed creation trials in two triplets; diagnostic, not controlled A/B or physical WebView",
+  "model_profile": {
+    "id": "lite",
+    "name": "Lite",
+    "description": "Модель через API",
+    "provider": "relay",
+    "model": "qwen38",
+    "available": true,
+    "unavailable_reason": ""
+  },
+  "limits": {
+    "max_calls": 24,
+    "max_seconds": 5400
+  },
+  "started_at_epoch": 1792838441.520687,
+  "closed_at_epoch": 1792842719.4902139,
+  "closure_reason": "Two fixed triplets complete and all ten saved candidates independently reviewed. Sixteen calls used; eight unused calls are closed and do not renew. No model calls remain active or unknown.",
+  "closed_elapsed_seconds": 4277.969526767731,
+  "generation_window_seconds": 4152.3816130161285,
+  "total_model_calls": 16,
+  "unused_calls": 8,
+  "known_usage_calls": 16,
+  "unknown_calls": 0,
+  "tokens": {
+    "input_tokens": 52588,
+    "output_tokens": 59578
+  },
+  "recorded_cost_usd": 0.0,
+  "cost_note": "Relay price is configured as zero locally. Recorded zero is not a measured GPU infrastructure cost. Pre-existing account unknown budget is separate from this pilot.",
+  "account_budget_summary": {
+    "unknown_preexisted": true,
+    "unknown_unchanged": true
+  },
+  "provenance": {
+    "source_sha256": {
+      "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+      "generation/artifacts.py": "eaab2edfea9a5390b56425c7ed9e982b98e39b6cbff9f9e0a9112e0838c30820",
+      "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+      "generation/feedback.py": "a4e8e8ea13ed372f176e275049c01c259e0688144740ac38d28d967fd7815c43",
+      "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+      "generation/prompts.py": "579d8d2c86445e5cd0218b04c63406b520d12b6bcbbba9b5986629ce937e0e1b",
+      "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+      "generation/providers/codex.py": "49257a0dcc3569d6b0952fa95ec1e2b29fbb9b0873fe51acb7487d09e55ddb1d",
+      "generation/providers/fake.py": "1a093b162869e43fe719f5c4c9dd37eb1fd6cbd32aec8a18545fed03fa86c747",
+      "generation/providers/relay.py": "e8e04e873515df5b0323e52b8678cba76a4a0af630d9709b57b3f8349ba0a9da",
+      "generation/providers/vllm.py": "7d35a09752ecaa6f046188e7b3029ea1d51a925a120b891aa515ec1501b0b81c",
+      "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+      "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+      "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+      "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+      "generation/schema.py": "0c45f94fd3f69870cee46d276bdd2e121a58f2651760882dc4adf05a19430698",
+      "generation/service.py": "6375d4ecdd5e037d77eb27d8722be69caec64cc3072e8102b476be051e7fa554",
+      "generation/source_map.py": "4bf21f3213211486f873fd0f7f5727ad054c43f89afeaf9c7a33b5ad5c9ca503",
+      "generation/source_policy.py": "dff66a8e57d4b89e4d7c4716f1ae0c9a26686ddb90ec49efe17d174befc44fe6",
+      "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+      "scripts/evaluation.py": "395066b67bb054202d98c3fa7d7e550efb47a48b2c170cd9ab02f805607a07ad",
+      "scripts/live_eval.py": "21824418cd29332db02585cc9969cb85fb44526803df5f16c7beb4c474491b16",
+      "studio/acceptance.py": "3335406d1600455abd4d6ee18fd38d4cdbe2ce576a1b8d6b89c7afdcabb952f2",
+      "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+      "studio/models.py": "281016fc8d8a2d7ff6ad081897d7160d583d0840a9293a6d724ec630800044f5",
+      "studio/recovery.py": "82ba82e150d4c24f3faf5fc9c790f62fb204e876afbef37a7ddc8a3e496b2c98",
+      "studio/serialization.py": "8b15ff0554a20e2effbd5b430d22b71171a53c876e9183b8e6ff233949d1bd84",
+      "studio/services.py": "63c7363b08c50e75f8adfa126ea0d9e459a3053d6a1802db292e22849ad18ad1",
+      "studio/tasks.py": "875a042c4f81bfc201a916582ef98498234f6b417bc6ebd47cc520d643fadbc9",
+      "studio/views.py": "842761d4a6e325788d9ad5229b3d013a008b60f0bd352a7c7f36171caa99f340",
+      "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+      "validation/checks.py": "b5b8e64a2bae062e220775633f983be0c23281152c9b5ba11537a2609d3b07a7",
+      "validation/contracts.py": "17a45a4410535d1fb96fa6dcd4a4bb37232ffe1ff5f52dfbc57a4a28e432c8d6",
+      "validation/daemon.py": "d5147e7d25ed9b3d2681f0efe9b55fb1814064f7f661bb206d5027c9d9ccca4b",
+      "validation/native.py": "3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+      "validation/protocol.py": "01c76424b763d989b0e49c7e9f49f1fd95c417bfce07117a5e5788f9210904bd",
+      "validation/runner.py": "353719a7488b43b500bb4a44bd7ae1ea867ddcbd101fdbf097367b27684bd9ad",
+      "validation/service.py": "ba628ad38c8fe810b22de977011d7d02a3b9eb724735b4ce372696cd776ed52f",
+      "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd"
+    },
+    "weight_revision": "Not exposed by the relay API; model alias only",
+    "sampling_defaults": "Provider defaults; inspect captured request for explicit values"
+  },
+  "provenance_rechecked": true,
+  "baseline": {
+    "evidence": "lite-completion-2026-10-24.json",
+    "same_prompts_and_order": true,
+    "same_criteria": true,
+    "provider_sources_unchanged": true,
+    "validator_sources_unchanged": true,
+    "calls": 10,
+    "automatic": 0,
+    "playable_saved": 0,
+    "cases": 3,
+    "generation_window_seconds": 1058.885,
+    "summary": {
+      "counts": {
+        "operations": 3,
+        "automatic": 0,
+        "playable": 0,
+        "broken": 3,
+        "unverified": 0,
+        "unreviewed": 0,
+        "playable_not_accepted": 0,
+        "false_acceptances": 0,
+        "unknown_usage": 0
+      },
+      "tokens": {
+        "input_tokens": 25604,
+        "output_tokens": 15773
+      },
+      "remaining_calls": 14,
+      "results": [
+        {
+          "case": "grid",
+          "kind": "create",
+          "run_id": "b58bb4d6-2af9-44e5-960e-ff1a2c1fd45f",
+          "status": "needs_attention",
+          "verdict": "broken",
+          "revision_verdicts": {
+            "5b1cb4ff-229e-4520-bd1c-f52da7f50457": "broken"
+          },
+          "calls": 4,
+          "reserved_ceiling": 4,
+          "first_candidate_seconds": 126.6636757850647,
+          "decision_seconds": 337.41908979415894,
+          "first_playable_seconds": null,
+          "calls_after_playable": 0
+        },
+        {
+          "case": "snake",
+          "kind": "create",
+          "run_id": "384fbd9a-6a7c-411d-9226-d90a8add488d",
+          "status": "needs_attention",
+          "verdict": "broken",
+          "revision_verdicts": {
+            "709bd43f-b82b-459b-85c9-ee4b20b7da92": "broken",
+            "fd9f0d1e-c3d0-46f6-83bc-67f9da99913f": "broken"
+          },
+          "calls": 2,
+          "reserved_ceiling": 2,
+          "first_candidate_seconds": 276.32798194885254,
+          "decision_seconds": 372.3245279788971,
+          "first_playable_seconds": null,
+          "calls_after_playable": 0
+        },
+        {
+          "case": "memory",
+          "kind": "create",
+          "run_id": "24259dc9-ce21-45c0-a6c1-b553a4dc8a61",
+          "status": "needs_attention",
+          "verdict": "broken",
+          "revision_verdicts": {
+            "eeda21a4-6dee-44f1-968a-ee568cacb02e": "broken"
+          },
+          "calls": 4,
+          "reserved_ceiling": 4,
+          "first_candidate_seconds": 89.44977807998657,
+          "decision_seconds": 347.58015608787537,
+          "first_playable_seconds": null,
+          "calls_after_playable": 0
+        }
+      ],
+      "skipped_edits": [
+        {
+          "case": "grid",
+          "reason": "Creation needs independent review and an accepted base"
+        },
+        {
+          "case": "snake",
+          "reason": "Creation needs independent review and an accepted base"
+        },
+        {
+          "case": "memory",
+          "reason": "Creation needs independent review and an accepted base"
+        }
+      ],
+      "note": "Unreviewed/uncertain outcomes remain in the denominator. Application status is not an independent verdict."
+    },
+    "raw_rejected_sources_reviewed": false
+  },
+  "creation_counts": {
+    "trials": 6,
+    "terminal": 6,
+    "automatic": 0,
+    "selected_playable": 2,
+    "broken": 4,
+    "no_candidate": 0,
+    "unverified": 0,
+    "unreviewed": 0,
+    "false_acceptances": 0
+  },
+  "summary": {
+    "counts": {
+      "operations": 7,
+      "automatic": 0,
+      "playable": 2,
+      "broken": 5,
+      "unverified": 0,
+      "unreviewed": 0,
+      "playable_not_accepted": 2,
+      "false_acceptances": 0,
+      "unknown_usage": 0,
+      "no_candidate": 0
+    },
+    "tokens": {
+      "input_tokens": 52588,
+      "output_tokens": 59578
+    },
+    "remaining_calls": 8,
+    "results": [
+      {
+        "case": "grid",
+        "kind": "create",
+        "run_id": "99cb6710-7bd2-4be9-af13-f55dcc5ee788",
+        "status": "failed",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "68592564-7fff-4047-a841-535d89c1ddd9": "broken"
+        },
+        "calls": 3,
+        "reserved_ceiling": 3,
+        "first_candidate_seconds": 1067.9792141914368,
+        "decision_seconds": 1071.81014919281,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "snake",
+        "kind": "create",
+        "run_id": "16cde38b-5ef4-47b2-9e31-4f877fa6fe17",
+        "status": "failed",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "b9cb2795-1018-4bbc-ace2-11ba48fcd5f2": "broken"
+        },
+        "calls": 1,
+        "reserved_ceiling": 1,
+        "first_candidate_seconds": 209.81486082077026,
+        "decision_seconds": 219.2793378829956,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "create",
+        "run_id": "a616c164-abd8-4e55-b379-6ae49b87b3c5",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "60832fe8-7f32-49d1-aee3-592f17d57bb7": "broken"
+        },
+        "calls": 4,
+        "reserved_ceiling": 4,
+        "first_candidate_seconds": 275.6247720718384,
+        "decision_seconds": 908.042829990387,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "grid",
+        "kind": "validation_repair",
+        "run_id": "c7ff0c3b-4d19-45d9-a841-45f9249dc2d5",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "d7a98d8e-b0ec-4a3c-8b48-36df2633fe44": "broken"
+        },
+        "calls": 1,
+        "reserved_ceiling": 1,
+        "first_candidate_seconds": 207.455313205719,
+        "decision_seconds": 208.670175075531,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "grid",
+        "kind": "replicate_create",
+        "run_id": "b5dc4caf-9a2f-4462-b460-c1278441525a",
+        "status": "needs_attention",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "ee90931b-ad6a-44fb-912a-df19c35b1e2d": "broken",
+          "e80d127b-afda-4f22-9ff7-c4c2216ad915": "playable",
+          "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff": "playable"
+        },
+        "calls": 3,
+        "reserved_ceiling": 3,
+        "first_candidate_seconds": 210.22527813911438,
+        "decision_seconds": 456.8136270046234,
+        "first_playable_seconds": 326.64470410346985,
+        "calls_after_playable": 1
+      },
+      {
+        "case": "snake",
+        "kind": "replicate_create",
+        "run_id": "d517931d-1d50-4ef2-bfa1-34d951bdf510",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "374a6e95-a4a3-4168-8729-f1d079302846": "broken",
+          "ccbf6874-691f-46de-bb07-4b9c085bd3d5": "broken"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "first_candidate_seconds": 402.24407386779785,
+        "decision_seconds": 653.1742589473724,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "replicate_create",
+        "run_id": "f4daf92e-b0a8-4649-b56c-679134be61bb",
+        "status": "unverified",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "47c29121-cf35-45d9-96cc-cc1ef2ce16e5": "playable"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "first_candidate_seconds": 396.71244192123413,
+        "decision_seconds": 403.59735894203186,
+        "first_playable_seconds": 396.71244192123413,
+        "calls_after_playable": 0
+      }
+    ],
+    "skipped_edits": [],
+    "note": "Unreviewed/uncertain outcomes remain in the denominator. Application status is not an independent verdict."
+  },
+  "operations": [
+    {
+      "case": "grid",
+      "kind": "create",
+      "run_id": "99cb6710-7bd2-4be9-af13-f55dcc5ee788",
+      "status": "failed",
+      "error_code": "validator_unavailable",
+      "selected_revision_id": "68592564-7fff-4047-a841-535d89c1ddd9",
+      "metrics": {
+        "model_calls": 3,
+        "check_seconds": 3.664,
+        "model_seconds": 1067.602425,
+        "queue_seconds": 0.189675,
+        "total_seconds": 1071.810149,
+        "packaging_seconds": 0.038877125014550984
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "f468739e-dfa8-40f5-bb98-726c8f73023f",
+          "attempt": 1,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 5833,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 371.535255,
+          "sent_at": "2026-10-24T10:40:41.769822+00:00",
+          "finished_at": "2026-10-24T10:46:53.308947+00:00",
+          "operation": "create",
+          "error_code": "missing_effects",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 5,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        },
+        {
+          "id": "b2416d4a-56f2-4cd6-88d8-6fb0d932338f",
+          "attempt": 2,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 1303,
+            "output_tokens": 3463,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 228.031529,
+          "sent_at": "2026-10-24T10:46:53.338251+00:00",
+          "finished_at": "2026-10-24T10:50:41.378800+00:00",
+          "operation": "create",
+          "error_code": "missing_effects",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        },
+        {
+          "id": "f1cf15c0-f70e-48eb-b917-7066183bec87",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1303,
+            "output_tokens": 7431,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 468.035641,
+          "sent_at": "2026-10-24T10:50:41.421730+00:00",
+          "finished_at": "2026-10-24T10:58:29.459586+00:00",
+          "operation": "create",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        }
+      ],
+      "revisions": [
+        {
+          "id": "68592564-7fff-4047-a841-535d89c1ddd9",
+          "artifact_hash": "fe6e7a635de8f10e5c65dd5981b93f0f4182fbdd5138d23c9a348016eca80f5e",
+          "created_at": "2026-10-24T10:58:29.526307+00:00",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "report_status": "infrastructure_error",
+          "finding_codes": [
+            "validator_unavailable"
+          ],
+          "assessment_action": "recheck",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "fe6e7a635de8f10e5c65dd5981b93f0f4182fbdd5138d23c9a348016eca80f5e",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent browser on exact saved preview at 390x844; real canvas click; read-only console inspection; separate native validator diagnostic",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Only Ход: X / Нажмите СТАРТ labels appear. No start/restart button exists; actual canvas click has no effect. Browser and native compilation report Unexpected end of input."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "The script fails to parse before listeners and board rendering initialize; actual click leaves the blank board unchanged."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "No playable round initializes, so normal wins/draws are unreachable."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "At 390x844 the Canvas element exists but remains blank with inert labels and no usable start control."
+              }
+            },
+            "screenshot": "68592564-7fff-4047-a841-535d89c1ddd9/manual-mobile.png"
+          },
+          "independent_native": null
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "kind": "create",
+      "run_id": "16cde38b-5ef4-47b2-9e31-4f877fa6fe17",
+      "status": "failed",
+      "error_code": "validator_unavailable",
+      "selected_revision_id": "b9cb2795-1018-4bbc-ace2-11ba48fcd5f2",
+      "metrics": {
+        "model_calls": 1,
+        "check_seconds": 9.417,
+        "model_seconds": 209.753876,
+        "queue_seconds": 0.022958,
+        "total_seconds": 219.279338,
+        "packaging_seconds": 0.004867417039349675
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "eedd3871-ca6d-4171-8868-3eeb2261d9dd",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1208,
+            "output_tokens": 3281,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 209.753876,
+          "sent_at": "2026-10-24T10:58:35.689884+00:00",
+          "finished_at": "2026-10-24T11:02:05.445967+00:00",
+          "operation": "create",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 5,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        }
+      ],
+      "revisions": [
+        {
+          "id": "b9cb2795-1018-4bbc-ace2-11ba48fcd5f2",
+          "artifact_hash": "5d3a97f81c8050f6442bff79915e83b56e918ab9db45d369f29a329ad6b26f15",
+          "created_at": "2026-10-24T11:02:05.462237+00:00",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "report_status": "infrastructure_error",
+          "finding_codes": [
+            "validator_unavailable"
+          ],
+          "assessment_action": "recheck",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "5d3a97f81c8050f6442bff79915e83b56e918ab9db45d369f29a329ad6b26f15",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "method": "Independent exact exported HTML on isolated diagnostic origin at 390x844; real restart and arrow clicks; no source/state changes",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Start and Game Over overlays are visible simultaneously on initial load and remain after actual restart. CSS #overlay/#gameover display:flex overrides .hidden display:none."
+              },
+              "control": {
+                "status": "unverified",
+                "evidence": "Actual restart and ▲ clicks occur, but both overlays continue to obscure the snake/round; normal live steering cannot be visually confirmed."
+              },
+              "outcome": {
+                "status": "unverified",
+                "evidence": "Game Over is displayed before any player action and never hides. A meaningful collision-to-end transition cannot be verified from this UI."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Large buttons fit 390x844, but simultaneous overlapping start/end dialogs obstruct the playable scene throughout."
+              }
+            },
+            "screenshot": "b9cb2795-1018-4bbc-ace2-11ba48fcd5f2/manual-mobile.png"
+          },
+          "independent_native": null
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "kind": "create",
+      "run_id": "a616c164-abd8-4e55-b379-6ae49b87b3c5",
+      "status": "needs_attention",
+      "error_code": "repair_exhausted",
+      "selected_revision_id": "60832fe8-7f32-49d1-aee3-592f17d57bb7",
+      "metrics": {
+        "model_calls": 4,
+        "check_seconds": 0.545,
+        "model_seconds": 906.2975530000001,
+        "queue_seconds": 0.055818,
+        "total_seconds": 908.04283,
+        "packaging_seconds": 0.00914612493943423
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "f3529a10-d401-4ff6-8d4b-d0ebe0f5342e",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 4176,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 275.511428,
+          "sent_at": "2026-10-24T11:02:17.355287+00:00",
+          "finished_at": "2026-10-24T11:06:52.869436+00:00",
+          "operation": "create",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 5,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        },
+        {
+          "id": "b1ef6053-af6b-489a-8631-c138095759ab",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5735,
+            "output_tokens": 3243,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 222.934655,
+          "sent_at": "2026-10-24T11:06:54.393989+00:00",
+          "finished_at": "2026-10-24T11:10:37.332998+00:00",
+          "operation": "repair",
+          "error_code": "no_changes",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        },
+        {
+          "id": "8c532729-8806-4c43-9377-02c5fbe58ce7",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5782,
+            "output_tokens": 3091,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 204.068107,
+          "sent_at": "2026-10-24T11:10:37.383264+00:00",
+          "finished_at": "2026-10-24T11:14:01.454604+00:00",
+          "operation": "repair",
+          "error_code": "no_changes",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        },
+        {
+          "id": "7c81bdbf-60aa-4468-a782-f7f6a0c6c78f",
+          "attempt": 4,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5782,
+            "output_tokens": 3120,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 203.783363,
+          "sent_at": "2026-10-24T11:14:01.502096+00:00",
+          "finished_at": "2026-10-24T11:17:25.288574+00:00",
+          "operation": "repair",
+          "error_code": "no_changes",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        }
+      ],
+      "revisions": [
+        {
+          "id": "60832fe8-7f32-49d1-aee3-592f17d57bb7",
+          "artifact_hash": "51a302238a18c9fc074b0bb2ed04b0df097f6c076d67a1853e4a832a700512f2",
+          "created_at": "2026-10-24T11:06:52.896732+00:00",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "javascript_syntax"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "51a302238a18c9fc074b0bb2ed04b0df097f6c076d67a1853e4a832a700512f2",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "method": "Independent 390x844 sandboxed view of exact saved candidate; visible DOM and browser syntax error, no state/source changes",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Blank page; no cards, Canvas or start button. Browser reports SyntaxError: Unexpected token )."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "No executable card controls initialize because the script fails to parse."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "No cards or round initialize; finding both pairs and reaching a win is impossible."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "At 390x844 only the uniform background is visible; no reachable game controls."
+              }
+            },
+            "screenshot": "60832fe8-7f32-49d1-aee3-592f17d57bb7/manual-mobile.png"
+          },
+          "independent_native": null
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "kind": "validation_repair",
+      "run_id": "c7ff0c3b-4d19-45d9-a841-45f9249dc2d5",
+      "status": "needs_attention",
+      "error_code": "repair_exhausted",
+      "selected_revision_id": "d7a98d8e-b0ec-4a3c-8b48-36df2633fe44",
+      "metrics": {
+        "model_calls": 1,
+        "check_seconds": 0.729,
+        "model_seconds": 206.341894,
+        "queue_seconds": 0.030915,
+        "total_seconds": 208.670175,
+        "packaging_seconds": 0.005739540909416974
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "4d6e8cf9-0fb4-4f52-92f3-a130dc28038a",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7566,
+            "output_tokens": 3166,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 206.341894,
+          "sent_at": "2026-10-24T11:19:53.252763+00:00",
+          "finished_at": "2026-10-24T11:23:19.598346+00:00",
+          "operation": "repair",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        }
+      ],
+      "revisions": [
+        {
+          "id": "d7a98d8e-b0ec-4a3c-8b48-36df2633fe44",
+          "artifact_hash": "6024ed9098cff45521d98923b2e0b91f3fc73ae6069579dbd05947303c678c51",
+          "created_at": "2026-10-24T11:23:19.638729+00:00",
+          "parent_id": "68592564-7fff-4047-a841-535d89c1ddd9",
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "javascript_syntax"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "6024ed9098cff45521d98923b2e0b91f3fc73ae6069579dbd05947303c678c51",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent 390x844 isolated view of exact repaired candidate; no source/state changes",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Only static Ход: X / Нажмите СТАРТ labels and a blank Canvas appear; script fails with SyntaxError: Unexpected identifier x before initialization."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "No live board or controls initialize; source contains conflicting quotes in syncHud innerHTML."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "No playable round initializes, so normal wins/draws are unreachable."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "At 390x844 the Canvas element exists but remains blank with inert labels and no usable start control."
+              }
+            },
+            "screenshot": "d7a98d8e-b0ec-4a3c-8b48-36df2633fe44/manual-mobile.png"
+          },
+          "independent_native": null
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "kind": "replicate_create",
+      "run_id": "b5dc4caf-9a2f-4462-b460-c1278441525a",
+      "status": "needs_attention",
+      "error_code": "no_progress",
+      "selected_revision_id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+      "metrics": {
+        "model_calls": 3,
+        "check_seconds": 4.776,
+        "model_seconds": 449.759005,
+        "queue_seconds": 0.025669,
+        "total_seconds": 456.813627,
+        "packaging_seconds": 0.009165750001557171
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "5ce8ba00-a0e7-41e0-934c-9f97dde2951f",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 3235,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 210.153314,
+          "sent_at": "2026-10-24T11:24:34.804445+00:00",
+          "finished_at": "2026-10-24T11:28:04.963001+00:00",
+          "operation": "create",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 5,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        },
+        {
+          "id": "0892efde-8134-4ac0-83f0-1ecd2d7d37e5",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4536,
+            "output_tokens": 1671,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 113.62519,
+          "sent_at": "2026-10-24T11:28:07.760060+00:00",
+          "finished_at": "2026-10-24T11:30:01.388619+00:00",
+          "operation": "repair",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 2,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        },
+        {
+          "id": "45e76f60-f0d8-409b-a588-0f9dc2b79fb7",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4311,
+            "output_tokens": 1946,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 125.980501,
+          "sent_at": "2026-10-24T11:30:03.460545+00:00",
+          "finished_at": "2026-10-24T11:32:09.443435+00:00",
+          "operation": "repair",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 2,
+            "pipeline_version": 5,
+            "reported_findings": 2,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        }
+      ],
+      "revisions": [
+        {
+          "id": "ee90931b-ad6a-44fb-912a-df19c35b1e2d",
+          "artifact_hash": "ac5f50112a829e795a6ed07b8378a6de5c8e80f6e9a7d1670bf4da1d21818500",
+          "created_at": "2026-10-24T11:28:04.987184+00:00",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "invalid_check",
+            "runtime_or_network"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "ac5f50112a829e795a6ed07b8378a6de5c8e80f6e9a7d1670bf4da1d21818500",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent real pointer games at 390x844 on exact saved candidate: occupied-cell test, X-column win and nine-move draw; no state/source mutation",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Empty visible 3x3 board with Сделайте первый ход; first real click places X."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "X/O alternate and a repeat click on the occupied first cell leaves O to move."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "An actual X-column win clears the board and throws TypeError state.winLine[0].includes is not a function; no winner is announced (status stays Ход: X). Separate nine-move draw correctly displays Ничья!."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Board and reset button fit 390x844 and are reachable through normal pointer input."
+              }
+            },
+            "screenshots": [
+              "ee90931b-ad6a-44fb-912a-df19c35b1e2d/manual-win-error.png",
+              "ee90931b-ad6a-44fb-912a-df19c35b1e2d/manual-draw-error.png"
+            ]
+          },
+          "independent_native": null
+        },
+        {
+          "id": "e80d127b-afda-4f22-9ff7-c4c2216ad915",
+          "artifact_hash": "4f8a08d2356cbc73c498bcfa3aafd254fae4390589a08ffcce6735b7ea715dfb",
+          "created_at": "2026-10-24T11:30:01.406610+00:00",
+          "parent_id": "ee90931b-ad6a-44fb-912a-df19c35b1e2d",
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch",
+            "invalid_check"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "playable",
+          "independent_review": {
+            "artifact_hash": "4f8a08d2356cbc73c498bcfa3aafd254fae4390589a08ffcce6735b7ea715dfb",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent real pointer games on exact immutable artifact at 390x844; occupied-cell, X-column win, nine-move draw, reset and post-win input. Final candidate additionally resized to 1280x800 and played to O-diagonal win. Separate native real-touch suite; no state/source mutation.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Visible empty 3x3 Canvas; first click places X."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "X/O alternate; repeat occupied cell is ignored; reset clears the board."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Actual X-column win announces Победил: X; further moves ignored. Separate nine-move round announces Ничья!."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Board and reset fit 390x844 and are reachable by real pointer input."
+              }
+            },
+            "screenshots": [
+              "e80d127b-afda-4f22-9ff7-c4c2216ad915/manual-win.png",
+              "e80d127b-afda-4f22-9ff7-c4c2216ad915/manual-draw.png"
+            ]
+          },
+          "independent_native": {
+            "status": "passed",
+            "passed": 6,
+            "total": 6,
+            "finding_codes": []
+          }
+        },
+        {
+          "id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+          "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+          "created_at": "2026-10-24T11:32:09.455633+00:00",
+          "parent_id": "e80d127b-afda-4f22-9ff7-c4c2216ad915",
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch",
+            "invalid_check"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "playable",
+          "independent_review": {
+            "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent real pointer games on exact immutable artifact at 390x844; occupied-cell, X-column win, nine-move draw, reset and post-win input. Final candidate additionally resized to 1280x800 and played to O-diagonal win. Separate native real-touch suite; no state/source mutation.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Visible empty 3x3 Canvas; first click places X."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "X/O alternate; repeat occupied cell is ignored; reset clears the board."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Actual X-column win announces Победил: X; further moves ignored. Separate nine-move round announces Ничья!."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Board and reset fit 390x844 and are reachable by real pointer input."
+              }
+            },
+            "screenshots": [
+              "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff/manual-win.png",
+              "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff/manual-draw.png",
+              "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff/manual-desktop-o-win.png"
+            ]
+          },
+          "independent_native": {
+            "status": "passed",
+            "passed": 6,
+            "total": 6,
+            "finding_codes": []
+          }
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "kind": "replicate_create",
+      "run_id": "d517931d-1d50-4ef2-bfa1-34d951bdf510",
+      "status": "needs_attention",
+      "error_code": "no_progress",
+      "selected_revision_id": "ccbf6874-691f-46de-bb07-4b9c085bd3d5",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 24.142,
+        "model_seconds": 627.561116,
+        "queue_seconds": 0.031849,
+        "total_seconds": 653.174259,
+        "packaging_seconds": 0.012030916986986995
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "33f0f24a-28b0-4ba7-9b3f-c5f4a0efadd8",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1208,
+            "output_tokens": 6370,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 402.174717,
+          "sent_at": "2026-10-24T11:32:14.745603+00:00",
+          "finished_at": "2026-10-24T11:38:56.921897+00:00",
+          "operation": "create",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 5,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        },
+        {
+          "id": "ca93d9fb-427f-423c-9a42-c8a37ad3a7c8",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7451,
+            "output_tokens": 3381,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 225.386399,
+          "sent_at": "2026-10-24T11:39:10.074580+00:00",
+          "finished_at": "2026-10-24T11:42:55.463833+00:00",
+          "operation": "repair",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 5,
+            "reported_findings": 4,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "3be082d74e12b0413a38fcec7113162268a8088a3f75d5afb7d6d6b68f3501d0",
+            "response_schema_sha256": "39b2e430f49e354614e0bbc10a4e2c1b7611b3963823dacf04532706d046327a"
+          },
+          "replace_module_allowed": true
+        }
+      ],
+      "revisions": [
+        {
+          "id": "374a6e95-a4a3-4168-8729-f1d079302846",
+          "artifact_hash": "d684b69cc7af0fa9ab2579107e697c94af2b188c4043b5d20b16de53473ea2ba",
+          "created_at": "2026-10-24T11:38:56.939601+00:00",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "d684b69cc7af0fa9ab2579107e697c94af2b188c4043b5d20b16de53473ea2ba",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "method": "Independent real Start and Up button input at 390x844; visible board watched across subsequent source inspection; no state/source mutation. Source confirms frame timing reset before the interval is reached.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Clear instructions and a Start button. Actual click reveals a snake and food on Canvas."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Snake remains at its initial visible position after Start and Up input; gameLoop resets lastTime each animation frame, so dt never accumulates to the 350ms movement interval."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "No normal movement occurs, so wall collision cannot end the round."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Readable large controls and board fit 390x844; Start and direction buttons are reachable."
+              }
+            },
+            "screenshot": "374a6e95-a4a3-4168-8729-f1d079302846/manual-no-movement.png"
+          },
+          "independent_native": {
+            "status": "failed",
+            "passed": 1,
+            "total": 3,
+            "finding_codes": [
+              "effect_mismatch",
+              "effect_mismatch"
+            ]
+          }
+        },
+        {
+          "id": "ccbf6874-691f-46de-bb07-4b9c085bd3d5",
+          "artifact_hash": "742e29d2921fd1d10e57bacec4cbc3fb0e718ba4b0ea7e81b847700064a58345",
+          "created_at": "2026-10-24T11:42:55.480822+00:00",
+          "parent_id": "374a6e95-a4a3-4168-8729-f1d079302846",
+          "accepted": false,
+          "verification": "none",
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch"
+          ],
+          "assessment_action": "repair",
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "742e29d2921fd1d10e57bacec4cbc3fb0e718ba4b0ea7e81b847700064a58345",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "method": "Independent real Start and Up button input at 390x844 on repaired artifact; separate same native real-touch movement/wall suite; no state/source mutation.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Clear instructions and a Start button. Actual click reveals a snake and food on Canvas."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Snake remains at its initial visible position after Start and Up input; gameLoop resets lastTime each animation frame, so dt never accumulates to the 350ms movement interval."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "No normal movement occurs, so wall collision cannot end the round."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Readable large controls and board fit 390x844; Start and direction buttons are reachable."
+              }
+            },
+            "screenshot": "ccbf6874-691f-46de-bb07-4b9c085bd3d5/manual-no-movement.png"
+          },
+          "independent_native": {
+            "status": "failed",
+            "passed": 1,
+            "total": 3,
+            "finding_codes": [
+              "effect_mismatch",
+              "effect_mismatch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "kind": "replicate_create",
+      "run_id": "f4daf92e-b0a8-4649-b56c-679134be61bb",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "selected_revision_id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 5.909,
+        "model_seconds": 396.59504300000003,
+        "queue_seconds": 0.042175,
+        "total_seconds": 403.597359,
+        "packaging_seconds": 0.00690108397975564
+      },
+      "completion_policy": 2,
+      "invocations": [
+        {
+          "id": "f4672a10-cb57-4c28-9732-5f9e2ad9e89e",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 2496,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 162.570167,
+          "sent_at": "2026-10-24T11:43:10.394054+00:00",
+          "finished_at": "2026-10-24T11:45:52.967667+00:00",
+          "operation": "create",
+          "error_code": "incomplete_sources",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 5,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        },
+        {
+          "id": "863b7825-a6ab-4f87-8e2d-1ce422c08761",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1359,
+            "output_tokens": 3675,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 234.024876,
+          "sent_at": "2026-10-24T11:45:52.997557+00:00",
+          "finished_at": "2026-10-24T11:49:47.024486+00:00",
+          "operation": "create",
+          "error_code": null,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 5,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "replace_module_allowed": false
+        }
+      ],
+      "revisions": [
+        {
+          "id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+          "artifact_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+          "created_at": "2026-10-24T11:49:47.043789+00:00",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "report_status": "unverified",
+          "finding_codes": [
+            "invalid_check"
+          ],
+          "assessment_action": "review",
+          "independent_verdict": "playable",
+          "independent_review": {
+            "artifact_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "method": "Independent actual Start and card-center pointer clicks at 390x844 on exact immutable saved artifact; visually learned fruits, deliberate mismatch, delayed closure, both matches and visible victory; no hidden-state inspection/mutation and no source/check changes.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Clear start overlay; real Играть click reveals four face-down Canvas cards."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Apple/grape mismatch closes after the delay. Apple/apple then stays green and open; moves counter advances from 1 to 2."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Real clicks find the remaining grape pair; after the match delay the game displays Победа! and Ходов: 3."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Four large cards and start control fit 390x844 and respond at visible card centers."
+              }
+            },
+            "screenshots": [
+              "47c29121-cf35-45d9-96cc-cc1ef2ce16e5/manual-mismatch.png",
+              "47c29121-cf35-45d9-96cc-cc1ef2ce16e5/manual-mismatch-closed.png",
+              "47c29121-cf35-45d9-96cc-cc1ef2ce16e5/manual-match.png",
+              "47c29121-cf35-45d9-96cc-cc1ef2ce16e5/manual-win.png"
+            ]
+          },
+          "independent_native": null
+        }
+      ]
+    }
+  ],
+  "free_rechecks": [
+    {
+      "case": "grid",
+      "run_id": "fb5b14dc-3084-474d-ab32-05beda899fb9",
+      "status": "failed",
+      "error_code": "validator_unavailable",
+      "metrics": {
+        "model_calls": 0,
+        "check_seconds": 1.037,
+        "model_seconds": 0,
+        "queue_seconds": 42.877456,
+        "total_seconds": 43.998972
+      },
+      "model_calls": 0
+    },
+    {
+      "case": "grid",
+      "run_id": "600fdf78-dded-4c22-a434-5a3ba721a2d0",
+      "status": "needs_attention",
+      "error_code": "saved_response_validation",
+      "metrics": {
+        "model_calls": 0,
+        "check_seconds": 0.613,
+        "model_seconds": 0,
+        "queue_seconds": 419.497485,
+        "total_seconds": 420.892412
+      },
+      "model_calls": 0
+    },
+    {
+      "case": "snake",
+      "run_id": "ab1b67f2-c8d9-48b9-8719-f8be81a44203",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "metrics": {
+        "model_calls": 0,
+        "check_seconds": 5.254,
+        "model_seconds": 0,
+        "queue_seconds": 422.369407,
+        "total_seconds": 428.408322
+      },
+      "model_calls": 0
+    }
+  ],
+  "raw_rejected_review": [
+    {
+      "invocation_id": "f468739e-dfa8-40f5-bb98-726c8f73023f",
+      "case": "grid",
+      "artifact_hash": "bc3bd1aeed17852c65f9582aeaa4b5accfdfd03dfca3874b548e978e26a3b3b0",
+      "verdict": "broken",
+      "review": {
+        "artifact_hash": "bc3bd1aeed17852c65f9582aeaa4b5accfdfd03dfca3874b548e978e26a3b3b0",
+        "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+        "method": "Raw create response packaged without source changes; sandboxed isolated origin; actual click on Играть at 390x844; no game state mutation",
+        "criteria": {
+          "start": {
+            "status": "failed",
+            "evidence": "Only a blank overlay and Играть button appear. Actual click has no effect. Browser reports SyntaxError: Unexpected string."
+          },
+          "control": {
+            "status": "failed",
+            "evidence": "Board and turn state never initialize; the start button remains inert after a real click."
+          },
+          "outcome": {
+            "status": "failed",
+            "evidence": "Win/draw cannot be reached because JavaScript fails to parse before initialization."
+          },
+          "mobile": {
+            "status": "failed",
+            "evidence": "390x844 layout shows a large start button but no usable game scene or running round."
+          }
+        },
+        "screenshot": "raw-f468739e-dfa8-40f5-bb98-726c8f73023f/manual-mobile.png"
+      }
+    },
+    {
+      "invocation_id": "b2416d4a-56f2-4cd6-88d8-6fb0d932338f",
+      "case": "grid",
+      "artifact_hash": "9c74560cf08974a16d44acef17050beeda3f48f478e2b3a44ad8a96ae962e57b",
+      "verdict": "playable",
+      "review": {
+        "artifact_hash": "9c74560cf08974a16d44acef17050beeda3f48f478e2b3a44ad8a96ae962e57b",
+        "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+        "method": "Independent real pointer input at 390x844 and 1280x800 on exact packaged raw sources; no state mutation or source edits; separate native OS sandbox run used actual touchscreen taps",
+        "criteria": {
+          "start": {
+            "status": "passed",
+            "evidence": "Clicked Начать игру: visible empty Canvas and Ход: X. Reset after terminal clears the board and starts X."
+          },
+          "control": {
+            "status": "passed",
+            "evidence": "X/O alternate after real clicks; clicking an occupied X cell leaves Ход: O and the board unchanged. Input after victory is ignored."
+          },
+          "outcome": {
+            "status": "passed",
+            "evidence": "Mobile left-column win completed with the middle cell last displays Победа: X. A fresh nine-move game displays Ничья. Desktop six-move diagonal game displays Победа: O."
+          },
+          "mobile": {
+            "status": "passed",
+            "evidence": "At 390x844 the Canvas measures 358.8x358.8, fits the viewport (scrollWidth=390), and its controls are reachable. Resize to 1280x800 preserves board state. Native touchscreen checks passed start, occupied-cell control, X victory and nine-move draw with no findings."
+          }
+        },
+        "screenshots": [
+          "raw-b2416d4a-56f2-4cd6-88d8-6fb0d932338f/manual-win.png",
+          "raw-b2416d4a-56f2-4cd6-88d8-6fb0d932338f/manual-draw.png",
+          "raw-b2416d4a-56f2-4cd6-88d8-6fb0d932338f/manual-desktop-win.png"
+        ],
+        "independent_touch_report": "raw-b2416d4a-56f2-4cd6-88d8-6fb0d932338f/independent-touch-report.json"
+      }
+    },
+    {
+      "invocation_id": "f4672a10-cb57-4c28-9732-5f9e2ad9e89e",
+      "case": "memory",
+      "artifact_hash": "5d0082799ff2eab192a1308aceed711f1f80b90794480144fc6edd50bdae259a",
+      "verdict": "broken",
+      "review": {
+        "artifact_hash": "5d0082799ff2eab192a1308aceed711f1f80b90794480144fc6edd50bdae259a",
+        "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+        "method": "Exact rejected raw sources packaged without edits on isolated diagnostic origin at 390x844; visible DOM and screenshot, no game-state mutation.",
+        "criteria": {
+          "start": {
+            "status": "failed",
+            "evidence": "Blank page, zero Canvas and zero buttons; no cards, executable game or reachable round."
+          },
+          "control": {
+            "status": "failed",
+            "evidence": "Blank page, zero Canvas and zero buttons; no cards, executable game or reachable round."
+          },
+          "outcome": {
+            "status": "failed",
+            "evidence": "Blank page, zero Canvas and zero buttons; no cards, executable game or reachable round."
+          },
+          "mobile": {
+            "status": "failed",
+            "evidence": "Blank page, zero Canvas and zero buttons; no cards, executable game or reachable round."
+          }
+        },
+        "screenshot": "raw-f4672a10-cb57-4c28-9732-5f9e2ad9e89e/manual-mobile.png"
+      }
+    }
+  ],
+  "grid_model_oracle_traces": [
+    {
+      "id": "win-row",
+      "expect": {
+        "value": "X",
+        "operator": "eq"
+      },
+      "trace": [
+        {
+          "move": 1,
+          "cell": 3,
+          "mark": "X",
+          "winner": null
+        },
+        {
+          "move": 2,
+          "cell": 4,
+          "mark": "O",
+          "winner": null
+        },
+        {
+          "move": 3,
+          "cell": 5,
+          "mark": "X",
+          "winner": null
+        },
+        {
+          "move": 4,
+          "cell": 7,
+          "mark": "O",
+          "winner": null
+        },
+        {
+          "move": 5,
+          "cell": 6,
+          "mark": "X",
+          "winner": null
+        }
+      ],
+      "actual_winner": null,
+      "board": [
+        "",
+        "",
+        "",
+        "X",
+        "O",
+        "X",
+        "X",
+        "O",
+        ""
+      ]
+    },
+    {
+      "id": "draw",
+      "expect": {
+        "value": "draw",
+        "operator": "eq"
+      },
+      "trace": [
+        {
+          "move": 1,
+          "cell": 0,
+          "mark": "X",
+          "winner": null
+        },
+        {
+          "move": 2,
+          "cell": 1,
+          "mark": "O",
+          "winner": null
+        },
+        {
+          "move": 3,
+          "cell": 2,
+          "mark": "X",
+          "winner": null
+        },
+        {
+          "move": 4,
+          "cell": 4,
+          "mark": "O",
+          "winner": null
+        },
+        {
+          "move": 5,
+          "cell": 3,
+          "mark": "X",
+          "winner": null
+        },
+        {
+          "move": 6,
+          "cell": 5,
+          "mark": "O",
+          "winner": null
+        },
+        {
+          "move": 7,
+          "cell": 6,
+          "mark": "X",
+          "winner": "X"
+        }
+      ],
+      "actual_winner": "X",
+      "board": [
+        "X",
+        "O",
+        "X",
+        "X",
+        "O",
+        "O",
+        "X",
+        "",
+        ""
+      ]
+    }
+  ],
+  "runtime_events": [
+    {
+      "at": 1792839833.382211,
+      "kind": "local_validator_backend_correction",
+      "previous": null,
+      "new": "native",
+      "reason": "Native preflight passed but local worker defaulted to a different validation backend; direct native validation confirms grid candidate syntax failure. Existing relay job must retain its ID.",
+      "generator_sources_changed": false,
+      "gpu_changed": false
+    }
+  ],
+  "guardrails": {
+    "gpu_server_changed": false,
+    "codex_calls": 0,
+    "generator_modified_during_pilot": false,
+    "validator_sources_modified_during_pilot": false,
+    "local_worker_backend_changed_during_pilot": true,
+    "game_sources_manually_changed": false,
+    "app_checks_manually_changed": false,
+    "manual_acceptances": 0
+  }
+}

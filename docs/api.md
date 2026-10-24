@@ -17,7 +17,8 @@ model request was sent are separate, potentially unknown outcomes.
 - `POST /api/chats/`: optional `{title,audience}` → full chat. Empty title allowed. `GET /api/chats/:id/` → `{id,title,audience,created_at,updated_at,current_revision:Revision|null,candidate_revision:Revision|null,messages:Message[],revisions:Revision[],runs:Run[],active_run:Run|null,source_publication:null|uuid}`. `DELETE` → 204. Publications survive deletion.
 - `POST /api/chats/:id/runs/`: `{prompt,audience?,model?,idempotency_key}` → `Run` (202). Same idempotency key returns the same run, conflicting payload rejected. `GET /api/runs/:id/` → `Run`.
 - `POST /api/runs/:id/cancel/`: cancel even in flight; preserves accepted version. `POST /api/runs/:id/continue/`: optional `{prompt,idempotency_key,accept_unknown_cost}` resumes saved candidate/last exact response; does not replay planning. Provider and model default to those of the original run. An unresolved unknown invocation requires explicit boolean `accept_unknown_cost:true` for a new attempt. The old liability remains untouched, the new invocation is accounted separately, and the accepted revision must still match the original base (`retry_base_changed` otherwise). The same idempotency key and payload return the same new run; no automatic retry/reconciliation is implied.
-- `POST /api/runs/:id/confirm/`: `{confirmed:true}` accepts an unverified candidate with explicit human verification; failed/infrastructure-error candidates cannot be manually marked green.
+- `POST /api/runs/:id/recheck/`: optional `{idempotency_key}` checks the same saved candidate in a new run with `allow_model_calls=false`. It neither invokes a provider nor materializes pending replies from the original run. Ownership, active-chat and unchanged-base guards apply. Existing unknown model liability is preserved.
+- `POST /api/runs/:id/confirm/`: `{confirmed:true,artifact_hash,report_id}` accepts the exact candidate after explicit human verification. Copy evidence tokens from `Run.confirmation`; mismatched tokens, changed validator/base, active work, known gameplay failures or missing mandatory gate receipts reject confirmation. Eligibility is evidence-based, including an otherwise eligible `needs_attention` run. Acceptance remains `manual`.
 - `GET /api/runs/:id/events/?after=ID`: finite SSE stream of persisted events (client reconnects); events have increasing integer `id`, `event:progress`, `data:{id,kind,message,created_at,details}`. Each reconnect uses Last-Event-ID or after. `GET /api/runs/:id/diagnostics/` private request/response/errors/reports only for owner. New invocations retain `request.generation_contract.{system_prompt_sha256,response_schema_sha256}`, `provider_invocation_id` (actual provider turn/request ID when reported) and `provider_metadata` (thread/turn/request IDs and separate local execution ID). These identifiers are not exposed in normal run/events/publication responses; absent provider IDs are never invented.
 - `POST /api/chats/:id/restore/`: `{revision_id}` selects an accepted historical revision when no run is active; no model call.
 - `GET /api/revisions/:id/`: private revision summary. `GET /api/revisions/:id/export/`: exact single HTML download; same bytes used by preview. `GET /api/revisions/:id/preview/`: `{url}` signed URL on separate preview origin. Optional `GET /api/revisions/:id/source/` for owner source diagnostics.
@@ -30,13 +31,15 @@ model request was sent are separate, potentially unknown outcomes.
 
 `Revision`: `{id,title,number,artifact_hash,design,checks,created_at,accepted,verification:automatic|manual|none,preview_url,export_url,parent_id,report:{status,findings,facts,elapsed_seconds}|null}`. Source files are only returned by private source/diagnostics endpoints. Candidate may be previewed safely but is not accepted/publishable.
 
-`Run`: `{id,chat_id,operation,status,stage,message,prompt,created_at,updated_at,finished_at,base_revision_id,candidate_revision_id,result_revision_id,error:{code,message,details}|null,can_cancel,can_continue,can_retry_unknown,can_confirm,attempts,max_repair_attempts,max_model_calls,elapsed_seconds,events_url,budget,metrics}`. Statuses `queued`, `generating`, `checking`, `succeeded`, `needs_attention`, `unverified`, `failed`, `cancelled`, `unknown`. `can_continue` is true for `needs_attention`, `unverified`, `failed` and `cancelled` unless that run has an unresolved unknown invocation. `can_retry_unknown` exposes a separately acknowledged new attempt for `unknown` or `cancelled` with an unknown invocation and unchanged base revision. Neither capability guarantees admission: budget and active-chat constraints are checked by the backend again. A budget error alone does not hide the continuation button. `unknown` deliberately cannot blind-retry. `stage/message` are concrete Russian user explanations. No fake percent.
+`Run`: `{id,chat_id,operation,status,stage,message,prompt,created_at,updated_at,finished_at,base_revision_id,candidate_revision_id,result_revision_id,error:{code,message,details}|null,can_cancel,can_continue,can_retry_unknown,can_confirm,can_recheck,confirmation,attempts,max_repair_attempts,max_model_calls,elapsed_seconds,events_url,budget,metrics}`. Statuses `queued`, `generating`, `checking`, `succeeded`, `needs_attention`, `unverified`, `failed`, `cancelled`, `unknown`. `can_continue` is true for repairable `needs_attention`, `failed` and `cancelled` runs without unacknowledged unknown invocations in their continuation chain; check-review results do not offer code repair. `can_recheck` offers a provider-free check of a current candidate. `confirmation` is null or `{artifact_hash,report_id,requirements:string[]}` for eligible manual verification. `can_retry_unknown` exposes a separately acknowledged new attempt for terminal `unknown`, `cancelled`, `needs_attention`, `failed` or `unverified` runs with an unacknowledged unknown invocation and unchanged base revision. Rechecks preserve that requirement. Consent records exact invocation IDs, persists through later rechecks and does not cover a subsequent unknown call. Neither capability guarantees admission: budget, prior in-flight calls and active-chat constraints are checked by the backend again. A budget error alone does not hide the continuation button. `unknown` deliberately cannot blind-retry. `stage/message` are concrete Russian user explanations. No fake percent.
 
 `Publication`: `{id,title,author:{id?,username},created_at,updated_at,revision_id,artifact_hash,preview_url,thumbnail_url:null|string,likes,liked,is_owner,source_chat_id:null|owned_chat_id,verification,public_url}`. Unauthenticated public responses omit author id and return `source_chat_id:null`; only the owner sees an undeleted private source chat ID. Frontend fallback thumbnail is a neutral illustration, not a claimed screenshot. Share URL `/games/:id`; preview shell must use sandbox `allow-scripts` (no allow-same-origin) and no credential propagation. The private player route `/play/:revisionId` requires login and keeps the same isolated iframe boundary.
 
-The API stores a shared app budget. `spent_usd` confirmed usage, `reserved_usd` active calls, `unknown_usd` unresolved sent calls. API-equivalent subscription accounting is not a card invoice. Generation defaults to one model call plus at most one repair. Explicit continuation starts another bounded attempt using saved candidate, never whole-history context.
+The API stores a shared app budget. `spent_usd` confirmed usage, `reserved_usd` active calls, `unknown_usd` unresolved sent calls. API-equivalent subscription accounting is not a card invoice. Generation allows one model call plus up to the frozen 2–3 repairs, and stops earlier on uncertainty, repeated failure or regression under completion policy 2. Explicit continuation uses the saved candidate and rechecks uncertain evidence before considering another model call; it never uses whole-history context.
 
-An edit that reports `ok` but changes neither final source files nor the final check suite is a `no_changes` contract failure and gets the same single corrective attempt as other model contract failures. A provider's explicit `unchanged` result with a valid exact base finishes as `needs_attention` with `error.code=unchanged` and its explanation. It creates no revision, runs no browser check and does not retry automatically. The last accepted game remains selected; prose alone is never treated as evidence of an implemented edit.
+An explicit continuation searches saved complete replies through intermediate rechecks before requesting a new inference. Only a reply to its exact candidate base is eligible; source-restart audit events stop reuse of superseded replies. Recheck itself never applies a pending model reply. The worker checks unresolved ancestor delivery/consent again before reserving a model call (`outcome_pending` / `outcome_unknown`); an existing receipt and its original usage remain attached to the original invocation.
+
+An edit that reports `ok` but changes neither final source files nor the final check suite is a `no_changes` contract failure and uses the same saved repair budget as other model contract failures. A provider's explicit `unchanged` result with a valid exact base finishes as `needs_attention` with `error.code=unchanged` and its explanation. It creates no revision, runs no browser check and does not retry automatically. The last accepted game remains selected; prose alone is never treated as evidence of an implemented edit.
 
 ## API сохраняемой очереди модели
 
@@ -77,8 +80,62 @@ GameForge разбирает их в своём адаптере. Детали v
 `max_model_calls` (первый вызов + лимит). Новые задания получают 2 или 3 исправления
 из настройки сервера, по умолчанию 3; после перезапуска лимит не пересчитывается.
 Прежние задания сохраняют старый предел. При ожидании ответа relay счётчик не растёт.
+
+Для ограниченных пилотов create/continue дополнительно принимают `model_call_limit`
+(целое 1–4, включая основной вызов) и `model_call_deadline` (ISO-время с часовым поясом).
+Они входят в идемпотентный payload и сохраняются в Run. Эффективный `max_model_calls`
+равен меньшему из обычного потолка и переданного лимита. Истёкший срок блокирует новый
+inference до резервации и непосредственно перед отправкой; получение квитанции уже
+отправленного запроса остаётся доступным. Срок не гарантирует отмену удалённого inference:
+оператор пилота отдельно отменяет активный Run по общему времени. Run возвращает
+`model_call_deadline` или null. Owner-диагностика содержит времена created/sent/finished
+каждого Invocation, completion_policy и до 200 событий с признаком усечения.
 `stage=repairing` и message показывают номер текущего исправления.
 В `Revision.report` добавлен `stages`: массив `{stage,status}` с дополнительными
 диагностическими полями. Этап `syntax` предшествует `browser`; при ошибке разбора
 второй этап отсутствует. Старые отчёты имеют пустой список этапов. Эти поля не
 заменяют verdict/facts и не разрешают публиковать непроверенную игру.
+
+### Контракт исходников v5 (24.10.2026)
+
+Это внутренний контракт worker/model; обычные HTTP-запросы чата не получают новых прав.
+`incomplete_sources` означает отсутствие локального исходника или исполняемой реализации
+при создании. Ответ/usage сохраняются, Revision ещё нет; следующий шаг остаётся create
+в общем лимите. При исчерпании лимита вызовов Run получает конечный needs_attention с этой
+причиной. Явное новое продолжение старой непринятой заглушки без рабочей базы может
+создать игру заново с событием source_restart и сохранением предыдущей истории.
+Recheck остаётся без inference и не выполняет этот переход.
+
+В repair v5 приложение может сохранить в Invocation.request.module_repair разрешённый
+файл/hash и предел 12288 байт UTF-8. Альтернатива точным заменам — единственная запись
+`{action:"replace_module",path,file_hash,content}` в patches. Старые v2/v3/v4 и обычный edit
+эту запись не принимают. HTML, неразрешённый/нетронутый рабочий файл, неверная база/hash,
+превышение размера и смешивание с другими патчами запрещены. Checks наследуются точно.
+Права формируются приложением; параметр клиента не может их расширить.
+
+### Receipt handling and artifact evidence v7
+
+The HTTP routes are unchanged. A run waiting for an admitted relay job stays active
+until the saved receipt is handled; polling does not consume another model call.
+The model-call deadline blocks new submissions, but not collection of existing receipts.
+Direct transports with an unknown submitted outcome require reconciliation/explicit retry.
+Unsent reservations also survive direct-provider recovery with the same request and UUID.
+They retain their reservation until sending or cancellation; deadlines still block sending.
+
+Reports include `assessment.artifact_evidence` when produced by the new validator:
+version 1, artifact hash, environment, syntax result/script count and per-viewport
+load/error/surface evidence. It is independent of scenario completeness. Positive
+artifact gates alone never mean that gameplay requirements passed. Empty or incomplete
+requirements do not enable `can_confirm`. Revised model scenarios retain explicit review.
+Findings may contain a bounded `diagnostic` from the game frame (observed types,
+failed step, controls and geometry); no full DOM or host data is exposed.
+Every shortening sets `diagnostic.truncated`, including nested values and feedback limits.
+For an uncovered viewport, `artifact_evidence.viewports[].probes` records any replay of
+already successful real inputs. Replays supply artifact evidence only. A
+`surface_not_observed` finding means missing scenario evidence, not infrastructure failure;
+it can permit one source-preserving check repair with verified loading evidence, but
+cannot enable confirmation or code repair on its own.
+
+V7 source-repair permission is internal application data, not a new client capability.
+It binds the source/check hashes and current report; source repair preserves the entire
+scenario list, including its order. Old frozen invocation contracts remain supported.

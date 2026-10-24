@@ -58,6 +58,9 @@ class Run(models.Model):
     attempts = models.PositiveSmallIntegerField(default=0)
     max_repair_attempts = models.PositiveSmallIntegerField(default=3)
     allow_model_calls = models.BooleanField(default=True)
+    completion_policy = models.PositiveSmallIntegerField(default=2)
+    model_call_limit = models.PositiveSmallIntegerField(null=True, blank=True)
+    model_call_deadline = models.DateTimeField(null=True, blank=True)
     cancel_requested = models.BooleanField(default=False)
     fence = models.UUIDField(null=True)
     lease_until = models.DateTimeField(null=True)
@@ -83,7 +86,8 @@ class Run(models.Model):
 
     @property
     def max_model_calls(self):
-        return 1 + self.max_repair_attempts
+        maximum = 1 + self.max_repair_attempts
+        return min(maximum, self.model_call_limit) if self.model_call_limit is not None else maximum
 
 
 class Message(models.Model):
@@ -112,6 +116,7 @@ class Revision(models.Model):
     design = models.JSONField(default=dict)
     checks = models.JSONField(default=list)
     diff = models.JSONField(default=list)
+    checks_review_required = models.BooleanField(default=False)
     accepted = models.BooleanField(default=False)
     verification = models.CharField(max_length=16, default="none")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -135,6 +140,8 @@ class CheckReport(models.Model):
     screenshot_base64 = models.TextField(blank=True)
     screenshot_mime = models.CharField(max_length=30, default="image/png")
     identity = models.CharField(max_length=64, db_index=True)
+    checks = models.JSONField(default=list)
+    assessment = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

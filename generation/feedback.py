@@ -31,7 +31,7 @@ def _text(value, limit=MAX_MESSAGE_CHARS):
     text = _URL.sub(_safe_url, str(value))
     text = _CREDENTIAL.sub(r"\1[redacted]", text)
     text = _BEARER.sub("Bearer [redacted]", text)
-    return text if len(text) <= limit else text[: limit - 1] + "…"
+    return text if limit is None or len(text) <= limit else text[: limit - 1] + "…"
 
 
 def _context(value, depth=0):
@@ -70,7 +70,26 @@ def _finding(source):
     for key in ("before", "after", "expected"):
         if key in source:
             result[key] = _bounded_context(source[key])
+    if isinstance(source.get("diagnostic"), dict):
+        result["diagnostic"] = _diagnostic(source["diagnostic"])
     return result
+
+
+def _diagnostic(source):
+    from validation.diagnostics import bounded
+
+    def scrub(value):
+        if isinstance(value, str):
+            # Let bounded() mark any shortening; redaction alone is not truncation.
+            return _text(value, None)
+        if isinstance(value, dict):
+            return {k: scrub(v) for k, v in value.items() if k.lower() not in _PRIVATE_KEYS}
+        if isinstance(value, list):
+            return [scrub(v) for v in value]
+        return value
+    allowed = {"check_id", "step_index", "step", "observation", "before", "after", "expected",
+               "actual_type", "viewport", "controls", "truncated", "state", "selector_matches", "unavailable"}
+    return bounded(scrub({k: v for k, v in source.items() if k in allowed}), 4096)
 
 
 def _unique(findings, *, root_errors=False):
@@ -97,6 +116,14 @@ def _unique(findings, *, root_errors=False):
         elif len(result) < MAX_FINDINGS:
             seen[key] = item
             result.append(item)
+    remaining = 4096
+    for item in result:
+        if "diagnostic" in item:
+            size = len(json.dumps(item["diagnostic"], ensure_ascii=False).encode())
+            if size > remaining:
+                item.pop("diagnostic")
+            else:
+                remaining -= size
     return result
 
 

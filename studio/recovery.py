@@ -39,12 +39,16 @@ def recover_saved_response(invocation_id, *, apply=False):
         raise DomainError("invalid_saved_json", "Сохранённый ответ не является полным JSON.") from exc
     response, paths = normalize_response(decoded)
     # Pre-versioned stored calls used the v2 wire contract.
-    saved_request = {"generation_contract": {"pipeline_version": 2}, **source.request}
+    saved_request = {**source.request, "generation_contract": {
+        "pipeline_version": 2, **(source.request.get("generation_contract") or {}),
+    }}
     validate_response(response, operation=source.request["operation"], schema=response_schema(saved_request))
     base = chat.current_revision
     artifact = materialize(
         response, operation=source.request["operation"], base_revision=base_id,
         files=base.files if base else None, previous_checks=base.checks if base else None,
+        generation_contract=saved_request["generation_contract"],
+        module_repair=source.request.get("module_repair") if base and not base.accepted else None,
     )
     if artifact.get("status") == "unchanged":
         raise DomainError("no_saved_candidate", "Ответ не содержит нового кандидата игры.")

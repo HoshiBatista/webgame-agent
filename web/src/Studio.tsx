@@ -73,6 +73,7 @@ export default function Studio() {
   const [customReason, setCustomReason] = useState('');
   const [feedbackDone, setFeedbackDone] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmEvidence, setConfirmEvidence] = useState<Run['confirmation']>(null);
   const [diagnostics, setDiagnostics] = useState<unknown | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
   const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
@@ -237,7 +238,7 @@ export default function Studio() {
     }
   }
   async function act(
-    action: 'cancel' | 'continue' | 'confirm',
+    action: 'cancel' | 'continue' | 'confirm' | 'recheck',
     note = '',
     acceptUnknownCost = false,
   ) {
@@ -265,8 +266,14 @@ export default function Studio() {
               }),
             }
           : action === 'confirm'
-            ? { confirmed: true }
-            : {},
+            ? {
+                confirmed: true,
+                artifact_hash: confirmEvidence?.artifact_hash,
+                report_id: confirmEvidence?.report_id,
+              }
+            : action === 'recheck'
+              ? { idempotency_key: operationKey({ action, run: latestRun.id }) }
+              : {},
       );
       idempotency.current = newKey();
       lastPayload.current = '';
@@ -511,7 +518,9 @@ export default function Studio() {
               busy={busy}
               onCancel={() => void act('cancel')}
               onContinue={(note, consent) => void act('continue', note, consent)}
+              onRecheck={() => void act('recheck')}
               onConfirm={() => {
+                setConfirmEvidence(latestRun.confirmation);
                 if (chat?.candidate_revision) setSelectedRevision(chat.candidate_revision.id);
                 setShowConfirm(true);
               }}
@@ -810,6 +819,13 @@ export default function Studio() {
               кандидат: проверьте управление, основное действие и условие победы или поражения.
             </p>
             <p>Эта версия будет отмечена как проверенная вами, а не автоматически.</p>
+            {confirmEvidence?.requirements.length ? (
+              <ul>
+                {confirmEvidence.requirements.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
             <button
               className="button button-coral"
               disabled={busy}

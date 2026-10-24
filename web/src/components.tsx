@@ -371,13 +371,14 @@ export const runLabels: Record<Run['status'], string> = {
   checking: 'Проверяем код и работу игры',
   succeeded: 'Готово, можно играть',
   needs_attention: 'Нужно ваше решение',
-  unverified: 'Нужна проверка человеком',
+  unverified: 'Игра сохранена — нужна ваша проверка',
   failed: 'Не получилось завершить',
   cancelled: 'Задание отменено',
   unknown: 'Ответ не получен полностью',
 };
 const pendingRunLabels: Record<string, string> = {
   repairing: 'Исправляем найденную проблему',
+  repairing_checks: 'Уточняем проверки сохранённой игры',
   waiting_model: 'Ожидаем ответ модели',
   waiting_admin: 'Нужна помощь администратора',
 };
@@ -387,6 +388,7 @@ export function RunStatus({
   onCancel,
   onContinue,
   onConfirm,
+  onRecheck,
   busy,
 }: {
   run: Run;
@@ -394,6 +396,7 @@ export function RunStatus({
   onCancel: () => void;
   onContinue: (prompt: string, acceptUnknownCost?: boolean) => void;
   onConfirm: () => void;
+  onRecheck?: () => void;
   busy: boolean;
 }) {
   const [comment, setComment] = useState('');
@@ -426,6 +429,13 @@ export function RunStatus({
         {run.elapsed_seconds > 0 && <small>{formatDuration(run.elapsed_seconds)}</small>}
       </div>
       {run.error && <p className="run-error">{run.error.message}</p>}
+      {run.confirmation?.requirements.length ? (
+        <ul>
+          {run.confirmation.requirements.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
       {run.status === 'unknown' && (
         <p>
           Сохранённые версии и данные запроса не потеряны. Неизвестный расход остаётся в бюджете;
@@ -483,6 +493,11 @@ export function RunStatus({
         {run.can_confirm && (
           <button className="button button-small" disabled={busy} onClick={onConfirm}>
             <Check size={15} /> Я проверил игру
+          </button>
+        )}
+        {run.can_recheck && onRecheck && (
+          <button className="button button-small button-quiet" disabled={busy} onClick={onRecheck}>
+            Повторить проверку без генерации
           </button>
         )}
       </div>

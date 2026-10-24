@@ -15,7 +15,11 @@ from urllib.parse import urlsplit
 from playwright.sync_api import TimeoutError as BrowserTimeout
 from playwright.sync_api import ViewportSize, sync_playwright
 
+from .checks import INPUT, NUMERIC, RELATIVE, check_issue, comparable, numeric, parse_number
 from .contracts import VIEWPORTS, implementation_hash
+from .diagnostics import collect as collect_diagnostic
+from .evidence import gates as evidence_gates
+from .evidence import receipt as artifact_receipt
 from .syntax import check_javascript
 
 ENVIRONMENT = "mini-browser-v1"
@@ -108,16 +112,26 @@ def observe(frame, observation, operator):
         raise InvalidCheck("У наблюдения отсутствует selector.")
     locator = frame.locator(selector)
     if operator == "visible":
-        return locator.count() == 1 and locator.is_visible()
+        if locator.count() != 1:
+            raise InvalidCheck(f"Наблюдение {selector!r} должно однозначно находить один элемент.")
+        return locator.is_visible()
     if locator.count() != 1:
         raise InvalidCheck(f"Наблюдение {selector!r} должно однозначно находить один элемент.")
-    if source == "text":
-        return locator.inner_text(timeout=1200)
-    if source == "attribute":
+    if source in {"text", "text_number"}:
+        value = locator.inner_text(timeout=1200)
+        try:
+            return parse_number(value) if source == "text_number" else value
+        except ValueError as exc:
+            raise InvalidCheck(str(exc)) from exc
+    if source in {"attribute", "attribute_number"}:
         attribute = observation.get("attribute", "")
         if not attribute or attribute.lower() in {"data-passed", "passed", "data-test-passed"}:
             raise InvalidCheck("Нельзя принимать самоотчёт проверки.")
-        return locator.get_attribute(attribute, timeout=1200)
+        value = locator.get_attribute(attribute, timeout=1200)
+        try:
+            return parse_number(value) if source == "attribute_number" else value
+        except ValueError as exc:
+            raise InvalidCheck(str(exc)) from exc
     raise InvalidCheck("Неизвестный тип наблюдения.")
 
 
@@ -213,23 +227,18 @@ def run(payload):
     artifact_hash = hashlib.sha256(html.encode()).hexdigest()
     if artifact_hash != payload.get("artifact_hash"):
         raise ValueError("artifact hash mismatch")
-    facts, findings = [], []
+    facts: list[dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
     screenshot = None
     required = {"start", "control", "outcome"}
-    if not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12:
-        return {
-            "status": "unverified",
-            "findings": [
-                {
-                    "code": "incomplete_checks",
-                    "message": "Нужны короткие проверки начала, управления и игрового исхода.",
-                }
-            ],
-            "facts": [],
-            "artifact_hash": artifact_hash,
-            "environment": environment,
-            "elapsed_seconds": 0,
-        }
+    incomplete = not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12 or len({c.get("id") for c in checks}) != len(checks)
+    if incomplete:
+        findings.append({"code": "incomplete_checks", "message": "Нужны проверки начала, управления и исхода."})
+    measurements = []
+    successful_routes: list[dict[str, Any]] = []
+    covered = {c.get("viewport", "mobile") for c in checks}
+    probes = [{"id": "artifact-" + name, "viewport": name, "_artifact_probe": True} for name in VIEWPORTS
+              if name not in covered]
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
             headless=True,
@@ -243,7 +252,9 @@ def run(payload):
                 "status": "failed",
                 "stage": "syntax",
                 "stages": [{"stage": "syntax", "status": "failed", "scripts": script_count}],
-                "findings": [syntax_error],
+                "findings": [syntax_error, *findings],
+                "artifact_evidence": artifact_receipt(artifact_hash, environment,
+                    {"status": "failed", "scripts": script_count}, []),
                 "facts": [],
                 "artifact_hash": artifact_hash,
                 "environment": environment,
@@ -251,7 +262,12 @@ def run(payload):
                 "screenshot_base64": "",
                 "screenshot_mime": "image/jpeg",
             }
-        for check in checks:
+        for check in [*checks, *probes]:
+            probe = check.get("_artifact_probe") is True
+            # These exact inputs have already exposed a scene in a real scenario.
+            # Replaying them proves only artifact gates in the other viewport.
+            route_check = min(successful_routes, key=lambda c: (c["category"] != "start", len(c["steps"]))) \
+                if probe and successful_routes else None
             size = VIEWPORTS[check.get("viewport", "mobile")]
             viewport: ViewportSize = {"width": size["width"], "height": size["height"]}
             # Opaque sandbox origins cannot register service workers. Playwright's
@@ -309,84 +325,139 @@ def run(payload):
                 "status": "unverified",
                 "actions": [],
             }
+            frame = None
+            loaded = False
+            step_index = None
+            before = after = None
             try:
-                steps = check.get("steps", [])
-                if len(steps) > 30 or sum(s.get("ms", 0) for s in steps) > 10000:
-                    raise InvalidCheck("Сценарий слишком длинный для короткой автоматической проверки.")
-                if check.get("category") in {"control", "outcome"} and not any(
-                    s.get("action")
-                    in {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
-                    for s in steps
-                ):
-                    raise InvalidCheck("Проверка управления должна выполнять реальный ввод.")
                 page.goto("https://harness.invalid/", wait_until="load", timeout=5000)
                 frame = page.frames[1]
                 frame.wait_for_load_state("load", timeout=2000)
+                loaded = True
+                if probe:
+                    if route_check:
+                        for step_index, step in enumerate(route_check["steps"]):
+                            if step["action"] == "checkpoint":
+                                continue
+                            if step["action"] == "wait_for":
+                                page.wait_for_timeout(step["ms"])
+                            else:
+                                action(page, frame, step)
+                            fact["actions"].append(step)
+                        page.wait_for_timeout(40)
+                    raise InvalidCheck("artifact_probe")
+                issue = check_issue(check)
+                if issue:
+                    raise InvalidCheck(issue)
+                steps = check.get("steps", [])
+                if len(steps) > 30 or sum(s.get("ms", 0) for s in steps) > 10000:
+                    raise InvalidCheck("Сценарий слишком длинный для короткой автоматической проверки.")
                 observation, expect = check["observation"], check["expect"]
                 before = None
-                if expect["operator"] in {"changed", "increased", "decreased"}:
+                if expect["operator"] in RELATIVE and not any(s["action"] == "checkpoint" for s in steps):
                     before = observe(frame, observation, expect["operator"])
-                for step in steps:
-                    action(page, frame, step)
+                wait_ms = 40
+                for step_index, step in enumerate(steps):
+                    if step["action"] == "checkpoint":
+                        before = observe(frame, observation, expect["operator"])
+                    elif step["action"] == "wait_for":
+                        wait_ms = step["ms"]
+                    else:
+                        action(page, frame, step)
                     fact["actions"].append(step)
-                # One animation frame worth of settling, not a second model/reviewer pass.
-                page.wait_for_timeout(40)
-                after = observe(frame, observation, expect["operator"])
-                fact.update(before=before, after=after, expected=expect)
-                fact["status"] = "passed" if compare(before, after, expect) else "failed"
-                surface = frame.evaluate("""() => ({canvases:[...document.querySelectorAll('canvas')].map(c=>{
-                  const rect=c.getBoundingClientRect();
-                  const info={width:c.width,height:c.height,visible:rect.width>0&&rect.height>0,
-                    pixel_evidence:'unavailable'};
-                  if (!info.visible || !c.width || !c.height) return info;
-                  try {
-                    // Existing WebGL contexts return null; their framebuffer must not
-                    // be declared empty because a 2D readback is unavailable.
-                    if (!c.getContext('2d')) return info;
-                    const sample=document.createElement('canvas');sample.width=32;sample.height=32;
-                    const ctx=sample.getContext('2d');ctx.drawImage(c,0,0,32,32);
-                    const data=ctx.getImageData(0,0,32,32).data;
-                    let uniform=true,transparent=true;
-                    for(let i=0;i<data.length;i+=4){
-                      if(data[i+3]!==0) transparent=false;
-                      if(data[i]!==data[0]||data[i+1]!==data[1]||data[i+2]!==data[2]||data[i+3]!==data[3]) uniform=false;
-                    }
-                    info.pixel_evidence=transparent?'transparent':uniform?'uniform':'varied';
-                  } catch (_) { /* Readback failure is absence of evidence, not a defect. */ }
-                  return info;
-                }), overflow:document.documentElement.scrollWidth>innerWidth+2})""")
-                fact["surface"] = surface
-                if not any(c["width"] > 0 and c["height"] > 0 and c["visible"] for c in surface["canvases"]):
-                    fact["status"] = "failed"
+                deadline = time.monotonic() + wait_ms / 1000
+                while True:
+                    try:
+                        after = observe(frame, observation, expect["operator"])
+                        if expect["operator"] in NUMERIC and not (numeric(before) and numeric(after)):
+                            raise InvalidCheck("Числовое сравнение получило нечисловое состояние.")
+                        if expect["operator"] in {"eq", "not_eq"}:
+                            value = expect.get("value")
+                            if not comparable(after, value):
+                                raise InvalidCheck("Тип наблюдаемого значения несовместим с ожиданием.")
+                        matched = compare(before, after, expect)
+                    except InvalidCheck:
+                        if time.monotonic() >= deadline:
+                            raise
+                        page.wait_for_timeout(min(25, max(1, (deadline - time.monotonic()) * 1000)))
+                        continue
+                    if matched or time.monotonic() >= deadline:
+                        break
+                    page.wait_for_timeout(min(25, max(1, (deadline - time.monotonic()) * 1000)))
+                fact.update(before=before, after=after, expected=expect, comparison=matched)
+                fact["status"] = "passed" if matched else "failed"
+            except (InvalidCheck, KeyError, ValueError) as exc:
+                if not probe:
+                    fact["detail"] = str(exc)[:800]
                     findings.append(
-                        {
-                            "code": "canvas_missing",
-                            "check_id": check.get("id"),
-                            "message": "Не обнаружена видимая игровая Canvas/WebGL-сцена.",
-                        }
+                        {"code": "invalid_check", "check_id": check.get("id"), "message": fact["detail"]}
                     )
-                if surface["overflow"] and check.get("viewport") == "mobile":
-                    fact["status"] = "failed"
-                    findings.append(
-                        {
-                            "code": "mobile_overflow",
-                            "check_id": check.get("id"),
-                            "message": "Игра выходит за ширину телефонного экрана.",
-                        }
-                    )
-                if screenshot is None:
-                    screenshot = base64.b64encode(page.screenshot(type="jpeg", quality=60)).decode()
-            except (InvalidCheck, BrowserTimeout, KeyError, ValueError) as exc:
+            except BrowserTimeout as exc:
                 fact["detail"] = str(exc)[:800]
-                findings.append(
-                    {"code": "check_unverified", "check_id": check.get("id"), "message": fact["detail"]}
-                )
+                if not probe:
+                    findings.append({"code": "check_timeout", "check_id": check.get("id"),
+                                     "message": fact["detail"]})
             except Exception as exc:
                 fact["detail"] = str(exc)[:800]
                 findings.append(
                     {"code": "browser_error", "check_id": check.get("id"), "message": fact["detail"]}
                 )
                 fact["status"] = "failed"
+            # These gates run even if a selector/state/test is defective.
+            if frame is not None:
+                try:
+                    surface = frame.evaluate("""() => ({canvases:[...document.querySelectorAll('canvas')].map(c=>{
+                      const rect=c.getBoundingClientRect();
+                      const info={width:c.width,height:c.height,visible:rect.width>0&&rect.height>0,
+                        pixel_evidence:'unavailable'};
+                      if (!info.visible || !c.width || !c.height) return info;
+                      try {
+                        // Existing WebGL contexts return null; their framebuffer must not
+                        // be declared empty because a 2D readback is unavailable.
+                        if (!c.getContext('2d')) return info;
+                        const sample=document.createElement('canvas');sample.width=32;sample.height=32;
+                        const ctx=sample.getContext('2d');ctx.drawImage(c,0,0,32,32);
+                        const data=ctx.getImageData(0,0,32,32).data;
+                        let uniform=true,transparent=true;
+                        for(let i=0;i<data.length;i+=4){
+                          if(data[i+3]!==0) transparent=false;
+                          if(data[i]!==data[0]||data[i+1]!==data[1]||data[i+2]!==data[2]||data[i+3]!==data[3]) uniform=false;
+                        }
+                        info.pixel_evidence=transparent?'transparent':uniform?'uniform':'varied';
+                      } catch (_) { /* Readback failure is absence of evidence, not a defect. */ }
+                      return info;
+                    }), overflow:document.documentElement.scrollWidth>innerWidth+2})""")
+                    fact["surface"] = surface
+                    if not any(c["width"] > 0 and c["height"] > 0 and c["visible"] for c in surface["canvases"]):
+                        # A broken selector or a pre-start page is not proof that
+                        # the implementation lacks a scene. Keep real defects hard.
+                        confirmed_missing = not probe and fact.get("comparison") is True and any(
+                            s["action"] in INPUT for s in fact["actions"])
+                        if confirmed_missing:
+                            fact["status"] = "failed"
+                        findings.append(
+                            {
+                                "code": "canvas_missing" if confirmed_missing else "surface_not_observed",
+                                "check_id": check.get("id"),
+                                "message": "Не обнаружена видимая игровая Canvas/WebGL-сцена.",
+                            }
+                        )
+                    if surface["overflow"] and check.get("viewport") == "mobile":
+                        fact["status"] = "failed"
+                        findings.append(
+                            {
+                                "code": "mobile_overflow",
+                                "check_id": check.get("id"),
+                                "message": "Игра выходит за ширину телефонного экрана.",
+                            }
+                        )
+                    if screenshot is None:
+                        screenshot = base64.b64encode(page.screenshot(type="jpeg", quality=60)).decode()
+                except Exception as exc:
+                    if fact["status"] != "failed":
+                        fact["status"] = "unverified"
+                    findings.append({"code": "surface_unverified", "check_id": check.get("id"),
+                                     "message": str(exc)[:500]})
             if errors or requests:
                 fact["status"] = "failed"
                 findings.append(
@@ -399,7 +470,7 @@ def run(payload):
                         "locations": locations,
                     }
                 )
-            if fact["status"] == "failed" and not errors and not requests:
+            if fact.get("comparison") is False and not errors and not requests:
                 findings.append(
                     {
                         "code": "effect_mismatch",
@@ -410,11 +481,37 @@ def run(payload):
                         "expected": check.get("expect"),
                     }
                 )
-            facts.append(fact)
+            if fact["status"] != "passed" and any(f.get("check_id") == check.get("id") for f in findings):
+                diagnostic_check = {**route_check, "id": check["id"]} if probe and route_check else check
+                diagnostic = collect_diagnostic(frame, diagnostic_check, step_index, before, after, OBSERVE_STATE)
+                for finding in findings:
+                    if finding.get("check_id") == check.get("id"):
+                        finding["diagnostic"] = diagnostic
+            measurement = {"viewport": check.get("viewport", "mobile"), "loaded": loaded,
+                           "errors": errors, "requests": requests, "surface": fact.get("surface")}
+            if probe:
+                measurement["probe"] = {"source_check_id": route_check["id"] if route_check else None,
+                                        "actions": fact["actions"]}
+            measurements.append(measurement)
+            if not probe:
+                facts.append(fact)
+                if fact["status"] == "passed" and any(s["action"] in INPUT for s in fact["actions"]):
+                    successful_routes.append(check)
             context.close()
         browser.close()
     statuses = {f["status"] for f in facts}
-    status = "failed" if "failed" in statuses else "unverified" if "unverified" in statuses else "passed"
+    status = "failed" if "failed" in statuses else "unverified" if "unverified" in statuses or incomplete else "passed"
+    evidence = artifact_receipt(artifact_hash, environment, {"status": "passed", "scripts": script_count}, measurements)
+    gates = evidence_gates(evidence)
+    if gates["surface"]:
+        # A pre-start instruction can pass before Canvas exists; another real
+        # scenario may already prove the surface in that viewport. Keep failed
+        # input/assertion facts, but do not invent a missing artifact gate.
+        findings = [f for f in findings if f["code"] != "surface_not_observed"]
+    if any(f["code"] in {"runtime_or_network", "mobile_overflow", "canvas_missing"} for f in findings):
+        status = "failed"
+    elif not all(gates.values()):
+        status = "unverified"
     observed = [
         canvas
         for fact in facts
@@ -434,6 +531,8 @@ def run(payload):
             status = "unverified"
     return {
         "status": status,
+        "gates": gates,
+        "artifact_evidence": evidence,
         "stage": "browser",
         "stages": [
             {"stage": "syntax", "status": "passed", "scripts": script_count},

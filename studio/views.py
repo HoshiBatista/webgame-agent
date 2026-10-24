@@ -217,6 +217,14 @@ def continue_view(request, ident):
 
 
 @api_view(["POST"])
+def recheck_view(request, ident):
+    original = owned_run(request, ident)
+    # Owner-only local validation needs no access to the model provider.
+    data = {"idempotency_key": request.data.get("idempotency_key") or str(uuid.uuid4())}
+    return Response(run_data(create_run(original.chat, data, continued_from=original, check_only=True)), status=202)
+
+
+@api_view(["POST"])
 def confirm_view(request, ident):
     if request.data.get("confirmed") is not True:
         raise DomainError(
@@ -226,8 +234,19 @@ def confirm_view(request, ident):
         original = owned_run(request, ident)
         chat = Chat.objects.select_for_update().get(pk=original.chat_id)
         run = Run.objects.select_for_update().get(pk=original.pk)
-        if run.status != "unverified" or not run.candidate_revision:
+        from .acceptance import confirmation_report
+        from .tasks import check_identity
+
+        report = confirmation_report(run)
+        if report is None:
             raise DomainError("cannot_confirm", "Это задание не ожидает ручной проверки.", 409)
+        if (
+            request.data.get("artifact_hash") != run.candidate_revision.artifact_hash
+            or request.data.get("report_id") != report.id
+        ):
+            raise DomainError("confirmation_changed", "Результат проверки изменился. Откройте его заново.", 409)
+        if report.identity != check_identity(run.candidate_revision):
+            raise DomainError("stale_verification", "Правила проверки изменились. Повторите проверку игры.", 409)
         if (
             chat.current_revision_id != run.base_revision_id
             or chat.runs.filter(status__in=Run.ACTIVE).exists()
@@ -236,7 +255,8 @@ def confirm_view(request, ident):
         revision = run.candidate_revision
         revision.accepted = True
         revision.verification = "manual"
-        revision.save(update_fields=["accepted", "verification"])
+        revision.checks_review_required = False
+        revision.save(update_fields=["accepted", "verification", "checks_review_required"])
         chat.current_revision = revision
         if not chat.title:
             chat.title = revision.title
@@ -314,10 +334,17 @@ def diagnostics_view(request, ident):
                     "provider_invocation_id": i.provider_invocation_id,
                     "provider_metadata": i.provider_metadata,
                     "elapsed_seconds": i.elapsed_seconds,
+                    "created_at": i.created_at.isoformat(),
+                    "sent_at": i.sent_at.isoformat() if i.sent_at else None,
+                    "finished_at": i.finished_at.isoformat() if i.finished_at else None,
                 }
                 for i in run.invocations.order_by("attempt")
             ],
             "revisions": [revision_data(v) for v in run.revisions.all()],
+            "completion_policy": run.completion_policy,
+            "events": [{"id": e.id, "kind": e.kind, "created_at": e.created_at.isoformat(),
+                        "details": e.details} for e in run.events.order_by("id")[:200]],
+            "events_truncated": run.events.count() > 200,
         }
     )
 

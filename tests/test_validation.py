@@ -196,7 +196,7 @@ def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
     import validation.contracts as contracts
 
     directory = Path(contracts.__file__).parent
-    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py"):
+    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py"):
         (tmp_path / name).write_bytes((directory / name).read_bytes())
     assert implementation_hash(tmp_path) == implementation_hash()
     original = implementation_hash(tmp_path)
@@ -509,3 +509,74 @@ def test_browser_does_not_execute_invalid_fraction_input(coordinate):
 
     with pytest.raises(InvalidCheck):
         action(None, None, {"action": "click_fraction", "selector": "canvas", "x": coordinate, "y": 0.5})
+
+
+@pytest.mark.browser
+def test_incomplete_scenarios_do_not_hide_javascript_syntax():
+    html = '<canvas width="300" height="200"></canvas><script>return 1;</script>'
+    report = validate(html, [], artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report['status'] == 'failed'
+    assert any(f['code'] == 'javascript_syntax' for f in report['findings'])
+    assert report['stages'][0]['stage'] == 'syntax'
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('kind', ['empty', 'runtime', 'network', 'type', 'missing', 'getter'])
+def test_independent_receipts_and_bounded_diagnostics(kind):
+    from generation.feedback import focus_findings
+    from validation.checks import gates_verified
+
+    html = fixture_html(network=kind == 'network')
+    checks = fixture_checks()
+    if kind == 'empty':
+        checks = []
+    elif kind == 'runtime':
+        html += '<script>throw new Error("broken game")</script>'
+        checks = []
+    elif kind == 'type':
+        html += '<script>window.visibleData=[1,2];</script>'
+        checks[1]['observation'] = {'source': 'state', 'path': 'visibleData'}
+        checks[1]['expect'] = {'operator': 'eq', 'value': 'wrong type'}
+    elif kind == 'getter':
+        html += '<script>Object.defineProperty(window,"hiddenData",{get(){throw new Error("getter executed")}});</script>'
+        checks[1]['observation'] = {'source': 'state', 'path': 'hiddenData'}
+    elif kind == 'missing':
+        checks[1]['observation'] = {'source': 'text', 'selector': '#missing'}
+    report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report['artifact_evidence']['artifact_hash'] == report['artifact_hash']
+    assert {v['viewport'] for v in report['artifact_evidence']['viewports']} == {'mobile', 'desktop'}
+    if kind in {'runtime', 'network'}:
+        assert report['status'] == 'failed'
+        assert not gates_verified(report, checks)
+    elif kind == 'empty':
+        assert report['status'] == 'unverified'
+        assert gates_verified(report, checks)
+        assert not report['facts']
+    else:
+        finding = next(f for f in report['findings'] if f.get('check_id') == checks[1]['id'])
+        diagnostic = finding['diagnostic']
+        assert len(json.dumps(diagnostic, ensure_ascii=False).encode()) <= 8192
+        assert diagnostic['controls'] and 'viewport' in diagnostic
+        assert 'diagnostic' in focus_findings([finding])[0]
+        if kind == 'type':
+            assert diagnostic['actual_type'] == 'list'
+        if kind == 'missing':
+            assert diagnostic['selector_matches'] == 0
+        if kind == 'getter':
+            assert diagnostic['state']['missing'] is True
+            assert not any('getter executed' in e for v in report['artifact_evidence']['viewports'] for e in v['errors'])
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('started', [False, True])
+def test_canvas_created_only_after_start_is_not_inferred_broken_from_initial_probe(started):
+    html = fixture_html().replace('<canvas ', '<canvas style="display:none" ')
+    html = html.replace('state.active=true;', 'state.active=true;c.style.display="block";')
+    checks = fixture_checks() if started else []
+    report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    if started:
+        assert report['status'] == 'passed', report['findings']
+    else:
+        assert report['status'] == 'unverified'
+        assert report['gates']['surface'] is False
+        assert 'canvas_missing' not in {f['code'] for f in report['findings']}

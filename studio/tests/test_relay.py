@@ -202,3 +202,67 @@ def test_late_pending_diagnostics_do_not_overwrite_committed_result(environment)
     fresh.refresh_from_db()
     assert fresh.state == "settled"
     assert fresh.provider_metadata.get("relay_wait", {}).get("code") != "late"
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize('continued', [False, True])
+def test_check_repair_pending_reentry_keeps_job_and_consumes_receipt_after_deadline(environment, monkeypatch, continued):
+    from studio.tests.test_check_repair import browser
+
+    run, store, executor, calls = environment
+    original_fixture = fixture_response()
+    def incomplete():
+        from copy import deepcopy
+        response = deepcopy(original_fixture)
+        response['checks'] = response['checks'][:2]
+        return response
+    monkeypatch.setattr('studio.tests.test_relay.fixture_response', incomplete)
+    if continued:
+        run.model_call_limit = 1
+        run.save(update_fields=['model_call_limit'])
+    with patch('validation.service.validate', side_effect=browser):
+        process_run(str(run.id))
+        executor.step()
+        executor.step()
+        process_run(str(run.id))
+        if continued:
+            run.refresh_from_db()
+            assert run.status not in run.ACTIVE
+            run = create_run(run.chat, {'idempotency_key': 'continue-checks'}, continued_from=run)
+            process_run(str(run.id))
+        run.refresh_from_db()
+        inv = run.invocations.order_by('attempt').last()
+        assert inv.request['operation'] == 'check_repair' and inv.state == 'sent'
+        ident = inv.id
+        for _ in range(2):
+            process_run(str(run.id))
+            run.refresh_from_db()
+            assert run.status in run.ACTIVE
+            assert run.invocations.filter(state='sent').get().id == ident
+        assert calls == [1]
+        # The deadline/call cap govern admission, not retrieval of an admitted job.
+        run.model_call_deadline = timezone.now() - timedelta(seconds=1)
+        run.model_call_limit = run.attempts
+        run.save(update_fields=['model_call_deadline', 'model_call_limit'])
+        executor.step()
+        job_id, receipt = executor.pending
+        policy = inv.request['check_repair']
+        repaired = []
+        for entry in policy['requirements']:
+            scenario = next(c for c in original_fixture['checks'] if c['category'] == entry['category'])
+            repaired.append({**scenario, **entry})
+        response = {'status': 'ok', 'operation': 'check_repair', 'base_revision': inv.request['base_revision'],
+                    'artifact_hash': policy['artifact_hash'], 'checks_hash': policy['checks_hash'],
+                    'checks': repaired, 'message': 'Сценарии восстановлены.'}
+        receipt['result']['response']['choices'][0]['message']['content'] = json.dumps(response)
+        executor.pending = (job_id, receipt)
+        executor.step()
+        process_run(str(run.id))
+    run.refresh_from_db()
+    inv.refresh_from_db()
+    assert run.status == 'unverified', run.error
+    assert inv.state == 'settled' and inv.revision_id
+    assert inv.usage['output_tokens'] == 50
+    assert inv.revision.checks_review_required
+    assert inv.revision.files == inv.revision.parent.files
+    assert calls == [1, 1]

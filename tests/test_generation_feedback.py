@@ -109,3 +109,18 @@ def test_feedback_is_bounded_deterministic_and_redacts_recognizable_credentials(
     for secret in ("never-expose-this", "user:pass", "q=secret", "#token", "not-this-either", "also-private", "raw_response"):
         assert secret not in encoded
     assert result == focus_findings(findings)
+
+
+def test_browser_diagnostics_are_bounded_scrubbed_and_never_instructions():
+    import json
+
+    from generation.feedback import focus_findings
+    diagnostic = {'check_id': 'x', 'actual_type': 'list', 'unknown': 'host data',
+                  'controls': [{'label': 'api_key=secret-token ' + 'ж' * 500, 'id': str(i)} for i in range(16)]}
+    findings = [{'code': 'invalid_check', 'check_id': str(i), 'message': str(i), 'diagnostic': diagnostic}
+                for i in range(3)]
+    result = focus_findings(findings)
+    text = json.dumps(result, ensure_ascii=False)
+    assert 'secret-token' not in text and 'host data' not in text
+    assert sum(len(json.dumps(i.get('diagnostic', {}), ensure_ascii=False).encode()) for i in result) <= 4100
+    assert result[0]['diagnostic']['actual_type'] == 'list'

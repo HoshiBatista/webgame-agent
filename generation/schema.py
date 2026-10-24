@@ -140,15 +140,51 @@ RESPONSE_SCHEMA = obj(
 )
 
 
-CONTRACT_VERSION = 3
+# Keep persisted v2/v3 wire contracts byte-for-byte compatible.
+LEGACY_CHECK_SCHEMA = deepcopy(CHECK_SCHEMA)
+RESPONSE_SCHEMA = deepcopy(RESPONSE_SCHEMA)
+CHECK_SCHEMA["properties"]["observation"]["anyOf"].extend([
+    obj({"source": {"enum": ["text_number"]}, "selector": string(minLength=1, maxLength=200)}),
+    obj({"source": {"enum": ["attribute_number"]}, "selector": string(minLength=1, maxLength=200),
+         "attribute": string(minLength=1, maxLength=80)}),
+])
+CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
+    obj({"action": {"enum": ["checkpoint"]}}),
+    obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
+])
+APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
+APPLICATION_SCHEMA["properties"]["checks"]["items"] = CHECK_SCHEMA
+EXACT_PATCH = deepcopy(RESPONSE_SCHEMA["properties"]["patches"]["items"])
+MODULE_REPLACEMENT = obj({
+    "action": {"enum": ["replace_module"]},
+    "path": string(maxLength=120),
+    "file_hash": string(pattern="^[0-9a-f]{64}$"),
+    "content": string(maxLength=12288),
+})
+APPLICATION_SCHEMA["properties"]["patches"]["items"] = {"anyOf": [EXACT_PATCH, MODULE_REPLACEMENT]}
+CONTRACT_VERSION = 7
+
+CHECK_REPAIR_SCHEMA = obj({
+    "status": {"enum": ["ok", "unchanged"]},
+    "operation": {"enum": ["check_repair"]},
+    "base_revision": string(minLength=1),
+    "artifact_hash": string(pattern="^[0-9a-f]{64}$"),
+    "checks_hash": string(pattern="^[0-9a-f]{64}$"),
+    "message": string(minLength=1, maxLength=2000),
+    "checks": array(CHECK_SCHEMA, maxItems=12),
+})
 
 
 def response_schema(request):
     """App-owned operation contract. Persisted v2 invocations retain their wire schema."""
     version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
-    if version not in {2, CONTRACT_VERSION}:
+    if version not in {2, 3, 4, 5, 6, 7}:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if request.get("operation") == "check_repair" and version >= 6 and request.get("check_repair"):
+        return deepcopy(CHECK_REPAIR_SCHEMA)
     schema = deepcopy(RESPONSE_SCHEMA)
+    if version >= 4:
+        schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
     if version == 2:
         return schema
     operation = request.get("operation", "create")
@@ -165,14 +201,20 @@ def response_schema(request):
         props["files"]["maxItems"] = 0
         if operation == "repair":
             props["checks"]["maxItems"] = 0
+            allowed = request.get("module_repair", {}).get("files", {}) if version >= 5 else {}
+            if allowed:
+                replacement = deepcopy(MODULE_REPLACEMENT)
+                replacement["properties"]["path"] = {"enum": sorted(allowed)}
+                props["patches"] = {"anyOf": [array(deepcopy(EXACT_PATCH), maxItems=80),
+                                               array(replacement, minItems=1, maxItems=1)]}
     return schema
 
 
-def validate_response(response, *, operation=None, schema=None):
+def validate_response(response, *, operation=None, schema=None, defer_check_errors=False):
     if isinstance(response, dict) and operation is not None and "operation" in response and response["operation"] != operation:
         raise ContractError("operation_mismatch", "Ответ изменил вид операции. Используйте operation из запроса.")
     errors = sorted(
-        Draft202012Validator(schema or RESPONSE_SCHEMA).iter_errors(response), key=lambda e: str(list(e.path))
+        Draft202012Validator(schema or APPLICATION_SCHEMA).iter_errors(response), key=lambda e: str(list(e.path))
     )
     if errors:
         error = errors[0]
@@ -185,6 +227,13 @@ def validate_response(response, *, operation=None, schema=None):
             "operation_mismatch",
             "Ответ изменил вид операции. Используйте operation из текущего запроса приложения.",
         )
+    if response["operation"] == "check_repair":
+        if response["status"] == "unchanged":
+            if response["checks"]:
+                raise ContractError("invalid_unchanged", "Ответ без изменений должен содержать checks=[].")
+        else:
+            validate_checks(response["checks"])
+        return
     if response["status"] == "scope_refusal":
         if not response["message"].strip() or response["files"] or response["patches"]:
             raise ContractError("invalid_refusal", "Отказ должен объяснять ограничение и не изменять игру.")
@@ -202,7 +251,8 @@ def validate_response(response, *, operation=None, schema=None):
             )
         return
     partial = response["operation"] in {"edit", "repair"} and response["base_revision"] is not None
-    validate_checks(response["checks"], require_complete=not partial)
+    if not defer_check_errors:
+        validate_checks(response["checks"], require_complete=not partial)
     if not response["title"].strip():
         raise ContractError("missing_title", "Модель не предложила название игры.")
 

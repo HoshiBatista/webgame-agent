@@ -64,11 +64,13 @@ def test_stages_repair_only_current_problem_and_stop_on_success(setup):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("repairs", [2, 3])
 @pytest.mark.parametrize("provider", ["fake", "codex"])
-def test_allowance_is_frozen_and_failed_games_cannot_loop(setup, settings, repairs, provider):
+def test_legacy_allowance_is_frozen_and_failed_games_cannot_loop(setup, settings, repairs, provider):
     settings.GAMEFORGE_PROVIDER = provider
     settings.GAMEFORGE_MODEL = "fixture" if provider == "fake" else "gpt-6-luna"
     settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS = repairs
     run = new_run(setup)
+    run.completion_policy = 1
+    run.save(update_fields=["completion_policy"])
     settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS = 3 if repairs == 2 else 2
     with (patch("generation.service.generate", side_effect=fixture_generate) as model,
           patch("validation.service.validate", return_value=GAMEPLAY)):

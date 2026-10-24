@@ -357,6 +357,11 @@ describe('saved work and mutation submission', () => {
           candidate_revision_id: 'candidate',
           message: 'Проверьте управление',
           can_confirm: true,
+          confirmation: {
+            artifact_hash: 'candidate-hash',
+            report_id: 42,
+            requirements: ['Проверьте управление'],
+          },
           can_continue: true,
           can_cancel: false,
           attempts: 1,
@@ -370,6 +375,16 @@ describe('saved work and mutation submission', () => {
     expect(screen.getByTitle('Игра')).toHaveAttribute('src', 'http://localhost:8001/p/candidate');
     expect(screen.getByRole('button', { name: 'Поделиться' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Я проверил игру' })).toBeInTheDocument();
+    vi.mocked(post).mockResolvedValue({});
+    fireEvent.click(screen.getByRole('button', { name: 'Я проверил игру' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Я проверил механику, принять версию' }));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith('/api/runs/run/confirm/', {
+        confirmed: true,
+        artifact_hash: 'candidate-hash',
+        report_id: 42,
+      }),
+    );
   });
   it('browsing history does not run a model or overwrite the current version', async () => {
     vi.mocked(request).mockResolvedValue({

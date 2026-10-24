@@ -86,7 +86,27 @@ def _validated_report(report, checks, artifact_hash, started):
             f"{ENVIRONMENT}:{implementation_hash()}:"
         ):
             raise ValueError("validator implementation is stale; rebuild the browser image")
+    if "artifact_evidence" in report:
+        from .evidence import gates as evidence_gates
+        from .evidence import valid
+
+        if not valid(report["artifact_evidence"], artifact_hash, report.get("environment")):
+            raise ValueError("invalid artifact gate receipt")
+        if "gates" in report and report["gates"] != evidence_gates(report["artifact_evidence"]):
+            raise ValueError("gate flags contradict artifact receipt")
+    if report["status"] == "unverified" and report.get("gates") == {
+        "syntax": True, "runtime": True, "surface": True,
+    }:
+        from .checks import gates_verified
+
+        if not gates_verified(report, checks):
+            raise ValueError("manual verification lacks mandatory gate evidence")
     if report["status"] == "passed":
+        if "artifact_evidence" in report:
+            from .checks import gates_verified
+
+            if not gates_verified(report, checks):
+                raise ValueError("passed report lacks mandatory artifact evidence")
         expected = {check.get("id"): check for check in checks}
         facts = {fact.get("id"): fact for fact in report["facts"]}
         if (

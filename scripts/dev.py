@@ -16,6 +16,16 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / ".data"
 
 
+def ensure_available_port(port):
+    with socket.socket() as listener:
+        # Match the dev server: a closed connection in TIME_WAIT is not a running listener.
+        listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            listener.bind(("127.0.0.1", port))
+        except OSError as exc:
+            raise RuntimeError(f"Local port {port} is occupied; no processes were started") from exc
+
+
 def start():
     DATA.mkdir(mode=0o700, exist_ok=True)
     pidfile = DATA / "local-processes.json"
@@ -28,11 +38,7 @@ def start():
     load_dotenv(ROOT / ".env")
     # Do not start a competing worker if another local app already owns a port.
     for port in (8000, 8001):
-        with socket.socket() as listener:
-            try:
-                listener.bind(("127.0.0.1", port))
-            except OSError as exc:
-                raise RuntimeError(f"Local port {port} is occupied; no processes were started") from exc
+        ensure_available_port(port)
     if os.environ.get("VALIDATOR_BACKEND") == "native":
         subprocess.run([python, str(ROOT / "scripts/native.py"), "check"], cwd=ROOT, check=True)
     subprocess.run([python, str(ROOT / "manage.py"), "migrate", "--noinput"], cwd=ROOT, check=True)
@@ -78,8 +84,7 @@ def start():
                 stderr=log,
                 start_new_session=True,
             )
-        started = subprocess.run(["ps", "-p", str(process.pid), "-o", "lstart="],
-                                 text=True, capture_output=True, check=True).stdout.strip()
+        started = process_start(process.pid)
         processes[role] = {"pid": process.pid, "command": command, "started": started}
     pidfile.write_text(json.dumps(processes, indent=2))
     deadline = time.monotonic() + 8
@@ -109,11 +114,16 @@ def start():
     print("GameForge: http://127.0.0.1:8000/; isolated preview: http://localhost:8001/")
 
 
+def process_start(pid):
+    # start() loads .env but status/stop need not; timezone/locale must not change identity.
+    return subprocess.run(["ps", "-p", str(pid), "-o", "lstart="], text=True, capture_output=True,
+                          env={**os.environ, "TZ": "UTC", "LC_ALL": "C"}).stdout.strip()
+
+
 def still_ours(item):
     pid = item["pid"]
     result = subprocess.run(["ps", "-p", str(pid), "-o", "command="], text=True, capture_output=True)
-    started = subprocess.run(["ps", "-p", str(pid), "-o", "lstart="],
-                             text=True, capture_output=True).stdout.strip()
+    started = process_start(pid)
     args = shlex.split(result.stdout)
     return bool(args) and args[1:] == item["command"][1:] and started == item["started"]
 

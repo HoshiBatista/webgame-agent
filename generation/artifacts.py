@@ -7,12 +7,14 @@ import html as html_module
 import json
 import posixpath
 import re
+from copy import deepcopy
 from pathlib import PurePosixPath
 from typing import Any
 from urllib.parse import unquote, urlsplit
 
 from .errors import ContractError
-from .schema import validate_checks, validate_response
+from .schema import CONTRACT_VERSION, validate_checks, validate_response
+from .source_policy import MAX_MODULE_BYTES, MODULE_POLICY_VERSION, require_implementation
 
 MAX_TOTAL_BYTES = 1500000
 ALLOWED_SUFFIXES = {".html", ".css", ".js", ".json", ".svg"}
@@ -61,9 +63,25 @@ def normalize_files(files):
     return result
 
 
-def apply_patches(files, patches):
+def apply_patches(files, patches, *, module_repair=None):
     original = normalize_files(files)
     result = dict(original)
+    replacements = [p for p in patches if p.get("action") == "replace_module"]
+    if replacements:
+        policy = module_repair or {}
+        if len(patches) != 1 or policy.get("version") != MODULE_POLICY_VERSION or policy.get("max_bytes") != MAX_MODULE_BYTES:
+            raise ContractError("module_scope", "Замена модуля разрешена отдельно, ровно для одного файла.")
+        patch = replacements[0]
+        path = safe_path(patch["path"])
+        if path not in original or not path.endswith((".js", ".css", ".json")) or path not in policy.get("files", {}):
+            raise ContractError("module_scope", "Приложение не разрешило замену этого модуля.")
+        expected = sha256(original[path])
+        if policy["files"][path] != expected or patch["file_hash"] != expected:
+            raise ContractError("stale_file", "Hash модуля не совпал; замена не применена.")
+        if max(len(original[path].encode()), len(patch["content"].encode())) > MAX_MODULE_BYTES:
+            raise ContractError("module_too_large", "Для замены модуль должен быть не больше 12 КиБ до и после.")
+        result[path] = patch["content"]
+        return normalize_files(result)
     by_path: dict[str, list[dict[str, Any]]] = {}
     for patch_number, patch in enumerate(patches, 1):
         path = safe_path(patch["path"])
@@ -248,8 +266,29 @@ def bundle(files, *, script_map=None):
     return document
 
 
-def materialize(response, *, operation, base_revision=None, files=None, previous_checks=None):
-    validate_response(response, operation=operation)
+def materialize(response, *, operation, base_revision=None, files=None, previous_checks=None,
+                generation_contract=None, module_repair=None, check_repair=None, code_repair_basis=None):
+    version = (generation_contract or {}).get("pipeline_version", CONTRACT_VERSION)
+    if version not in {2, 3, 4, 5, 6, 7}:
+        raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    from .schema import response_schema
+
+    validate_response(response, operation=operation,
+                      schema=response_schema({"operation": operation, "generation_contract": {"pipeline_version": version},
+                                              "check_repair": check_repair}) if operation == "check_repair" else None,
+                      defer_check_errors=operation == "create" and version >= 6)
+    if operation == "check_repair":
+        from .check_repair import repaired_checks
+
+        original = normalize_files(files or {})
+        document = bundle(original)
+        checks = repaired_checks(response, base_revision=base_revision, artifact_hash=sha256(document),
+                                 previous_checks=previous_checks or [], policy=check_repair)
+        if checks is None:
+            return {"status": "unchanged", "message": response["message"]}
+        return {"files": original, "file_hashes": {p: sha256(c) for p, c in original.items()},
+                "html": document, "artifact_hash": sha256(document), "checks": checks,
+                "diff": "", "checks_review_required": True}
     if response["status"] == "scope_refusal":
         raise ContractError("scope_refusal", response["message"])
     original = normalize_files(files) if files is not None else {}
@@ -259,8 +298,16 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
         if response["base_revision"] != str(base_revision):
             raise ContractError("stale_revision", "Ответ «без изменений» относится к другой версии игры.")
         return {"status": "unchanged", "message": response["message"]}
+    inherited_incomplete = False
     if original:
-        if operation == "repair":
+        if operation == "repair" and version >= 7 and code_repair_basis is not None:
+            from .code_repair import inherit_checks
+
+            inherited_incomplete = inherit_checks(code_repair_basis, base_revision=base_revision,
+                artifact_hash=sha256(bundle(original)), checks=previous_checks or [])
+            if response["checks"]:
+                raise ContractError("repair_checks_locked", "Ремонт кода не меняет сценарии.")
+        if operation == "repair" and not inherited_incomplete:
             try:
                 validate_checks(previous_checks or [])
             except ContractError as exc:
@@ -280,7 +327,8 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             )
         if response["base_revision"] != str(base_revision):
             raise ContractError("stale_revision", "Патч относится к другой версии игры.")
-        result = apply_patches(original, response["patches"])
+        policy = module_repair if operation == "repair" and version >= 5 else None
+        result = apply_patches(original, response["patches"], module_repair=policy)
     else:
         if response["operation"] != "create" or response["patches"] or response["base_revision"] is not None:
             raise ContractError(
@@ -300,8 +348,10 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
                 )
         else:
             check_map[old["id"]] = old
-    checks = list(check_map.values())
-    validate_checks(checks)
+    checks = deepcopy(previous_checks or []) if inherited_incomplete else (
+        list(response["checks"]) if operation == "create" and version >= 6 else list(check_map.values()))
+    if (operation != "create" or version < 6) and not inherited_incomplete:
+        validate_checks(checks)
     if original and result == original and check_map != {c["id"]: c for c in previous_checks or []}:
         raise ContractError(
             "test_only_change",
@@ -312,7 +362,14 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             "no_changes",
             "Ответ заявляет об изменении, но исходники и проверки остались прежними. Верните нужный точный патч; если запрос уже реализован, используйте status=unchanged и объясните почему.",
         )
-    document = bundle(result)
+    try:
+        document = bundle(result)
+    except ContractError as exc:
+        if operation == "create" and version >= 5 and exc.code == "missing_resource":
+            raise ContractError("incomplete_sources", f"Неполный набор исходников. {exc.message} Верните полный files.") from exc
+        raise
+    if operation == "create" and version >= 5:
+        require_implementation(document)
     changes: list[str] = []
     for path in sorted(set(result) | set(original)):
         if result.get(path) != original.get(path):

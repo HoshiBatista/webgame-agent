@@ -9,7 +9,9 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
+from .continuations import delivery_state, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
 from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Run, RunEvent
 
@@ -124,6 +126,13 @@ def reserve_invocation(run, request):
     current = Run.objects.get(pk=run.pk)
     if not current.allow_model_calls:
         raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
+    unknown_calls, inflight_calls = delivery_state(current)
+    if unknown_calls:
+        raise DomainError("outcome_unknown", "Итоговый расход неизвестен. Подтвердите новый запрос отдельно.", 409)
+    if inflight_calls:
+        raise DomainError("outcome_pending", "Предыдущий запрос ещё не завершён. Дождитесь сверки его результата.", 409)
+    if current.model_call_deadline and timezone.now() >= current.model_call_deadline:
+        raise DomainError("model_deadline", "Время новых модельных вызовов истекло. Кандидат сохранён.", 409)
     if current.invocations.count() >= current.max_model_calls:
         raise DomainError("repair_exhausted", "Лимит исправлений этого запуска исчерпан. Черновик сохранён.", 409)
     price = tariff(run.provider, run.model)
@@ -160,11 +169,17 @@ def settle_invocation(
     elapsed=0,
     provider_id="",
     provider_metadata=None,
+    unsent_fence=None,
 ):
     Budget.objects.select_for_update().get(pk=1)
     run_id = Invocation.objects.only("run_id").get(pk=invocation_id).run_id
     run = Run.objects.select_for_update().get(pk=run_id)
     inv = Invocation.objects.select_for_update().get(pk=invocation_id)
+    if unsent_fence is not None and (
+        run.fence != unsent_fence or inv.sent_at is not None or inv.state != "reserved"
+    ):
+        # A stale worker cannot cancel its successor's reservation or sent call.
+        return inv
     was_unknown = inv.state == "unknown"
     if inv.finished_at and inv.state not in ("unknown",):
         return inv
@@ -216,7 +231,7 @@ def schedule(run):
 
 
 @transaction.atomic
-def create_run(chat, data, *, continued_from=None, authorize=None):
+def create_run(chat, data, *, continued_from=None, authorize=None, check_only=False):
     chat = Chat.objects.select_for_update().get(pk=chat.pk, deleted_at__isnull=True)
     key = data.get("idempotency_key")
     if not isinstance(key, str) or not key.strip() or len(key) > 100:
@@ -262,6 +277,22 @@ def create_run(chat, data, *, continued_from=None, authorize=None):
         "model": model,
         "continued_from": str(continued_from.id) if continued_from else None,
     }
+    call_limit = data.get("model_call_limit")
+    deadline_text = data.get("model_call_deadline")
+    if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= 4):
+        raise DomainError("invalid_call_budget", "Лимит вызовов должен быть целым числом от 1 до 4.")
+    try:
+        deadline = parse_datetime(deadline_text) if isinstance(deadline_text, str) else None
+    except ValueError:
+        deadline = None
+    if deadline_text is not None and (deadline is None or timezone.is_naive(deadline)):
+        raise DomainError("invalid_call_budget", "Укажите ISO-время окончания с часовым поясом.")
+    if call_limit is not None:
+        payload["model_call_limit"] = call_limit
+    if deadline is not None:
+        payload["model_call_deadline"] = deadline.isoformat()
+    if check_only:
+        payload["check_only"] = True
     accept_unknown_cost = data.get("accept_unknown_cost") is True
     if accept_unknown_cost:
         payload["accept_unknown_cost"] = True
@@ -285,14 +316,15 @@ def create_run(chat, data, *, continued_from=None, authorize=None):
         "unknown",
     ):
         raise DomainError("cannot_continue", "Задание не ожидает продолжения.", 409)
-    unknown = bool(continued_from and continued_from.invocations.filter(state="unknown").exists())
-    if unknown and not accept_unknown_cost:
+    unknown_calls = unacknowledged_unknowns(continued_from) if continued_from else []
+    unknown = bool(unknown_calls)
+    if unknown and not accept_unknown_cost and not check_only:
         raise DomainError(
             "outcome_unknown",
             "Итоговый расход неизвестен. Для нового запроса отдельно подтвердите расход; прежняя сумма останется в учёте.",
             409,
         )
-    if continued_from and (unknown or continued_from.status == "unknown"):
+    if continued_from and (unknown or continued_from.status == "unknown") and not check_only:
         if not unknown or not accept_unknown_cost:
             raise DomainError("cannot_continue", "Сначала нужно уточнить состояние запроса.", 409)
         if chat.current_revision_id != continued_from.base_revision_id:
@@ -303,6 +335,10 @@ def create_run(chat, data, *, continued_from=None, authorize=None):
             )
     base = chat.current_revision
     candidate = continued_from.candidate_revision if continued_from else None
+    if check_only and (
+        not candidate or not continued_from or chat.current_revision_id != continued_from.base_revision_id
+    ):
+        raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
     operation = "repair" if candidate or continued_from else ("edit" if base else "create")
     run = Run.objects.create(
         chat=chat,
@@ -318,14 +354,18 @@ def create_run(chat, data, *, continued_from=None, authorize=None):
         candidate_revision=candidate,
         continued_from=continued_from,
         max_repair_attempts=settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS,
+        allow_model_calls=not check_only,
+        model_call_limit=call_limit,
+        model_call_deadline=deadline,
     )
     chat.audience = audience
     chat.save(update_fields=["audience", "updated_at"])
     Message.objects.create(chat=chat, run=run, role="user", content=prompt.strip())
     event(run, "queued", "Запрос принят. Ожидаем свободное место для генерации.")
-    if unknown:
+    if unknown and not check_only:
         event(run, "explicit_retry", "Новый запрос подтверждён пользователем; прежний неизвестный расход сохранён.",
-              {"previous_run_id": str(continued_from.id)})
+              {"previous_run_id": str(continued_from.id),
+               "unknown_invocation_ids": sorted(str(call.id) for call in unknown_calls)})
     schedule(run)
     return run
 
@@ -351,6 +391,10 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     run = Run.objects.select_for_update(of=("self",)).select_related("chat").get(pk=run_id)
     if run.fence != fence or run.cancel_requested or run.chat.deleted_at:
         return False
+    if run.invocations.filter(state__in=["reserved", "sent"]).exists() or (
+        status != "failed" and run.invocations.filter(state="returned", revision__isnull=True).exists()
+    ):
+        raise DomainError("invocation_pending", "Сначала нужно обработать сохранённый вызов.", 409)
     run.status = status
     run.stage = status
     run.message = message
@@ -367,6 +411,8 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     }
     run.lease_until = None
     if revision:
+        if revision.checks_review_required:
+            raise DomainError("check_review_required", "Изменённые сценарии требуют явного подтверждения результата.")
         run.result_revision = revision
         revision.accepted = True
         revision.verification = "automatic"

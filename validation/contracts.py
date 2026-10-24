@@ -13,7 +13,7 @@ def implementation_hash(root=None):
     """Changing executable checks OR their geometry invalidates prior acceptance."""
     directory = Path(root) if root is not None else Path(__file__).parent
     digest = hashlib.sha256()
-    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py"):
+    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py"):
         digest.update(name.encode())
         digest.update(b"\x00")
         digest.update((directory / name).read_bytes())
@@ -26,6 +26,7 @@ def browser_watchdog_seconds(checks):
     if not isinstance(checks, list) or not 0 <= len(checks) <= 12:
         raise ValueError("invalid browser check count")
     waiting = 0.0
+    longest_wait = 0.0
     for check in checks:
         if (
             not isinstance(check, dict)
@@ -44,4 +45,7 @@ def browser_watchdog_seconds(checks):
         if step_wait > 10000:
             raise ValueError("smoke check wait exceeds 10 seconds")
         waiting += step_wait / 1000
-    return min(15 + len(checks) * 5 + waiting, 180)
+        longest_wait = max(longest_wait, step_wait / 1000)
+    # An uncovered viewport may replay one successful route for surface evidence.
+    probes = len(set(VIEWPORTS) - {c.get("viewport", "mobile") for c in checks})
+    return min(15 + (len(checks) + probes) * 5 + waiting + probes * longest_wait, 180)

@@ -29,7 +29,9 @@ def generate(request, *, on_event, is_cancelled):
         }
     try:
         validate_response(result["response"], operation=request.get("operation", "create"),
-                          schema=response_schema(request))
+                          schema=response_schema(request),
+                          defer_check_errors=request.get("operation", "create") == "create"
+                          and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
     except GenerationError as exc:
         exc.usage = result.get("usage")
         exc.raw_response = result.get("raw_response") or result.get("response")

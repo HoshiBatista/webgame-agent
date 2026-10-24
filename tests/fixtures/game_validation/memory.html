@@ -1,0 +1,22 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0}canvas{touch-action:none;width:300px;height:200px}</style>
+<div id="overlay"><button id="start">Start</button></div><button id="reset">Reset</button><p id="status">ready</p><canvas width="300" height="200"></canvas>
+<script>
+const board=document.querySelector('canvas'),ctx=board.getContext('2d'),label=document.querySelector('#status');
+window.memory={active:false,face:[false,false,false,false],matches:[],selected:[],busy:false};
+const cards=['A','B','A','B'];
+function draw(){ctx.fillStyle='#ddeeff';ctx.fillRect(0,0,300,200);ctx.fillStyle='#123';
+cards.forEach((v,i)=>ctx.fillText(memory.face[i]?v:'?',i%2*150+70,Math.floor(i/2)*100+50));}
+function begin(){memory.active=true;label.textContent='playing';document.querySelector('#overlay').style.display='none';draw();}
+const savedStart=document.querySelector('#start');
+/* START_REPLACEMENT */
+savedStart.onclick=begin;
+board.onpointerdown=e=>{if(!memory.active||memory.busy)return;
+const r=board.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+const i=Math.floor(x*2)+Math.floor(y*2)*2; /* HIT_TEST */
+if(memory.face[i])return;memory.face[i]=true;memory.selected.push(i);draw();
+if(memory.selected.length===2){const [a,b]=memory.selected;
+if(cards[a]===cards[b]){memory.matches.push(a,b);memory.selected=[];if(memory.matches.length===4)label.textContent='win';}
+else{memory.busy=true;setTimeout(()=>{memory.face[a]=false;memory.face[b]=false;memory.selected=[];memory.busy=false;draw();},100);}}};
+document.querySelector('#reset').onclick=()=>{memory.face.fill(false);memory.matches=[];memory.selected=[];memory.active=true;memory.busy=false;label.textContent='playing';draw();};draw();
+</script>

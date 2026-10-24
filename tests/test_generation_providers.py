@@ -30,13 +30,21 @@ def generate(request, **kwargs):
     return generate_operation(request, **kwargs)
 
 
-@pytest.mark.parametrize("operation", ["create", "edit", "repair"])
+@pytest.mark.parametrize("operation", ["create", "edit", "repair", "check_repair"])
 def test_codex_receives_selected_operation_schema_through_actual_rpc_adapter(codex_rpc, operation):
     from generation.schema import response_schema
 
     request = {"provider": "codex", "operation": operation, "model": "gpt-6-luna"}
     reply = fixture_response()
-    if operation != "create":
+    if operation == "check_repair":
+        from generation.check_repair import permission
+
+        policy = permission("a" * 64, reply["checks"], reply["design"])
+        request.update(base_revision="base", check_repair=policy)
+        reply = {"operation": operation, "status": "ok", "base_revision": "base",
+                 "artifact_hash": policy["artifact_hash"], "checks_hash": policy["checks_hash"],
+                 "checks": reply["checks"], "message": "Сценарии проверки."}
+    elif operation != "create":
         request["base_revision"] = "base"
         reply.update(operation=operation, base_revision="base", files=[], checks=[])
     codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(reply)

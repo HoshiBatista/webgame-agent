@@ -1,0 +1,106 @@
+{
+  "source_manifest_sha256": "ad87a74cc278836e1a47868098a11ca3cbc1b8bbab0f2922e777b7fcd9174452",
+  "new_model_calls": 0,
+  "applied_to_database": false,
+  "kind": "Saved original scenarios replay, not independent gameplay acceptance",
+  "results": [
+    {
+      "revision_id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+      "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+      "status": "failed",
+      "codes": [
+        "effect_mismatch",
+        "invalid_check"
+      ],
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "receipt": true
+    },
+    {
+      "revision_id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+      "artifact_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+      "status": "unverified",
+      "codes": [
+        "invalid_check"
+      ],
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "receipt": true
+    },
+    {
+      "revision_id": "cc01d21c-e51b-40ef-baa8-b90b60cfc84e",
+      "artifact_hash": "e2bb58d85eb619e045444b1a1b0842eff13e058e5138c54dcaaba91e48167ca0",
+      "status": "unverified",
+      "codes": [
+        "check_timeout",
+        "incomplete_checks"
+      ],
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "receipt": true
+    },
+    {
+      "revision_id": "c2e4b4b0-ad68-43b6-8457-c4ae96ab7128",
+      "artifact_hash": "4734615f3ad6128351b3db69f465ca32c809fc03b46c52c6d7d592234c407808",
+      "status": "unverified",
+      "codes": [
+        "invalid_check"
+      ],
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "receipt": true
+    },
+    {
+      "revision_id": "e95b87f5-77b0-4eed-881f-f54c9c823ed4",
+      "artifact_hash": "9619c5a0edcae4c6e234171c7746be6306889ff9b0052839db2c6412ec7c37fc",
+      "status": "failed",
+      "codes": [
+        "incomplete_checks",
+        "javascript_syntax"
+      ],
+      "gates": null,
+      "receipt": true
+    },
+    {
+      "revision_id": "c664a346-da6b-45e4-a17e-16ce41fc08b2",
+      "artifact_hash": "bb53d5890df5bd451f0391d3d658c3722c61a3863dfc54277aa20458a3ca286d",
+      "status": "failed",
+      "codes": [
+        "effect_mismatch",
+        "incomplete_checks"
+      ],
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "receipt": true
+    },
+    {
+      "revision_id": "1be597dd-fe7b-4fb1-a20d-bc1a4af7da63",
+      "artifact_hash": "aacd045b37615fc526e91edbe3a46b313249e0811ce988ea5d11ae95a2fa8ead",
+      "status": "failed",
+      "codes": [
+        "effect_mismatch"
+      ],
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "receipt": true
+    }
+  ]
+}

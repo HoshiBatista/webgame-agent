@@ -68,6 +68,13 @@ def generate(request, *, on_event, is_cancelled):
             usage={"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0},
         )
     response = fixture_response()
+    if request.get("operation") == "check_repair":
+        return {"response": {"status": "unchanged", "operation": "check_repair",
+                "base_revision": str(request["base_revision"]),
+                "artifact_hash": request["check_repair"]["artifact_hash"],
+                "checks_hash": request["check_repair"]["checks_hash"], "checks": [],
+                "message": "Тестовый provider не исправляет произвольные сценарии."},
+                "usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0}}
     if request.get("files"):
         files = request["files"]
         response.update(

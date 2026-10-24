@@ -1,0 +1,81 @@
+{
+  "scope": "Offline exact-source replay with human-authored corrected scenarios, not model capability or a fresh live pilot",
+  "inference_calls": 0,
+  "browser": "OS-isolated native Chromium, real tap/tap_fraction input",
+  "results": [
+    {
+      "case": "rejected_complete_grid",
+      "original_id": "b2416d4a-56f2-4cd6-88d8-6fb0d932338f",
+      "artifact_hash": "9c74560cf08974a16d44acef17050beeda3f48f478e2b3a44ad8a96ae962e57b",
+      "previous_result": "missing_effects",
+      "source_bytes_unchanged": true,
+      "original_checks_unchanged": true,
+      "checks_review_required": true,
+      "browser_status": "passed",
+      "facts": [
+        {
+          "id": "tic-tac-toe-win",
+          "status": "passed"
+        },
+        {
+          "id": "tic-tac-toe-draw",
+          "status": "passed"
+        },
+        {
+          "id": "required_start",
+          "status": "passed"
+        },
+        {
+          "id": "required_control",
+          "status": "passed"
+        },
+        {
+          "id": "required_outcome",
+          "status": "passed"
+        }
+      ],
+      "finding_codes": []
+    },
+    {
+      "case": "saved_grid_bad_oracle",
+      "original_id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+      "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+      "previous_result": "failed",
+      "source_bytes_unchanged": true,
+      "original_checks_unchanged": true,
+      "checks_review_required": true,
+      "browser_status": "passed",
+      "facts": [
+        {
+          "id": "start-ready",
+          "status": "passed"
+        },
+        {
+          "id": "place-X",
+          "status": "passed"
+        },
+        {
+          "id": "place-O",
+          "status": "passed"
+        },
+        {
+          "id": "win-row",
+          "status": "passed"
+        },
+        {
+          "id": "draw",
+          "status": "passed"
+        }
+      ],
+      "finding_codes": []
+    }
+  ],
+  "source_sha256": {
+    "generation/schema.py": "40b77667b01bf5ba0cbaa9b2d5a5f97292e60a3cd01edeefda4a86af5b3e65c5",
+    "generation/check_repair.py": "fad95fca8e5576fcabc2ad7cd35f71f35016245d08ccddee6ade91102591c3dc",
+    "generation/artifacts.py": "6625c7512baffa0a71615d5e30507119e94b4e454f18b2facdf8030f37cb621e",
+    "studio/tasks.py": "4fd64523aa3309d49b6310c7ec0445884b80782bd9d8c9295e3d3ac2cf1578c0",
+    "studio/check_repair.py": "f1255e2236ea8eca6c040a70cf46ed425a1595ec828abdbf03af495fe57b14cb",
+    "studio/acceptance.py": "bec10f6845e3512723e5d901743352b0d9c10578b8d545e413873c58a88ba554"
+  }
+}
