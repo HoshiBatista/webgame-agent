@@ -1,0 +1,110 @@
+{
+  "verified_at": "2026-10-24T18:43:00.551468+00:00",
+  "release": "6f3b9ee4f7f794c98e4f8671f1da488e5cbf56da",
+  "release_directory": "/opt/gameforge/releases/20261024-6f3b9ee",
+  "previous_release_directory": "/opt/gameforge/releases/20261024-1d798e8",
+  "archive_sha256": "c24d988d37e0e9d3c2ba4cafe9f0a771d0e86fb9af73e736ec592bdab039197b",
+  "server": {
+    "revision": "6f3b9ee4f7f794c98e4f8671f1da488e5cbf56da",
+    "users_preserved": 2,
+    "chats_preserved": 3,
+    "revisions_preserved": 12,
+    "after_counts": {
+      "users": 2,
+      "chats": 4,
+      "revisions": 13
+    },
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_settings_and_secrets_preserved": true,
+    "relay_db_redis_container_identity_preserved": true,
+    "images": {
+      "app": {
+        "image_id": "sha256:c962d5aa9d807d50a7237af85b790e811e14a0778da2d0b3f06f1891e92fe818",
+        "image_tag": "gameforge-mini:cloud-6f3b9ee-20261024",
+        "running": true
+      },
+      "preview": {
+        "image_id": "sha256:c962d5aa9d807d50a7237af85b790e811e14a0778da2d0b3f06f1891e92fe818",
+        "image_tag": "gameforge-mini:cloud-6f3b9ee-20261024",
+        "running": true
+      },
+      "worker": {
+        "image_id": "sha256:c962d5aa9d807d50a7237af85b790e811e14a0778da2d0b3f06f1891e92fe818",
+        "image_tag": "gameforge-mini:cloud-6f3b9ee-20261024",
+        "running": true
+      },
+      "beat": {
+        "image_id": "sha256:c962d5aa9d807d50a7237af85b790e811e14a0778da2d0b3f06f1891e92fe818",
+        "image_tag": "gameforge-mini:cloud-6f3b9ee-20261024",
+        "running": true
+      },
+      "validator": {
+        "image_id": "sha256:22d35519b1bc8cbf3804a1ce6679e1fb556792a23cb9d3f0efbb3d069914f6e7",
+        "image_tag": "gameforge-mini-validator:cloud-6f3b9ee-20261024",
+        "running": true
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-6f3b9ee-20261024T183929Z.dump",
+    "backup_sha256": "1ee473bcfa866ce904b9ebcd95c73733e3ec93bd3cfc5a8bc798dd3b3b30ab15"
+  },
+  "http": {
+    "origin": "https://212.57.126.215",
+    "https_verified": true,
+    "health": "passed",
+    "login_route": "passed",
+    "authenticated_login": "passed",
+    "guest_and_admin_denied": "passed",
+    "secure_httponly_cookie": "passed",
+    "preview_exact_bytes_hash_and_isolation": "passed",
+    "profiles": [
+      {
+        "id": "pro",
+        "model": "gpt-6-sol",
+        "available": false
+      },
+      {
+        "id": "lite",
+        "model": "qwen38",
+        "available": true
+      }
+    ],
+    "real_model_calls": 0
+  },
+  "fixture": {
+    "revision_id": "4c21b916-71d5-4da8-b6a6-b67ea80ab4e6",
+    "artifact_hash": "31f5703a5c0f6a76ffffdb83cc04d6ef731771dc57e6f7c00fc090bbfefb1d9f",
+    "run_id": "87eac577-c1a9-440b-b400-73efc8c8867a",
+    "chat_id": "4b71dee7-13f4-40b0-9a61-58183d5fe292",
+    "provider": "fake",
+    "status": "succeeded",
+    "calls_to_real_models": 0,
+    "attempts": 1,
+    "passed_facts": 3,
+    "validator_hash": "901dc92abdd3e1ea058357a9f87adfa2d5db337c9612ad67a11521a757b67cca",
+    "validator_environment": "mini-browser-v1:901dc92abdd3e1ea058357a9f87adfa2d5db337c9612ad67a11521a757b67cca:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)"
+  },
+  "local_frontend": {
+    "tests_passed": 83,
+    "build": "passed",
+    "lint": "passed"
+  },
+  "migrations_applied": [
+    "studio.0008_completion_policy",
+    "studio.0009_run_call_budget",
+    "studio.0010_check_review_required"
+  ],
+  "rollout_events": [
+    "Initial inline SSH script stopped before activation when a child consumed stdin; completed via a separate file script.",
+    "First image switch reverted automatically after an immediate connection-reset readiness probe. Added bounded readiness polling, checked zero active jobs, took a fresh backup and successfully switched again. Database data was never restored/deleted."
+  ],
+  "real_model_calls": 0,
+  "gpu_server_access_or_changes": false,
+  "relay_restart": false,
+  "codex_configuration_changed": false,
+  "cloud_pro_available": false,
+  "limitations": [
+    "Infrastructure checks with a fake model do not measure live Lite generation quality.",
+    "Cloud Pro remains disabled because its previous standalone authentication was not completed."
+  ]
+}
