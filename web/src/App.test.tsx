@@ -231,7 +231,8 @@ it('returns to a public game after cancelling or completing sign-in for a remix'
     preview_url: 'https://preview.example/one',
   });
   setup('/games/public-one');
-  fireEvent.click(await screen.findByRole('button', { name: 'Доработать' }));
+  await screen.findByRole('heading', { name: 'Лунная игра' });
+  fireEvent.click(screen.getByRole('button', { name: 'Доработать' }));
   await screen.findByRole('form', { name: 'Вход в beeGame' });
   fireEvent.click(screen.getByRole('link', { name: 'Вернуться к игре' }));
   await screen.findByRole('heading', { name: 'Лунная игра' });
