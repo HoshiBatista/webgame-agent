@@ -63,7 +63,8 @@ def _finding(source):
     # Explicit fields exclude raw responses, screenshots and provider credentials.
     result = {}
     for key in ("code", "message", "check_id", "path", "file", "filename", "line", "column",
-                "script_index", "script_line"):
+                "script_index", "script_line", "script_column", "location", "column_unit", "file_hash",
+                "source_excerpt", "bundled_location"):
         if key in source:
             result[key] = _text(source[key]) if isinstance(source[key], str) else _bounded_context(source[key])
     for key in ("before", "after", "expected"):

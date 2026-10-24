@@ -90,7 +90,7 @@ def generate(request, *, on_event, is_cancelled):
 def build_payload(request, *, json_mode="json_object", stream=True):
     """Freeze the exact model request before durable relay admission."""
     from ..prompts import build_messages, schema_prompt
-    from ..schema import RESPONSE_SCHEMA
+    from ..schema import response_schema
 
     model = request.get("model") or os.environ.get("GAMEFORGE_VLLM_MODEL") or os.environ.get("LLM_MODEL")
     if not model:
@@ -108,13 +108,13 @@ def build_payload(request, *, json_mode="json_object", stream=True):
     if mode == "json_schema":
         payload["response_format"] = {
             "type": "json_schema",
-            "json_schema": {"name": "mini_game", "strict": True, "schema": RESPONSE_SCHEMA},
+            "json_schema": {"name": "mini_game", "strict": True, "schema": response_schema(request)},
         }
     elif mode == "json_object":
         payload["response_format"] = {"type": "json_object"}
-        messages[0]["content"] += "\nRequired JSON schema: " + schema_prompt()
+        messages[0]["content"] += "\nRequired JSON schema: " + schema_prompt(request)
     elif mode == "none":
-        messages[0]["content"] += "\nRequired JSON schema: " + schema_prompt()
+        messages[0]["content"] += "\nRequired JSON schema: " + schema_prompt(request)
     else:
         raise GenerationError("invalid_provider_config", "Неизвестный формат ответа локальной модели.")
     context_check = os.environ.get("GAMEFORGE_VLLM_CONTEXT_CHECK", "conservative")
@@ -130,7 +130,7 @@ def build_payload(request, *, json_mode="json_object", stream=True):
     # incomplete response. Never truncate input or change a saved relay payload.
     input_bound = len(json.dumps(messages, ensure_ascii=False).encode("utf-8")) + 8192
     if mode == "json_schema":
-        input_bound += len(schema_prompt().encode("utf-8"))
+        input_bound += len(schema_prompt(request).encode("utf-8"))
     if context_check == "conservative" and input_bound + max_output > context_window:
         raise GenerationError(
             "context_limit", "Текущий код не помещается в настроенный контекст локальной модели."

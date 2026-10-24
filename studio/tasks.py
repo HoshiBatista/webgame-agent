@@ -297,13 +297,17 @@ def store_candidate(run, materialized, base):
     return revision
 
 
-def request_for(run, base, findings):
+def request_for(run, base, findings, last_attempt_error=None):
     import hashlib
 
+    from generation.errors import ContractError
     from generation.feedback import focus_findings
     from generation.prompts import system_prompt
-    from generation.schema import RESPONSE_SCHEMA
+    from generation.schema import CONTRACT_VERSION, response_schema, validate_checks
 
+    first = run.invocations.order_by("attempt").first()
+    version = first.request.get("generation_contract", {}).get("pipeline_version", 2) if first else CONTRACT_VERSION
+    focused_error = focus_findings([last_attempt_error]) if last_attempt_error else []
     request = {
         # A rejected response has not established new game requirements yet.
         # Only a materialized candidate becomes the fixed base of a repair.
@@ -315,16 +319,27 @@ def request_for(run, base, findings):
         "files": base.files if base else {},
         "design": base.design if base else {},
         "checks": base.checks if base else [],
-        "findings": focus_findings(findings),
+        "findings": focus_findings(findings or ([last_attempt_error] if last_attempt_error else [])),
+        "unresolved_findings": findings,
+        "last_attempt_error": focused_error[0] if focused_error else None,
         "provider": run.provider,
         "model": run.model,
+        "generation_contract": {"pipeline_version": version},
     }
+    if request["operation"] == "repair":
+        try:
+            validate_checks(base.checks)
+        except ContractError as exc:
+            raise DomainError(
+                "invalid_baseline_checks",
+                "Сохранённые проверки требуют проверки приложения. Автоматическое исправление остановлено.",
+            ) from exc
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
-        "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
-        "pipeline_version": 2,
+        "response_schema_sha256": fingerprint(response_schema(request)),
+        "pipeline_version": version,
         "max_repair_attempts": run.max_repair_attempts,
-        "reported_findings": len(findings),
+        "reported_findings": len(findings) or int(bool(last_attempt_error)),
         "focused_findings": len(request["findings"]),
     }
 
@@ -351,12 +366,31 @@ def record_exception(run, exc, stage):
 
 
 def check_identity(revision):
+    from generation.source_map import VERSION
     from validation import service
 
     environment = service.environment_identity()
     return fingerprint(
-        {"artifact": revision.artifact_hash, "checks": revision.checks, "validator": environment}
+        {"artifact": revision.artifact_hash, "checks": revision.checks, "validator": environment,
+         "source_map": VERSION}
     )
+
+
+def repair_state(run, base):
+    """Reports own game defects; a rejected invocation owns only its reply error."""
+    report = base.reports.order_by("-id").first() if base else None
+    findings = report.findings if report else []
+    previous = run.invocations.order_by("-attempt").first()
+    if previous is None and run.continued_from:
+        previous = run.continued_from.invocations.order_by("-attempt").first()
+    last_error = None
+    if previous and not previous.revision_id and previous.error:
+        base_id = str(base.id) if base else None
+        if previous.request.get("base_revision") == base_id:
+            last_error = {key: previous.error[key] for key in ("code", "message") if key in previous.error}
+            if not report:
+                findings = previous.request.get("unresolved_findings") or previous.request.get("findings") or []
+    return findings, last_error
 
 
 def error_data(exc):
@@ -419,7 +453,7 @@ def _execute(run, lease, generate, materialize, validate):
     from generation.errors import ContractError, GenerationPending
 
     base = run.candidate_revision or run.base_revision
-    findings = []
+    findings, last_attempt_error = repair_state(run, base)
     # A continued infrastructure failure only needs validation, not another model call.
     pending = (
         run.candidate_revision
@@ -451,9 +485,10 @@ def _execute(run, lease, generate, materialize, validate):
     if run.continued_from and not pending:
         previous = run.continued_from
         report = base.reports.order_by("-id").first() if base else None
-        findings = (
-            report.findings if report else [previous.error or {"message": "Продолжить сохранённый запрос."}]
-        )
+        if report:
+            findings = report.findings
+        elif not last_attempt_error:
+            last_attempt_error = previous.error or {"message": "Продолжить сохранённый запрос."}
     while not lease.cancelled():
         run.refresh_from_db()
         inv = (
@@ -514,18 +549,23 @@ def _execute(run, lease, generate, materialize, validate):
                 if pending is None:
                     return
                 base = pending
+                last_attempt_error = None
             except ContractError as exc:
                 inv.state = "settled"
                 inv.error = error_data(exc)
                 inv.save(update_fields=["state", "error"])
-                findings = [error_data(exc)]
+                last_attempt_error = error_data(exc)
                 pending = None
                 event(
                     run,
                     "contract_error",
                     "Ответ сохранён; исправляем проблему формата, изменений или проверок.",
-                    {"code": findings[0]["code"]},
+                    {"code": last_attempt_error["code"]},
                 )
+                if exc.code in {"test_only_change", "invalid_baseline_checks"}:
+                    finish_run(run.id, run.fence, "needs_attention", exc.message,
+                               error={**last_attempt_error, "details": findings})
+                    return
         if pending is not None:
             identity = check_identity(pending)
             report = (
@@ -561,6 +601,11 @@ def _execute(run, lease, generate, materialize, validate):
                                 {"code": "validator_unavailable", "message": "Среда проверки недоступна."}
                             ],
                         }
+                from generation.source_map import locate_findings
+
+                result["findings"] = locate_findings(
+                    result.get("findings", []), files=pending.files, html=pending.html,
+                )
                 report = CheckReport.objects.create(
                     validation_run=run,
                     revision=pending,
@@ -636,8 +681,9 @@ def _execute(run, lease, generate, materialize, validate):
                 error={
                     "code": "repair_exhausted",
                     "message": "Остались проблемы применения или проверки.",
-                    "details": findings,
+                    "details": findings or ([last_attempt_error] if last_attempt_error else []),
                     "max_repair_attempts": run.max_repair_attempts,
+                    "last_attempt_error": last_attempt_error,
                 },
             )
             return
@@ -645,7 +691,7 @@ def _execute(run, lease, generate, materialize, validate):
             if resumed:
                 inv = resumed
             else:
-                req = request_for(run, base, findings)
+                req = request_for(run, base, findings, last_attempt_error)
                 with transaction.atomic():
                     inv = reserve_invocation(run, req)
                     run.attempts = inv.attempt
@@ -743,7 +789,7 @@ def _execute(run, lease, generate, materialize, validate):
                 )
                 return
             if isinstance(exc, ContractError) or data["code"] == "invalid_json":
-                findings = [error_data(exc)]
+                last_attempt_error = error_data(exc)
                 continue
             finish_run(run.id, run.fence, "failed", data["message"], error=error_data(exc))
             return

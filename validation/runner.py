@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 import time
@@ -127,7 +128,7 @@ def compare(before, after, expect):
     if op == "not_eq":
         return after != value
     if op == "contains":
-        return isinstance(after, (str, list)) and value in after
+        return isinstance(value, str) and bool(value.strip()) and isinstance(after, (str, list)) and value in after
     if op == "changed":
         return before != after
     if op in {"increased", "decreased"}:
@@ -259,9 +260,18 @@ def run(payload):
                 viewport=viewport, has_touch=True, device_scale_factor=1, accept_downloads=False
             )
             errors, requests = [], []
+            locations: list[dict[str, Any]] = []
             page = context.new_page()
             page.set_default_timeout(1800)
-            page.on("pageerror", lambda error: errors.append(str(error)[:700]))
+
+            def page_error(error):
+                errors.append(str(error)[:700])
+                for match in re.finditer(r"https://game\.invalid/index\.html:(\d+):(\d+)", error.stack or ""):
+                    if len(locations) < 8:
+                        locations.append({"file": "index.html", "line": int(match[1]), "column": int(match[2]),
+                                          "location": "bundled_html"})
+
+            page.on("pageerror", page_error)
             page.on(
                 "console",
                 lambda message: errors.append(message.text[:700]) if message.type == "error" else None,
@@ -386,6 +396,7 @@ def run(payload):
                         "message": "Ошибки JavaScript или попытки внешних запросов.",
                         "errors": errors,
                         "requests": requests,
+                        "locations": locations,
                     }
                 )
             if fact["status"] == "failed" and not errors and not requests:

@@ -78,7 +78,7 @@ def test_normalized_response_still_cannot_change_trusted_operation():
 
 def test_relay_passes_strict_schema_without_a_model_call(monkeypatch):
     from generation.providers.relay import prepare
-    from generation.schema import RESPONSE_SCHEMA
+    from generation.schema import response_schema
 
     monkeypatch.setenv("GAMEFORGE_RELAY_URL", "https://relay.example")
     monkeypatch.setenv("GAMEFORGE_RELAY_API_KEY", "test-key" * 8)
@@ -90,4 +90,4 @@ def test_relay_passes_strict_schema_without_a_model_call(monkeypatch):
     fmt = prepared["payload"]["response_format"]
     assert fmt["type"] == "json_schema"
     assert fmt["json_schema"]["strict"] is True
-    assert fmt["json_schema"]["schema"] == RESPONSE_SCHEMA
+    assert fmt["json_schema"]["schema"] == response_schema({"operation": "create"})

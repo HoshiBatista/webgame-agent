@@ -18,6 +18,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
+from .model_profiles import (
+    can_use_pro,
+    configured_profiles,
+    default_profile,
+    profile_options,
+    unavailable_reason,
+)
 from .models import Chat, Feedback, Like, Message, Publication, Revision, Run
 from .serialization import chat_data, preview_url, publication_data, revision_data, run_data
 from .services import DomainError, budget_snapshot, cancel_run, create_run, event, preference_for, tariff
@@ -68,7 +75,7 @@ def owned_revision(request, ident):
     return get_object_or_404(Revision, pk=ident, chat__owner=request.user, chat__deleted_at__isnull=True)
 
 
-def capabilities():
+def capabilities(request):
     models = []
     if settings.GAMEFORGE_PROVIDER == "codex":
         try:
@@ -81,12 +88,19 @@ def capabilities():
         models = [{"id": settings.GAMEFORGE_MODEL, "name": settings.GAMEFORGE_MODEL}]
     for model in models:
         model["priced"] = bool(tariff(settings.GAMEFORGE_PROVIDER, model["id"]))
+    options = profile_options(request)
     return {
         "provider": settings.GAMEFORGE_PROVIDER,
         "model": settings.GAMEFORGE_MODEL,
         "models": models,
         "local_only": settings.GAMEFORGE_LOCAL_ONLY,
+        "model_profiles": options,
+        "default_model_profile": default_profile(options),
     }
+
+
+def preference_data(pref):
+    return {"theme": pref.theme, "notes": pref.notes, "model_profile": pref.model_profile}
 
 
 def session_data(request):
@@ -95,10 +109,10 @@ def session_data(request):
     return {
         "user": {"id": user.id, "username": user.username, "is_staff": user.is_staff} if pref else None,
         "csrfToken": get_token(request),
-        "preferences": {"theme": pref.theme, "notes": pref.notes}
+        "preferences": preference_data(pref)
         if pref
-        else {"theme": "light", "notes": []},
-        "capabilities": capabilities(),
+        else {"theme": "light", "notes": [], "model_profile": ""},
+        "capabilities": capabilities(request),
         "budget": budget_snapshot() if pref else None,
     }
 
@@ -166,23 +180,18 @@ def chat_view(request, ident):
     return Response(status=204)
 
 
-def enforce_provider_boundary(request):
-    if settings.GAMEFORGE_PROVIDER == "codex":
-        local_host = request.get_host().split(":")[0] in ("127.0.0.1", "localhost", "testserver")
-        if (
-            not settings.GAMEFORGE_LOCAL_ONLY
-            or not local_host
-            or request.META.get("REMOTE_ADDR") not in ("127.0.0.1", "::1", None)
-        ):
+def enforce_provider_boundary(request, provider):
+    if provider == "codex":
+        if not settings.GAMEFORGE_PRO_ENABLED or not can_use_pro(request):
             raise DomainError(
-                "local_codex_only", "Вход через Codex доступен только локальному оператору.", 403
+                "codex_access_denied", "Для вашего аккаунта Pro не разрешён на этом сервере.", 403
             )
 
 
 @api_view(["POST"])
 def runs_view(request, ident):
-    enforce_provider_boundary(request)
-    run = create_run(owned_chat(request, ident), request.data)
+    run = create_run(owned_chat(request, ident), request.data,
+                     authorize=lambda provider: enforce_provider_boundary(request, provider))
     return Response(run_data(run), status=202)
 
 
@@ -198,11 +207,13 @@ def cancel_view(request, ident):
 
 @api_view(["POST"])
 def continue_view(request, ident):
-    enforce_provider_boundary(request)
     run = owned_run(request, ident)
     data = dict(request.data)
     data.setdefault("idempotency_key", str(uuid.uuid4()))
-    return Response(run_data(create_run(run.chat, data, continued_from=run)), status=202)
+    return Response(run_data(create_run(
+        run.chat, data, continued_from=run,
+        authorize=lambda provider: enforce_provider_boundary(request, provider),
+    )), status=202)
 
 
 @api_view(["POST"])
@@ -473,6 +484,14 @@ def remix_view(request, ident):
 def preferences_view(request):
     pref = preference_for(request.user)
     if request.method == "PATCH":
+        if "model_profile" in request.data:
+            profile_id = request.data["model_profile"]
+            if not isinstance(profile_id, str) or profile_id not in configured_profiles():
+                raise DomainError("invalid_model_profile", "Выберите Pro или Lite.")
+            reason = unavailable_reason(configured_profiles()[profile_id], request)
+            if reason:
+                raise DomainError("model_unavailable", reason, 409)
+            pref.model_profile = profile_id
         if "theme" in request.data:
             if request.data["theme"] not in ("light", "dark"):
                 raise DomainError("invalid_theme", "Выберите светлую или тёмную тему.")
@@ -486,8 +505,8 @@ def preferences_view(request):
             ):
                 raise DomainError("invalid_preferences", "Можно сохранить до 10 коротких пожеланий.")
             pref.notes = list(dict.fromkeys(s.strip() for s in notes if s.strip()))
-        pref.save()
-    return Response({"theme": pref.theme, "notes": pref.notes})
+        pref.save(update_fields=[key for key in ("theme", "notes", "model_profile") if key in request.data])
+    return Response(preference_data(pref))
 
 
 @api_view(["POST"])
@@ -515,7 +534,7 @@ def feedback_view(request, ident):
             "id": feedback.id,
             "rating": rating,
             "reasons": reasons,
-            "preferences": {"theme": pref.theme, "notes": pref.notes},
+            "preferences": preference_data(pref),
         },
         status=201,
     )

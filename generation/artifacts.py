@@ -142,12 +142,13 @@ def _css(content, containing, files):
     return re.sub(r"url\((.*?)\)", replace, content, flags=re.I | re.S)
 
 
-def bundle(files):
+def bundle(files, *, script_map=None):
     files = normalize_files(files)
     document = _get(files, "index.html")
     if re.search(r"<(?:iframe|object|embed|base)\b", document, re.I):
         raise ContractError("embedded_document", "Игра должна быть автономной, без вложенных документов.")
     deferred = []
+    immediate_maps, deferred_maps = [], []
 
     def script(match):
         tag, content = match.group(1), match.group(2)
@@ -183,12 +184,18 @@ def bundle(files):
             raise ContractError(
                 "module_import", "Автономная игра использует обычные script без модульных импортов."
             )
+        original_content = content
+        source_start = 0 if src else match.start(2)
         # A JS string containing an HTML closing tag must not terminate its container.
         content = re.sub(r"</script", r"<\/script", content, flags=re.I)
         bundled = "<script>" + content + "</script>"
+        record = {"path": path if src else "index.html", "source_start": source_start,
+                  "original": original_content, "generated": content}
         if src and re.search(r"\sdefer(?:\s|=|>)", tag, re.I):
             deferred.append(bundled)
+            deferred_maps.append(record)
             return ""
+        immediate_maps.append(record)
         return bundled
 
     document = re.sub(r"(<script\b[^>]*>)(.*?)</script\s*>", script, document, flags=re.I | re.S)
@@ -236,6 +243,8 @@ def bundle(files):
     # Reject external declarations; sandbox/CSP enforces dynamic network restrictions too.
     if re.search(r"(?:src|href|poster)\s*=\s*['\"]\s*(?:https?:|//|file:)", document, re.I):
         raise ContractError("external_resource", "Экспорт не должен зависеть от внешних ресурсов.")
+    if script_map is not None:
+        script_map.extend(immediate_maps + deferred_maps)
     return document
 
 
@@ -251,6 +260,20 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             raise ContractError("stale_revision", "Ответ «без изменений» относится к другой версии игры.")
         return {"status": "unchanged", "message": response["message"]}
     if original:
+        if operation == "repair":
+            try:
+                validate_checks(previous_checks or [])
+            except ContractError as exc:
+                raise ContractError(
+                    "invalid_baseline_checks",
+                    "Сохранённые проверки требуют отдельной проверки приложения; код игры не переписываем.",
+                ) from exc
+            previous = {check["id"]: check for check in previous_checks or []}
+            if any(previous.get(check["id"]) != check for check in response["checks"]):
+                raise ContractError(
+                    "repair_checks_locked",
+                    "Автоматическое исправление не может менять обязательные проверки. Верните checks=[].",
+                )
         if response["operation"] not in {"edit", "repair"} or response["files"]:
             raise ContractError(
                 "rewrite_disallowed", "Изменение существующей игры должно содержать только точные патчи."
@@ -279,7 +302,12 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             check_map[old["id"]] = old
     checks = list(check_map.values())
     validate_checks(checks)
-    if original and result == original and check_map == {c["id"]: c for c in previous_checks or []}:
+    if original and result == original and check_map != {c["id"]: c for c in previous_checks or []}:
+        raise ContractError(
+            "test_only_change",
+            "Изменены только проверки. Нужна отдельная проверка приложения; игра не объявляется исправленной.",
+        )
+    if original and result == original:
         raise ContractError(
             "no_changes",
             "Ответ заявляет об изменении, но исходники и проверки остались прежними. Верните нужный точный патч; если запрос уже реализован, используйте status=unchanged и объясните почему.",

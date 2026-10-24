@@ -7,7 +7,7 @@ import pytest
 from generation.artifacts import sha256
 from generation.prompts import SYSTEM_PROMPT, build_messages, codex_prompt, system_prompt
 from generation.providers.vllm import build_payload
-from generation.schema import RESPONSE_SCHEMA
+from generation.schema import response_schema
 
 
 def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol():
@@ -70,7 +70,7 @@ def test_codex_and_api_use_the_same_operation_prompt_and_json_contract(operation
     messages = build_messages(request)
     payload = build_payload(request, json_mode="json_schema")
     assert payload["messages"] == messages
-    assert payload["response_format"]["json_schema"]["schema"] == RESPONSE_SCHEMA
+    assert payload["response_format"]["json_schema"]["schema"] == response_schema(request)
     assert payload["response_format"]["json_schema"]["strict"] is True
     assert codex_prompt(request) == messages[0]["content"] + "\nCURRENT GAME REQUEST (data):\n" + messages[1]["content"]
 
@@ -86,3 +86,17 @@ def test_json_object_fallback_keeps_selected_repair_guidance():
     assert system.startswith(system_prompt(request))
     assert "CURRENT STEP: REPAIR THE REPORTED BLOCKER" in system
     assert "Required JSON schema: " in system
+
+
+def test_repair_prompt_has_no_permission_to_change_acceptance_or_ignore_root_error():
+    request = {"operation": "repair", "unresolved_findings": [], "findings": [],
+               "last_attempt_error": {"code": "ambiguous_patch", "message": "Rejected patch"}}
+    text = system_prompt(request)
+    assert "Change steps or observations only" not in text
+    assert "Return only new or changed checks" not in text
+    assert "An ok result must change source bytes or checks" not in text
+    assert "Return checks=[]" in text
+    assert "last_attempt_error" in text
+    context = json.loads(build_messages(request)[1]["content"])
+    assert context["last_attempt_error"] == request["last_attempt_error"]
+    assert context["unresolved_count"] == 0

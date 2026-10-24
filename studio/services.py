@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
+from .model_profiles import configured_profiles, unavailable_reason
 from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Run, RunEvent
 
 
@@ -59,6 +60,8 @@ def tariff(provider, model):
     # https://developers.openai.com/api/docs/pricing (USD per million tokens).
     prices = {
         "gpt-6-luna": {"input": 0.10, "cached": 0.01, "cache_write": 0.125, "output": 0.50},
+        # https://developers.openai.com/api/docs/models/gpt-6-sol (2026-10-24).
+        "gpt-6-sol": {"input": 2, "cached": 0.20, "cache_write": 2.5, "output": 10},
         "gpt-6.1-sol": {"input": 2, "cached": 0.10, "cache_write": 2.5, "output": 10},
     }
     if provider != "codex":
@@ -213,7 +216,7 @@ def schedule(run):
 
 
 @transaction.atomic
-def create_run(chat, data, *, continued_from=None):
+def create_run(chat, data, *, continued_from=None, authorize=None):
     chat = Chat.objects.select_for_update().get(pk=chat.pk, deleted_at__isnull=True)
     key = data.get("idempotency_key")
     if not isinstance(key, str) or not key.strip() or len(key) > 100:
@@ -224,9 +227,35 @@ def create_run(chat, data, *, continued_from=None):
     audience = data.get("audience", chat.audience)
     if audience not in ("everyone", "gamers", "children", "seniors"):
         raise DomainError("invalid_audience", "Неизвестная аудитория.")
-    model = data.get("model") or (continued_from.model if continued_from else settings.GAMEFORGE_MODEL)
+    previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
+    # Retries inherit the original choice even if the user's preference or server
+    # configuration changed after a lost HTTP response. Continuations inherit it
+    # unless the user explicitly selects another profile.
+    inherited = previous or continued_from
+    default_choice = inherited.model_profile if inherited else (
+        "" if settings.GAMEFORGE_PROVIDER == "fake" else preference_for(chat.owner).model_profile
+    )
+    profile_id = data.get("model_profile", default_choice)
+    if not isinstance(profile_id, str) or profile_id not in {"", "pro", "lite"}:
+        raise DomainError("invalid_model_profile", "Выберите Pro или Lite.")
+    if inherited and profile_id == inherited.model_profile:
+        provider, model = inherited.provider, inherited.model
+    elif profile_id:
+        profile = configured_profiles()[profile_id]
+        reason = unavailable_reason(profile)
+        if reason:
+            raise DomainError("model_unavailable", reason, 409)
+        provider, model = profile["provider"], profile["model"]
+    else:
+        provider, model = settings.GAMEFORGE_PROVIDER, settings.GAMEFORGE_MODEL
+    if data.get("model"):
+        if profile_id and data["model"] != model:
+            raise DomainError("invalid_model", "Модель определяется выбранным режимом Pro / Lite.")
+        model = data["model"]
     if not isinstance(model, str) or len(model) > 100:
         raise DomainError("invalid_model", "Некорректная модель.")
+    if authorize:
+        authorize(provider)
     payload = {
         "prompt": prompt.strip(),
         "audience": audience,
@@ -236,9 +265,14 @@ def create_run(chat, data, *, continued_from=None):
     accept_unknown_cost = data.get("accept_unknown_cost") is True
     if accept_unknown_cost:
         payload["accept_unknown_cost"] = True
-    previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
+    legacy_fingerprint = fingerprint(payload)
+    payload.update(provider=provider, model_profile=profile_id)
     if previous:
-        if previous.request_fingerprint != fingerprint(payload):
+        legacy_match = (
+            not previous.model_profile and not profile_id and previous.provider == provider
+            and previous.request_fingerprint == legacy_fingerprint
+        )
+        if previous.request_fingerprint != fingerprint(payload) and not legacy_match:
             raise DomainError("idempotency_conflict", "Этот ключ уже использован для другого запроса.", 409)
         return previous
     if chat.runs.filter(status__in=Run.ACTIVE).exists():
@@ -276,7 +310,8 @@ def create_run(chat, data, *, continued_from=None):
         prompt=prompt.strip(),
         audience=audience,
         model=model,
-        provider=continued_from.provider if continued_from else settings.GAMEFORGE_PROVIDER,
+        provider=provider,
+        model_profile=profile_id,
         idempotency_key=key,
         request_fingerprint=fingerprint(payload),
         base_revision=base,

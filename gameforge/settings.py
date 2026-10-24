@@ -122,6 +122,17 @@ if GAMEFORGE_MAX_REPAIR_ATTEMPTS not in (2, 3):
     raise ValueError("GAMEFORGE_MAX_REPAIR_ATTEMPTS must be 2 or 3")
 GAMEFORGE_LEASE_SECONDS = int(os.environ.get("GAMEFORGE_LEASE_SECONDS", "45"))
 GAMEFORGE_LOCAL_ONLY = os.environ.get("GAMEFORGE_LOCAL_ONLY", "1") == "1"
+# Pro is opt-in. The default remains local-only; a trusted cloud installation
+# must separately allow exact existing account IDs, never every logged-in visitor.
+GAMEFORGE_PRO_ENABLED = os.environ.get("GAMEFORGE_PRO_ENABLED", "0") == "1"
+GAMEFORGE_PRO_ACCESS = os.environ.get("GAMEFORGE_PRO_ACCESS", "local")
+if GAMEFORGE_PRO_ACCESS not in {"local", "restricted"}:
+    raise ValueError("GAMEFORGE_PRO_ACCESS must be local or restricted")
+GAMEFORGE_PRO_USER_IDS = frozenset(
+    int(value.strip()) for value in os.environ.get("GAMEFORGE_PRO_USER_IDS", "").split(",") if value.strip()
+)
+GAMEFORGE_LITE_PROVIDER = os.environ.get("GAMEFORGE_LITE_PROVIDER", "")
+GAMEFORGE_LITE_MODEL = os.environ.get("GAMEFORGE_LITE_MODEL", "")
 DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 
 # Dedicated logger stays visible even when Celery's root log level is WARNING.

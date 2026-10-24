@@ -378,7 +378,10 @@ export function RunStatus({
           )}
         </span>
         <div>
-          <strong>{label}</strong>
+          <strong>
+            {label}
+            {run.model_label && <span className="model-badge">{run.model_label}</span>}
+          </strong>
           <span>{run.message || latest?.message || run.stage}</span>
         </div>
         {run.elapsed_seconds > 0 && <small>{formatDuration(run.elapsed_seconds)}</small>}

@@ -6,6 +6,14 @@ export interface User {
 export interface Preferences {
   theme: 'light' | 'dark';
   notes: string[];
+  model_profile?: string;
+}
+export interface ModelProfile {
+  id: string;
+  name: string;
+  description: string;
+  available: boolean;
+  unavailable_reason: string;
 }
 export interface Budget {
   limit_usd: number | string;
@@ -23,6 +31,8 @@ export interface Session {
     model: string;
     models: Array<string | { id: string; name?: string; priced?: boolean }>;
     local_only: boolean;
+    model_profiles?: ModelProfile[];
+    default_model_profile?: string;
   };
   budget: Budget;
 }
@@ -72,6 +82,10 @@ export interface Run {
   id: string;
   chat_id: string;
   operation: string;
+  model_profile?: string;
+  model_label?: string;
+  model?: string;
+  provider?: string;
   status: RunStatus;
   stage: string;
   message: string;

@@ -10,6 +10,7 @@ from django.db import IntegrityError, transaction
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
+from generation.providers.fake import fixture_response
 from studio.models import Budget, Chat, Invocation, Publication, Revision, User
 from studio.services import budget_snapshot, create_run, reserve_invocation, settle_invocation, usage_cost
 from studio.tasks import process_run, recover_expired
@@ -24,7 +25,9 @@ def artifact(title="Generated"):
         "artifact_hash": hashlib.sha256(HTML.encode()).hexdigest(),
         "file_hashes": {"index.html": hashlib.sha256(HTML.encode()).hexdigest()},
         "design": {"summary": "Independent game"},
-        "checks": [],
+        # Packaging is mocked in these workflow tests; its output must still
+        # satisfy the admission contract before another repair can be reserved.
+        "checks": fixture_response()["checks"],
         "title": title,
         "diff": [],
     }
@@ -733,7 +736,7 @@ class DomainTests(TestCase):
 
     def test_private_provider_receipt_and_generation_fingerprints_are_saved(self):
         from generation.prompts import SYSTEM_PROMPT
-        from generation.schema import RESPONSE_SCHEMA
+        from generation.schema import response_schema
         from studio.services import fingerprint
 
         run = self.make_run()
@@ -756,8 +759,8 @@ class DomainTests(TestCase):
             inv.request["generation_contract"],
             {
                 "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
-                "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
-                "pipeline_version": 2,
+                "response_schema_sha256": fingerprint(response_schema(inv.request)),
+                "pipeline_version": 3,
                 "max_repair_attempts": 3,
                 "reported_findings": 0,
                 "focused_findings": 0,

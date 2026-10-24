@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowDownToLine,
   ArrowUp,
-  ChevronDown,
   Gamepad2,
   History,
   PanelRightClose,
@@ -23,8 +22,9 @@ import {
   Spinner,
 } from './components';
 import { chatsChanged, useSession } from './context';
-import type { Chat, Publication, Revision, Run, RunEvent } from './types';
+import type { Chat, Preferences, Publication, Revision, Run, RunEvent } from './types';
 import { useSavedChat } from './useSavedChat';
+import ModelSelector, { selectedProfile } from './ModelSelector';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех', icon: '✦' },
@@ -45,12 +45,15 @@ export default function Studio() {
   const { id = 'new' } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
-  const { session, refresh } = useSession();
+  const { session, refresh, updateSession } = useSession();
   const { chat, loading, connectionError, reload: load } = useSavedChat(isNew ? undefined : id);
   const [error, setError] = useState('');
   const [prompt, setPrompt] = useState('');
   const [audience, setAudience] = useState('everyone');
-  const [model, setModel] = useState(session.capabilities.model);
+  const modelProfile = selectedProfile(session);
+  const profiles = session.capabilities.model_profiles ?? [];
+  const selectedModel = profiles.find((item) => item.id === modelProfile);
+  const modelUnavailable = profiles.length > 0 && !selectedModel?.available;
   const [busy, setBusy] = useState(false);
   const [events, setEvents] = useState<RunEvent[]>([]);
   const [selectedRevision, setSelectedRevision] = useState<string | null>(null);
@@ -151,12 +154,31 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
-  async function send(event: FormEvent) {
-    event.preventDefault();
-    if (!prompt.trim() || busy || activeRun || (!isNew && !chat)) return;
+  async function chooseModel(value: string) {
     setBusy(true);
     setError('');
-    const payload = { prompt: prompt.trim(), audience, model };
+    try {
+      const preferences = await request<Preferences>('/api/preferences/', {
+        method: 'PATCH',
+        body: JSON.stringify({ model_profile: value }),
+      });
+      updateSession({ ...session, preferences });
+    } catch (cause) {
+      setError(errorText(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function send(event: FormEvent) {
+    event.preventDefault();
+    if (!prompt.trim() || busy || activeRun || modelUnavailable || (!isNew && !chat)) return;
+    setBusy(true);
+    setError('');
+    const payload = {
+      prompt: prompt.trim(),
+      audience,
+      ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
+    };
     const key = operationKey(payload);
     let targetId = chat?.id;
     try {
@@ -196,6 +218,10 @@ export default function Studio() {
     acceptUnknownCost = false,
   ) {
     if (!latestRun) return;
+    if (action === 'continue' && modelUnavailable) {
+      setError('Выберите доступную модель для продолжения.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -204,12 +230,14 @@ export default function Studio() {
         action === 'continue'
           ? {
               prompt: note,
+              ...(modelProfile ? { model_profile: modelProfile } : {}),
               accept_unknown_cost: acceptUnknownCost,
               idempotency_key: operationKey({
                 action,
                 run: latestRun.id,
                 prompt: note,
                 acceptUnknownCost,
+                modelProfile,
               }),
             }
           : action === 'confirm'
@@ -337,7 +365,16 @@ export default function Studio() {
       <section className="chat-pane">
         <header className="chat-heading">
           <div>
-            <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
+            {profiles.length ? (
+              <ModelSelector
+                options={profiles}
+                value={modelProfile}
+                onChange={(value) => void chooseModel(value)}
+                disabled={busy}
+              />
+            ) : (
+              <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
+            )}
             <h1>{chat?.title || 'Новая маленькая вселенная'}</h1>
           </div>
           <div className="chat-heading-actions">
@@ -384,6 +421,11 @@ export default function Studio() {
             </div>
           )}
           {error && <ErrorNotice message={error} onClose={() => setError('')} />}{' '}
+          {modelUnavailable && (
+            <ErrorNotice
+              message={selectedModel?.unavailable_reason || 'Выберите доступную модель.'}
+            />
+          )}
           {connectionError && (
             <div className="notice" role="status">
               <span>{connectionError}</span>
@@ -429,6 +471,11 @@ export default function Studio() {
                   : message.role === 'system'
                     ? 'Мастерская'
                     : 'GameForge'}
+                {message.role === 'assistant' &&
+                  (() => {
+                    const label = chat.runs.find((run) => run.id === message.run_id)?.model_label;
+                    return label ? <span className="model-badge">{label}</span> : null;
+                  })()}
               </span>
               <div>{message.content}</div>
             </article>
@@ -494,7 +541,9 @@ export default function Studio() {
               </span>
               <button
                 className="send-button"
-                disabled={!prompt.trim() || busy || !!activeRun || (!isNew && !chat)}
+                disabled={
+                  !prompt.trim() || busy || !!activeRun || modelUnavailable || (!isNew && !chat)
+                }
                 aria-label={current ? 'Отправить доработку' : 'Создать игру'}
               >
                 <ArrowUp size={20} />
@@ -507,36 +556,13 @@ export default function Studio() {
                 ? 'Можно отменить задание в карточке выше.'
                 : '⌘ / Ctrl + Enter — отправить'}
             </span>
-            <details className="model-picker">
-              <summary>
-                {session.capabilities.provider}
-                <ChevronDown size={12} />
-              </summary>
-              <label>
-                Модель
-                <select
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                  disabled={!!activeRun || busy}
-                >
-                  {session.capabilities.models.map((item) => {
-                    const value = typeof item === 'string' ? item : item.id;
-                    return (
-                      <option
-                        key={value}
-                        value={value}
-                        disabled={typeof item !== 'string' && item.priced === false}
-                      >
-                        {typeof item === 'string' ? item : (item.name ?? value)}
-                        {typeof item !== 'string' && item.priced === false
-                          ? ' · тариф не настроен'
-                          : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              </label>
-            </details>
+            {selectedModel && (
+              <span>
+                {activeRun
+                  ? `Выполняется: ${activeRun.model_label || activeRun.model || 'модель запуска'}. Далее: ${selectedModel.name}`
+                  : `Следующий запрос · ${selectedModel.name}`}
+              </span>
+            )}
           </div>
         </form>
       </section>

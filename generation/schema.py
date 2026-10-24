@@ -1,5 +1,7 @@
 """The same bounded, declarative contract drives providers and browser checks."""
 
+from copy import deepcopy
+
 from jsonschema import Draft202012Validator
 
 from .errors import ContractError
@@ -138,9 +140,39 @@ RESPONSE_SCHEMA = obj(
 )
 
 
-def validate_response(response, *, operation=None):
+CONTRACT_VERSION = 3
+
+
+def response_schema(request):
+    """App-owned operation contract. Persisted v2 invocations retain their wire schema."""
+    version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
+    if version not in {2, CONTRACT_VERSION}:
+        raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    schema = deepcopy(RESPONSE_SCHEMA)
+    if version == 2:
+        return schema
+    operation = request.get("operation", "create")
+    if operation not in {"create", "edit", "repair"}:
+        raise ContractError("operation_mismatch", "Неизвестная операция генерации.")
+    props = schema["properties"]
+    props["operation"] = {"enum": [operation]}
+    if operation == "create":
+        props["status"] = {"enum": ["ok", "scope_refusal"]}
+        props["base_revision"] = {"type": "null"}
+        props["patches"]["maxItems"] = 0
+    else:
+        props["base_revision"] = {"type": "string", "minLength": 1}
+        props["files"]["maxItems"] = 0
+        if operation == "repair":
+            props["checks"]["maxItems"] = 0
+    return schema
+
+
+def validate_response(response, *, operation=None, schema=None):
+    if isinstance(response, dict) and operation is not None and "operation" in response and response["operation"] != operation:
+        raise ContractError("operation_mismatch", "Ответ изменил вид операции. Используйте operation из запроса.")
     errors = sorted(
-        Draft202012Validator(RESPONSE_SCHEMA).iter_errors(response), key=lambda e: str(list(e.path))
+        Draft202012Validator(schema or RESPONSE_SCHEMA).iter_errors(response), key=lambda e: str(list(e.path))
     )
     if errors:
         error = errors[0]
@@ -190,6 +222,10 @@ def validate_checks(checks, *, require_complete=True):
             raise ContractError("duplicate_check", "Идентификаторы проверок должны быть уникальны.")
         ids.add(check["id"])
         categories.add(check["category"])
+        if check["expect"]["operator"] == "contains" and (
+            not isinstance(check["expect"]["value"], str) or not check["expect"]["value"].strip()
+        ):
+            raise ContractError("trivial_expectation", "Ожидание contains требует непустой содержательной строки.")
         if sum(step.get("ms", 0) for step in check["steps"]) > 10000:
             raise ContractError(
                 "long_check",

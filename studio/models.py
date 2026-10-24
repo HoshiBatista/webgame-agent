@@ -15,6 +15,7 @@ class Preference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="preference")
     theme = models.CharField(max_length=10, default="light")
     notes = models.JSONField(default=list)
+    model_profile = models.CharField(max_length=10, blank=True, default="")
 
 
 class Chat(models.Model):
@@ -42,6 +43,7 @@ class Run(models.Model):
     audience = models.CharField(max_length=32, default="everyone")
     provider = models.CharField(max_length=32)
     model = models.CharField(max_length=100, blank=True)
+    model_profile = models.CharField(max_length=10, blank=True, default="")
     status = models.CharField(max_length=32, default="queued")
     stage = models.CharField(max_length=40, default="queued")
     message = models.TextField(default="В очереди на создание игры")

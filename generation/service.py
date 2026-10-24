@@ -7,7 +7,7 @@ from .errors import GenerationError
 from .normalization import VERSION as NORMALIZATION_VERSION
 from .normalization import normalize_response
 from .providers import codex, fake, relay, vllm
-from .schema import validate_response
+from .schema import response_schema, validate_response
 
 PROVIDERS = {"codex": codex, "vllm": vllm, "relay": relay, "fake": fake}
 
@@ -28,7 +28,8 @@ def generate(request, *, on_event, is_cancelled):
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
     try:
-        validate_response(result["response"], operation=request.get("operation", "create"))
+        validate_response(result["response"], operation=request.get("operation", "create"),
+                          schema=response_schema(request))
     except GenerationError as exc:
         exc.usage = result.get("usage")
         exc.raw_response = result.get("raw_response") or result.get("response")
@@ -63,7 +64,7 @@ def estimate_reservation(request, price):
     if not any(rates):
         return Decimal(0)
     model = request.get("model") or "gpt-6-luna"
-    if request.get("provider", "codex") == "codex" and model in {"gpt-6-luna", "gpt-6.1-sol"}:
+    if request.get("provider", "codex") == "codex" and model in {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"}:
         context, output, input_factor, output_factor = 872000, 128000, Decimal(2), Decimal("1.5")
     else:
         context, output = price.get("context_window"), price.get("max_output_tokens")

@@ -2,6 +2,7 @@
 .idea/
 .env
 .env.*
+/docs/1.txt
 !.env.example
 !.env.team.example
 !.env.native.example

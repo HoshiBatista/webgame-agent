@@ -2,6 +2,7 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from types import SimpleNamespace
 
 import pytest
 
@@ -11,10 +12,39 @@ from generation.providers.fake import fixture_response
 from generation.service import generate as generate_operation
 
 
+@pytest.mark.parametrize("version", ["0.163.0-alpha.10.2", "0.163.0-alpha.11.2", "0.999.0"])
+def test_codex_cli_contract_allows_only_reviewed_versions(monkeypatch, version):
+    monkeypatch.setattr(codex, "binary", lambda: "codex")
+    monkeypatch.setattr(codex.subprocess, "run", lambda *a, **kw: SimpleNamespace(stdout=f"codex-cli {version}"))
+    if version == "0.999.0":
+        with pytest.raises(GenerationError) as exc:
+            codex.verify_cli_contract()
+        assert exc.value.code == "codex_profile_unverified"
+    else:
+        assert codex.verify_cli_contract() == f"codex-cli {version}"
+
+
 def generate(request, **kwargs):
     if request.get("provider") == "vllm":
         request = {**request, "execution_limits": {"context_window": 64000, "max_output_tokens": 8000}}
     return generate_operation(request, **kwargs)
+
+
+@pytest.mark.parametrize("operation", ["create", "edit", "repair"])
+def test_codex_receives_selected_operation_schema_through_actual_rpc_adapter(codex_rpc, operation):
+    from generation.schema import response_schema
+
+    request = {"provider": "codex", "operation": operation, "model": "gpt-6-luna"}
+    reply = fixture_response()
+    if operation != "create":
+        request["base_revision"] = "base"
+        reply.update(operation=operation, base_revision="base", files=[], checks=[])
+    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(reply)
+    result = generate_operation(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    params = next(params for method, params in codex_rpc["calls"] if method == "turn/start")
+    assert params["outputSchema"] == response_schema(request)
+    assert params["outputSchema"]["properties"]["operation"]["enum"] == [operation]
+    assert result["response"]["operation"] == operation
 
 
 @pytest.fixture

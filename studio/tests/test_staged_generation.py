@@ -138,3 +138,121 @@ def test_format_failures_also_consume_the_same_finite_allowance(setup):
     assert model.call_count == run.invocations.count() == 4
     assert all(i.raw_response == '{"bad":true}' for i in run.invocations.all())
     check.assert_not_called()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("rejection", ["patch", "schema", "json"])
+@pytest.mark.parametrize("restart", [False, True])
+def test_rejected_reply_preserves_root_defect_and_exact_base_across_restart(setup, rejection, restart):
+    from generation.errors import ContractError
+    from studio import tasks
+
+    run = new_run(setup)
+    seen = []
+
+    def model(request, **kwargs):
+        seen.append(request)
+        if len(seen) == 2:
+            if rejection != "patch":
+                raise ContractError("invalid_schema" if rejection == "schema" else "invalid_json",
+                                    "The reply was rejected", raw_response="{}",
+                                    usage={"input_tokens": 1, "cached_input_tokens": 0, "output_tokens": 1})
+            result = fixture_generate(request, **kwargs)
+            result["response"]["patches"][0]["old_text"] = "not in the original file"
+            return result
+        return fixture_generate(request, **kwargs)
+
+    original_request = tasks.request_for
+
+    def fail_before_next_send(*args, **kwargs):
+        request = original_request(*args, **kwargs)
+        if request["last_attempt_error"]:
+            raise KeyboardInterrupt()
+        return request
+
+    with (patch("generation.service.generate", side_effect=model),
+          patch("validation.service.validate", side_effect=[SYNTAX, PASS]),
+          patch("studio.tasks.request_for", side_effect=fail_before_next_send if restart else original_request)):
+        if restart:
+            with pytest.raises(KeyboardInterrupt):
+                process_run(str(run.id))
+        else:
+            process_run(str(run.id))
+    if restart:
+        run.refresh_from_db()
+        assert run.invocations.count() == 2
+        run.lease_until = timezone.now() - timedelta(seconds=1)
+        run.save(update_fields=["lease_until"])
+        recover_expired()
+        with (patch("generation.service.generate", side_effect=model),
+              patch("validation.service.validate", return_value=PASS)):
+            process_run(str(run.id))
+    run.refresh_from_db()
+    assert run.status == "succeeded", run.error
+    assert len(seen) == 3
+    failed_request, final_request = seen[1:]
+    assert final_request["base_revision"] == failed_request["base_revision"]
+    assert final_request["files"] == failed_request["files"]
+    assert final_request["findings"][0]["code"] == "javascript_syntax"
+    assert final_request["unresolved_findings"][0]["code"] == "javascript_syntax"
+    expected = {"patch": "ambiguous_patch", "schema": "invalid_schema", "json": "invalid_json"}[rejection]
+    assert final_request["last_attempt_error"]["code"] == expected
+    assert run.invocations.count() == 3
+
+
+@pytest.mark.django_db(transaction=True)
+def test_new_calls_in_an_existing_v2_run_keep_the_saved_wire_contract(setup):
+    from studio.tasks import request_for
+
+    run = new_run(setup)
+    first = request_for(run, None, [])
+    first["generation_contract"]["pipeline_version"] = 2
+    reserve_invocation(run, first)
+    assert request_for(run, None, [])["generation_contract"]["pipeline_version"] == 2
+
+
+@pytest.mark.django_db(transaction=True)
+def test_test_only_correction_stops_for_review_and_preserves_last_working_game(setup):
+    first = new_run(setup)
+    with (patch("generation.service.generate", side_effect=fixture_generate),
+          patch("validation.service.validate", return_value=PASS)):
+        process_run(str(first.id))
+    setup.refresh_from_db()
+    working = setup.current_revision_id
+    count = setup.revisions.count()
+    run = create_run(setup, {"prompt": "Исправь проверку, не меняя игру", "idempotency_key": "test-only"})
+
+    def checks_only(request, **kwargs):
+        result = fixture_generate(request, **kwargs)
+        result["response"]["patches"] = []
+        result["response"]["checks"][0]["expect"] = {"operator": "eq", "value": "unrelated"}
+        return result
+
+    with (patch("generation.service.generate", side_effect=checks_only) as model,
+          patch("validation.service.validate") as browser):
+        process_run(str(run.id))
+    run.refresh_from_db()
+    setup.refresh_from_db()
+    assert run.status == "needs_attention" and run.error["code"] == "test_only_change"
+    assert setup.current_revision_id == working and setup.revisions.count() == count
+    assert model.call_count == 1
+    browser.assert_not_called()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_invalid_inherited_suite_stops_before_another_model_reservation(setup):
+    from generation.artifacts import materialize
+    from studio.models import Revision
+    from studio.tasks import request_for
+
+    run = new_run(setup)
+    candidate = materialize(fixture_generate({}, on_event=lambda _: None, is_cancelled=lambda: False)["response"],
+                            operation="create")
+    candidate["checks"][0]["expect"] = {"operator": "contains", "value": ""}
+    revision = Revision.objects.create(chat=setup, run=run, number=1, files=candidate["files"],
+                                       html=candidate["html"], artifact_hash=candidate["artifact_hash"],
+                                       checks=candidate["checks"])
+    with pytest.raises(DomainError) as caught:
+        request_for(run, revision, SYNTAX["findings"])
+    assert caught.value.code == "invalid_baseline_checks"
+    assert run.invocations.count() == 0

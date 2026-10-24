@@ -1,0 +1,47 @@
+# Optional third overlay, after cloud.compose.yaml. Fresh VPS login only.
+# Auth is mounted only into worker; app can read only the exported model catalog.
+x-pro-environment: &pro-environment
+  GAMEFORGE_PRO_ENABLED: ${GAMEFORGE_PRO_ENABLED:-0}
+  GAMEFORGE_PRO_ACCESS: restricted
+  GAMEFORGE_PRO_USER_IDS: ${GAMEFORGE_PRO_USER_IDS:?Set explicit allowed user IDs}
+  GAMEFORGE_CODEX_BINARY: /usr/local/bin/codex
+
+x-codex-binary: &codex-binary
+  type: bind
+  source: ${GAMEFORGE_CODEX_BINARY_HOST:?Set the verified Linux Codex executable}
+  target: /usr/local/bin/codex
+  read_only: true
+  bind:
+    create_host_path: false
+
+services:
+  app:
+    environment:
+      <<: *pro-environment
+      GAMEFORGE_CODEX_CATALOG: /run/codex-catalog/models_cache.json
+    volumes:
+      - *codex-binary
+      - type: bind
+        source: ${GAMEFORGE_CODEX_CATALOG_HOST:?Set the non-secret catalog directory}
+        target: /run/codex-catalog
+        read_only: true
+        bind:
+          create_host_path: false
+  worker:
+    environment:
+      <<: *pro-environment
+      CODEX_HOME: /home/forge/.codex
+    mem_limit: 768m
+    pids_limit: 128
+    volumes:
+      - *codex-binary
+      - type: bind
+        source: ${GAMEFORGE_CODEX_HOME_HOST:?Set a dedicated VPS Codex home}
+        target: /home/forge/.codex
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${GAMEFORGE_CODEX_CATALOG_HOST}
+        target: /run/codex-catalog
+        bind:
+          create_host_path: false

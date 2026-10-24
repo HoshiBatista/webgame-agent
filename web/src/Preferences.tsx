@@ -5,6 +5,7 @@ import { errorText, request } from './api';
 import { useSession } from './context';
 import type { Preferences as PreferencesType } from './types';
 import SyntheticAnalytics, { DEMO_RECOMMENDATION } from './SyntheticAnalytics';
+import { ModelChoices, selectedProfile } from './ModelSelector';
 
 export default function Preferences({ onClose }: { onClose: () => void }) {
   const { session, updateSession, refresh } = useSession();
@@ -16,6 +17,7 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
   }, [refresh]);
   const [notes, setNotes] = useState(session.preferences.notes.join('\n'));
   const [theme, setTheme] = useState(session.preferences.theme);
+  const [modelProfile, setModelProfile] = useState(selectedProfile(session));
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [demoApplied, setDemoApplied] = useState(
@@ -59,6 +61,11 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
         method: 'PATCH',
         body: JSON.stringify({
           theme,
+          ...(modelProfile &&
+          modelProfile !== session.preferences.model_profile &&
+          session.capabilities.model_profiles?.some((p) => p.id === modelProfile && p.available)
+            ? { model_profile: modelProfile }
+            : {}),
           notes: notes
             .split('\n')
             .map((note) => note.trim())
@@ -76,6 +83,20 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="Всё по-вашему" onClose={onClose}>
       <form onSubmit={save} className="form-stack">
+        {!!session.capabilities.model_profiles?.length && (
+          <div>
+            <p>Модель по умолчанию</p>
+            <ModelChoices
+              options={session.capabilities.model_profiles}
+              value={modelProfile}
+              onChange={setModelProfile}
+              disabled={busy}
+            />
+            <p className="field-help">
+              Можно менять и в шапке чата. Текущая генерация продолжится с прежней моделью.
+            </p>
+          </div>
+        )}
         <label>Оформление</label>
         <div className="segmented">
           <button
@@ -121,13 +142,7 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
         busy={busy}
       />
       <details className="disclosure settings-budget">
-        <summary>Модель и общий бюджет</summary>
-        <p>
-          {session.capabilities.provider} · {session.capabilities.model}
-        </p>
-        {session.capabilities.local_only && (
-          <p className="field-help">Локальный доступ через ваш вход в Codex.</p>
-        )}
+        <summary>Общий бюджет</summary>
         <BudgetDetails budget={session.budget} />
       </details>
       {session.user?.is_staff && (

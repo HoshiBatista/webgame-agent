@@ -1784,35 +1784,130 @@ svg {
   margin-top: 9px;
   gap: 8px;
 }
-.model-picker {
-  position: relative;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
-.model-picker > summary {
-  cursor: pointer;
-  list-style: none;
+.model-selector {
+  position: relative;
+  margin-bottom: 6px;
+}
+.model-selector > summary {
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-.model-picker > label {
-  position: absolute;
-  bottom: 22px;
-  right: 0;
-  border: 1px solid var(--border);
-  padding: 13px;
-  background: var(--surface);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  font-size: 11px;
-  display: flex;
-  flex-direction: column;
   gap: 7px;
-  z-index: 20;
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+  font-size: 16px;
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 5px 7px;
+  margin-left: -7px;
+  &:hover {
+    background: var(--soft);
+  }
+  &::-webkit-details-marker {
+    display: none;
+  }
+  strong {
+    color: var(--ink);
+  }
 }
-.model-picker select {
+.model-selector-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: min(310px, calc(100vw - 44px));
   padding: 8px;
-  max-width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 12px 35px #0002;
+  > p {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 8px;
+    line-height: 1.5;
+  }
+}
+.model-choices {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.model-choices .model-choice {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  &:hover {
+    background: var(--soft);
+  }
+  &.selected {
+    background: var(--soft);
+    border-color: var(--border);
+  }
+  &:has(input:disabled) {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+  input {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+    accent-color: var(--teal);
+  }
+  > span {
+    display: grid;
+    gap: 4px;
+    flex: 1;
+  }
+  strong {
+    font-size: 15px;
+    color: var(--ink);
+  }
+  small {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+  > svg {
+    color: var(--teal);
+  }
+}
+.model-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  vertical-align: middle;
+  border-radius: 6px;
+  background: var(--soft);
+  color: var(--muted);
   font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
 }
 .preview-pane {
   display: flex;

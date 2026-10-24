@@ -92,6 +92,7 @@ def check_javascript(browser, html):
                     "column": column,
                     "script_index": index,
                     "script_line": relative_line + 1,
+                    "script_column": details.get("columnNumber", 0) + 1,
                 }, len(parser.scripts)
         return None, len(parser.scripts)
     finally:

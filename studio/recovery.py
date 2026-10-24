@@ -7,7 +7,7 @@ from django.db import transaction
 
 from generation.artifacts import materialize
 from generation.normalization import VERSION, normalize_response
-from generation.schema import validate_response
+from generation.schema import response_schema, validate_response
 
 from .models import Chat, Invocation, Run
 from .services import DomainError, event, fingerprint, schedule
@@ -38,7 +38,9 @@ def recover_saved_response(invocation_id, *, apply=False):
     except (ValueError, TypeError) as exc:
         raise DomainError("invalid_saved_json", "Сохранённый ответ не является полным JSON.") from exc
     response, paths = normalize_response(decoded)
-    validate_response(response, operation=source.request["operation"])
+    # Pre-versioned stored calls used the v2 wire contract.
+    saved_request = {"generation_contract": {"pipeline_version": 2}, **source.request}
+    validate_response(response, operation=source.request["operation"], schema=response_schema(saved_request))
     base = chat.current_revision
     artifact = materialize(
         response, operation=source.request["operation"], base_revision=base_id,
