@@ -45,18 +45,21 @@ export default function Studio() {
   const { id = 'new' } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
-  const { session, refresh, updateSession } = useSession();
+  const { session, refresh, updateSession, studioDrafts } = useSession();
+  const initialDraft = useRef(studioDrafts?.get(id)).current;
   const { chat, loading, connectionError, reload: load } = useSavedChat(isNew ? undefined : id);
   const [error, setError] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [audience, setAudience] = useState('everyone');
+  const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
+  const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
   const modelProfile = selectedProfile(session);
   const profiles = session.capabilities.model_profiles ?? [];
   const selectedModel = profiles.find((item) => item.id === modelProfile);
   const modelUnavailable = profiles.length > 0 && !selectedModel?.available;
   const [busy, setBusy] = useState(false);
   const [events, setEvents] = useState<RunEvent[]>([]);
-  const [selectedRevision, setSelectedRevision] = useState<string | null>(null);
+  const [selectedRevision, setSelectedRevision] = useState<string | null>(
+    initialDraft?.selectedRevision ?? null,
+  );
   const [previewOpen, setPreviewOpen] = useState(true);
   const [gameFullscreen, setGameFullscreen] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -72,9 +75,27 @@ export default function Studio() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [diagnostics, setDiagnostics] = useState<unknown | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const idempotency = useRef(newKey());
-  const lastPayload = useRef('');
+  const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
+  const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
+  const audienceReady = useRef(isNew || initialDraft?.audience != null);
+  const draft = useRef({ prompt, audience, selectedRevision });
+  draft.current = { prompt, audience, selectedRevision };
+  useEffect(
+    () => () => {
+      if (id === 'new' && submissionChat.current === currentId.current) {
+        studioDrafts?.delete(id);
+        return;
+      }
+      studioDrafts?.set(id, {
+        ...draft.current,
+        audience: audienceReady.current ? draft.current.audience : null,
+        idempotencyKey: idempotency.current,
+        lastPayload: lastPayload.current,
+      });
+    },
+    [id, studioDrafts],
+  );
   function operationKey(payload: unknown) {
     const fingerprint = JSON.stringify(payload);
     if (lastPayload.current && lastPayload.current !== fingerprint) idempotency.current = newKey();
@@ -85,8 +106,10 @@ export default function Studio() {
   const currentId = useRef(id);
   currentId.current = id;
   useEffect(() => {
+    const remembered = studioDrafts?.get(id);
+    audienceReady.current = isNew || remembered?.audience != null;
     setEvents([]);
-    setSelectedRevision(null);
+    setSelectedRevision(remembered?.selectedRevision ?? null);
     setGameFullscreen(false);
     setFeedbackDone(false);
     setRating(0);
@@ -95,17 +118,18 @@ export default function Studio() {
     setShareDone('');
     if (submissionChat.current !== id) {
       setError('');
-      setPrompt('');
-      idempotency.current = newKey();
-      lastPayload.current = '';
+      setPrompt(remembered?.prompt ?? '');
+      idempotency.current = remembered?.idempotencyKey ?? newKey();
+      lastPayload.current = remembered?.lastPayload ?? '';
     }
-    if (isNew) {
-      setAudience('everyone');
-      return;
-    }
-  }, [id, isNew]);
+    if (remembered?.audience != null) setAudience(remembered.audience);
+    else if (isNew) setAudience('everyone');
+  }, [id, isNew, studioDrafts]);
   useEffect(() => {
-    if (chat) setAudience(chat.audience);
+    if (chat && !audienceReady.current) {
+      setAudience(chat.audience);
+      audienceReady.current = true;
+    }
   }, [chat?.id]);
   const latestRun = chat?.active_run ?? chat?.runs[0] ?? null;
   const activeRun = chat?.active_run;

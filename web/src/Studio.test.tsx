@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { StrictMode } from 'react';
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Studio from './Studio';
-import { SessionContext } from './context';
+import { SessionContext, type StudioDraft } from './context';
 import { post, request } from './api';
 import type { Chat, Revision, Session } from './types';
 
@@ -65,12 +66,137 @@ function setup(path = '/chats/one', refresh = vi.fn().mockResolvedValue(undefine
     </SessionContext.Provider>,
   );
 }
+function setupNavigation(path = '/chats/one') {
+  const studioDrafts = new Map<string, StudioDraft>();
+  return render(
+    <StrictMode>
+      <SessionContext.Provider
+        value={{ session, updateSession: vi.fn(), refresh: vi.fn(), studioDrafts }}
+      >
+        <MemoryRouter initialEntries={[path]}>
+          <nav>
+            <Link to="/settings">Настройки</Link>
+            <Link to="/chats/one">Чат один</Link>
+            <Link to="/chats/two">Чат два</Link>
+            <Link to="/chats/new">Новый чат</Link>
+          </nav>
+          <Routes>
+            <Route path="/chats/:id" element={<Studio />} />
+            <Route path="/settings" element={<h1>Настройки аккаунта</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </SessionContext.Provider>
+    </StrictMode>,
+  );
+}
 beforeEach(() => {
   vi.clearAllMocks();
   Element.prototype.scrollIntoView = vi.fn();
   vi.mocked(request).mockResolvedValue(chat);
 });
 describe('saved work and mutation submission', () => {
+  it('preserves the draft, audience and retry identity across settings and other chats', async () => {
+    vi.mocked(request).mockImplementation(async (url) => ({
+      ...chat,
+      id: url.includes('/two/') ? 'two' : 'one',
+      audience: 'children',
+    }));
+    vi.mocked(post).mockRejectedValue(new Error('Соединение потеряно'));
+    setupNavigation();
+    const prompt = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    fireEvent.change(prompt, { target: { value: 'Сделай фон тёплым' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    await screen.findByText('Соединение потеряно');
+    const first = vi.mocked(post).mock.calls[0];
+    expect(first[1]).toMatchObject({ audience: 'children' });
+    fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Что изменить в игре' })).toHaveValue(''),
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Что изменить в игре' }), {
+      target: { value: 'Черновик второго чата' },
+    });
+    fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+    await screen.findByRole('heading', { name: 'Настройки аккаунта' });
+    fireEvent.click(screen.getByRole('link', { name: 'Чат один' }));
+    const restored = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    expect(restored).toHaveValue('Сделай фон тёплым');
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(post).mock.calls[1]).toEqual(first);
+    fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Что изменить в игре' })).toHaveValue(
+        'Черновик второго чата',
+      ),
+    );
+  });
+
+  it('restores the selected revision after visiting settings without submitting a request', async () => {
+    vi.mocked(request).mockResolvedValue({
+      ...chat,
+      revisions: [
+        revision,
+        {
+          ...revision,
+          id: 'older',
+          number: 0,
+          preview_url: 'http://localhost:8001/p/old',
+          artifact_hash: 'old',
+        },
+      ],
+    });
+    setupNavigation();
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Версия игры' }), {
+      target: { value: 'older' },
+    });
+    fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Чат один' }));
+    await waitFor(() =>
+      expect(screen.getByTitle('Игра')).toHaveAttribute('src', 'http://localhost:8001/p/old'),
+    );
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('keeps a new-game draft through settings and does not restore it after submission', async () => {
+    vi.mocked(request).mockResolvedValue({ ...chat, current_revision: null, revisions: [] });
+    vi.mocked(post).mockResolvedValue({ ...chat, current_revision: null, revisions: [] });
+    setupNavigation('/chats/new');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Описание вашей игры' }), {
+      target: { value: 'Собирай звёзды' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Для геймеров/ }));
+    fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Новый чат' }));
+    expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue(
+      'Собирай звёзды',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(post).mock.calls[1][1]).toMatchObject({ audience: 'gamers' });
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue(''),
+    );
+    fireEvent.click(screen.getByRole('link', { name: 'Новый чат' }));
+    expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue('');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Описание вашей игры' }), {
+      target: { value: 'Следующая игра' },
+    });
+    fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Новый чат' }));
+    expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue(
+      'Следующая игра',
+    );
+  });
+
+  it('offers copying above the phone while preserving the lower download link', async () => {
+    setup();
+    await screen.findByRole('button', { name: 'Скопировать HTML для WebView' });
+    expect(screen.getByRole('link', { name: 'Скачать игру HTML' })).toHaveAttribute(
+      'href',
+      revision.export_url,
+    );
+  });
   it('sends explicit unknown-cost consent once and reuses its key if the HTTP response is lost', async () => {
     vi.mocked(request).mockResolvedValue({
       ...chat,

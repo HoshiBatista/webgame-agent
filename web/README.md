@@ -30,6 +30,15 @@ fullscreen frame identity, history without generation, and feed hover/like behav
 Component tests use fixtures and do not count as live model evidence. Real browser and model
 evidence belongs in the repository's integration report.
 
+Typography uses **Manrope Variable**, bundled by Vite from the pinned
+`@fontsource-variable/manrope` dependency. The browser loads the required language subsets
+from this application; no font CDN is contacted. This is the Google Fonts OFL release,
+with its copyright and license shipped at [`public/licenses/manrope-OFL.txt`](public/licenses/manrope-OFL.txt).
+The interface has a 14px minimum for secondary copy and 16px body/chat/input text, using
+`--text-small` and `--text-body` in `src/styles.scss`. Responsive rules preserve the minimum;
+larger browser text preferences scale the rem values upward. Generated game artifacts
+have their own isolated styling.
+
 Settings include an explicitly labelled synthetic analytics example (three invented touch
 metrics). It is not collected player data. An opt-in action adds one editable recommendation
 to preferences through the existing API and makes no model request. Genre and implementation

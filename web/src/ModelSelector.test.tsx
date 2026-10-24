@@ -7,6 +7,7 @@ import { post, request } from './api';
 import { SessionContext } from './context';
 import ModelSelector from './ModelSelector';
 import Preferences from './Preferences';
+import { ThemeProvider } from './theme';
 import Studio from './Studio';
 import type { Chat, Session } from './types';
 
@@ -66,7 +67,15 @@ function setup(page: 'studio' | 'settings', initial = session) {
           <Routes>
             <Route
               path="/chats/:id"
-              element={page === 'studio' ? <Studio /> : <Preferences onClose={vi.fn()} />}
+              element={
+                page === 'studio' ? (
+                  <Studio />
+                ) : (
+                  <ThemeProvider>
+                    <Preferences />
+                  </ThemeProvider>
+                )
+              }
             />
           </Routes>
         </MemoryRouter>
@@ -77,12 +86,14 @@ function setup(page: 'studio' | 'settings', initial = session) {
 }
 beforeEach(() => {
   vi.clearAllMocks();
+  window.scrollTo = vi.fn();
   Element.prototype.scrollIntoView = vi.fn();
-  vi.mocked(request).mockImplementation(async (url, init) =>
-    url === '/api/preferences/'
-      ? { ...session.preferences, ...JSON.parse(init!.body as string) }
-      : chat,
-  );
+  let preferences = { ...session.preferences };
+  vi.mocked(request).mockImplementation(async (url, init) => {
+    if (url !== '/api/preferences/') return chat;
+    preferences = { ...preferences, ...JSON.parse(init!.body as string) };
+    return preferences;
+  });
   vi.mocked(post).mockRejectedValue(new Error('Соединение потеряно'));
 });
 
@@ -138,17 +149,26 @@ it('continues Lite with the newly selected Pro, without automatically generating
   expect(vi.mocked(post).mock.calls[0][1]).toMatchObject({ model_profile: 'pro' });
 });
 
-it('persists the default in settings with the other preferences', async () => {
+it('saves the default immediately in settings without saving the draft notes', async () => {
   setup('settings');
+  fireEvent.change(screen.getByLabelText('Что учитывать в новых играх'), {
+    target: { value: 'Черновик' },
+  });
   fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
-  expect(request).not.toHaveBeenCalled();
+  await waitFor(() => expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked());
+  expect(request).toHaveBeenCalledWith('/api/preferences/', {
+    method: 'PATCH',
+    body: JSON.stringify({ model_profile: 'pro' }),
+  });
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue('Черновик');
   fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
-  await waitFor(() =>
-    expect(request).toHaveBeenCalledWith('/api/preferences/', {
-      method: 'PATCH',
-      body: JSON.stringify({ theme: 'light', model_profile: 'pro', notes: [] }),
-    }),
-  );
+  await screen.findByText('Пожелания сохранены');
+  expect(request).toHaveBeenLastCalledWith('/api/preferences/', {
+    method: 'PATCH',
+    body: JSON.stringify({ notes: ['Черновик'] }),
+  });
+  expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked();
   expect(post).not.toHaveBeenCalled();
 });
 

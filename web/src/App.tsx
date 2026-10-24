@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -6,23 +6,22 @@ import {
   Gamepad2,
   LogOut,
   Menu,
-  Moon,
   Plus,
   Settings2,
-  Sun,
   X,
 } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request } from './api';
 import { Brand, ErrorNotice, Spinner } from './components';
-import { SessionContext } from './context';
+import { SessionContext, type StudioDraft } from './context';
 import Landing from './Landing';
 import Feed from './Feed';
 import Preferences from './Preferences';
 import PublicGame from './PublicGame';
 import Studio from './Studio';
 import RevisionPlayer from './RevisionPlayer';
-import type { ChatSummary, Preferences as PreferencesType, Session } from './types';
+import type { ChatSummary, Session } from './types';
+import { ThemeProvider } from './theme';
 
 function Shell({
   session,
@@ -34,7 +33,6 @@ function Shell({
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [settings, setSettings] = useState(false);
   const [error, setError] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,17 +87,6 @@ function Shell({
       window.removeEventListener('keydown', escape);
     };
   }, [mobileOpen]);
-  async function toggleTheme() {
-    try {
-      const preferences = await request<PreferencesType>('/api/preferences/', {
-        method: 'PATCH',
-        body: JSON.stringify({ theme: session.preferences.theme === 'dark' ? 'light' : 'dark' }),
-      });
-      updateSession({ ...session, preferences });
-    } catch (cause) {
-      setError(errorText(cause));
-    }
-  }
   async function logout() {
     try {
       await post('/api/logout/');
@@ -196,27 +183,21 @@ function Shell({
           </div>
           <div className="account-line">
             <span className="avatar">{session.user?.username.slice(0, 1).toUpperCase()}</span>
-            <button className="account-name" onClick={() => setSettings(true)} title="Настройки">
+            <div className="account-name">
               {session.user?.username}
               <small>Ваша мастерская</small>
-            </button>
-            <button
-              className="icon-button"
-              aria-label={
-                session.preferences.theme === 'dark'
-                  ? 'Включить светлую тему'
-                  : 'Включить тёмную тему'
-              }
-              onClick={toggleTheme}
-            >
-              {session.preferences.theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-            </button>
+            </div>
           </div>
           <div className="account-actions">
-            <button className="text-button" onClick={() => setSettings(true)} title="Настройки">
+            <Link
+              className="text-button"
+              to="/settings"
+              state={{ from: location.pathname + location.search + location.hash }}
+              title="Настройки"
+            >
               <Settings2 size={15} />
               <span>Настройки</span>
-            </button>
+            </Link>
             <button className="text-button" onClick={logout} title="Выйти">
               <LogOut size={15} />
               <span>Выйти</span>
@@ -236,29 +217,37 @@ function Shell({
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-      {settings && <Preferences onClose={() => setSettings(false)} />}
     </div>
   );
 }
 
-export default function App() {
+function Application() {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState('');
   const location = useLocation();
+  const sessionVersion = useRef(0);
+  // Drafts live only for this signed-in user and this tab, never in persistent storage.
+  const studioDrafts = useMemo(() => new Map<string, StudioDraft>(), [session?.user?.id]);
+  const updateSession = useCallback((value: Session) => {
+    sessionVersion.current += 1;
+    setSession(value);
+    setError('');
+  }, []);
   const refresh = useCallback(async () => {
+    const version = ++sessionVersion.current;
     try {
-      setSession(await getSession());
-      setError('');
+      const value = await getSession();
+      if (sessionVersion.current === version) {
+        setSession(value);
+        setError('');
+      }
     } catch (cause) {
-      setError(errorText(cause));
+      if (sessionVersion.current === version) setError(errorText(cause));
     }
   }, []);
   useEffect(() => {
     void refresh();
   }, [refresh]);
-  useEffect(() => {
-    document.documentElement.dataset.theme = session?.user ? session.preferences.theme : 'light';
-  }, [session]);
   if (!session)
     return (
       <div className="boot-screen">
@@ -276,22 +265,31 @@ export default function App() {
       </div>
     );
   return (
-    <SessionContext.Provider value={{ session, updateSession: setSession, refresh }}>
+    <SessionContext.Provider
+      key={session.user?.id ?? 'guest'}
+      value={{ session, updateSession, refresh, studioDrafts }}
+    >
       {location.pathname.startsWith('/games/') ? (
         <Routes>
           <Route path="/games/:id" element={<PublicGame />} />
         </Routes>
       ) : session.user ? (
-        location.pathname.startsWith('/play/') ? (
-          <Routes>
-            <Route path="/play/:id" element={<RevisionPlayer />} />
-          </Routes>
-        ) : (
-          <Shell session={session} updateSession={setSession} />
-        )
+        <Routes>
+          <Route path="/play/:id" element={<RevisionPlayer />} />
+          <Route path="/settings" element={<Preferences />} />
+          <Route path="*" element={<Shell session={session} updateSession={updateSession} />} />
+        </Routes>
       ) : (
         <Landing />
       )}
     </SessionContext.Provider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <Application />
+    </ThemeProvider>
   );
 }

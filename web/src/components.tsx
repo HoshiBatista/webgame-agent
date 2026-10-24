@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ArrowDownToLine,
   ArrowUpRight,
   Check,
   ChevronDown,
   CircleAlert,
+  Copy,
   Expand,
   ExternalLink,
   Gamepad2,
@@ -16,6 +16,7 @@ import {
 import { Link } from 'react-router-dom';
 import { formatDuration, formatMoney } from './api';
 import type { Budget, Revision, Run, RunEvent } from './types';
+import { copyGameHtml } from './webview';
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
@@ -170,6 +171,33 @@ export function PhonePreview({
   onExitFullscreen?: () => void;
 }) {
   const [expanded, setExpanded] = useState(forceFullscreen);
+  const [copying, setCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState('');
+  const currentExport = useRef(exportUrl);
+  currentExport.current = exportUrl;
+  useEffect(() => {
+    setCopied(false);
+    setCopyError('');
+  }, [exportUrl]);
+  async function copyHtml() {
+    if (!exportUrl || copying) return;
+    const selected = exportUrl;
+    setCopying(true);
+    setCopied(false);
+    setCopyError('');
+    try {
+      await copyGameHtml(selected);
+      if (currentExport.current === selected) setCopied(true);
+    } catch {
+      if (currentExport.current === selected)
+        setCopyError(
+          'Не удалось скопировать HTML. Проверьте соединение и разрешение на копирование в браузере.',
+        );
+    } finally {
+      setCopying(false);
+    }
+  }
   const stageRef = useRef<HTMLDivElement>(null);
   const screenRef = useRef<HTMLDivElement>(null);
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
@@ -269,14 +297,21 @@ export function PhonePreview({
             </a>
           )}
           {exportUrl && (
-            <a
+            <button
               className="icon-button"
-              href={exportUrl}
-              aria-label="Скачать HTML"
-              title="Скачать HTML"
+              onClick={copyHtml}
+              disabled={copying}
+              aria-label="Скопировать HTML для WebView"
+              title={copied ? 'Скопировано' : 'Скопировать HTML для WebView'}
             >
-              <ArrowDownToLine size={18} />
-            </a>
+              {copying ? (
+                <LoaderCircle className="spin" size={18} />
+              ) : copied ? (
+                <Check size={18} />
+              ) : (
+                <Copy size={18} />
+              )}
+            </button>
           )}
           <button
             className="icon-button"
@@ -289,6 +324,10 @@ export function PhonePreview({
           </button>
         </div>
       </div>
+      <span className="sr-only" role="status">
+        {copied ? 'HTML скопирован одной строкой для WebView' : ''}
+      </span>
+      {copyError && <ErrorNotice message={copyError} onClose={() => setCopyError('')} />}
       <div
         ref={stageRef}
         className={`phone-stage ${url ? 'has-game' : ''} ${expanded ? 'fullscreen-preview' : ''}`}
