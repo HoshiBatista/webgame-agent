@@ -15,7 +15,8 @@ Development uses Vite on localhost and proxies `/api` to `127.0.0.1:8000`. Produ
 builds to `dist/`; Django/nginx serves the same root routes `/`, `/chats/:id`, `/games/:id`.
 Guest sign-in lives at `/login`; both landing-page actions open it. Successful sign-in
 returns to the requested private page, or to the feed for a direct visit. The sign-in
-page stays light and hides its decorative scenery at widths of 480px and below.
+page stays light, keeps its dotted background at every width, and has no footer.
+Pixel illustrations hide at 760px and below; the logo is centered at 480px and below.
 `/play/:revisionId` is an authenticated personal player for opening an immutable revision
 in a separate tab. It keeps game execution inside the isolated sandbox, not the app origin.
 The signed preview origin must be running separately and allow the configured application

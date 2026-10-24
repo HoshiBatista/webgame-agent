@@ -157,7 +157,6 @@ export default function Login() {
           </form>
         </section>
       </main>
-      <footer className="login-footer">Маленькие игры. Большие идеи.</footer>
     </div>
   );
 }

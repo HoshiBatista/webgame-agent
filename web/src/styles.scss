@@ -970,7 +970,7 @@ svg {
 .login-page {
   min-height: 100svh;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   overflow-x: clip;
 }
 .login-header {
@@ -1039,12 +1039,6 @@ svg {
   line-height: 1.6;
   margin-bottom: 20px;
 }
-.login-footer {
-  padding: 20px 24px 32px;
-  text-align: center;
-  color: var(--muted);
-  font-size: var(--text-small);
-}
 @media (min-width: 761px) and (max-width: 1000px) {
   .login-island {
     width: 160px;
@@ -1063,13 +1057,9 @@ svg {
   }
 }
 @media (max-width: 480px) {
-  .login-page {
-    grid-template-rows: 1fr;
-  }
-  .login-header,
-  .login-scenery,
-  .login-footer {
-    display: none;
+  .login-header {
+    display: flex;
+    justify-content: center;
   }
   .login-main {
     padding: 24px 14px;
