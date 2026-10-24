@@ -28,11 +28,13 @@ artifact. Only one live hover preview is mounted in the feed. Candidate versions
 separate from accepted versions; manual confirmation is explicit, and publication uses a
 captured accepted revision.
 
-The studio preview collapses with a 320ms width/opacity transition and keeps the same
+The studio preview collapses with a 600ms width transition and a staggered opacity fade, keeping the same
 game frame mounted. The centered conversation has a continuous surface without side borders.
-At 760px and below, the phone mockup is hidden: the chat header opens the existing frame
-directly in fullscreen, and version selection, HTML copying/download, sharing and rating
-sit below the header. Reduced-motion preferences disable the panel transition.
+At 760px and below, the phone mockup is hidden. A rotating chevron in the chat header
+opens a collapsed action bar with version selection, fullscreen, HTML copying/download,
+sharing, rating and chat deletion. Fullscreen opens the existing frame directly.
+The action bar expands over 480ms; hidden actions are inert and excluded from accessibility.
+Reduced-motion preferences disable panel transitions.
 
 Tests cover CSRF and error transport, no automatic mutation retry, preserved idempotency
 after a lost response, candidate/manual-review selection, immutable preview lifecycle,

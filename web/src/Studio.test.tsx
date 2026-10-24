@@ -120,6 +120,16 @@ describe('saved work and mutation submission', () => {
     setup();
     const frame = await screen.findByTitle('Игра');
     expect(screen.queryByRole('button', { name: 'Свернуть предпросмотр' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Удалить чат' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Открыть игру на весь экран' }),
+    ).not.toBeInTheDocument();
+    const toolsToggle = screen.getByRole('button', { name: 'Развернуть действия с игрой' });
+    expect(toolsToggle).toHaveAttribute('aria-expanded', 'false');
+    expect(document.querySelector('#mobile-game-tools')).toHaveAttribute('inert');
+    fireEvent.click(toolsToggle);
+    expect(toolsToggle).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Удалить чат' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Версия игры' })).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Скопировать HTML для WebView' }),
@@ -137,6 +147,14 @@ describe('saved work and mutation submission', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Вернуться' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(document.querySelector('#studio-preview')).toHaveAttribute('inert');
+    fireEvent.click(screen.getByRole('button', { name: 'Свернуть действия с игрой' }));
+    expect(document.querySelector('#mobile-game-tools')).toHaveAttribute('inert');
+    expect(screen.queryByRole('combobox', { name: 'Версия игры' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Скопировать HTML для WebView' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    fireEvent.click(screen.getByRole('button', { name: 'Развернуть действия с игрой' }));
     act(() => {
       viewport.matches = false;
       viewport.dispatchEvent(new Event('change'));

@@ -1730,11 +1730,12 @@ svg {
 .studio {
   --preview-width: 50vw;
   --chat-min-width: 290px;
-  --duration-panel: 320ms;
+  --duration-panel: 600ms;
+  --ease-panel: cubic-bezier(0.42, 0, 0.58, 1);
   height: 100svh;
   display: grid;
   grid-template-columns: minmax(var(--chat-min-width), 1fr) minmax(0, var(--preview-width));
-  transition: grid-template-columns var(--duration-panel) var(--ease-quiet);
+  transition: grid-template-columns var(--duration-panel) var(--ease-panel);
   background: var(--surface);
   min-width: 0;
 }
@@ -1768,6 +1769,7 @@ svg {
 }
 .chat-heading-actions {
   display: flex;
+  align-items: center;
   gap: 1px;
 }
 .chat-heading-actions .icon-button {
@@ -2085,7 +2087,7 @@ svg {
   opacity: 1;
   visibility: visible;
   transition:
-    opacity var(--duration-panel) var(--ease-quiet),
+    opacity 380ms var(--ease-panel) 160ms,
     visibility 0s;
 }
 .preview-title {
@@ -2329,6 +2331,7 @@ svg {
   opacity: 0;
   visibility: hidden;
   transition-delay: 0s, var(--duration-panel);
+  transition-duration: 240ms, 0s;
 }
 .preview-hidden .chat-pane {
   width: 100%;
@@ -3779,9 +3782,32 @@ svg {
   }
   .mobile-play {
     display: inline-flex;
-    font-size: var(--text-small);
-    padding: 8px 10px;
-    margin-right: 3px;
+  }
+  .mobile-tools-toggle svg {
+    transition: transform 400ms var(--ease-panel);
+  }
+  .mobile-tools-toggle[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+  .mobile-tools-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows 480ms var(--ease-panel),
+      opacity 320ms var(--ease-panel),
+      visibility 0s 480ms;
+  }
+  .mobile-tools-panel.is-open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .mobile-tools-clip {
+    min-height: 0;
+    overflow: hidden;
   }
   .studio .preview-pane {
     display: contents;
@@ -3806,6 +3832,14 @@ svg {
   .studio-game-tools .icon-button {
     width: 38px;
     height: 38px;
+  }
+  .studio-game-tools .mobile-play {
+    background: var(--accent);
+    color: #28303f;
+  }
+  .studio-game-tools .mobile-play:not(:disabled):hover {
+    background: var(--accent-hover);
+    color: #28303f;
   }
   .studio-game-tools .version-selector select {
     max-width: min(240px, calc(100vw - 68px));

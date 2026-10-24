@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowDownToLine,
   ArrowUp,
+  ChevronDown,
   Expand,
   Gamepad2,
   History,
@@ -63,6 +64,7 @@ export default function Studio() {
     initialDraft?.selectedRevision ?? null,
   );
   const [previewOpen, setPreviewOpen] = useState(true);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const [mobile, setMobile] = useState(
     () => window.matchMedia?.('(max-width: 760px)').matches ?? false,
   );
@@ -125,6 +127,7 @@ export default function Studio() {
     setEvents([]);
     setSelectedRevision(remembered?.selectedRevision ?? null);
     setGameFullscreen(false);
+    setMobileToolsOpen(false);
     setFeedbackDone(false);
     setRating(0);
     setReasons([]);
@@ -403,6 +406,17 @@ export default function Studio() {
       setDiagnostics({ error: errorText(cause) });
     }
   }
+  const deleteChatButton = chat && (
+    <button
+      className="icon-button"
+      onClick={removeChat}
+      disabled={busy}
+      aria-label="Удалить чат"
+      title="Удалить чат"
+    >
+      <Trash2 size={16} />
+    </button>
+  );
   const gameTools = chat && (
     <div
       className={`preview-bottom ${mobile ? 'studio-game-tools' : ''}`}
@@ -432,6 +446,20 @@ export default function Studio() {
         </select>
       </div>
       <div className="preview-actions">
+        {mobile && (
+          <button
+            className="icon-button mobile-play"
+            disabled={!revision?.preview_url}
+            aria-label="Открыть игру на весь экран"
+            title="На весь экран"
+            onClick={() => {
+              setPreviewOpen(true);
+              setGameFullscreen(true);
+            }}
+          >
+            <Expand size={18} />
+          </button>
+        )}
         {mobile && revision && (
           <CopyHtmlButton exportUrl={revision.export_url} onError={setError} />
         )}
@@ -470,6 +498,7 @@ export default function Studio() {
             <ArrowDownToLine size={18} />
           </a>
         )}
+        {mobile && deleteChatButton}
       </div>
     </div>
   );
@@ -494,28 +523,20 @@ export default function Studio() {
           <div className="chat-heading-actions">
             {mobile && (
               <button
-                className="button button-primary button-small mobile-play"
-                disabled={!revision?.preview_url}
-                aria-label="Открыть игру на весь экран"
-                onClick={() => {
-                  setPreviewOpen(true);
-                  setGameFullscreen(true);
-                }}
+                className="icon-button mobile-tools-toggle"
+                disabled={!chat}
+                aria-expanded={mobileToolsOpen}
+                aria-controls="mobile-game-tools"
+                aria-label={
+                  mobileToolsOpen ? 'Свернуть действия с игрой' : 'Развернуть действия с игрой'
+                }
+                title="Действия с игрой"
+                onClick={() => setMobileToolsOpen((open) => !open)}
               >
-                <Expand size={16} /> На весь экран
+                <ChevronDown size={20} />
               </button>
             )}
-            {chat && (
-              <button
-                className="icon-button"
-                onClick={removeChat}
-                disabled={busy}
-                aria-label="Удалить чат"
-                title="Удалить чат"
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
+            {!mobile && deleteChatButton}
             {!mobile && (
               <button
                 className="icon-button"
@@ -530,7 +551,16 @@ export default function Studio() {
             )}
           </div>
         </header>
-        {mobile && gameTools}
+        {mobile && (
+          <div
+            id="mobile-game-tools"
+            className={`mobile-tools-panel ${mobileToolsOpen ? 'is-open' : ''}`}
+            aria-hidden={!mobileToolsOpen}
+            inert={!mobileToolsOpen || undefined}
+          >
+            <div className="mobile-tools-clip">{gameTools}</div>
+          </div>
+        )}
         <div className="chat-scroll">
           {chat?.source_publication && (
             <div className="notice remix-notice">
