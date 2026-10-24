@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowDownToLine,
   ArrowUp,
+  Expand,
   Gamepad2,
   History,
   PanelRightClose,
@@ -15,6 +16,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { errorText, newKey, post, request } from './api';
 import {
   ErrorNotice,
+  CopyHtmlButton,
   Modal,
   PhonePreview,
   RevisionDetails,
@@ -61,6 +63,17 @@ export default function Studio() {
     initialDraft?.selectedRevision ?? null,
   );
   const [previewOpen, setPreviewOpen] = useState(true);
+  const [mobile, setMobile] = useState(
+    () => window.matchMedia?.('(max-width: 760px)').matches ?? false,
+  );
+  useEffect(() => {
+    const media = window.matchMedia?.('(max-width: 760px)');
+    if (!media) return;
+    const change = () => setMobile(media.matches);
+    change();
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
   const [gameFullscreen, setGameFullscreen] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareRevision, setShareRevision] = useState<Revision | null>(null);
@@ -390,6 +403,76 @@ export default function Studio() {
       setDiagnostics({ error: errorText(cause) });
     }
   }
+  const gameTools = chat && (
+    <div
+      className={`preview-bottom ${mobile ? 'studio-game-tools' : ''}`}
+      role="group"
+      aria-label="Действия с игрой"
+    >
+      <div className="version-selector">
+        <History size={15} />
+        <select
+          aria-label="Версия игры"
+          value={selectedRevision ?? 'latest'}
+          onChange={(event) =>
+            setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
+          }
+        >
+          <option value="latest">
+            {defaultRevision
+              ? `${defaultRevision.accepted ? 'Рабочая версия' : 'Кандидат'} · ${defaultRevision.number}`
+              : 'Пока нет версии'}
+          </option>
+          {chat.revisions.map((item) => (
+            <option key={item.id} value={item.id}>
+              Версия {item.number}
+              {item.id === current?.id ? ' · рабочая' : item.accepted ? '' : ' · кандидат'}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="preview-actions">
+        {mobile && revision && (
+          <CopyHtmlButton exportUrl={revision.export_url} onError={setError} />
+        )}
+        {revision?.accepted && selectedRevision && revision.id !== current?.id && (
+          <button
+            className="button button-small button-outline"
+            disabled={busy || !!activeRun}
+            onClick={restoreRevision}
+          >
+            Восстановить
+          </button>
+        )}
+        <button
+          className="button button-small button-outline"
+          disabled={!revision?.accepted || busy}
+          onClick={openShare}
+        >
+          <Share2 size={15} /> Поделиться
+        </button>
+        <button
+          className={`icon-button ${feedbackDone ? 'rated' : ''}`}
+          disabled={!current || busy}
+          onClick={() => setShowFeedback(true)}
+          aria-label="Оценить результат"
+          title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
+        >
+          <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} />
+        </button>
+        {revision && (
+          <a
+            className="icon-button"
+            href={revision.export_url}
+            aria-label="Скачать игру HTML"
+            title="Скачать HTML"
+          >
+            <ArrowDownToLine size={18} />
+          </a>
+        )}
+      </div>
+    </div>
+  );
   if (loading) return <Spinner text="Открываем вашу мастерскую…" />;
   return (
     <main className={`studio ${previewOpen ? '' : 'preview-hidden'}`}>
@@ -409,15 +492,17 @@ export default function Studio() {
             <h1>{chat?.title || 'Новая маленькая вселенная'}</h1>
           </div>
           <div className="chat-heading-actions">
-            {revision && (
+            {mobile && (
               <button
-                className="button button-small mobile-play"
+                className="button button-primary button-small mobile-play"
+                disabled={!revision?.preview_url}
+                aria-label="Открыть игру на весь экран"
                 onClick={() => {
                   setPreviewOpen(true);
                   setGameFullscreen(true);
                 }}
               >
-                <Gamepad2 size={15} /> Играть
+                <Expand size={16} /> На весь экран
               </button>
             )}
             {chat && (
@@ -431,16 +516,21 @@ export default function Studio() {
                 <Trash2 size={16} />
               </button>
             )}
-            <button
-              className="icon-button"
-              onClick={() => setPreviewOpen(!previewOpen)}
-              aria-label={previewOpen ? 'Свернуть предпросмотр' : 'Развернуть предпросмотр'}
-              title="Предпросмотр"
-            >
-              {previewOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
-            </button>
+            {!mobile && (
+              <button
+                className="icon-button"
+                onClick={() => setPreviewOpen(!previewOpen)}
+                aria-expanded={previewOpen}
+                aria-controls="studio-preview"
+                aria-label={previewOpen ? 'Свернуть предпросмотр' : 'Развернуть предпросмотр'}
+                title="Предпросмотр"
+              >
+                {previewOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
+              </button>
+            )}
           </div>
         </header>
+        {mobile && gameTools}
         <div className="chat-scroll">
           {chat?.source_publication && (
             <div className="notice remix-notice">
@@ -568,10 +658,7 @@ export default function Studio() {
               }}
             />
             <div className="composer-bottom">
-              <span>
-                <Sparkles size={13} />{' '}
-                {current ? 'Небольшие правки, ваша игра' : 'Из идеи — в игру'}
-              </span>
+              <Sparkles size={13} aria-hidden="true" />
               <button
                 className="send-button"
                 disabled={
@@ -583,103 +670,30 @@ export default function Studio() {
               </button>
             </div>
           </div>
-          <div className="composer-foot">
-            <span>
-              {activeRun
-                ? 'Можно отменить задание в карточке выше.'
-                : '⌘ / Ctrl + Enter — отправить'}
-            </span>
-            {selectedModel && (
-              <span>
-                {activeRun
-                  ? `Выполняется: ${activeRun.model_label || activeRun.model || 'модель запуска'}. Далее: ${selectedModel.name}`
-                  : `Следующий запрос · ${selectedModel.name}`}
-              </span>
-            )}
-          </div>
         </form>
       </section>
-      {previewOpen && (
-        <aside className="preview-pane">
-          <PhonePreview
-            forceFullscreen={gameFullscreen}
-            onExitFullscreen={() => setGameFullscreen(false)}
-            artifactKey={revision?.artifact_hash}
-            url={revision?.preview_url}
-            title={revision?.title || 'Ваша игра'}
-            exportUrl={revision?.export_url}
-            playUrl={revision ? `/play/${revision.id}` : undefined}
-            badge={
-              revision && !revision.accepted
-                ? 'Сохранённый кандидат — требуется проверка'
-                : undefined
-            }
-          />
-          {chat && (
-            <div className="preview-bottom">
-              <div className="version-selector">
-                <History size={15} />
-                <select
-                  aria-label="Версия игры"
-                  value={selectedRevision ?? 'latest'}
-                  onChange={(event) =>
-                    setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
-                  }
-                >
-                  <option value="latest">
-                    {defaultRevision
-                      ? `${defaultRevision.accepted ? 'Рабочая версия' : 'Кандидат'} · ${defaultRevision.number}`
-                      : 'Пока нет версии'}
-                  </option>
-                  {chat.revisions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      Версия {item.number}
-                      {item.id === current?.id ? ' · рабочая' : item.accepted ? '' : ' · кандидат'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="preview-actions">
-                {revision?.accepted && selectedRevision && revision.id !== current?.id && (
-                  <button
-                    className="button button-small button-outline"
-                    disabled={busy || !!activeRun}
-                    onClick={restoreRevision}
-                  >
-                    Восстановить
-                  </button>
-                )}
-                <button
-                  className="button button-small button-outline"
-                  disabled={!revision?.accepted || busy}
-                  onClick={openShare}
-                >
-                  <Share2 size={15} /> Поделиться
-                </button>
-                <button
-                  className={`icon-button ${feedbackDone ? 'rated' : ''}`}
-                  disabled={!current || busy}
-                  onClick={() => setShowFeedback(true)}
-                  aria-label="Оценить результат"
-                  title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
-                >
-                  <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} />
-                </button>
-                {revision && (
-                  <a
-                    className="icon-button"
-                    href={revision.export_url}
-                    aria-label="Скачать игру HTML"
-                    title="Скачать HTML"
-                  >
-                    <ArrowDownToLine size={18} />
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-        </aside>
-      )}
+      <aside
+        className="preview-pane"
+        id="studio-preview"
+        aria-hidden={mobile ? !gameFullscreen : !previewOpen}
+        inert={(mobile ? !gameFullscreen : !previewOpen) || undefined}
+      >
+        <PhonePreview
+          hideToolbar={mobile}
+          forceFullscreen={gameFullscreen}
+          onEnterFullscreen={() => setGameFullscreen(true)}
+          onExitFullscreen={() => setGameFullscreen(false)}
+          artifactKey={revision?.artifact_hash}
+          url={revision?.preview_url}
+          title={revision?.title || 'Ваша игра'}
+          exportUrl={revision?.export_url}
+          playUrl={revision ? `/play/${revision.id}` : undefined}
+          badge={
+            revision && !revision.accepted ? 'Сохранённый кандидат — требуется проверка' : undefined
+          }
+        />
+        {!mobile && gameTools}
+      </aside>
       {showShare && shareRevision && (
         <Modal
           title={

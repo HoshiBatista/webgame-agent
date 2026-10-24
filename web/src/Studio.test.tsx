@@ -1,7 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Studio from './Studio';
 import { SessionContext, type StudioDraft } from './context';
 import { post, request } from './api';
@@ -89,12 +89,72 @@ function setupNavigation(path = '/chats/one') {
     </StrictMode>,
   );
 }
+let viewport: EventTarget & { matches: boolean };
 beforeEach(() => {
   vi.clearAllMocks();
   Element.prototype.scrollIntoView = vi.fn();
   vi.mocked(request).mockResolvedValue(chat);
+  viewport = Object.assign(new EventTarget(), { matches: false });
+  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue(viewport));
 });
+afterEach(() => vi.unstubAllGlobals());
 describe('saved work and mutation submission', () => {
+  it('keeps the loaded game when the desktop preview is collapsed and reopened', async () => {
+    setup();
+    const frame = await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByRole('button', { name: 'Свернуть предпросмотр' }));
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    expect(document.querySelector('#studio-preview')).toHaveAttribute('aria-hidden', 'true');
+    expect(document.querySelector('#studio-preview')).toHaveAttribute('inert');
+    expect(
+      screen.queryByRole('button', { name: 'Открыть игру на весь экран' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Развернуть предпросмотр' }));
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    expect(document.querySelector('#studio-preview')).not.toHaveAttribute('inert');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('offers mobile game tools and direct fullscreen, retaining the frame across viewport changes', async () => {
+    viewport.matches = true;
+    setup();
+    const frame = await screen.findByTitle('Игра');
+    expect(screen.queryByRole('button', { name: 'Свернуть предпросмотр' })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Версия игры' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Скопировать HTML для WebView' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Скачать игру HTML' })).toHaveAttribute(
+      'href',
+      revision.export_url,
+    );
+    expect(screen.getByRole('button', { name: 'Поделиться' })).toBeEnabled();
+    const play = screen.getByRole('button', { name: 'Открыть игру на весь экран' });
+    fireEvent.click(play);
+    expect(screen.getByRole('dialog', { name: 'Игра: Игра' })).toBeInTheDocument();
+    expect(document.querySelectorAll('iframe')).toHaveLength(1);
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    fireEvent.click(screen.getByRole('button', { name: 'Вернуться' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.querySelector('#studio-preview')).toHaveAttribute('inert');
+    act(() => {
+      viewport.matches = false;
+      viewport.dispatchEvent(new Event('change'));
+    });
+    expect(screen.getByRole('button', { name: 'Свернуть предпросмотр' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Скопировать HTML для WebView' })).toHaveLength(1);
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть игру на весь экран' }));
+    act(() => {
+      viewport.matches = true;
+      viewport.dispatchEvent(new Event('change'));
+    });
+    expect(screen.getByRole('dialog', { name: 'Игра: Игра' })).toBeInTheDocument();
+    expect(document.querySelector('#studio-preview')).not.toHaveAttribute('inert');
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    expect(post).not.toHaveBeenCalled();
+  });
+
   it('preserves the draft, audience and retry identity across settings and other chats', async () => {
     vi.mocked(request).mockImplementation(async (url) => ({
       ...chat,

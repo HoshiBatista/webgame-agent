@@ -153,6 +153,66 @@ export function GameFrame({
     />
   );
 }
+export function CopyHtmlButton({
+  exportUrl,
+  onError,
+}: {
+  exportUrl: string;
+  onError: (message: string) => void;
+}) {
+  const [copying, setCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const currentExport = useRef(exportUrl);
+  currentExport.current = exportUrl;
+  useEffect(() => {
+    currentExport.current = exportUrl;
+    setCopied(false);
+    return () => {
+      currentExport.current = '';
+    };
+  }, [exportUrl]);
+  async function copyHtml() {
+    if (copying) return;
+    const selected = exportUrl;
+    setCopying(true);
+    setCopied(false);
+    onError('');
+    try {
+      await copyGameHtml(selected);
+      if (currentExport.current === selected) setCopied(true);
+    } catch {
+      if (currentExport.current === selected)
+        onError(
+          'Не удалось скопировать HTML. Проверьте соединение и разрешение на копирование в браузере.',
+        );
+    } finally {
+      setCopying(false);
+    }
+  }
+  return (
+    <>
+      <button
+        className="icon-button"
+        onClick={copyHtml}
+        disabled={copying}
+        aria-label="Скопировать HTML для WebView"
+        title={copied ? 'Скопировано' : 'Скопировать HTML для WebView'}
+      >
+        {copying ? (
+          <LoaderCircle className="spin" size={18} />
+        ) : copied ? (
+          <Check size={18} />
+        ) : (
+          <Copy size={18} />
+        )}
+      </button>
+      <span className="sr-only" role="status">
+        {copied ? 'HTML скопирован одной строкой для WebView' : ''}
+      </span>
+    </>
+  );
+}
+
 export function PhonePreview({
   url,
   title,
@@ -162,7 +222,9 @@ export function PhonePreview({
   badge,
   empty,
   forceFullscreen = false,
+  onEnterFullscreen,
   onExitFullscreen,
+  hideToolbar = false,
 }: {
   url?: string;
   title: string;
@@ -172,36 +234,15 @@ export function PhonePreview({
   badge?: string;
   empty?: ReactNode;
   forceFullscreen?: boolean;
+  onEnterFullscreen?: () => void;
   onExitFullscreen?: () => void;
+  hideToolbar?: boolean;
 }) {
   const [expanded, setExpanded] = useState(forceFullscreen);
-  const [copying, setCopying] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
-  const currentExport = useRef(exportUrl);
-  currentExport.current = exportUrl;
   useEffect(() => {
-    setCopied(false);
     setCopyError('');
   }, [exportUrl]);
-  async function copyHtml() {
-    if (!exportUrl || copying) return;
-    const selected = exportUrl;
-    setCopying(true);
-    setCopied(false);
-    setCopyError('');
-    try {
-      await copyGameHtml(selected);
-      if (currentExport.current === selected) setCopied(true);
-    } catch {
-      if (currentExport.current === selected)
-        setCopyError(
-          'Не удалось скопировать HTML. Проверьте соединение и разрешение на копирование в браузере.',
-        );
-    } finally {
-      setCopying(false);
-    }
-  }
   const stageRef = useRef<HTMLDivElement>(null);
   const screenRef = useRef<HTMLDivElement>(null);
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
@@ -282,55 +323,41 @@ export function PhonePreview({
   );
   return (
     <>
-      <div className="preview-title">
-        <span>
-          <i className={`status-dot ${url ? 'ready' : ''}`} />
-          {badge ?? (url ? 'Можно играть' : 'Место для вашей идеи')}
-        </span>
-        <div>
-          {playUrl && (
-            <a
-              className="icon-button"
-              href={playUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Открыть игру в отдельной вкладке"
-              title="В отдельной вкладке"
-            >
-              <ExternalLink size={18} />
-            </a>
-          )}
-          {exportUrl && (
+      {!hideToolbar && (
+        <div className="preview-title">
+          <span>
+            <i className={`status-dot ${url ? 'ready' : ''}`} />
+            {badge ?? (url ? 'Можно играть' : 'Место для вашей идеи')}
+          </span>
+          <div>
+            {playUrl && (
+              <a
+                className="icon-button"
+                href={playUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Открыть игру в отдельной вкладке"
+                title="В отдельной вкладке"
+              >
+                <ExternalLink size={18} />
+              </a>
+            )}
+            {exportUrl && <CopyHtmlButton exportUrl={exportUrl} onError={setCopyError} />}
             <button
               className="icon-button"
-              onClick={copyHtml}
-              disabled={copying}
-              aria-label="Скопировать HTML для WebView"
-              title={copied ? 'Скопировано' : 'Скопировать HTML для WebView'}
+              disabled={!url}
+              onClick={() => {
+                setExpanded(true);
+                onEnterFullscreen?.();
+              }}
+              aria-label="Открыть игру на весь экран"
+              title="На весь экран"
             >
-              {copying ? (
-                <LoaderCircle className="spin" size={18} />
-              ) : copied ? (
-                <Check size={18} />
-              ) : (
-                <Copy size={18} />
-              )}
+              <Expand size={18} />
             </button>
-          )}
-          <button
-            className="icon-button"
-            disabled={!url}
-            onClick={() => setExpanded(true)}
-            aria-label="Открыть игру на весь экран"
-            title="На весь экран"
-          >
-            <Expand size={18} />
-          </button>
+          </div>
         </div>
-      </div>
-      <span className="sr-only" role="status">
-        {copied ? 'HTML скопирован одной строкой для WebView' : ''}
-      </span>
+      )}
       {copyError && <ErrorNotice message={copyError} onClose={() => setCopyError('')} />}
       <div
         ref={stageRef}

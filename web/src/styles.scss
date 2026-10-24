@@ -1728,9 +1728,14 @@ svg {
 
 /* One conversation, one game. The preview owns at least half the desktop viewport. */
 .studio {
+  --preview-width: 50vw;
+  --chat-min-width: 290px;
+  --duration-panel: 320ms;
   height: 100svh;
   display: grid;
-  grid-template-columns: minmax(290px, 1fr) minmax(0, 50vw);
+  grid-template-columns: minmax(var(--chat-min-width), 1fr) minmax(0, var(--preview-width));
+  transition: grid-template-columns var(--duration-panel) var(--ease-quiet);
+  background: var(--surface);
   min-width: 0;
 }
 .chat-pane {
@@ -1924,35 +1929,20 @@ svg {
   padding: 7px 10px 9px;
   gap: 12px;
 }
-.composer-bottom > span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: var(--text-small);
+.composer-bottom > svg {
   color: var(--muted);
-  flex-wrap: wrap;
 }
 .send-button {
   border: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  width: 40px;
+  height: 36px;
+  width: 36px;
   flex-shrink: 0;
   border-radius: 10px;
   background: var(--accent);
   color: #28303f;
-}
-.composer-foot {
-  font-size: var(--text-small);
-  color: var(--muted);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 9px;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 .sr-only {
   position: absolute;
@@ -2091,6 +2081,12 @@ svg {
     transparent 0.7px
   );
   background-size: 16px 16px;
+  overflow: clip;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--duration-panel) var(--ease-quiet),
+    visibility 0s;
 }
 .preview-title {
   display: flex;
@@ -2327,14 +2323,19 @@ svg {
   color: #d1b35c;
 }
 .preview-hidden {
-  display: flex;
+  grid-template-columns: minmax(var(--chat-min-width), 1fr) minmax(0, 0px);
+}
+.preview-hidden .preview-pane {
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, var(--duration-panel);
 }
 .preview-hidden .chat-pane {
   width: 100%;
   max-width: 800px;
   margin: auto;
   height: 100%;
-  border-inline: 1px solid var(--border);
+  border: 0;
 }
 .preview-hidden .chat-welcome > p {
   max-width: 400px;
@@ -2665,7 +2666,8 @@ svg {
 
 @media (min-width: 1600px) {
   .studio {
-    grid-template-columns: minmax(360px, 1fr) minmax(0, 52vw);
+    --chat-min-width: 360px;
+    --preview-width: 52vw;
   }
   .chat-heading {
     padding: 29px 30px;
@@ -2723,7 +2725,7 @@ svg {
     grid-template-columns: 68px minmax(0, 1fr);
   }
   .studio {
-    grid-template-columns: minmax(280px, 1fr) minmax(0, 50vw);
+    --chat-min-width: 280px;
   }
   .chat-heading {
     padding: 22px 17px 18px;
@@ -2862,7 +2864,7 @@ svg {
     gap: 13px;
   }
   .studio {
-    grid-template-columns: minmax(275px, 1fr) minmax(0, 50vw);
+    --chat-min-width: 275px;
   }
   .preview-title {
     padding-inline: 20px;
@@ -3453,16 +3455,6 @@ svg {
     font-size: var(--text-small);
     padding: 7px 9px;
   }
-  .composer-bottom > span {
-    font-size: var(--text-small);
-  }
-  .composer-foot {
-    font-size: var(--text-small);
-  }
-  .send-button {
-    height: 44px;
-    width: 44px;
-  }
   .run-heading strong {
     font-size: var(--text-small);
   }
@@ -3790,6 +3782,33 @@ svg {
     font-size: var(--text-small);
     padding: 8px 10px;
     margin-right: 3px;
+  }
+  .studio .preview-pane {
+    display: contents;
+    opacity: 1;
+    visibility: visible;
+    transition: none;
+  }
+  .studio .phone-stage:not(.fullscreen-preview) {
+    display: none;
+  }
+  .studio .chat-heading > div:first-child {
+    flex-basis: 140px;
+  }
+  .studio-game-tools {
+    padding: 10px 18px;
+    gap: 8px;
+    justify-content: space-between;
+    background: var(--surface);
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .studio-game-tools .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+  .studio-game-tools .version-selector select {
+    max-width: min(240px, calc(100vw - 68px));
   }
 }
 
