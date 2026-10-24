@@ -101,7 +101,7 @@ export default function Landing() {
                 <Plus />
               </div>
               <span>А можно по-своему?</span>
-              <b>Можно всё.</b>
+              <b>Можно всё!</b>
             </div>
             <div className="art-sticker">
               PRESS
