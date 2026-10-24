@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowUpRight, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Brand, ErrorNotice } from './components';
+import { Brand, BrandDisclaimer, ErrorNotice } from './components';
 import { errorText, getSession, post, setCsrfToken } from './api';
 import { useSession } from './context';
 import type { Session } from './types';
@@ -121,7 +121,7 @@ export default function Login() {
           <form
             onSubmit={submit}
             className="form-stack"
-            aria-label="Вход в GameForge"
+            aria-label="Вход в beeGame"
             aria-busy={busy}
           >
             <label>
@@ -133,7 +133,7 @@ export default function Login() {
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
                 required
-                placeholder="Как вас зовут в GameForge"
+                placeholder="Как вас зовут в beeGame"
               />
             </label>
             <label>
@@ -149,11 +149,12 @@ export default function Login() {
               />
             </label>
             {error && <ErrorNotice message={error} />}
-            <button className="button button-coral button-block" disabled={busy}>
+            <button className="button button-primary button-block" disabled={busy}>
               {busy ? 'Входим…' : 'Войти в мастерскую'}
             </button>
             <p className="form-footnote">Учётную запись выдаёт администратор.</p>
           </form>
+          <BrandDisclaimer />
         </section>
       </main>
     </div>

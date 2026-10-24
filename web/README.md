@@ -1,4 +1,4 @@
-# GameForge mini-games interface
+# beeGame mini-games interface
 
 React + TypeScript + SCSS. The application uses the Django session API described in
 [`../docs/api.md`](../docs/api.md); no model credentials are sent to the browser.
@@ -42,6 +42,17 @@ The interface has a 14px minimum for secondary copy and 16px body/chat/input tex
 `--text-small` and `--text-body` in `src/styles.scss`. Responsive rules preserve the minimum;
 larger browser text preferences scale the rem values upward. Generated game artifacts
 have their own isolated styling.
+
+The public-facing name is **beeGame**. The primary accent is Beeline yellow `#ffc800`;
+dark mode uses graphite `#191c22`, while the light background stays `#f7f5ef`.
+Illustration colors are independent of the UI palette. Internal event names and the
+theme storage key keep their existing `gameforge` names so saved preferences still work.
+The logo and tab icon use the unmodified SVG supplied by the user from
+[Beeline's asset server](https://static.beeline.ru/upload/images/b2c/bee-logo/beeline_logo.svg).
+It lives at `public/assets/beeline-logo.svg`, which Vite copies into the `/assets/`
+directory served by Django. The landing footer and login card identify beeGame as
+a hackathon development, not an official Beeline product. This notice does not establish
+permission to use the trademark; that depends on the event's terms or the rights holder.
 
 Settings include an explicitly labelled synthetic analytics example (three invented touch
 metrics). It is not collected player data. An opt-in action adds one editable recommendation

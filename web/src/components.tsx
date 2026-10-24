@@ -20,17 +20,21 @@ import { copyGameHtml } from './webview';
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link className="brand" to="/" aria-label="GameForge, главная">
-      <span className="brand-mark">
-        <Gamepad2 size={24} strokeWidth={2.3} />
-      </span>
+    <Link className="brand" to="/" aria-label="beeGame, главная">
+      <img className="brand-mark" src="/assets/beeline-logo.svg" alt="" width="44" height="44" />
       {!compact && (
         <span>
-          game<span className="brand-weight">forge</span>
-          <span className="brand-dot">.</span>
+          bee<span className="brand-weight">Game</span>
         </span>
       )}
     </Link>
+  );
+}
+export function BrandDisclaimer() {
+  return (
+    <p className="brand-disclaimer">
+      Разработано в рамках хакатона. Не является официальным продуктом билайна.
+    </p>
   );
 }
 export function Spinner({ text = 'Загружаем…' }: { text?: string }) {

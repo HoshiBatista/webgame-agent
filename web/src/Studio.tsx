@@ -501,7 +501,7 @@ export default function Studio() {
                   ? 'Вы'
                   : message.role === 'system'
                     ? 'Мастерская'
-                    : 'GameForge'}
+                    : 'beeGame'}
                 {message.role === 'assistant' &&
                   (() => {
                     const label = chat.runs.find((run) => run.id === message.run_id)?.model_label;
@@ -706,7 +706,7 @@ export default function Studio() {
                   onFocus={(event) => event.currentTarget.select()}
                 />
               </label>
-              <a className="button button-coral" href={shareDone}>
+              <a className="button button-primary" href={shareDone}>
                 Открыть публикацию
               </a>
             </div>
@@ -728,7 +728,7 @@ export default function Studio() {
                   : `В ленте сохранится отдельный снимок выбранной версии ${shareRevision.number}.`}{' '}
                 История ваших сообщений остаётся приватной.
               </p>
-              <button className="button button-coral" disabled={busy}>
+              <button className="button button-primary" disabled={busy}>
                 {publication ? 'Обновить публикацию' : 'Опубликовать игру'}
                 <Share2 size={17} />
               </button>
@@ -798,7 +798,7 @@ export default function Studio() {
               Пожелания будут учтены в следующих запросах. Сейчас новая генерация не запускается.
             </p>
             <button
-              className="button button-coral"
+              className="button button-primary"
               disabled={
                 !rating ||
                 busy ||
@@ -827,7 +827,7 @@ export default function Studio() {
               </ul>
             ) : null}
             <button
-              className="button button-coral"
+              className="button button-primary"
               disabled={busy}
               onClick={() => void act('confirm')}
             >

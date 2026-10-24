@@ -151,7 +151,7 @@ it.each(['Войти', 'Создать свою игру'])('opens the login pag
 it('supports a direct login URL and a return to the landing without signing in', async () => {
   vi.mocked(getSession).mockResolvedValue(guestSession);
   setup('/login');
-  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
   expect(screen.getByLabelText('Имя пользователя')).toHaveFocus();
   expect(screen.getByText('Учётную запись выдаёт администратор.')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('link', { name: 'На главную' }));
@@ -168,7 +168,7 @@ it.each([
   let finishLogin!: (value: Session) => void;
   vi.mocked(post).mockReturnValue(new Promise((resolve) => (finishLogin = resolve)));
   setup(entry);
-  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
   expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
   fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
   fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'test-password' } });
@@ -184,14 +184,14 @@ it.each([
   await act(async () => finishLogin(session));
   await screen.findByRole('heading', { name: heading });
   expect(screen.getByTestId('location').textContent).toBe(destination);
-  expect(screen.queryByRole('form', { name: 'Вход в GameForge' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('form', { name: 'Вход в beeGame' })).not.toBeInTheDocument();
 });
 
 it('keeps the login form usable after rejected credentials', async () => {
   vi.mocked(getSession).mockResolvedValue(guestSession);
   vi.mocked(post).mockRejectedValue(new Error('Неверное имя пользователя или пароль.'));
   setup('/login');
-  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
   fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
   fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'wrong-password' } });
   fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
@@ -208,7 +208,7 @@ it('redirects a signed-in visitor away from the login page', async () => {
   setup('/login');
   await screen.findByRole('heading', { name: 'Игры сообщества' });
   expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
-  expect(screen.queryByRole('form', { name: 'Вход в GameForge' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('form', { name: 'Вход в beeGame' })).not.toBeInTheDocument();
   expect(post).not.toHaveBeenCalled();
 });
 
@@ -232,14 +232,14 @@ it('returns to a public game after cancelling or completing sign-in for a remix'
   });
   setup('/games/public-one');
   fireEvent.click(await screen.findByRole('button', { name: 'Доработать' }));
-  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
   fireEvent.click(screen.getByRole('link', { name: 'Вернуться к игре' }));
   await screen.findByRole('heading', { name: 'Лунная игра' });
   expect(screen.getByTestId('location')).toHaveTextContent(/^\/games\/public-one$/);
   expect(post).not.toHaveBeenCalled();
 
   fireEvent.click(screen.getByRole('button', { name: 'Доработать' }));
-  await screen.findByRole('form', { name: 'Вход в GameForge' });
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
   fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
   fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'test-password' } });
   fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));

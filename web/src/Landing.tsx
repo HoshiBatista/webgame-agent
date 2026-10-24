@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Brand } from './components';
+import { Brand, BrandDisclaimer } from './components';
 
 export default function Landing() {
   return (
@@ -38,7 +38,7 @@ export default function Landing() {
               Опишите мини-игру, попробуйте её и добавьте
               <br className="desktop-break" /> немного своего характера.
             </p>
-            <Link className="button button-coral hero-button" to="/login">
+            <Link className="button button-primary hero-button" to="/login">
               Создать свою игру <ArrowRight size={20} />
             </Link>
             <div className="hero-benefits">
@@ -148,8 +148,11 @@ export default function Landing() {
         </section>
       </main>
       <footer className="landing-footer">
-        <Brand />
-        <span>Маленькие игры. Большие идеи.</span>
+        <div className="landing-footer-main">
+          <Brand />
+          <span>Маленькие игры. Большие идеи.</span>
+        </div>
+        <BrandDisclaimer />
       </footer>
     </div>
   );

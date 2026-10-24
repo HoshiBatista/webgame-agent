@@ -99,7 +99,7 @@ beforeEach(() => {
 
 it('saves the chat choice without generating, then uses it and retains the retry key', async () => {
   setup('studio');
-  fireEvent.click(await screen.findByText('GameForge', { selector: 'summary' }));
+  fireEvent.click(await screen.findByText('beeGame', { selector: 'summary' }));
   fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
   await waitFor(() => expect(screen.getByLabelText('Выбрать модель: Pro')).toBeInTheDocument());
   expect(post).not.toHaveBeenCalled();

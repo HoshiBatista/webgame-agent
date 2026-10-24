@@ -210,7 +210,7 @@ export default function Preferences() {
                   <Check size={17} /> Пожелания сохранены
                 </p>
               )}
-              <button className="button button-coral" disabled={busy || modelBusy}>
+              <button className="button button-primary" disabled={busy || modelBusy}>
                 <Check size={17} />
                 {busy ? 'Сохраняем…' : 'Сохранить'}
               </button>

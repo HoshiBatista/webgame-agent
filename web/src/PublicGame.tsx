@@ -53,7 +53,7 @@ export default function PublicGame() {
         </Link>
         <Brand />
         <button
-          className="button button-coral button-small"
+          className="button button-primary button-small"
           onClick={remix}
           disabled={busy || !game}
         >

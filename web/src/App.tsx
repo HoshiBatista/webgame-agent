@@ -261,7 +261,7 @@ function Application() {
             </button>
           </>
         ) : (
-          <Spinner text="Открываем GameForge…" />
+          <Spinner text="Открываем beeGame…" />
         )}
       </div>
     );
