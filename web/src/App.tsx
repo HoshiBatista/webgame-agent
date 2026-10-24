@@ -147,7 +147,6 @@ function Shell({
         >
           <Gamepad2 size={19} />
           <span>Игры сообщества</span>
-          <ArrowUpRight size={14} />
         </Link>
         <div className="sidebar-section-label">
           ВАШИ МИРЫ <span>{chats.length}</span>
