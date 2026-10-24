@@ -151,7 +151,6 @@ export default function Login() {
             {error && <ErrorNotice message={error} />}
             <button className="button button-coral button-block" disabled={busy}>
               {busy ? 'Входим…' : 'Войти в мастерскую'}
-              <ArrowUpRight size={18} />
             </button>
             <p className="form-footnote">Учётную запись выдаёт администратор.</p>
           </form>
