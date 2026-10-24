@@ -47,6 +47,9 @@ The public-facing name is **beeGame**. The primary accent is Beeline yellow `#ff
 dark mode uses graphite `#191c22`, while the light background stays `#f7f5ef`.
 Illustration colors are independent of the UI palette. Internal event names and the
 theme storage key keep their existing `gameforge` names so saved preferences still work.
+Theme colors are registered with `@property` and transition together over
+`--duration-theme: 600ms`. The same transition applies to system theme changes;
+`prefers-reduced-motion: reduce` disables transitions and their delays.
 The logo and tab icon use the unmodified SVG supplied by the user from
 [Beeline's asset server](https://static.beeline.ru/upload/images/b2c/bee-logo/beeline_logo.svg).
 It lives at `public/assets/beeline-logo.svg`, which Vite copies into the `/assets/`

@@ -1,5 +1,29 @@
 @use 'sass:color';
 
+$theme-colors: (
+  bg: #f7f5ef,
+  surface: #fffefa,
+  soft: #eeece5,
+  ink: #252a34,
+  muted: #656b76,
+  border: #deded7,
+  accent: #ffc800,
+  accent-hover: #ffda4b,
+  accent-text: #725800,
+  accent-soft: #fff1b8,
+  danger: #b94732,
+  shadow-color: #30352b0a,
+);
+
+// Typed, inherited colors let the whole interface follow one theme transition.
+@each $name, $initial-value in $theme-colors {
+  @property --#{$name} {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #{$initial-value};
+  }
+}
+
 :root {
   color-scheme: light;
   font-family: 'Manrope Variable', 'Noto Sans', Helvetica, Arial, sans-serif;
@@ -9,23 +33,22 @@
   // Keep even secondary copy readable; rem sizes respect the browser's text preference.
   --text-small: max(14px, 0.875rem);
   --text-body: max(16px, 1rem);
-  color: #252a34;
-  background: #f7f5ef;
+  color: var(--ink);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --bg: #f7f5ef;
-  --surface: #fffefa;
-  --soft: #eeece5;
-  --ink: #252a34;
-  --muted: #656b76;
-  --border: #deded7;
-  --accent: #ffc800;
-  --accent-hover: #ffda4b;
-  --accent-text: #725800;
-  --accent-soft: #fff1b8;
-  --danger: #b94732;
-  --shadow: 0 15px 50px #30352b0a;
+  @each $name, $value in $theme-colors {
+    --#{$name}: #{$value};
+  }
+  --shadow: 0 15px 50px var(--shadow-color);
+  --duration-theme: 600ms;
+  --ease-quiet: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-property:
+    --bg, --surface, --soft, --ink, --muted, --border, --accent, --accent-hover, --accent-text,
+    --accent-soft, --danger, --shadow-color;
+  transition-duration: var(--duration-theme);
+  transition-timing-function: var(--ease-quiet);
 }
 :root[data-theme='dark'] {
   color-scheme: dark;
@@ -40,7 +63,7 @@
   --accent-text: #ffd54a;
   --accent-soft: #30343d;
   --danger: #f39480;
-  --shadow: 0 15px 50px #0002;
+  --shadow-color: #0002;
 }
 * {
   box-sizing: border-box;
@@ -3689,7 +3712,8 @@ svg {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
   .spin {
     animation: none;
