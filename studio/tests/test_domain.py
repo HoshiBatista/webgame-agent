@@ -10,6 +10,7 @@ from django.db import IntegrityError, transaction
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
+from generation.providers.fake import fixture_response
 from studio.models import Budget, Chat, Invocation, Publication, Revision, User
 from studio.services import budget_snapshot, create_run, reserve_invocation, settle_invocation, usage_cost
 from studio.tasks import process_run, recover_expired
@@ -24,7 +25,9 @@ def artifact(title="Generated"):
         "artifact_hash": hashlib.sha256(HTML.encode()).hexdigest(),
         "file_hashes": {"index.html": hashlib.sha256(HTML.encode()).hexdigest()},
         "design": {"summary": "Independent game"},
-        "checks": [],
+        # Packaging is mocked in these workflow tests; its output must still
+        # satisfy the admission contract before another repair can be reserved.
+        "checks": fixture_response()["checks"],
         "title": title,
         "diff": [],
     }
@@ -163,7 +166,7 @@ class DomainTests(TestCase):
         self.assertEqual(Revision.objects.count(), 1)
         self.assertEqual(run.invocations.get().state, "settled")
 
-    def test_one_auto_repair_then_explicit_continuation(self):
+    def test_bounded_auto_repairs_then_explicit_continuation(self):
         run = self.make_run()
         with (
             patch("generation.service.generate", return_value=response()) as model,
@@ -174,7 +177,8 @@ class DomainTests(TestCase):
         run.refresh_from_db()
         self.assertEqual(run.status, "needs_attention", run.error)
         self.assertEqual(model.call_count, 2)
-        self.assertEqual([call.args[0]["operation"] for call in model.call_args_list], ["create", "repair"])
+        self.assertEqual([call.args[0]["operation"] for call in model.call_args_list],
+                         ["create", "repair"])
         candidate = run.candidate_revision
         next_run = create_run(self.chat, {"idempotency_key": "continue"}, continued_from=run)
         with (
@@ -405,7 +409,12 @@ class DomainTests(TestCase):
             patch("generation.artifacts.materialize", return_value=artifact()),
             patch(
                 "validation.service.validate",
-                return_value={"status": "unverified", "findings": [{"message": "Check end condition"}]},
+                return_value={"status": "unverified", "findings": [{"message": "Check end condition"}],
+                              "gates": {"syntax": True, "runtime": True, "surface": True},
+                              "stages": [{"stage": "syntax", "status": "passed"}],
+                              "facts": [{**{k: c[k] for k in ("id", "category", "requirement", "viewport")},
+                                         "surface": {"canvases": [{"visible": True, "width": 300, "height": 300}], "overflow": False}}
+                                        for c in artifact()["checks"]]},
             ),
         ):
             process_run(str(run.id))
@@ -421,7 +430,9 @@ class DomainTests(TestCase):
         )
         self.assertEqual(
             self.client.post(
-                f"/api/runs/{run.id}/confirm/", {"confirmed": True}, content_type="application/json"
+                f"/api/runs/{run.id}/confirm/", {"confirmed": True,
+                    "artifact_hash": run.candidate_revision.artifact_hash,
+                    "report_id": run.candidate_revision.reports.get().id}, content_type="application/json"
             ).status_code,
             200,
         )
@@ -602,7 +613,7 @@ class DomainTests(TestCase):
             dispatch.assert_not_called()
         dispatch.assert_called_once_with()
 
-    def test_lost_worker_before_send_releases_reservation(self):
+    def test_lost_worker_before_send_preserves_reservation_for_recovery(self):
         run = self.make_run()
         run.status = "generating"
         run.lease_until = timezone.now() - timedelta(seconds=1)
@@ -610,7 +621,8 @@ class DomainTests(TestCase):
         run.save()
         Invocation.objects.create(run=run, attempt=1, request={}, state="reserved", reservation_usd=1)
         recover_expired()
-        self.assertEqual(budget_snapshot()["reserved_usd"], 0)
+        self.assertEqual(budget_snapshot()["reserved_usd"], 1)
+        self.assertEqual(run.invocations.get().state, "reserved")
         run.refresh_from_db()
         self.assertEqual(run.status, "queued")
 
@@ -655,7 +667,7 @@ class DomainTests(TestCase):
         ):
             process_run(str(run.id))
         run.refresh_from_db()
-        self.assertEqual(run.status, "unverified", run.error)
+        self.assertEqual(run.status, "needs_attention", run.error)
         self.assertEqual(run.candidate_revision.reports.get().screenshot_base64, "")
 
     def test_unexpected_exception_trace_is_private(self):
@@ -731,8 +743,8 @@ class DomainTests(TestCase):
         self.assertEqual(run.error["code"], "internal_error")
 
     def test_private_provider_receipt_and_generation_fingerprints_are_saved(self):
-        from generation.prompts import system_prompt
-        from generation.schema import RESPONSE_SCHEMA
+        from generation.prompts import SYSTEM_PROMPT
+        from generation.schema import CONTRACT_VERSION, response_schema
         from studio.services import fingerprint
 
         run = self.make_run()
@@ -754,10 +766,12 @@ class DomainTests(TestCase):
         self.assertEqual(
             inv.request["generation_contract"],
             {
-                "system_prompt_sha256": hashlib.sha256(
-                    system_prompt(inv.request["operation"]).encode()
-                ).hexdigest(),
-                "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
+                "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+                "response_schema_sha256": fingerprint(response_schema(inv.request)),
+                "pipeline_version": CONTRACT_VERSION,
+                "max_repair_attempts": 3,
+                "reported_findings": 0,
+                "focused_findings": 0,
             },
         )
         regular = json.dumps(self.client.get(f"/api/runs/{run.id}/").json())
@@ -813,7 +827,7 @@ class DomainTests(TestCase):
         ):
             process_run(str(edit.id))
         check.assert_not_called()
-        self.assertEqual(model.call_count, 2)
+        self.assertEqual(model.call_count, 4)
         edit.refresh_from_db()
         self.chat.refresh_from_db()
         self.assertEqual(edit.status, "needs_attention")
@@ -1000,7 +1014,7 @@ class DomainTests(TestCase):
         self.assertEqual(follow.metrics["model_calls"], 0)
         self.assertEqual(run.metrics["check_seconds"], 2)
 
-    def test_unverified_gets_one_generic_autofix(self):
+    def test_unverified_finishes_without_a_generic_autofix(self):
         run = self.make_run()
         uncertain = {
             "status": "unverified",
@@ -1013,9 +1027,9 @@ class DomainTests(TestCase):
         ):
             process_run(str(run.id))
         run.refresh_from_db()
-        self.assertEqual(run.status, "succeeded", run.error)
-        self.assertEqual(model.call_count, 2)
-        self.assertEqual(model.call_args.args[0]["findings"], uncertain["findings"])
+        self.assertEqual(run.status, "needs_attention", run.error)
+        self.assertEqual(model.call_count, 1)
+        self.assertIsNotNone(run.finished_at)
 
     def test_infrastructure_failure_never_requests_model_repair(self):
         run = self.make_run()

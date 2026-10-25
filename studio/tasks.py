@@ -11,6 +11,7 @@ from django.db import close_old_connections, connections, transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
+from .continuations import pending_invocations, returned_response
 from .models import Budget, Chat, CheckReport, Invocation, Outbox, Revision, Run
 from .services import (
     DomainError,
@@ -64,8 +65,8 @@ def dispatch_outbox():
 def recover_expired():
     # Requests abandoned during cancellation still retain a liability, never an active reservation forever.
     abandoned = Invocation.objects.filter(
-        state__in=["reserved", "sent"], run__status="cancelled", run__lease_until__lt=timezone.now()
-    )
+        state__in=["reserved", "sent"], run__status="cancelled"
+    ).filter(Q(run__lease_until__lt=timezone.now()) | Q(run__lease_until__isnull=True)).exclude(run__provider="relay")
     for inv in abandoned:
         settle_invocation(
             inv.id,
@@ -84,7 +85,7 @@ def recover_expired():
             ):
                 continue
             unresolved = run.invocations.filter(state="sent")
-            if unresolved.exists():
+            if unresolved.exists() and run.provider != "relay":
                 unresolved.update(
                     state="unknown",
                     finished_at=timezone.now(),
@@ -99,10 +100,8 @@ def recover_expired():
                 run.finished_at = timezone.now()
                 event(run, "unknown", run.message)
             else:
-                run.invocations.filter(state="reserved").update(
-                    state="failed", cost_usd=0, finished_at=timezone.now()
-                )
-                # Returned responses and candidates are durable; process_run reuses them.
+                # Unsent reservations, returned responses and candidates are durable.
+                # A direct provider is unsafe to retry only after the send marker.
                 run.status = "queued"
                 run.message = "Восстанавливаем сохранённый шаг после перезапуска."
                 Outbox.objects.update_or_create(run=run, defaults={"dispatched_at": None})
@@ -110,6 +109,78 @@ def recover_expired():
             run.fence = None
             run.lease_until = None
             run.save()
+
+
+@shared_task(acks_late=False)
+def reconcile_relay_cancellations():
+    """Durable cancellation intent survives lost connections and stopped application workers."""
+    from generation.errors import GenerationError, GenerationPending
+    from generation.providers.relay import fetch, unpack
+
+    rows = Invocation.objects.filter(
+        run__provider="relay", run__status="cancelled", state__in=["reserved", "sent"]
+    ).filter(
+        Q(provider_metadata__relay_cancel_wait__retry_at__isnull=True)
+        | Q(provider_metadata__relay_cancel_wait__retry_at__lte=time.time())
+        | Q(provider_metadata__relay_cancel_wait__operator_required=False)
+    ).order_by("created_at")[:20]
+    for inv in rows:
+        wait = (inv.provider_metadata or {}).get("relay_cancel_wait", {})
+        if wait.get("operator_required") and wait.get("retry_at", 0) > time.time():
+            continue
+        try:
+            result = unpack(fetch(inv.request, cancel=True), str(inv.id))
+            settle_invocation(inv.id, response=result["response"], usage=result.get("usage"),
+                              provider_metadata=result.get("provider_metadata"))
+        except GenerationPending as exc:
+            record_relay_pending(inv, exc, cancel=True)
+            continue
+        except GenerationError as exc:
+            data = error_data(exc)
+            if exc.raw_response is not None:
+                data["raw_response"] = exc.raw_response
+            settle_invocation(inv.id, error=data, usage=exc.usage, unknown=exc.outcome_unknown,
+                              provider_metadata=exc.provider_metadata)
+
+
+@transaction.atomic
+def record_relay_pending(inv, pending, *, cancel=False):
+    inv = Invocation.objects.select_for_update().get(pk=inv.pk)
+    if inv.state not in {"reserved", "sent"}:
+        return
+    key = "relay_cancel_wait" if cancel else "relay_wait"
+    previous = (inv.provider_metadata or {}).get(key, {})
+    details = {"code": pending.code, "operator_required": pending.operator_required,
+               "retry_after": pending.retry_after, **pending.metadata,
+               "checked_at": timezone.now().isoformat(), "retry_at": time.time() + pending.retry_after,
+               "checks": previous.get("checks", 0) + 1}
+    inv.provider_metadata = {**(inv.provider_metadata or {}), "relay_job_id": str(inv.id),
+                             key: details}
+    inv.save(update_fields=["provider_metadata"])
+    if pending.operator_required and previous.get("code") != pending.code:
+        logging.getLogger(__name__).warning("relay_operator_required job=%s code=%s http_status=%s",
+                                           inv.id, pending.code, pending.metadata.get("http_status"))
+
+
+@transaction.atomic
+def defer_relay(run, message, pending=None):
+    current = Run.objects.select_for_update().get(pk=run.id)
+    if current.fence != run.fence or current.cancel_requested or current.status == "cancelled":
+        return
+    changed = current.message != message
+    stage = "waiting_admin" if pending and pending.operator_required else "waiting_model"
+    current.status, current.stage, current.message = "queued", stage, message
+    current.error = ({"code": pending.code, "message": message, "operator_required": True}
+                     if pending and pending.operator_required else {})
+    current.fence, current.lease_until = None, None
+    current.save()
+    # Keep the durable outbox; configuration errors wait five minutes, not five seconds.
+    Outbox.objects.update_or_create(
+        run=current, defaults={"dispatched_at": timezone.now() + timedelta(
+            seconds=(pending.retry_after if pending else 5) - 15)}
+    )
+    if changed:
+        event(current, stage, message, current.error)
 
 
 @transaction.atomic
@@ -138,16 +209,24 @@ def claim_run(run_id):
         return False
     run.fence = uuid.uuid4()
     run.lease_until = timezone.now() + timedelta(seconds=settings.GAMEFORGE_LEASE_SECONDS)
+    resuming_relay = run.provider == "relay" and run.invocations.filter(
+        state__in=["reserved", "sent"]
+    ).exists()
     run.status = "generating"
-    run.stage = "generating"
-    run.message = (
-        "Создаём игру одним запросом."
-        if run.operation == "create"
-        else "Готовим точечные изменения сохранённой игры."
-    )
-    run.metrics = {**run.metrics, "queue_seconds": (timezone.now() - run.created_at).total_seconds()}
+    if not resuming_relay:
+        run.stage = "generating"
+        run.message = (
+            "Создаём компактную игру, затем проверим её по шагам."
+            if run.operation == "create"
+            else "Готовим точечные изменения сохранённой игры."
+        )
+        run.metrics = {**run.metrics, "queue_seconds": (timezone.now() - run.created_at).total_seconds()}
+    if not run.allow_model_calls:
+        run.status = run.stage = "checking"
+        run.message = "Проверяем сохранённый ответ без нового вызова модели."
     run.save()
-    event(run, "generating", run.message)
+    if not resuming_relay:
+        event(run, run.stage, run.message)
     return run
 
 
@@ -206,26 +285,34 @@ def store_candidate(run, materialized, base):
         design=materialized.get("design", {}),
         checks=materialized.get("checks", []),
         diff=materialized.get("diff", []),
+        checks_review_required=bool(materialized.get("checks_review_required") or base and base.checks_review_required),
     )
     current.candidate_revision = revision
     current.status = "checking"
     current.stage = "checking"
-    current.message = "Проверяем загрузку, управление и игровой результат."
+    current.message = "Проверяем синтаксис, затем управление и игровые условия."
     current.save()
     event(current, "checking", current.message)
     return revision
 
 
-def request_for(run, base, findings):
+def request_for(run, base, findings, last_attempt_error=None):
     import hashlib
 
+    from generation.errors import ContractError
+    from generation.feedback import focus_findings
     from generation.prompts import repair_evidence, system_prompt
-    from generation.schema import RESPONSE_SCHEMA
+    from generation.schema import CONTRACT_VERSION, response_schema, validate_checks
 
-    # Only a materialized candidate establishes fixed requirements for repair.
-    operation = "create" if base is None else "edit" if base.id == run.base_revision_id else "repair"
+    from .check_repair import attempted, needs_repair
+
+    first = run.invocations.order_by("attempt").first()
+    version = first.request.get("generation_contract", {}).get("pipeline_version", 2) if first else CONTRACT_VERSION
+    focused_error = focus_findings([last_attempt_error]) if last_attempt_error else []
     request = {
-        "operation": operation,
+        # A rejected response has not established new game requirements yet.
+        # Only a materialized candidate becomes the fixed base of a repair.
+        "operation": "create" if base is None else "edit" if base.id == run.base_revision_id else "repair",
         "prompt": run.prompt,
         "audience": run.audience,
         "preferences": preference_for(run.chat.owner).notes,
@@ -233,22 +320,59 @@ def request_for(run, base, findings):
         "files": base.files if base else {},
         "design": base.design if base else {},
         "checks": base.checks if base else [],
-        "findings": findings,
+        "findings": focus_findings(findings or ([last_attempt_error] if last_attempt_error else [])),
+        "unresolved_findings": findings,
+        "last_attempt_error": focused_error[0] if focused_error else None,
         "provider": run.provider,
         "model": run.model,
-        "generation_contract": {
-            "system_prompt_sha256": hashlib.sha256(system_prompt(operation).encode()).hexdigest(),
-            "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
-        },
+        "generation_contract": {"pipeline_version": version},
     }
+    if needs_repair(run, base, findings):
+        from generation.check_repair import permission
 
+        if attempted(run, base):
+            raise DomainError("check_review_required", "Проверки уже пересматривались для этих исходников. Код сохранён; нужен разбор результата.")
+        try:
+            request["check_repair"] = permission(base.artifact_hash, base.checks, base.design)
+        except ContractError as exc:
+            raise DomainError(exc.code, exc.message) from exc
+        request["operation"] = "check_repair"
+    if request["operation"] == "repair":
+        from .check_repair import code_repair_basis
+
+        try:
+            validate_checks(base.checks)
+        except ContractError as exc:
+            basis = code_repair_basis(run, base)
+            if basis is None:
+                raise DomainError(
+                    "invalid_baseline_checks",
+                    "Сохранённые проверки требуют проверки приложения. Автоматическое исправление остановлено.",
+                ) from exc
+            request["code_repair_basis"] = basis
+        if version >= 5 and not base.accepted:
+            from generation.source_policy import module_policy
+
+            policy = module_policy(base.files, findings)
+            # A cosmetic edit must not authorize replacement of untouched working code.
+            if run.base_revision_id:
+                policy["files"] = {p: h for p, h in policy["files"].items()
+                                   if base.files[p] != run.base_revision.files.get(p)}
+            request["module_repair"] = policy
     if base is not None and findings:
         report = base.reports.order_by("-id").first()
-        # A patch/packaging error must not be paired with an unrelated older browser report.
         if report and report.findings == findings and report.status in {"failed", "unverified"}:
             request["validation_evidence"] = repair_evidence({"status": report.status, "facts": report.facts})
+    request["generation_contract"] = {
+        "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
+        "response_schema_sha256": fingerprint(response_schema(request)),
+        "pipeline_version": version,
+        "max_repair_attempts": run.max_repair_attempts,
+        "reported_findings": len(findings) or int(bool(last_attempt_error)),
+        "focused_findings": len(request["findings"]),
+    }
 
-    if run.provider == "vllm":
+    if run.provider in {"vllm", "relay"}:
         from .services import tariff
 
         price = tariff(run.provider, run.model)
@@ -271,12 +395,74 @@ def record_exception(run, exc, stage):
 
 
 def check_identity(revision):
+    from generation.source_map import VERSION
     from validation import service
+    from validation.checks import VERSION as CHECK_VERSION
+    from validation.checks import review_checks
 
     environment = service.environment_identity()
+    checks, _ = review_checks(revision.checks)
     return fingerprint(
-        {"artifact": revision.artifact_hash, "checks": revision.checks, "validator": environment}
+        {"artifact": revision.artifact_hash, "checks": checks, "validator": environment,
+         "source_map": VERSION, "check_policy": CHECK_VERSION,
+         "checks_review_required": revision.checks_review_required}
     )
+
+
+def repair_state(run, base):
+    """Reports own game defects; a rejected invocation owns only its reply error."""
+    report = base.reports.order_by("-id").first() if base else None
+    findings = report.findings if report else []
+    previous = run.invocations.order_by("-attempt").first()
+    if previous is None and run.continued_from:
+        previous = run.continued_from.invocations.order_by("-attempt").first()
+    last_error = None
+    if previous and not previous.revision_id and previous.error:
+        base_id = str(base.id) if base else None
+        if previous.request.get("base_revision") == base_id:
+            last_error = {key: previous.error[key] for key in ("code", "message") if key in previous.error}
+            if not report:
+                findings = previous.request.get("unresolved_findings") or previous.request.get("findings") or []
+    if base is None and not last_error:
+        restart = run.events.filter(kind="source_restart").order_by("-id").first()
+        if restart:
+            last_error = restart.details["error"]
+    return findings, last_error
+
+
+def restart_incomplete_candidate(run, base):
+    """An explicit new continuation may supersede a legacy stub, retaining its history."""
+    from generation.artifacts import bundle
+    from generation.errors import ContractError
+    from generation.schema import CONTRACT_VERSION
+    from generation.source_policy import require_implementation
+
+    first = run.invocations.order_by("attempt").first()
+    version = first.request.get("generation_contract", {}).get("pipeline_version", 2) if first else CONTRACT_VERSION
+    if (not base or base.accepted or run.base_revision_id or not run.allow_model_calls or version < 5):
+        return None
+    # Consume/reconcile an already paid exact-base response before starting a new create.
+    if pending_invocations(run, base).exists():
+        return None
+    try:
+        require_implementation(bundle(base.files))
+    except ContractError as exc:
+        if exc.code not in {"incomplete_sources", "missing_resource"}:
+            return None
+        error = {"code": "incomplete_sources", "message": "Сохранённый кандидат не содержит полной реализации. "
+                 "Верните полную игру в files без патчей к заглушке."}
+        with transaction.atomic():
+            Chat.objects.select_for_update().get(pk=run.chat_id)
+            current = Run.objects.select_for_update().get(pk=run.id)
+            if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
+                return None
+            current.candidate_revision = None
+            current.save(update_fields=["candidate_revision"])
+            run.candidate_revision = None
+            event(run, "source_restart", "Исходники неполны; продолжаем создание в прежнем лимите вызовов.",
+                  {"revision_id": str(base.id), "artifact_hash": base.artifact_hash, "error": error})
+        return error
+    return None
 
 
 def error_data(exc):
@@ -306,6 +492,9 @@ def process_run(self, run_id):
             _execute(run, lease, generate, materialize, validate)
         except Exception as exc:
             record_exception(run, exc, "pipeline")
+            if run.provider == "relay" and run.invocations.filter(state__in=["reserved", "sent"]).exists():
+                defer_relay(run, "Восстанавливаем получение сохранённого ответа после ошибки обработчика.")
+                return
             # If storage failed after sending, the request may still be billable.
             unresolved = run.invocations.filter(state="sent")
             ambiguous = unresolved.exists()
@@ -332,17 +521,44 @@ def process_run(self, run_id):
     transaction.on_commit(dispatch_outbox, robust=True)
 
 
+@transaction.atomic
+def mark_invocation_sent(run, inv):
+    """Fence the durable send marker before any direct transport can be retried."""
+    current = Run.objects.select_for_update(of=("self",)).select_related("chat").get(pk=run.id)
+    if (current.fence != run.fence or current.cancel_requested or current.chat.deleted_at
+            or current.status not in Run.ACTIVE):
+        return False
+    stored = Invocation.objects.select_for_update().get(pk=inv.id, run=current)
+    if stored.state not in ({"reserved", "sent"} if run.provider == "relay" else {"reserved"}):
+        return False
+    if stored.sent_at and run.provider != "relay":
+        return False
+    if not stored.sent_at and current.model_call_deadline and timezone.now() >= current.model_call_deadline:
+        return False
+    stored.state, stored.sent_at = "sent", stored.sent_at or timezone.now()
+    stored.save(update_fields=["state", "sent_at"])
+    inv.state, inv.sent_at, inv.provider_metadata = stored.state, stored.sent_at, stored.provider_metadata
+    return True
+
+
 def _execute(run, lease, generate, materialize, validate):
-    from generation.errors import ContractError
+    from generation.errors import ContractError, GenerationPending
+    from validation.checks import review_checks
+
+    from .acceptance import assess, best_failed_candidate, complete_requirements, repeated_failure
 
     base = run.candidate_revision or run.base_revision
-    findings = []
+    findings, last_attempt_error = repair_state(run, base)
+    restarted = restart_incomplete_candidate(run, base)
+    if restarted:
+        base, findings, last_attempt_error = None, [], restarted
     # A continued infrastructure failure only needs validation, not another model call.
     pending = (
         run.candidate_revision
         if run.candidate_revision
         and (
             run.candidate_revision.run_id == run.id
+            or not run.allow_model_calls
             or (
                 run.continued_from
                 and (
@@ -358,26 +574,38 @@ def _execute(run, lease, generate, materialize, validate):
         if previous_report and previous_report.identity != check_identity(run.candidate_revision):
             # A validator fix invalidates evidence, not game code; recheck before another paid edit.
             pending = run.candidate_revision
-    preserved_response = (
-        run.continued_from.invocations.filter(state="returned", revision__isnull=True)
-        .order_by("attempt")
-        .first()
-        if run.continued_from
-        else None
-    )
+        if run.completion_policy >= 2 and (
+            previous_report is None or previous_report.assessment.get("action") != "repair"
+        ):
+            pending = run.candidate_revision
     if run.continued_from and not pending:
         previous = run.continued_from
         report = base.reports.order_by("-id").first() if base else None
-        findings = (
-            report.findings if report else [previous.error or {"message": "Продолжить сохранённый запрос."}]
-        )
+        if report:
+            findings = report.findings
+        elif not last_attempt_error:
+            last_attempt_error = previous.error or {"message": "Продолжить сохранённый запрос."}
     while not lease.cancelled():
         run.refresh_from_db()
-        inv = (
-            run.invocations.filter(state="returned", revision__isnull=True).order_by("attempt").first()
-            or preserved_response
-        )
-        preserved_response = None
+        # Retrieval has priority over decisions based on the old candidate/report.
+        # A re-entered worker must not treat an admitted check repair as exhausted.
+        resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
+        if resumed and resumed.sent_at and run.provider != "relay":
+            # Direct transports cannot reconcile a submitted inference by UUID.
+            settle_invocation(resumed.id, unknown=True, error={
+                "code": "receipt_storage_failed", "message": "Результат отправленного вызова неизвестен.",
+            })
+            finish_run(run.id, run.fence, "unknown", "Нужна сверка исхода отправленного вызова.",
+                       error={"code": "receipt_storage_failed", "message": "Повтор требует подтверждения."})
+            return
+        inv = returned_response(run, base)
+        if inv is None:
+            stale = run.invocations.filter(state="returned", revision__isnull=True).first()
+            if stale is not None:
+                # Accounted receipt, but its original base is no longer applicable.
+                stale.state = "settled"
+                stale.error = {"code": "stale_revision", "message": "База сохранённого ответа изменилась."}
+                stale.save(update_fields=["state", "error"])
         if inv is not None:
             # Exact request base is durable: recovery cannot apply a saved patch to a later draft.
             base_id = inv.request.get("base_revision")
@@ -395,6 +623,11 @@ def _execute(run, lease, generate, materialize, validate):
                 )
                 return
             try:
+                if inv.request.get("code_repair_basis"):
+                    from .check_repair import code_repair_basis
+
+                    if response_base is None or code_repair_basis(run, response_base) != inv.request["code_repair_basis"]:
+                        raise ContractError("stale_code_repair_basis", "Свидетельство для ремонта кода изменилось; нужна повторная проверка.")
                 packaging_started = time.monotonic()
                 artifact = materialize(
                     response,
@@ -402,7 +635,14 @@ def _execute(run, lease, generate, materialize, validate):
                     base_revision=str(response_base.id) if response_base else None,
                     files=response_base.files if response_base else None,
                     previous_checks=response_base.checks if response_base else None,
+                    generation_contract={**inv.request.get("generation_contract", {}),
+                                         "pipeline_version": inv.request.get("generation_contract", {}).get("pipeline_version", 2)},
+                    module_repair=inv.request.get("module_repair") if response_base and not response_base.accepted else None,
+                    check_repair=inv.request.get("check_repair"),
+                    code_repair_basis=inv.request.get("code_repair_basis"),
                 )
+                if (inv.request["operation"] == "check_repair" or inv.request.get("code_repair_basis")) and artifact.get("status") != "unchanged":
+                    artifact.update(title=response_base.title, design=response_base.design)
                 run.metrics = {
                     **run.metrics,
                     "packaging_seconds": run.metrics.get("packaging_seconds", 0)
@@ -412,13 +652,22 @@ def _execute(run, lease, generate, materialize, validate):
                 Run.objects.filter(pk=run.id, fence=run.fence).update(metrics=run.metrics)
                 if artifact.get("status") == "unchanged":
                     explanation = artifact["message"]
+                    previous_report = response_base.reports.order_by("-id").first() if response_base else None
+                    manual = bool(inv.request["operation"] == "check_repair" and previous_report
+                                  and previous_report.status == "unverified"
+                                  and previous_report.assessment.get("action") == "review"
+                                  and complete_requirements(response_base.checks)
+                                  and previous_report.assessment.get("gates_passed") is True)
                     with transaction.atomic():
+                        inv.state = "settled"
+                        inv.save(update_fields=["state"])
                         if finish_run(
                             run.id,
                             run.fence,
-                            "needs_attention",
+                            "unverified" if manual else "needs_attention",
+                            f"Исходники сохранены; проверьте игровые условия вручную. {explanation}" if manual else
                             f"Изменения не внесены. {explanation}",
-                            error={"code": "unchanged", "message": explanation},
+                            error={"code": "manual_verification" if manual else "unchanged", "message": explanation},
                         ):
                             inv.state = "settled"
                             inv.save(update_fields=["state"])
@@ -431,22 +680,31 @@ def _execute(run, lease, generate, materialize, validate):
                 if pending is None:
                     return
                 base = pending
+                last_attempt_error = None
             except ContractError as exc:
                 inv.state = "settled"
                 inv.error = error_data(exc)
                 inv.save(update_fields=["state", "error"])
-                findings = [error_data(exc)]
+                last_attempt_error = error_data(exc)
                 pending = None
                 event(
                     run,
-                    "contract_error",
+                    "incomplete_sources" if exc.code == "incomplete_sources" else "contract_error",
+                    "Ответ сохранён, но исходники неполны; продолжаем создание в общем лимите."
+                    if exc.code == "incomplete_sources" and base is None else
                     "Ответ сохранён; исправляем проблему формата, изменений или проверок.",
-                    {"code": findings[0]["code"]},
+                    {"code": last_attempt_error["code"]},
                 )
-        if pending is not None:
+                if inv.request["operation"] == "check_repair" or exc.code in {"test_only_change", "invalid_baseline_checks", "stale_code_repair_basis"}:
+                    finish_run(run.id, run.fence, "needs_attention", exc.message,
+                               error={**last_attempt_error, "details": findings})
+                    return
+        if pending is not None and resumed is None:
+            checks, corrections = review_checks(pending.checks)
             identity = check_identity(pending)
             report = (
                 pending.reports.filter(identity=identity)
+                .filter(**({"validation_run": run} if run.continued_from and run.completion_policy >= 2 else {}))
                 .exclude(status="infrastructure_error")
                 .order_by("-id")
                 .first()
@@ -455,20 +713,27 @@ def _execute(run, lease, generate, materialize, validate):
                 Run.objects.filter(pk=run.id, fence=run.fence).update(
                     status="checking",
                     stage="checking",
-                    message="Проверяем загрузку, управление и игровой результат.",
+                    message="Проверяем синтаксис, затем управление и игровые условия.",
                 )
-                cached = CheckReport.objects.filter(identity=identity, status="passed").first()
+                cached = None if pending.checks_review_required else CheckReport.objects.filter(identity=identity, status="passed").first()
                 if cached:
                     result = {
                         "status": cached.status,
                         "findings": cached.findings,
                         "facts": cached.facts,
+                        "stages": cached.stages,
                         "elapsed_seconds": 0,
                         "environment": cached.environment,
                     }
+                    if cached.assessment.get("artifact_evidence"):
+                        from validation.evidence import gates as evidence_gates
+
+                        result["artifact_evidence"] = cached.assessment["artifact_evidence"]
+                        result["artifact_hash"] = pending.artifact_hash
+                        result["gates"] = evidence_gates(result["artifact_evidence"])
                 else:
                     try:
-                        result = validate(pending.html, pending.checks, artifact_hash=pending.artifact_hash)
+                        result = validate(pending.html, checks, artifact_hash=pending.artifact_hash)
                     except Exception as exc:
                         record_exception(run, exc, "validation")
                         result = {
@@ -477,18 +742,39 @@ def _execute(run, lease, generate, materialize, validate):
                                 {"code": "validator_unavailable", "message": "Среда проверки недоступна."}
                             ],
                         }
-                report = CheckReport.objects.create(
-                    validation_run=run,
-                    revision=pending,
-                    status=result["status"],
-                    findings=result.get("findings", []),
-                    facts=result.get("facts", []),
-                    elapsed_seconds=result.get("elapsed_seconds", 0),
-                    environment=result.get("environment", {}),
-                    screenshot_base64=result.get("screenshot_base64") or "",
-                    screenshot_mime=result.get("screenshot_mime", "image/png"),
-                    identity=identity,
+                from generation.source_map import locate_findings
+
+                result["findings"] = locate_findings(
+                    result.get("findings", []), files=pending.files, html=pending.html,
                 )
+                if pending.checks_review_required and result["status"] == "passed":
+                    result = {**result, "status": "unverified", "findings": [
+                        *result.get("findings", []), {"code": "check_suite_revised",
+                         "message": "Исходники сохранены; модель изменила сценарии. Подтвердите исходные игровые условия вручную."},
+                    ]}
+                assessment = assess(result, checks, corrections)
+                if assessment["action"] == "review" and result["status"] == "failed":
+                    result["status"] = "unverified"
+                with transaction.atomic():
+                    Chat.objects.select_for_update().get(pk=run.chat_id)
+                    current = Run.objects.select_for_update().get(pk=run.id)
+                    if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
+                        return
+                    report = CheckReport.objects.create(
+                        validation_run=run,
+                        revision=pending,
+                        status=result["status"],
+                        findings=result.get("findings", []),
+                        facts=result.get("facts", []),
+                        stages=result.get("stages", []),
+                        elapsed_seconds=result.get("elapsed_seconds", 0),
+                        environment=result.get("environment", {}),
+                        screenshot_base64=result.get("screenshot_base64") or "",
+                        screenshot_mime=result.get("screenshot_mime", "image/png"),
+                        identity=identity,
+                        checks=checks,
+                        assessment=assessment,
+                    )
             if lease.cancelled():
                 return
             if report.status == "passed":
@@ -500,19 +786,52 @@ def _execute(run, lease, generate, materialize, validate):
                     revision=pending,
                 )
                 return
-            if report.status == "unverified" and run.attempts >= 2:
+            decision = report.assessment.get("action")
+            from .check_repair import can_repair
+
+            if can_repair(run, pending, report.findings):
+                findings, base, pending = report.findings, pending, None
+                continue
+            if run.completion_policy >= 2 and decision == "recheck":
+                finish_run(
+                    run.id, run.fence, "failed",
+                    "Игра сохранена. Среда не смогла завершить проверку; повторите проверку без генерации.",
+                    error={"code": "validator_unavailable", "message": "Проверка не завершена.",
+                           "details": report.findings},
+                )
+                return
+            if report.status == "unverified" and decision != "repair" and (
+                run.completion_policy >= 2 or run.attempts >= run.max_model_calls or not run.allow_model_calls
+            ):
+                manual = run.completion_policy < 2 or (
+                    report.assessment.get("gates_passed") is True and complete_requirements(checks)
+                )
                 finish_run(
                     run.id,
                     run.fence,
-                    "unverified",
-                    "Игра сохранена. Проверьте отмеченные условия в preview и подтвердите результат.",
+                    "unverified" if manual else "needs_attention",
+                    ("Проверки исправлены, код игры сохранён. Проверьте игровые условия и подтвердите результат."
+                     if pending.checks_review_required else
+                     "Игра сохранена. Проверьте отмеченные условия в preview и подтвердите результат.")
+                    if manual else "Игра сохранена. Не удалось подтвердить обязательные проверки; повторите проверку.",
                     error={
-                        "code": "manual_verification",
+                        "code": "manual_verification" if manual else "check_review_required",
                         "message": "Автоматически подтверждены не все условия.",
                         "details": report.findings,
                     },
                 )
                 return
+            if run.completion_policy >= 2 and report.status == "failed":
+                best = best_failed_candidate(run, report)
+                if best.id != pending.id:
+                    Run.objects.filter(pk=run.id, fence=run.fence, cancel_requested=False).update(candidate_revision=best)
+                    finish_run(
+                        run.id, run.fence, "needs_attention",
+                        "Исправление ухудшило проверенное поведение. Сохранён предыдущий кандидат.",
+                        error={"code": "repair_regression", "message": "Исправление добавило регрессию.",
+                               "details": report.findings},
+                    )
+                    return
             if report.status == "infrastructure_error":
                 finish_run(
                     run.id,
@@ -526,47 +845,101 @@ def _execute(run, lease, generate, materialize, validate):
                     },
                 )
                 return
+            if run.completion_policy >= 2 and repeated_failure(run, report):
+                best = best_failed_candidate(run, report)
+                Run.objects.filter(pk=run.id, fence=run.fence, cancel_requested=False).update(candidate_revision=best)
+                finish_run(
+                    run.id, run.fence, "needs_attention",
+                    "Исправление повторило ту же проблему. Сохранён кандидат; дальнейший одинаковый ремонт остановлен.",
+                    error={"code": "no_progress", "message": "Повторное исправление не дало прогресса.",
+                           "details": report.findings},
+                )
+                return
             findings = report.findings
             base = pending
             pending = None
         run.refresh_from_db()
-        if run.attempts >= 2:
+        if not run.allow_model_calls and resumed is None:
+            finish_run(
+                run.id, run.fence, "needs_attention",
+                "Ответ восстановлен без новой генерации. В игре или проверках остались проблемы; черновик сохранён.",
+                error={"code": "saved_response_validation", "message": "Требуется проверка восстановленной игры.",
+                       "details": findings},
+            )
+            return
+        restarted = restart_incomplete_candidate(run, base)
+        if restarted:
+            base, findings, last_attempt_error = None, [], restarted
+        resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
+        if run.attempts >= run.max_model_calls and resumed is None:
+            incomplete = base is None and (last_attempt_error or {}).get("code") == "incomplete_sources"
             finish_run(
                 run.id,
                 run.fence,
                 "needs_attention",
-                "После одной автоправки остались проблемы. Ответ и черновик сохранены; доступно продолжение.",
+                "Лимит вызовов исчерпан: модель не передала полную реализацию игры. Ответы сохранены; можно продолжить создание."
+                if incomplete else "Лимит исправлений исчерпан. Ответы и черновик сохранены; доступно продолжение.",
                 error={
-                    "code": "repair_exhausted",
-                    "message": "Остались проблемы применения или проверки.",
-                    "details": findings,
+                    "code": "incomplete_sources" if incomplete else "repair_exhausted",
+                    "message": "Не получена полная реализация игры." if incomplete else "Остались проблемы применения или проверки.",
+                    "details": findings or ([last_attempt_error] if last_attempt_error else []),
+                    "max_repair_attempts": run.max_repair_attempts,
+                    "last_attempt_error": last_attempt_error,
                 },
             )
             return
-        req = request_for(run, base, findings)
         try:
-            with transaction.atomic():
-                inv = reserve_invocation(run, req)
-                run.attempts = inv.attempt
-                Run.objects.filter(pk=run.id, fence=run.fence).update(
-                    attempts=inv.attempt, status="generating", stage="repairing" if findings else "generating"
-                )
+            if resumed:
+                inv = resumed
+            else:
+                req = request_for(run, base, findings, last_attempt_error)
+                with transaction.atomic():
+                    inv = reserve_invocation(run, req)
+                    run.attempts = inv.attempt
+                    Run.objects.filter(pk=run.id, fence=run.fence).update(
+                        attempts=inv.attempt, status="generating",
+                        stage="repairing_checks" if req["operation"] == "check_repair" else "repairing" if findings else "generating"
+                    )
+            req = inv.request
         except DomainError as exc:
             finish_run(run.id, run.fence, "needs_attention", exc.message, error=error_data(exc))
             return
         if lease.cancelled():
-            settle_invocation(inv.id, error={"code": "cancelled", "message": "Отменено до отправки."})
+            if not inv.sent_at:
+                settle_invocation(inv.id, unsent_fence=run.fence,
+                                  error={"code": "cancelled", "message": "Отменено до отправки."})
             return
-        inv.state = "sent"
-        inv.sent_at = timezone.now()
-        inv.save(update_fields=["state", "sent_at"])
-        event(
-            run,
-            "repairing" if findings else "generating",
-            "Точечно исправляем найденные проблемы."
-            if findings
-            else "Модель создаёт код и короткие проверки игры.",
-        )
+        if not inv.sent_at and run.model_call_deadline and timezone.now() >= run.model_call_deadline:
+            stopped = settle_invocation(inv.id, unsent_fence=run.fence,
+                                        error={"code": "model_deadline", "message": "Не отправлено: время вызовов истекло."})
+            if stopped.state != "failed" or stopped.sent_at is not None:
+                continue
+            finish_run(run.id, run.fence, "needs_attention", "Время новых модельных вызовов истекло. Кандидат сохранён.",
+                       error={"code": "model_deadline", "message": "Лимит времени вызовов исчерпан."})
+            return
+        if not mark_invocation_sent(run, inv):
+            continue
+        if run.provider == "vllm":
+            # Persist correlation before the network call, even if the worker later dies.
+            req = {**req, "transport_trace_id": inv.id.hex}
+            inv.provider_metadata = {**inv.provider_metadata, "trace_id": inv.id.hex}
+            inv.save(update_fields=["provider_metadata"])
+        if not resumed:
+            message = (
+                "Уточняем сценарии проверки сохранённой игры. Исходники остаются прежними."
+                if req["operation"] == "check_repair" else
+                f"Исправление {inv.attempt - 1} из {run.max_repair_attempts}. Устраняем основную найденную проблему."
+                if inv.attempt > 1 else
+                "Дорабатываем сохранённую игру по результатам проверки."
+                if findings else "Создаём игровую механику и короткие сценарии проверки."
+            )
+            Run.objects.filter(pk=run.id, fence=run.fence).update(message=message)
+            event(
+                run,
+                "repairing" if findings else "generating",
+                message,
+                {"attempt": inv.attempt, "max_model_calls": run.max_model_calls},
+            )
 
         def progress(data):
             if lease.cancelled() or not isinstance(data, dict):
@@ -590,11 +963,17 @@ def _execute(run, lease, generate, materialize, validate):
             settle_invocation(
                 inv.id,
                 response=result["response"],
+                raw_response=result.get("raw_response"),
                 usage=result.get("usage"),
-                elapsed=result.get("elapsed_seconds", 0),
+                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider == "relay"
+                else result.get("elapsed_seconds", 0),
                 provider_id=provider_metadata.get("turn_id") or provider_metadata.get("request_id") or "",
                 provider_metadata=provider_metadata,
             )
+        except GenerationPending as exc:
+            record_relay_pending(inv, exc)
+            defer_relay(run, exc.message, exc)
+            return
         except Exception as exc:
             data = error_data(exc)
             raw = getattr(exc, "raw_response", None)
@@ -606,7 +985,8 @@ def _execute(run, lease, generate, materialize, validate):
                 usage=getattr(exc, "usage", None),
                 error=data,
                 unknown=getattr(exc, "outcome_unknown", True),
-                elapsed=time.monotonic() - model_started,
+                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider == "relay"
+                else time.monotonic() - model_started,
                 provider_id=provider_metadata.get("turn_id") or provider_metadata.get("request_id") or "",
                 provider_metadata=provider_metadata,
             )
@@ -617,12 +997,16 @@ def _execute(run, lease, generate, materialize, validate):
                     run.id,
                     run.fence,
                     "unknown",
-                    "Связь с моделью оборвалась. Игра сохранена; новый запрос требует отдельного подтверждения расхода.",
+                    "Результат вызова модели неизвестен. Доступные данные сохранены; повтор требует подтверждения.",
                     error=error_data(exc),
                 )
                 return
-            if (isinstance(exc, ContractError) or data["code"] == "invalid_json") and run.attempts < 2:
-                findings = [error_data(exc)]
+            if isinstance(exc, ContractError) or data["code"] == "invalid_json":
+                if req["operation"] == "check_repair":
+                    finish_run(run.id, run.fence, "needs_attention", "Не удалось восстановить проверки. Код игры сохранён.",
+                               error=error_data(exc))
+                    return
+                last_attempt_error = error_data(exc)
                 continue
             finish_run(run.id, run.fence, "failed", data["message"], error=error_data(exc))
             return

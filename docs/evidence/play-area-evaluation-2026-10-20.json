@@ -1,0 +1,474 @@
+{
+  "date": "2026-10-20",
+  "branch": "mini-games",
+  "method": "Local Codex through application API. Default gpt-6-luna; fresh chat per case, no operator continuation or manual edits. DOM measurements plus rendered screenshots and read-only source audit, not Canvas-size-only assessment. Mobile viewport 390x844. Generated checks remained blocking.",
+  "series": [
+    {
+      "name": "spatial-plan",
+      "model": "gpt-6-luna",
+      "prompt_file_sha256": "9469b70942b8085fb3249dbd19501dda75666befb1b206279485926bf9d9609c",
+      "schema_file_sha256": "0ccb2f09a4493d4b641f6b5e1d94754de42e61c03b33a5b0212bd9f768da396e",
+      "budget_before": {
+        "limit_usd": 50.0,
+        "spent_usd": 0.351091,
+        "reserved_usd": 0.0,
+        "unknown_usd": 2.198,
+        "available_usd": 47.450909
+      },
+      "budget_after": {
+        "limit_usd": 50.0,
+        "spent_usd": 0.363544,
+        "reserved_usd": 0.0,
+        "unknown_usd": 2.198,
+        "available_usd": 47.438456
+      },
+      "cases": [
+        {
+          "case": "snake",
+          "prompt": "замути змейку для бабушки",
+          "chat_id": "766ec583-8961-46f0-95a0-0a65edd8aac3",
+          "run_id": "de7af171-86f8-4670-8843-7cf7f2a0cfbe",
+          "revision_id": "0f18c952-5980-41e2-90bb-251aae929c59",
+          "status": "succeeded",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 28.974,
+            "model_seconds": 40.81032637588214,
+            "queue_seconds": 0.195697,
+            "total_seconds": 70.301178,
+            "packaging_seconds": 0.009732916951179504,
+            "first_output_seconds": 8.143545624916442
+          },
+          "artifact_hash": "36f998f6b2d750d23b9aaceb9148f7b13fb8f5bd6b47fc96cb1c9755df23c9c6",
+          "file_hashes": {
+            "game.js": "9a132746848af2f795a1467c878bcc0ce7fcc5c1b8385b3d6c4cbc25ddebca87",
+            "index.html": "ce64dd88c5f2d1af3b6540c554c9cd77e941f42ebdf742615aa6a5e90beab07a",
+            "styles.css": "100036900b0dc3e0a0d0d28bc73c5c3141a8e0238086d65a6b750ecf533a6ecc"
+          },
+          "verification": "automatic",
+          "accepted": true,
+          "findings": [
+            {
+              "status": "passed",
+              "findings": []
+            }
+          ]
+        },
+        {
+          "case": "fixed-grid",
+          "prompt": "Сделай крестики-нолики на двоих по очереди на одном экране. Поле строго 3 на 3 с квадратными клетками. Победа при трёх в ряд или ничья. Управление касанием и мышью.",
+          "chat_id": "c4ccabf4-fb77-4d8a-b8d3-0c16c1fdb8d3",
+          "run_id": "c26f1c38-477b-4a1d-9816-ed19647ef442",
+          "revision_id": "fa27931c-16fa-42d2-8fd5-c841006823a2",
+          "status": "succeeded",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 4.982,
+            "model_seconds": 40.94247212505434,
+            "queue_seconds": 0.044715,
+            "total_seconds": 46.14563,
+            "packaging_seconds": 0.0036988749634474516,
+            "first_output_seconds": 3.391093250014819
+          },
+          "artifact_hash": "e30d2cbadb8ee3a525244fecbf5b6095c92a9034eb03dd961643983e7c2c8839",
+          "file_hashes": {
+            "game.js": "e7409e46f8b52254de5035ca0e62477b3f99cecd4fd04a1e927a8d66fa5ed5a0",
+            "index.html": "6087ff8e1ba17f6a36a22fdc60d44e925dcb8ad4b8d1240855ee6046205683f8",
+            "styles.css": "10dfccc5d15ae077ec32e1cb5b4c2e2503c1ea274952ad389b65b0b926ba3cae"
+          },
+          "verification": "automatic",
+          "accepted": true,
+          "findings": [
+            {
+              "status": "passed",
+              "findings": []
+            }
+          ]
+        },
+        {
+          "case": "fireflies",
+          "prompt": "Сделай мини-игру: поймать касаниями или мышью пять светлячков, которые медленно летают по ночному саду. Каждый пойманный исчезает, пойманы все — победа.",
+          "chat_id": "6f7a0877-4cd8-4ea6-97f3-764dbc9544b2",
+          "run_id": "84bea538-561a-4f7c-b5bd-fb7fd85f26a3",
+          "revision_id": "1b1babd1-77cd-43a1-912e-a6b1e1b5edaf",
+          "status": "needs_attention",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 16.41,
+            "model_seconds": 43.92124087398406,
+            "queue_seconds": 0.044478,
+            "total_seconds": 60.687237,
+            "packaging_seconds": 0.011404791031964123,
+            "first_output_seconds": 4.560811833012849
+          },
+          "artifact_hash": "fb495952757b19b1c009a61aaa2feb6e95b7e0af559728af703bedc9eb7d0938",
+          "file_hashes": {
+            "game.js": "dc83ba8065f677b47d4b95792be50dddbc3dcdedf0386c4b75d0ea1bdec705c1",
+            "index.html": "716a3aaac9237263db0eda7857bbc3c0ac8631f826e328bfd543f48965d93089",
+            "styles.css": "93c6900b26e0b1e3eacaa4fd334c3644944f0e4dedb7ea70c7ad803635e08e1e"
+          },
+          "verification": "none",
+          "accepted": false,
+          "findings": [
+            {
+              "status": "failed",
+              "findings": [
+                {
+                  "code": "effect_mismatch",
+                  "after": "playing",
+                  "before": null,
+                  "message": "Не подтверждено: После поимки всех пяти светлячков появляется победа.",
+                  "check_id": "victory",
+                  "expected": {
+                    "value": "won",
+                    "operator": "eq"
+                  }
+                },
+                {
+                  "code": "effect_mismatch",
+                  "after": 0,
+                  "before": 0,
+                  "message": "Не подтверждено: Касание рядом со светлячком ловит его и увеличивает прогресс.",
+                  "check_id": "catch",
+                  "expected": {
+                    "value": 0,
+                    "operator": "increased"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "case": "snake-repeat",
+          "prompt": "замути змейку для бабушки",
+          "chat_id": "125c8745-9e41-41e7-aa86-bbb4a6af8cd0",
+          "run_id": "c195fa06-93e1-42d9-b42e-91877b0c8e86",
+          "revision_id": "47ae3278-966b-4af0-b95d-f4f7b812005f",
+          "status": "succeeded",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 22.956,
+            "model_seconds": 34.74369120900519,
+            "queue_seconds": 0.030463,
+            "total_seconds": 57.912759,
+            "packaging_seconds": 0.008880167035385966,
+            "first_output_seconds": 3.106901125051081
+          },
+          "artifact_hash": "1b041e74b33a75b5c8ca9148ece4a98bc9d314e3ff28593facba976831b08dd3",
+          "file_hashes": {
+            "game.js": "75d9dff6d1765948e93989ebf3a06054c87e4e2611b8fb75c5ea689749426c82",
+            "index.html": "79890888bef5562809cb820a9ae74acc8bc8e42f4d2bd651d94e5b114a0dc013",
+            "styles.css": "7fc03f58f890859a6e9ad8d6ea490e1fc18836cdecd65c2eabce5f6ca84cb068"
+          },
+          "verification": "automatic",
+          "accepted": true,
+          "findings": [
+            {
+              "status": "passed",
+              "findings": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "container-sizing",
+      "model": "gpt-6-luna",
+      "prompt_file_sha256": "64c13cbbd2745992ac7cbc56dc84405628a3a1f86ccafba630af1429ab158d18",
+      "schema_file_sha256": "0ccb2f09a4493d4b641f6b5e1d94754de42e61c03b33a5b0212bd9f768da396e",
+      "budget_before": {
+        "limit_usd": 50.0,
+        "spent_usd": 0.363544,
+        "reserved_usd": 0.0,
+        "unknown_usd": 2.198,
+        "available_usd": 47.438456
+      },
+      "budget_after": {
+        "limit_usd": 50.0,
+        "spent_usd": 0.374448,
+        "reserved_usd": 0.0,
+        "unknown_usd": 2.198,
+        "available_usd": 47.427552
+      },
+      "cases": [
+        {
+          "case": "snake",
+          "prompt": "замути змейку для бабушки",
+          "chat_id": "a3671d84-d91f-4adc-856e-b46c274eac6f",
+          "run_id": "68f5d7c2-65eb-4f17-bade-107409874db8",
+          "revision_id": "0a105b47-80c4-4c38-a6e6-056305c88fb4",
+          "status": "succeeded",
+          "metrics": {
+            "model_calls": 1,
+            "check_seconds": 10.614,
+            "model_seconds": 35.88408941705711,
+            "queue_seconds": 0.876665,
+            "total_seconds": 47.527543,
+            "packaging_seconds": 0.0058025839971378446,
+            "first_output_seconds": 5.570872541051358
+          },
+          "artifact_hash": "80b88d91b1873eb050b2b84b6e245640b0bd268265f14f0c58fd2539726b12b6",
+          "file_hashes": {
+            "game.js": "72647aef8b0914125e41fe2f80146c54474e0e1a951dbf88caa77c36db344d09",
+            "index.html": "fce1c7777ab2e5adce4b8b225cad145dda942870747ae8d528691cfdd739a4a8",
+            "styles.css": "053eaeb96f7e233236e55a11359de432de3f68bf7a978b5ff7ec0f82fcad426d"
+          },
+          "verification": "automatic",
+          "accepted": true,
+          "findings": [
+            {
+              "status": "passed",
+              "findings": []
+            }
+          ]
+        },
+        {
+          "case": "fixed-grid",
+          "prompt": "Сделай крестики-нолики на двоих по очереди на одном экране. Поле строго 3 на 3 с квадратными клетками. Победа при трёх в ряд или ничья. Управление касанием и мышью.",
+          "chat_id": "070f8d16-06b4-42d0-97e4-099a812efa80",
+          "run_id": "a17be447-875e-4387-b10e-21ad3e9b9a49",
+          "revision_id": "6c38217f-61c1-4674-a693-6ebbaefea8e9",
+          "status": "succeeded",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 10.294,
+            "model_seconds": 35.403990707942285,
+            "queue_seconds": 0.038178,
+            "total_seconds": 45.967116,
+            "packaging_seconds": 0.0074954170268028975,
+            "first_output_seconds": 4.866820916067809
+          },
+          "artifact_hash": "6dff00852f784a7139b2399dc184fd0c3f5d8ed8c9041f8a3a810a067cbc2744",
+          "file_hashes": {
+            "game.js": "4be47a847e5861ef9d7e491982f1b5956dbcd799fa2a668d07f7a9e2124d4713",
+            "index.html": "4bbce007d2eaa519f57257a9fc2b3c1a50a6b923ec5724087316ab0c0df15f47",
+            "styles.css": "de9b4619ed8b20cc5202ed708aa14892747f0a699b1508ac03b56d44dade5f44"
+          },
+          "verification": "automatic",
+          "accepted": true,
+          "findings": [
+            {
+              "status": "passed",
+              "findings": []
+            }
+          ]
+        },
+        {
+          "case": "fireflies",
+          "prompt": "Сделай мини-игру: поймать касаниями или мышью пять светлячков, которые медленно летают по ночному саду. Каждый пойманный исчезает, пойманы все — победа.",
+          "chat_id": "c80dee5f-2882-464b-be6f-053b5926de29",
+          "run_id": "93d12783-67ce-4776-b555-d932da77d44f",
+          "revision_id": "85182db2-bf32-48b4-8e68-0ff2e7d21dd0",
+          "status": "needs_attention",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 10.399000000000001,
+            "model_seconds": 37.171653707977384,
+            "queue_seconds": 0.045175,
+            "total_seconds": 47.783026,
+            "packaging_seconds": 0.008854541927576065,
+            "first_output_seconds": 3.571821582969278
+          },
+          "artifact_hash": "338419af8ff1ed07fcfd5bddc59947f7562b99b5aecb1aaad49495215b2621e8",
+          "file_hashes": {
+            "game.js": "18c7e2cdd5ee8b9c87ba10d44ef463cb56985f2e033a9039b7877c9bfeb888ea",
+            "index.html": "ebc569112de3fc6995670371650c400b034537036c450b8cc145866cef02d9a2",
+            "styles.css": "4eea51dcdb82bbf9ae66698539e8cedc98e03aff23c7bf30ead96584125e7cd2"
+          },
+          "verification": "none",
+          "accepted": false,
+          "findings": [
+            {
+              "status": "failed",
+              "findings": [
+                {
+                  "code": "effect_mismatch",
+                  "after": 0,
+                  "before": 5,
+                  "message": "Не подтверждено: Касание рядом со светлячком ловит его и уменьшает число оставшихся.",
+                  "check_id": "catch",
+                  "expected": {
+                    "value": 0,
+                    "operator": "increased"
+                  }
+                },
+                {
+                  "code": "effect_mismatch",
+                  "after": "playing",
+                  "before": null,
+                  "message": "Не подтверждено: Поймав всех пять светлячков, игрок видит победу.",
+                  "check_id": "victory",
+                  "expected": {
+                    "value": "won",
+                    "operator": "eq"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "case": "snake-repeat",
+          "prompt": "замути змейку для бабушки",
+          "chat_id": "65257022-467b-494d-8405-9865a036fd45",
+          "run_id": "27208397-eaa1-49b7-97e8-3f6e71cc9060",
+          "revision_id": "10159b2d-86d5-4ac6-b88d-bbca1d689c6e",
+          "status": "succeeded",
+          "metrics": {
+            "model_calls": 2,
+            "check_seconds": 14.831,
+            "model_seconds": 58.38832829205785,
+            "queue_seconds": 0.028433,
+            "total_seconds": 73.443527,
+            "packaging_seconds": 0.012776624993421137,
+            "first_output_seconds": 3.962513375096023
+          },
+          "artifact_hash": "9e8650bb30a72d29b5d54904f098de4eab4be96cc34915cab144cb702c38dc69",
+          "file_hashes": {
+            "game.js": "ae7972168519e43f71e396cd620d05aa465b49da4d22083163524dea32a11383",
+            "index.html": "b9f53c56740b194374a972bba3feed0670741c7e3a2b110e7c6de7e25a133b47",
+            "styles.css": "4de379d2052d4b1c0dd57fcd14afbc3bbb31e79e24abab01ebbae854ab81783e"
+          },
+          "verification": "automatic",
+          "accepted": true,
+          "findings": [
+            {
+              "status": "passed",
+              "findings": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "visual_observations": {
+    "766ec583-8961-46f0-95a0-0a65edd8aac3": {
+      "mobile_canvas": [
+        372,
+        180
+      ],
+      "mobile_play_field": [
+        372,
+        180
+      ],
+      "layout_result": "underfilled: auto-sized mobile parent; preliminary failure retained"
+    },
+    "c4ccabf4-fb77-4d8a-b8d3-0c16c1fdb8d3": {
+      "mobile_canvas": [
+        370,
+        370
+      ],
+      "mobile_play_field": [
+        370,
+        370
+      ],
+      "layout_result": "fixed square preserved"
+    },
+    "125c8745-9e41-41e7-aa86-bbb4a6af8cd0": {
+      "mobile_canvas": [
+        364,
+        616
+      ],
+      "mobile_play_field": [
+        351,
+        594
+      ],
+      "mobile_grid": [
+        13,
+        22
+      ],
+      "layout_result": "flexible rectangular grid"
+    },
+    "a3671d84-d91f-4adc-856e-b46c274eac6f": {
+      "mobile_canvas": [
+        390,
+        669
+      ],
+      "mobile_play_field": [
+        387.3157894736842,
+        669
+      ],
+      "mobile_grid": [
+        11,
+        19
+      ],
+      "mobile_play_area_fraction": 0.7871985148799816,
+      "wide_viewport": [
+        1280,
+        664
+      ],
+      "wide_canvas": [
+        1280,
+        552
+      ],
+      "wide_play_field": [
+        1276.5,
+        552
+      ],
+      "wide_grid": [
+        37,
+        16
+      ],
+      "layout_result": "real grid, placement and collisions share rectangular dimensions"
+    },
+    "070f8d16-06b4-42d0-97e4-099a812efa80": {
+      "mobile_canvas": [
+        354,
+        722
+      ],
+      "mobile_play_field": [
+        342,
+        342
+      ],
+      "mobile_grid": [
+        3,
+        3
+      ],
+      "wide_viewport": [
+        1280,
+        664
+      ],
+      "wide_canvas": [
+        1216,
+        532
+      ],
+      "wide_play_field": [
+        520,
+        520
+      ],
+      "layout_result": "fixed square preserved; real center click and turn survived fullscreen"
+    },
+    "c80dee5f-2882-464b-be6f-053b5926de29": {
+      "mobile_canvas": [
+        390,
+        790
+      ],
+      "layout_result": "not accepted: intro remains displayed after start; hidden=true but computed display=grid; scene geometry alone is insufficient",
+      "manual_acceptance": false
+    },
+    "65257022-467b-494d-8405-9865a036fd45": {
+      "mobile_canvas": [
+        390,
+        632
+      ],
+      "mobile_play_field": [
+        390,
+        630
+      ],
+      "mobile_grid": [
+        13,
+        21
+      ],
+      "mobile_play_area_fraction": 0.7464454976303317,
+      "layout_result": "real grid, placement and collisions share rectangular dimensions"
+    }
+  },
+  "existing_revisions_unchanged": 51,
+  "confirmed_usage_delta_usd": "0.023357",
+  "limits": [
+    "Small sample, not a guarantee for all genres or a percentile benchmark.",
+    "Visual assessment performed by the operator; product does not gain an automatic visual judge.",
+    "Physical mobile WebView and live local LLM not tested."
+  ]
+}

@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowDownToLine,
   ArrowUp,
   ChevronDown,
+  Expand,
   Gamepad2,
   History,
   PanelRightClose,
@@ -16,6 +17,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { errorText, newKey, post, request } from './api';
 import {
   ErrorNotice,
+  CopyHtmlButton,
   Modal,
   PhonePreview,
   RevisionDetails,
@@ -23,9 +25,11 @@ import {
   Spinner,
 } from './components';
 import { chatsChanged, useSession } from './context';
-import type { Chat, Publication, Revision, Run, RunEvent } from './types';
+import type { Chat, Preferences, Publication, Revision, Run, RunEvent } from './types';
+import { useSavedChat } from './useSavedChat';
 import WaitingGames from './WaitingGames';
 import ChatTitle from './ChatTitle';
+import ModelSelector, { selectedProfile } from './ModelSelector';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех', icon: '✦' },
@@ -46,18 +50,41 @@ export default function Studio() {
   const { id = 'new' } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
-  const { session, refresh } = useSession();
-  const [chat, setChat] = useState<Chat | null>(null);
-  const [newTitle, setNewTitle] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!isNew);
+  const { session, refresh, updateSession, studioDrafts } = useSession();
+  const initialDraft = useRef(studioDrafts?.get(id)).current;
+  const {
+    chat,
+    loading,
+    connectionError,
+    reload: load,
+    updateTitle,
+  } = useSavedChat(isNew ? undefined : id);
+  const [newTitle, setNewTitle] = useState<string | null>(initialDraft?.chatTitle ?? null);
   const [error, setError] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [audience, setAudience] = useState('everyone');
-  const [model, setModel] = useState(session.capabilities.model);
+  const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
+  const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
+  const modelProfile = selectedProfile(session);
+  const profiles = session.capabilities.model_profiles ?? [];
+  const selectedModel = profiles.find((item) => item.id === modelProfile);
+  const modelUnavailable = profiles.length > 0 && !selectedModel?.available;
   const [busy, setBusy] = useState(false);
   const [events, setEvents] = useState<RunEvent[]>([]);
-  const [selectedRevision, setSelectedRevision] = useState<string | null>(null);
+  const [selectedRevision, setSelectedRevision] = useState<string | null>(
+    initialDraft?.selectedRevision ?? null,
+  );
   const [previewOpen, setPreviewOpen] = useState(true);
+  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const [mobile, setMobile] = useState(
+    () => window.matchMedia?.('(max-width: 760px)').matches ?? false,
+  );
+  useEffect(() => {
+    const media = window.matchMedia?.('(max-width: 760px)');
+    if (!media) return;
+    const change = () => setMobile(media.matches);
+    change();
+    media.addEventListener('change', change);
+    return () => media.removeEventListener('change', change);
+  }, []);
   const [gameFullscreen, setGameFullscreen] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareRevision, setShareRevision] = useState<Revision | null>(null);
@@ -70,10 +97,30 @@ export default function Studio() {
   const [customReason, setCustomReason] = useState('');
   const [feedbackDone, setFeedbackDone] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmEvidence, setConfirmEvidence] = useState<Run['confirmation']>(null);
   const [diagnostics, setDiagnostics] = useState<unknown | null>(null);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
-  const idempotency = useRef(newKey());
-  const lastPayload = useRef('');
+  const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
+  const lastPayload = useRef(initialDraft?.lastPayload ?? '');
+  const submissionChat = useRef('');
+  const audienceReady = useRef(isNew || initialDraft?.audience != null);
+  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle });
+  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle };
+  useEffect(
+    () => () => {
+      if (id === 'new' && submissionChat.current === currentId.current) {
+        studioDrafts?.delete(id);
+        return;
+      }
+      studioDrafts?.set(id, {
+        ...draft.current,
+        audience: audienceReady.current ? draft.current.audience : null,
+        idempotencyKey: idempotency.current,
+        lastPayload: lastPayload.current,
+      });
+    },
+    [id, studioDrafts],
+  );
   function operationKey(payload: unknown) {
     const fingerprint = JSON.stringify(payload);
     if (lastPayload.current && lastPayload.current !== fingerprint) idempotency.current = newKey();
@@ -82,53 +129,35 @@ export default function Studio() {
   }
   const endRef = useRef<HTMLDivElement>(null);
   const currentId = useRef(id);
-  const loadVersion = useRef(0);
   currentId.current = id;
-  const load = useCallback(async () => {
-    if (isNew) return;
-    const version = ++loadVersion.current;
-    const data = await request<Chat>(`/api/chats/${id}/`);
-    if (currentId.current === id && loadVersion.current === version) setChat(data);
-  }, [id, isNew]);
   useEffect(() => {
-    setChat(null);
-    setNewTitle(null);
-    setError('');
+    const remembered = studioDrafts?.get(id);
+    setNewTitle(remembered?.chatTitle ?? null);
+    audienceReady.current = isNew || remembered?.audience != null;
     setEvents([]);
-    setPrompt('');
-    setSelectedRevision(null);
+    setSelectedRevision(remembered?.selectedRevision ?? null);
     setGameFullscreen(false);
+    setMobileToolsOpen(false);
     setFeedbackDone(false);
     setRating(0);
     setReasons([]);
     setCustomReason('');
     setShareDone('');
-    setLoading(!isNew);
-    idempotency.current = newKey();
-    lastPayload.current = '';
-    if (isNew) {
-      setAudience('everyone');
-      return;
+    if (submissionChat.current !== id) {
+      setError('');
+      setPrompt(remembered?.prompt ?? '');
+      idempotency.current = remembered?.idempotencyKey ?? newKey();
+      lastPayload.current = remembered?.lastPayload ?? '';
     }
-    let alive = true;
-    const version = ++loadVersion.current;
-    request<Chat>(`/api/chats/${id}/`)
-      .then((data) => {
-        if (alive && loadVersion.current === version) {
-          setChat(data);
-          setAudience(data.audience);
-        }
-      })
-      .catch((cause) => {
-        if (alive) setError(errorText(cause));
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [id, isNew]);
+    if (remembered?.audience != null) setAudience(remembered.audience);
+    else if (isNew) setAudience('everyone');
+  }, [id, isNew, studioDrafts]);
+  useEffect(() => {
+    if (chat && !audienceReady.current) {
+      setAudience(chat.audience);
+      audienceReady.current = true;
+    }
+  }, [chat?.id]);
   const latestRun = chat?.active_run ?? chat?.runs[0] ?? null;
   const activeRun = chat?.active_run;
   const refreshedRun = useRef('');
@@ -142,14 +171,6 @@ export default function Studio() {
   useEffect(() => {
     if (chat) chatsChanged();
   }, [chat?.id, chat?.title, chat?.active_run?.id]);
-  useEffect(() => {
-    if (!activeRun) return;
-    const timer = window.setInterval(
-      () => void load().catch((cause) => setError(errorText(cause))),
-      2500,
-    );
-    return () => window.clearInterval(timer);
-  }, [activeRun?.id, load]);
   useEffect(() => {
     if (!activeRun || !('EventSource' in window)) return;
     setEvents([]);
@@ -197,56 +218,80 @@ export default function Studio() {
       method: 'PATCH',
       body: JSON.stringify({ title }),
     });
-    if (currentId.current === chat.id) {
-      ++loadVersion.current;
-      setChat((current) =>
-        current && current.id === renamed.id
-          ? { ...current, title: renamed.title, updated_at: renamed.updated_at }
-          : current,
-      );
-    }
+    if (currentId.current === chat.id) updateTitle(renamed);
     chatsChanged({ id: renamed.id, title: renamed.title, updated_at: renamed.updated_at });
   }
-  async function send(event: FormEvent) {
-    event.preventDefault();
-    if (!prompt.trim() || busy || activeRun) return;
+  async function chooseModel(value: string) {
     setBusy(true);
     setError('');
     try {
-      let target = chat;
-      if (!target) {
-        target = await post<Chat>('/api/chats/', {
-          audience,
-          ...(newTitle === null ? {} : { title: newTitle }),
-        });
-        setChat(target);
-        chatsChanged();
-      }
-      const payload = { prompt: prompt.trim(), audience, model };
-      await post<Run>(`/api/chats/${target.id}/runs/`, {
-        ...payload,
-        idempotency_key: operationKey(payload),
+      const preferences = await request<Preferences>('/api/preferences/', {
+        method: 'PATCH',
+        body: JSON.stringify({ model_profile: value }),
       });
-      idempotency.current = newKey();
-      lastPayload.current = '';
-      setPrompt('');
-      setSelectedRevision(null);
-      chatsChanged();
-      if (isNew) navigate(`/chats/${target.id}`);
-      else await load();
-      void refresh();
+      updateSession({ ...session, preferences });
     } catch (cause) {
       setError(errorText(cause));
     } finally {
       setBusy(false);
     }
   }
+  async function send(event: FormEvent) {
+    event.preventDefault();
+    if (!prompt.trim() || busy || activeRun || modelUnavailable || (!isNew && !chat)) return;
+    setBusy(true);
+    setError('');
+    const payload = {
+      prompt: prompt.trim(),
+      audience,
+      ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
+    };
+    const key = operationKey(payload);
+    let targetId = chat?.id;
+    try {
+      if (!targetId) {
+        const target = await post<Chat>('/api/chats/', {
+          audience,
+          ...(newTitle === null ? {} : { title: newTitle }),
+        });
+        targetId = target.id;
+        submissionChat.current = targetId;
+        // Persist the chat URL before starting generation, even if its 202 is lost.
+        navigate(`/chats/${targetId}`, { replace: true });
+        chatsChanged();
+      }
+      await post<Run>(`/api/chats/${targetId}/runs/`, {
+        ...payload,
+        idempotency_key: key,
+      });
+      if (currentId.current !== targetId && currentId.current !== id) return;
+      idempotency.current = newKey();
+      lastPayload.current = '';
+      setPrompt('');
+      setSelectedRevision(null);
+      chatsChanged();
+      void refresh();
+    } catch (cause) {
+      if (currentId.current === targetId || currentId.current === id) {
+        setError(errorText(cause));
+        setPrompt(payload.prompt);
+      }
+    } finally {
+      setBusy(false);
+      load();
+      chatsChanged();
+    }
+  }
   async function act(
-    action: 'cancel' | 'continue' | 'confirm',
+    action: 'cancel' | 'continue' | 'confirm' | 'recheck',
     note = '',
     acceptUnknownCost = false,
   ) {
     if (!latestRun) return;
+    if (action === 'continue' && modelUnavailable) {
+      setError('Выберите доступную модель для продолжения.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -255,29 +300,37 @@ export default function Studio() {
         action === 'continue'
           ? {
               prompt: note,
+              ...(modelProfile ? { model_profile: modelProfile } : {}),
               accept_unknown_cost: acceptUnknownCost,
               idempotency_key: operationKey({
                 action,
                 run: latestRun.id,
                 prompt: note,
                 acceptUnknownCost,
+                modelProfile,
               }),
             }
           : action === 'confirm'
-            ? { confirmed: true }
-            : {},
+            ? {
+                confirmed: true,
+                artifact_hash: confirmEvidence?.artifact_hash,
+                report_id: confirmEvidence?.report_id,
+              }
+            : action === 'recheck'
+              ? { idempotency_key: operationKey({ action, run: latestRun.id }) }
+              : {},
       );
       idempotency.current = newKey();
       lastPayload.current = '';
       setShowConfirm(false);
       setSelectedRevision(null);
-      await load();
       chatsChanged();
       void refresh();
     } catch (cause) {
       setError(errorText(cause));
     } finally {
       setBusy(false);
+      load();
     }
   }
   async function restoreRevision() {
@@ -286,7 +339,7 @@ export default function Studio() {
     try {
       await post(`/api/chats/${chat.id}/restore/`, { revision_id: revision.id });
       setSelectedRevision(null);
-      await load();
+      load();
       chatsChanged();
     } catch (cause) {
       setError(errorText(cause));
@@ -382,13 +435,118 @@ export default function Studio() {
       setDiagnostics({ error: errorText(cause) });
     }
   }
+  const deleteChatButton = chat && (
+    <button
+      className="icon-button"
+      onClick={removeChat}
+      disabled={busy}
+      aria-label="Удалить чат"
+      title="Удалить чат"
+    >
+      <Trash2 size={16} />
+    </button>
+  );
+  const gameTools = chat && (
+    <div
+      className={`preview-bottom ${mobile ? 'studio-game-tools' : ''}`}
+      role="group"
+      aria-label="Действия с игрой"
+    >
+      <div className="version-selector">
+        <History size={15} />
+        <select
+          aria-label="Версия игры"
+          value={selectedRevision ?? 'latest'}
+          onChange={(event) =>
+            setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
+          }
+        >
+          <option value="latest">
+            {defaultRevision
+              ? `${defaultRevision.accepted ? 'Рабочая версия' : 'Кандидат'} · ${defaultRevision.number}`
+              : 'Пока нет версии'}
+          </option>
+          {chat.revisions.map((item) => (
+            <option key={item.id} value={item.id}>
+              Версия {item.number}
+              {item.id === current?.id ? ' · рабочая' : item.accepted ? '' : ' · кандидат'}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="preview-actions">
+        {mobile && (
+          <button
+            className="icon-button mobile-play"
+            disabled={!revision?.preview_url}
+            aria-label="Открыть игру на весь экран"
+            title="На весь экран"
+            onClick={() => {
+              setPreviewOpen(true);
+              setGameFullscreen(true);
+            }}
+          >
+            <Expand size={18} />
+          </button>
+        )}
+        {mobile && revision && (
+          <CopyHtmlButton exportUrl={revision.export_url} onError={setError} />
+        )}
+        {revision?.accepted && selectedRevision && revision.id !== current?.id && (
+          <button
+            className="button button-small button-outline"
+            disabled={busy || !!activeRun}
+            onClick={restoreRevision}
+          >
+            Восстановить
+          </button>
+        )}
+        <button
+          className="button button-small button-outline"
+          disabled={!revision?.accepted || busy}
+          onClick={openShare}
+        >
+          <Share2 size={15} /> Поделиться
+        </button>
+        <button
+          className={`icon-button ${feedbackDone ? 'rated' : ''}`}
+          disabled={!current || busy}
+          onClick={() => setShowFeedback(true)}
+          aria-label="Оценить результат"
+          title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
+        >
+          <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} />
+        </button>
+        {revision && (
+          <a
+            className="icon-button"
+            href={revision.export_url}
+            aria-label="Скачать игру HTML"
+            title="Скачать HTML"
+          >
+            <ArrowDownToLine size={18} />
+          </a>
+        )}
+        {mobile && deleteChatButton}
+      </div>
+    </div>
+  );
   if (loading) return <Spinner text="Открываем вашу мастерскую…" />;
   return (
     <main className={`studio ${previewOpen ? '' : 'preview-hidden'}`}>
       <section className="chat-pane">
         <header className="chat-heading">
           <div>
-            <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
+            {profiles.length ? (
+              <ModelSelector
+                options={profiles}
+                value={modelProfile}
+                onChange={(value) => void chooseModel(value)}
+                disabled={busy}
+              />
+            ) : (
+              <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
+            )}
             <ChatTitle
               key={id}
               title={chat?.title || newTitle || 'Новая игра'}
@@ -396,38 +554,46 @@ export default function Studio() {
             />
           </div>
           <div className="chat-heading-actions">
-            {revision && (
+            {mobile && (
               <button
-                className="button button-small mobile-play"
-                onClick={() => {
-                  setPreviewOpen(true);
-                  setGameFullscreen(true);
-                }}
+                className="icon-button mobile-tools-toggle"
+                disabled={!chat}
+                aria-expanded={mobileToolsOpen}
+                aria-controls="mobile-game-tools"
+                aria-label={
+                  mobileToolsOpen ? 'Свернуть действия с игрой' : 'Развернуть действия с игрой'
+                }
+                title="Действия с игрой"
+                onClick={() => setMobileToolsOpen((open) => !open)}
               >
-                <Gamepad2 size={15} /> Играть
+                <ChevronDown size={20} />
               </button>
             )}
-            {chat && (
+            {!mobile && deleteChatButton}
+            {!mobile && (
               <button
                 className="icon-button"
-                onClick={removeChat}
-                disabled={busy}
-                aria-label="Удалить чат"
-                title="Удалить чат"
+                onClick={() => setPreviewOpen(!previewOpen)}
+                aria-expanded={previewOpen}
+                aria-controls="studio-preview"
+                aria-label={previewOpen ? 'Свернуть предпросмотр' : 'Развернуть предпросмотр'}
+                title="Предпросмотр"
               >
-                <Trash2 size={16} />
+                {previewOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
               </button>
             )}
-            <button
-              className="icon-button"
-              onClick={() => setPreviewOpen(!previewOpen)}
-              aria-label={previewOpen ? 'Свернуть предпросмотр' : 'Развернуть предпросмотр'}
-              title="Предпросмотр"
-            >
-              {previewOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
-            </button>
           </div>
         </header>
+        {mobile && (
+          <div
+            id="mobile-game-tools"
+            className={`mobile-tools-panel ${mobileToolsOpen ? 'is-open' : ''}`}
+            aria-hidden={!mobileToolsOpen}
+            inert={!mobileToolsOpen || undefined}
+          >
+            <div className="mobile-tools-clip">{gameTools}</div>
+          </div>
+        )}
         <div className="chat-scroll">
           {chat?.source_publication && (
             <div className="notice remix-notice">
@@ -439,6 +605,25 @@ export default function Studio() {
             </div>
           )}
           {error && <ErrorNotice message={error} onClose={() => setError('')} />}{' '}
+          {modelUnavailable && (
+            <ErrorNotice
+              message={selectedModel?.unavailable_reason || 'Выберите доступную модель.'}
+            />
+          )}
+          {connectionError && (
+            <div className="notice" role="status">
+              <span>{connectionError}</span>
+              <button className="text-button" onClick={load}>
+                Проверить связь
+              </button>
+            </div>
+          )}
+          {activeRun && !connectionError && (
+            <p className="field-help" role="status">
+              Задание выполняется на сервере. Можно закрыть страницу — результат сохранится в этом
+              чате.
+            </p>
+          )}
           {!chat?.messages.length && (
             <div className="chat-welcome">
               <div className="welcome-mark">
@@ -469,7 +654,12 @@ export default function Studio() {
                   ? 'Вы'
                   : message.role === 'system'
                     ? 'Мастерская'
-                    : 'GameForge'}
+                    : 'beeGame'}
+                {message.role === 'assistant' &&
+                  (() => {
+                    const label = chat.runs.find((run) => run.id === message.run_id)?.model_label;
+                    return label ? <span className="model-badge">{label}</span> : null;
+                  })()}
               </span>
               <div>{message.content}</div>
             </article>
@@ -481,7 +671,9 @@ export default function Studio() {
               busy={busy}
               onCancel={() => void act('cancel')}
               onContinue={(note, consent) => void act('continue', note, consent)}
+              onRecheck={() => void act('recheck')}
               onConfirm={() => {
+                setConfirmEvidence(latestRun.confirmation);
                 if (chat?.candidate_revision) setSelectedRevision(chat.candidate_revision.id);
                 setShowConfirm(true);
               }}
@@ -555,139 +747,42 @@ export default function Studio() {
               }}
             />
             <div className="composer-bottom">
-              <span>
-                <Sparkles size={13} />{' '}
-                {current ? 'Небольшие правки, ваша игра' : 'Из идеи — в игру'}
-              </span>
+              <Sparkles size={13} aria-hidden="true" />
               <button
                 className="send-button"
-                disabled={!prompt.trim() || busy || !!activeRun}
+                disabled={
+                  !prompt.trim() || busy || !!activeRun || modelUnavailable || (!isNew && !chat)
+                }
                 aria-label={current ? 'Отправить доработку' : 'Создать игру'}
               >
                 <ArrowUp size={20} />
               </button>
             </div>
           </div>
-          <div className="composer-foot">
-            <span>
-              {activeRun
-                ? 'Можно отменить задание в карточке выше.'
-                : '⌘ / Ctrl + Enter — отправить'}
-            </span>
-            <details className="model-picker">
-              <summary>
-                {session.capabilities.provider}
-                <ChevronDown size={12} />
-              </summary>
-              <label>
-                Модель
-                <select
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                  disabled={!!activeRun || busy}
-                >
-                  {session.capabilities.models.map((item) => {
-                    const value = typeof item === 'string' ? item : item.id;
-                    return (
-                      <option
-                        key={value}
-                        value={value}
-                        disabled={typeof item !== 'string' && item.priced === false}
-                      >
-                        {typeof item === 'string' ? item : (item.name ?? value)}
-                        {typeof item !== 'string' && item.priced === false
-                          ? ' · тариф не настроен'
-                          : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              </label>
-            </details>
-          </div>
         </form>
       </section>
-      {previewOpen && (
-        <aside className="preview-pane">
-          <PhonePreview
-            forceFullscreen={gameFullscreen}
-            onExitFullscreen={() => setGameFullscreen(false)}
-            artifactKey={revision?.artifact_hash}
-            url={revision?.preview_url}
-            title={revision?.title || 'Ваша игра'}
-            exportUrl={revision?.export_url}
-            playUrl={revision ? `/play/${revision.id}` : undefined}
-            badge={
-              revision && !revision.accepted
-                ? 'Сохранённый кандидат — требуется проверка'
-                : undefined
-            }
-          />
-          {chat && (
-            <div className="preview-bottom">
-              <div className="version-selector">
-                <History size={15} />
-                <select
-                  aria-label="Версия игры"
-                  value={selectedRevision ?? 'latest'}
-                  onChange={(event) =>
-                    setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
-                  }
-                >
-                  <option value="latest">
-                    {defaultRevision
-                      ? `${defaultRevision.accepted ? 'Рабочая версия' : 'Кандидат'} · ${defaultRevision.number}`
-                      : 'Пока нет версии'}
-                  </option>
-                  {chat.revisions.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      Версия {item.number}
-                      {item.id === current?.id ? ' · рабочая' : item.accepted ? '' : ' · кандидат'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="preview-actions">
-                {revision?.accepted && selectedRevision && revision.id !== current?.id && (
-                  <button
-                    className="button button-small button-outline"
-                    disabled={busy || !!activeRun}
-                    onClick={restoreRevision}
-                  >
-                    Восстановить
-                  </button>
-                )}
-                <button
-                  className="button button-small button-outline"
-                  disabled={!revision?.accepted || busy}
-                  onClick={openShare}
-                >
-                  <Share2 size={15} /> Поделиться
-                </button>
-                <button
-                  className={`icon-button ${feedbackDone ? 'rated' : ''}`}
-                  disabled={!current || busy}
-                  onClick={() => setShowFeedback(true)}
-                  aria-label="Оценить результат"
-                  title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
-                >
-                  <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} />
-                </button>
-                {revision && (
-                  <a
-                    className="icon-button"
-                    href={revision.export_url}
-                    aria-label="Скачать игру HTML"
-                    title="Скачать HTML"
-                  >
-                    <ArrowDownToLine size={18} />
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
-        </aside>
-      )}
+      <aside
+        className="preview-pane"
+        id="studio-preview"
+        aria-hidden={mobile ? !gameFullscreen : !previewOpen}
+        inert={(mobile ? !gameFullscreen : !previewOpen) || undefined}
+      >
+        <PhonePreview
+          hideToolbar={mobile}
+          forceFullscreen={gameFullscreen}
+          onEnterFullscreen={() => setGameFullscreen(true)}
+          onExitFullscreen={() => setGameFullscreen(false)}
+          artifactKey={revision?.artifact_hash}
+          url={revision?.preview_url}
+          title={revision?.title || 'Ваша игра'}
+          exportUrl={revision?.export_url}
+          playUrl={revision ? `/play/${revision.id}` : undefined}
+          badge={
+            revision && !revision.accepted ? 'Сохранённый кандидат — требуется проверка' : undefined
+          }
+        />
+        {!mobile && gameTools}
+      </aside>
       {showShare && shareRevision && (
         <Modal
           title={
@@ -714,7 +809,7 @@ export default function Studio() {
                   onFocus={(event) => event.currentTarget.select()}
                 />
               </label>
-              <a className="button button-coral" href={shareDone}>
+              <a className="button button-primary" href={shareDone}>
                 Открыть публикацию
               </a>
             </div>
@@ -736,7 +831,7 @@ export default function Studio() {
                   : `В ленте сохранится отдельный снимок выбранной версии ${shareRevision.number}.`}{' '}
                 История ваших сообщений остаётся приватной.
               </p>
-              <button className="button button-coral" disabled={busy}>
+              <button className="button button-primary" disabled={busy}>
                 {publication ? 'Обновить публикацию' : 'Опубликовать игру'}
                 <Share2 size={17} />
               </button>
@@ -806,7 +901,7 @@ export default function Studio() {
               Пожелания будут учтены в следующих запросах. Сейчас новая генерация не запускается.
             </p>
             <button
-              className="button button-coral"
+              className="button button-primary"
               disabled={
                 !rating ||
                 busy ||
@@ -827,8 +922,15 @@ export default function Studio() {
               кандидат: проверьте управление, основное действие и условие победы или поражения.
             </p>
             <p>Эта версия будет отмечена как проверенная вами, а не автоматически.</p>
+            {confirmEvidence?.requirements.length ? (
+              <ul>
+                {confirmEvidence.requirements.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
             <button
-              className="button button-coral"
+              className="button button-primary"
               disabled={busy}
               onClick={() => void act('confirm')}
             >

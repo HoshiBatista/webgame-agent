@@ -125,7 +125,7 @@ export default function Feed() {
             <span>большое «ещё раз».</span>
           </h1>
           <p>Посмотрите, что придумали другие. Или начните с чистого листа.</p>
-          <Link className="button button-coral" to="/chats/new">
+          <Link className="button button-primary" to="/chats/new">
             <Plus size={18} /> Создать игру
           </Link>
         </div>
@@ -302,7 +302,7 @@ export default function Feed() {
             <p className="field-help">
               Это меняет только название публикации. Код игры остаётся прежним.
             </p>
-            <button className="button button-coral" disabled={busy === editing.id}>
+            <button className="button button-primary" disabled={busy === editing.id}>
               Сохранить
             </button>
           </form>

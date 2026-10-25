@@ -19,11 +19,12 @@ from typing import Any
 
 from ..errors import GenerationError
 from ..prompts import build_messages
-from ..schema import RESPONSE_SCHEMA
+from ..schema import response_schema
 
 MAX_CONTEXT_BYTES = 256000
 CONTEXT_WINDOW = 872000
 AUTO_COMPACT_TOKEN_LIMIT = 800000
+VERIFIED_CLI_VERSIONS = {"codex-cli 0.163.0-alpha.10.2", "codex-cli 0.163.0-alpha.11.2"}
 
 DISABLED_FEATURES = (
     "shell_tool",
@@ -67,7 +68,10 @@ def codex_home():
 def available_models():
     """Actual authenticated catalog cache; never invent a fallback model list."""
     try:
-        catalog = json.loads((codex_home() / "models_cache.json").read_text())
+        # A cloud web process sees only a non-secret catalog, never the worker's
+        # credential directory. Generation still uses its own full local cache.
+        path = Path(os.environ.get("GAMEFORGE_CODEX_CATALOG", codex_home() / "models_cache.json"))
+        catalog = json.loads(path.read_text())
         result = []
         for model in catalog.get("models", []):
             if model.get("visibility") == "hide" or not model.get("slug"):
@@ -90,7 +94,7 @@ def binary():
     path = configured or shutil.which("codex")
     if not path:
         raise GenerationError(
-            "codex_unavailable", "Codex CLI не найден. Установите Codex и выполните вход локально."
+            "codex_unavailable", "Codex CLI не найден. Администратору нужно настроить подключение Codex."
         )
     return path
 
@@ -141,7 +145,7 @@ def verify_cli_contract():
         ).stdout.strip()
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise GenerationError("codex_unavailable", "Не удалось проверить версию Codex.") from exc
-    if version != "codex-cli 0.163.0-alpha.10.2":
+    if version not in VERIFIED_CLI_VERSIONS:
         raise GenerationError(
             "codex_profile_unverified",
             "Для этой версии Codex ещё не проверен профиль без инструментов. Нужна проверка адаптера; платный запрос не отправлен.",
@@ -332,9 +336,10 @@ def generate(request, *, on_event, is_cancelled):
         )
     verify_cli_contract()
     messages = build_messages(request)
+    schema = response_schema(request)
     context_bytes = sum(
         len(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
-        for value in (messages, RESPONSE_SCHEMA)
+        for value in (messages, schema)
     )
     if context_bytes > MAX_CONTEXT_BYTES:
         raise GenerationError(
@@ -400,7 +405,7 @@ def generate(request, *, on_event, is_cancelled):
                     "effort": "low",
                     "serviceTierForTurn": "default",
                     "input": [{"type": "text", "text": messages[1]["content"], "text_elements": []}],
-                    "outputSchema": RESPONSE_SCHEMA,
+                    "outputSchema": schema,
                 },
             )
             on_event({"type": "provider_started", "message": "Codex создаёт игру одним запросом."})

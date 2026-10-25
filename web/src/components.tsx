@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ArrowDownToLine,
   ArrowUpRight,
   Check,
   ChevronDown,
   CircleAlert,
+  Copy,
   Expand,
   ExternalLink,
   Gamepad2,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDuration, formatMoney } from './api';
+import { copyGameHtml } from './webview';
 import type { Budget, Publication, Revision, Run, RunEvent } from './types';
 
 export function GameThumbnail({
@@ -45,17 +46,21 @@ export function GameThumbnail({
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link className="brand" to="/" aria-label="GameForge, главная">
-      <span className="brand-mark">
-        <Gamepad2 size={24} strokeWidth={2.3} />
-      </span>
+    <Link className="brand" to="/" aria-label="beeGame, главная">
+      <img className="brand-mark" src="/assets/beeline-logo.svg" alt="" width="44" height="44" />
       {!compact && (
         <span>
-          game<span className="brand-weight">forge</span>
-          <span className="brand-dot">.</span>
+          bee<span className="brand-weight">Game</span>
         </span>
       )}
     </Link>
+  );
+}
+export function BrandDisclaimer() {
+  return (
+    <p className="brand-disclaimer">
+      Разработано в рамках хакатона. Не является официальным продуктом билайна.
+    </p>
   );
 }
 export function Spinner({ text = 'Загружаем…' }: { text?: string }) {
@@ -174,6 +179,66 @@ export function GameFrame({
     />
   );
 }
+export function CopyHtmlButton({
+  exportUrl,
+  onError,
+}: {
+  exportUrl: string;
+  onError: (message: string) => void;
+}) {
+  const [copying, setCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const currentExport = useRef(exportUrl);
+  currentExport.current = exportUrl;
+  useEffect(() => {
+    currentExport.current = exportUrl;
+    setCopied(false);
+    return () => {
+      currentExport.current = '';
+    };
+  }, [exportUrl]);
+  async function copyHtml() {
+    if (copying) return;
+    const selected = exportUrl;
+    setCopying(true);
+    setCopied(false);
+    onError('');
+    try {
+      await copyGameHtml(selected);
+      if (currentExport.current === selected) setCopied(true);
+    } catch {
+      if (currentExport.current === selected)
+        onError(
+          'Не удалось скопировать HTML. Проверьте соединение и разрешение на копирование в браузере.',
+        );
+    } finally {
+      setCopying(false);
+    }
+  }
+  return (
+    <>
+      <button
+        className="icon-button"
+        onClick={copyHtml}
+        disabled={copying}
+        aria-label="Скопировать HTML для WebView"
+        title={copied ? 'Скопировано' : 'Скопировать HTML для WebView'}
+      >
+        {copying ? (
+          <LoaderCircle className="spin" size={18} />
+        ) : copied ? (
+          <Check size={18} />
+        ) : (
+          <Copy size={18} />
+        )}
+      </button>
+      <span className="sr-only" role="status">
+        {copied ? 'HTML скопирован одной строкой для WebView' : ''}
+      </span>
+    </>
+  );
+}
+
 export function PhonePreview({
   url,
   title,
@@ -183,7 +248,9 @@ export function PhonePreview({
   badge,
   empty,
   forceFullscreen = false,
+  onEnterFullscreen,
   onExitFullscreen,
+  hideToolbar = false,
 }: {
   url?: string;
   title: string;
@@ -193,9 +260,15 @@ export function PhonePreview({
   badge?: string;
   empty?: ReactNode;
   forceFullscreen?: boolean;
+  onEnterFullscreen?: () => void;
   onExitFullscreen?: () => void;
+  hideToolbar?: boolean;
 }) {
   const [expanded, setExpanded] = useState(forceFullscreen);
+  const [copyError, setCopyError] = useState('');
+  useEffect(() => {
+    setCopyError('');
+  }, [exportUrl]);
   const stageRef = useRef<HTMLDivElement>(null);
   const screenRef = useRef<HTMLDivElement>(null);
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
@@ -276,48 +349,45 @@ export function PhonePreview({
   );
   return (
     <>
-      <div className="preview-title">
-        <span>
-          <i className={`status-dot ${url ? 'ready' : ''}`} />
-          {badge ?? (url ? 'Можно играть' : 'Место для вашей идеи')}
-        </span>
-        <div>
-          {playUrl && (
-            <a
+      {!hideToolbar && (
+        <div className="preview-title">
+          <span>
+            <i className={`status-dot ${url ? 'ready' : ''}`} />
+            {badge ?? (url ? 'Можно играть' : 'Место для вашей идеи')}
+          </span>
+          <div>
+            {playUrl && (
+              <a
+                className="icon-button"
+                href={playUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Открыть игру в отдельной вкладке"
+                title="В отдельной вкладке"
+              >
+                <ExternalLink size={18} />
+              </a>
+            )}
+            {exportUrl && <CopyHtmlButton exportUrl={exportUrl} onError={setCopyError} />}
+            <button
               className="icon-button"
-              href={playUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Открыть игру в отдельной вкладке"
-              title="В отдельной вкладке"
+              disabled={!url}
+              onClick={() => {
+                setExpanded(true);
+                onEnterFullscreen?.();
+              }}
+              aria-label="Открыть игру на весь экран"
+              title="На весь экран"
             >
-              <ExternalLink size={18} />
-            </a>
-          )}
-          {exportUrl && (
-            <a
-              className="icon-button"
-              href={exportUrl}
-              aria-label="Скачать HTML"
-              title="Скачать HTML"
-            >
-              <ArrowDownToLine size={18} />
-            </a>
-          )}
-          <button
-            className="icon-button"
-            disabled={!url}
-            onClick={() => setExpanded(true)}
-            aria-label="Открыть игру на весь экран"
-            title="На весь экран"
-          >
-            <Expand size={18} />
-          </button>
+              <Expand size={18} />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+      {copyError && <ErrorNotice message={copyError} onClose={() => setCopyError('')} />}
       <div
         ref={stageRef}
-        className={`phone-stage ${expanded ? 'fullscreen-preview' : ''}`}
+        className={`phone-stage ${url ? 'has-game' : ''} ${expanded ? 'fullscreen-preview' : ''}`}
         role={expanded ? 'dialog' : undefined}
         aria-label={expanded ? `Игра: ${title}` : undefined}
         aria-modal={expanded ? true : undefined}
@@ -342,9 +412,11 @@ export function PhonePreview({
           </div>
           <div className="phone-home" aria-hidden="true" />
         </div>
-        <span className="preview-caption">
-          Ваш ход. Попробуйте сыграть <ArrowUpRight size={15} />
-        </span>
+        {!url && (
+          <span className="preview-caption">
+            Ваш ход. Попробуйте сыграть <ArrowUpRight size={15} />
+          </span>
+        )}
       </div>
     </>
   );
@@ -353,13 +425,19 @@ export function PhonePreview({
 export const runLabels: Record<Run['status'], string> = {
   queued: 'Ожидаем свободную модель',
   generating: 'Создаём вашу игру',
-  checking: 'Проверяем управление и механику',
+  checking: 'Проверяем код и работу игры',
   succeeded: 'Готово, можно играть',
   needs_attention: 'Нужно ваше решение',
-  unverified: 'Нужна проверка человеком',
+  unverified: 'Игра сохранена — нужна ваша проверка',
   failed: 'Не получилось завершить',
   cancelled: 'Задание отменено',
   unknown: 'Ответ не получен полностью',
+};
+const pendingRunLabels: Record<string, string> = {
+  repairing: 'Исправляем найденную проблему',
+  repairing_checks: 'Уточняем проверки сохранённой игры',
+  waiting_model: 'Ожидаем ответ модели',
+  waiting_admin: 'Нужна помощь администратора',
 };
 export function RunStatus({
   run,
@@ -367,6 +445,7 @@ export function RunStatus({
   onCancel,
   onContinue,
   onConfirm,
+  onRecheck,
   busy,
 }: {
   run: Run;
@@ -374,12 +453,16 @@ export function RunStatus({
   onCancel: () => void;
   onContinue: (prompt: string, acceptUnknownCost?: boolean) => void;
   onConfirm: () => void;
+  onRecheck?: () => void;
   busy: boolean;
 }) {
   const [comment, setComment] = useState('');
   const [acceptUnknownCost, setAcceptUnknownCost] = useState(false);
   useEffect(() => setAcceptUnknownCost(false), [run.id]);
   const active = ['queued', 'generating', 'checking'].includes(run.status);
+  const label = active
+    ? pendingRunLabels[run.stage] || runLabels[run.status]
+    : runLabels[run.status];
   const latest = events.at(-1);
   return (
     <section className={`run-card run-${run.status}`} aria-live="polite">
@@ -394,12 +477,22 @@ export function RunStatus({
           )}
         </span>
         <div>
-          <strong>{runLabels[run.status]}</strong>
+          <strong>
+            {label}
+            {run.model_label && <span className="model-badge">{run.model_label}</span>}
+          </strong>
           <span>{run.message || latest?.message || run.stage}</span>
         </div>
         {run.elapsed_seconds > 0 && <small>{formatDuration(run.elapsed_seconds)}</small>}
       </div>
       {run.error && <p className="run-error">{run.error.message}</p>}
+      {run.confirmation?.requirements.length ? (
+        <ul>
+          {run.confirmation.requirements.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
       {run.status === 'unknown' && (
         <p>
           Сохранённые версии и данные запроса не потеряны. Неизвестный расход остаётся в бюджете;
@@ -459,12 +552,21 @@ export function RunStatus({
             <Check size={15} /> Я проверил игру
           </button>
         )}
+        {run.can_recheck && onRecheck && (
+          <button className="button button-small button-quiet" disabled={busy} onClick={onRecheck}>
+            Повторить проверку без генерации
+          </button>
+        )}
       </div>
       <details className="disclosure">
         <summary>
           Что происходит <ChevronDown size={15} />
         </summary>
-        <p>Попыток модели: {run.attempts}. Доработка использует сохранённый результат.</p>
+        <p>
+          Вызовов модели: {run.attempts}
+          {run.max_model_calls ? ` из ${run.max_model_calls}` : ''}. Доработка использует
+          сохранённый результат.
+        </p>
         {events.length > 0 && (
           <ol className="event-list">
             {events.slice(-12).map((event) => (
@@ -540,6 +642,16 @@ export function RevisionDetails({ revision }: { revision: Revision }) {
               } as Record<string, string>
             )[revision.report.status] ?? revision.report.status}
           </p>
+          {revision.report.stages?.map((item) => (
+            <p key={item.stage}>
+              {item.stage === 'syntax' ? 'Синтаксис кода' : 'Игровые сценарии'}:{' '}
+              {item.status === 'passed'
+                ? 'проверено'
+                : item.status === 'failed'
+                  ? 'найдены ошибки'
+                  : 'требует проверки'}
+            </p>
+          ))}
           {revision.report.findings.map((finding, index) => (
             <p className="report-finding" key={index}>
               {typeof finding === 'string' ? finding : (finding.message ?? readable(finding))}

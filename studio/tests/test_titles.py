@@ -4,8 +4,11 @@ import uuid
 from django.apps import apps
 from django.test import Client, TestCase, override_settings
 
-from studio.models import Chat, Invocation, Publication, Revision, User
+from generation.providers.fake import fixture_response
+from studio.acceptance import assess
+from studio.models import Chat, CheckReport, Invocation, Publication, Revision, User
 from studio.services import cancel_run, create_run, finish_run
+from studio.tasks import check_identity
 from studio.titles import title_from_prompt
 
 
@@ -139,8 +142,37 @@ class ChatTitleTests(TestCase):
                 run.status = "unverified"
                 run.candidate_revision = revision
                 run.save(update_fields=["status", "candidate_revision"])
+                checks = fixture_response()["checks"]
+                revision.checks = checks
+                revision.save(update_fields=["checks"])
+                result = {
+                    "status": "unverified",
+                    "findings": [{"code": "check_unverified", "check_id": checks[-1]["id"]}],
+                    "gates": {"syntax": True, "runtime": True, "surface": True},
+                    "stages": [{"stage": "syntax", "status": "passed"}],
+                    "facts": [
+                        {
+                            **{k: c[k] for k in ("id", "category", "requirement", "viewport")},
+                            "surface": {
+                                "canvases": [{"visible": True, "width": 300, "height": 300}],
+                                "overflow": False,
+                            },
+                        }
+                        for c in checks
+                    ],
+                }
+                report = CheckReport.objects.create(
+                    revision=revision,
+                    validation_run=run,
+                    status="unverified",
+                    checks=checks,
+                    identity=check_identity(revision),
+                    assessment=assess(result, checks, []),
+                )
                 response = self.client.post(
-                    f"/api/runs/{run.id}/confirm/", {"confirmed": True}, content_type="application/json"
+                    f"/api/runs/{run.id}/confirm/",
+                    {"confirmed": True, "artifact_hash": revision.artifact_hash, "report_id": report.pk},
+                    content_type="application/json",
                 )
                 self.assertEqual(response.status_code, 200)
                 self.chat.refresh_from_db()
@@ -149,7 +181,7 @@ class ChatTitleTests(TestCase):
     def test_migration_preserves_existing_names_and_fills_empty_ones(self):
         empty = Chat.objects.create(owner=self.user, title="")
         existing = Chat.objects.create(owner=self.user, title="Моё прежнее название")
-        migration = importlib.import_module("studio.migrations.0005_chat_titles")
+        migration = importlib.import_module("studio.migrations.0011_chat_titles")
         migration.preserve_existing_titles(apps, None)
         empty.refresh_from_db()
         existing.refresh_from_db()

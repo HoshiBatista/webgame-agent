@@ -1,0 +1,110 @@
+{
+  "verified_at": "2026-10-25T00:20:17.306792+03:00",
+  "release": "06ca722123c8f214d3b39b78f67a46fa4a4d24f5",
+  "release_directory": "/opt/gameforge/releases/20261025-06ca722",
+  "previous_release_directory": "/opt/gameforge/releases/20261024-a4d41d5",
+  "archive_sha256": "b92acc26bee0874753cf9a130a3ade3e505c41c8c357dafb7a314cd6540187e1",
+  "server": {
+    "revision": "06ca722123c8f214d3b39b78f67a46fa4a4d24f5",
+    "users_preserved": 2,
+    "chats_preserved": 7,
+    "revisions_preserved": 18,
+    "after_counts": {
+      "users": 2,
+      "chats": 8,
+      "revisions": 19
+    },
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_settings_and_secrets_preserved": true,
+    "relay_db_redis_container_identity_preserved": true,
+    "images": {
+      "app": {
+        "image_id": "sha256:a65d75bc8470a46d9a130674e954de7c84b45bf26efa86e19a1b13a8dd427c53",
+        "image_tag": "gameforge-mini:cloud-06ca722-20261025",
+        "running": true
+      },
+      "preview": {
+        "image_id": "sha256:a65d75bc8470a46d9a130674e954de7c84b45bf26efa86e19a1b13a8dd427c53",
+        "image_tag": "gameforge-mini:cloud-06ca722-20261025",
+        "running": true
+      },
+      "worker": {
+        "image_id": "sha256:a65d75bc8470a46d9a130674e954de7c84b45bf26efa86e19a1b13a8dd427c53",
+        "image_tag": "gameforge-mini:cloud-06ca722-20261025",
+        "running": true
+      },
+      "beat": {
+        "image_id": "sha256:a65d75bc8470a46d9a130674e954de7c84b45bf26efa86e19a1b13a8dd427c53",
+        "image_tag": "gameforge-mini:cloud-06ca722-20261025",
+        "running": true
+      },
+      "validator": {
+        "image_id": "sha256:8e62be3172cdfdc1a1d06d1fc3ee6d427b36f562dfef3f95d9e6202e5fb164bf",
+        "image_tag": "gameforge-mini-validator:cloud-06ca722-20261025",
+        "running": true
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-06ca722-20261024T211829Z.dump",
+    "backup_sha256": "b9ee0219ca7f673310b334c6075528935b2927896bdbcab85f76b7959e73d365"
+  },
+  "http": {
+    "origin": "https://212.57.126.215",
+    "https_verified": true,
+    "health": "passed",
+    "login_route": "passed",
+    "branding": "beeGame",
+    "beeline_logo_exact_bytes": true,
+    "authenticated_login": "passed",
+    "guest_and_admin_denied": "passed",
+    "secure_httponly_cookie": "passed",
+    "preview_exact_bytes_hash_and_isolation": "passed",
+    "profiles": [
+      {
+        "id": "pro",
+        "model": "gpt-6-sol",
+        "available": false
+      },
+      {
+        "id": "lite",
+        "model": "qwen38",
+        "available": true
+      }
+    ],
+    "real_model_calls": 0
+  },
+  "fixture": {
+    "revision_id": "60ae562d-5676-4e02-ab60-aa75e32162be",
+    "artifact_hash": "31f5703a5c0f6a76ffffdb83cc04d6ef731771dc57e6f7c00fc090bbfefb1d9f",
+    "run_id": "5d997ed4-6cb6-45c0-aeb4-b70dbbb7063e",
+    "chat_id": "8eb009a2-e438-4a93-a4b7-b37e7011d56b",
+    "provider": "fake",
+    "status": "succeeded",
+    "calls_to_real_models": 0,
+    "attempts": 1,
+    "passed_facts": 3,
+    "validator_hash": "901dc92abdd3e1ea058357a9f87adfa2d5db337c9612ad67a11521a757b67cca",
+    "validator_environment": "mini-browser-v1:901dc92abdd3e1ea058357a9f87adfa2d5db337c9612ad67a11521a757b67cca:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)"
+  },
+  "local_frontend": {
+    "tests_passed": 85,
+    "build": "passed",
+    "lint": "passed"
+  },
+  "migrations_applied": [],
+  "frontend_changes": [
+    "Refined studio preview",
+    "Compact message composer",
+    "Smoother theme transitions"
+  ],
+  "real_model_calls": 0,
+  "gpu_server_access_or_changes": false,
+  "relay_restart": false,
+  "codex_configuration_changed": false,
+  "cloud_pro_available": false,
+  "limitations": [
+    "Infrastructure verification used a fake model, not live inference.",
+    "Cloud Pro retains its previous disabled authentication state.",
+    "HTTP and component checks are not a new physical WebView visual acceptance."
+  ]
+}

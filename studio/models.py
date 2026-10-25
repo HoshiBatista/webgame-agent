@@ -17,6 +17,7 @@ class Preference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="preference")
     theme = models.CharField(max_length=10, default="light")
     notes = models.JSONField(default=list)
+    model_profile = models.CharField(max_length=10, blank=True, default="")
 
 
 class Chat(models.Model):
@@ -45,6 +46,7 @@ class Run(models.Model):
     audience = models.CharField(max_length=32, default="everyone")
     provider = models.CharField(max_length=32)
     model = models.CharField(max_length=100, blank=True)
+    model_profile = models.CharField(max_length=10, blank=True, default="")
     status = models.CharField(max_length=32, default="queued")
     stage = models.CharField(max_length=40, default="queued")
     message = models.TextField(default="В очереди на создание игры")
@@ -57,6 +59,11 @@ class Run(models.Model):
         "self", null=True, on_delete=models.SET_NULL, related_name="continuations"
     )
     attempts = models.PositiveSmallIntegerField(default=0)
+    max_repair_attempts = models.PositiveSmallIntegerField(default=3)
+    allow_model_calls = models.BooleanField(default=True)
+    completion_policy = models.PositiveSmallIntegerField(default=2)
+    model_call_limit = models.PositiveSmallIntegerField(null=True, blank=True)
+    model_call_deadline = models.DateTimeField(null=True, blank=True)
     cancel_requested = models.BooleanField(default=False)
     fence = models.UUIDField(null=True)
     lease_until = models.DateTimeField(null=True)
@@ -69,6 +76,9 @@ class Run(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(max_repair_attempts__lte=3), name="studio_run_repair_limit"
+            ),
             models.UniqueConstraint(fields=["chat", "idempotency_key"], name="studio_run_idempotency"),
             models.UniqueConstraint(
                 fields=["chat"],
@@ -76,6 +86,11 @@ class Run(models.Model):
                 name="studio_one_active_run",
             ),
         ]
+
+    @property
+    def max_model_calls(self):
+        maximum = 1 + self.max_repair_attempts
+        return min(maximum, self.model_call_limit) if self.model_call_limit is not None else maximum
 
 
 class Message(models.Model):
@@ -104,6 +119,7 @@ class Revision(models.Model):
     design = models.JSONField(default=dict)
     checks = models.JSONField(default=list)
     diff = models.JSONField(default=list)
+    checks_review_required = models.BooleanField(default=False)
     accepted = models.BooleanField(default=False)
     verification = models.CharField(max_length=16, default="none")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -121,11 +137,14 @@ class CheckReport(models.Model):
     status = models.CharField(max_length=32)
     findings = models.JSONField(default=list)
     facts = models.JSONField(default=list)
+    stages = models.JSONField(default=list)
     elapsed_seconds = models.FloatField(default=0)
     environment = models.JSONField(default=dict)
     screenshot_base64 = models.TextField(blank=True)
     screenshot_mime = models.CharField(max_length=30, default="image/png")
     identity = models.CharField(max_length=64, db_index=True)
+    checks = models.JSONField(default=list)
+    assessment = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -141,6 +160,7 @@ class Invocation(models.Model):
     state = models.CharField(max_length=20, default="reserved")
     request = models.JSONField()
     response = models.JSONField(null=True)
+    raw_response = models.JSONField(null=True)
     revision = models.ForeignKey(Revision, null=True, on_delete=models.SET_NULL, related_name="+")
     error = models.JSONField(null=True)
     usage = models.JSONField(null=True)

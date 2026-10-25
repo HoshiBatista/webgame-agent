@@ -9,7 +9,7 @@ def preserve_existing_titles(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("studio", "0004_invocation_provider_metadata")]
+    dependencies = [("studio", "0010_check_review_required")]
 
     operations = [
         migrations.AddField(

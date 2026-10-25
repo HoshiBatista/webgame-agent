@@ -7,7 +7,22 @@ from unittest.mock import Mock, patch
 import pytest
 
 from generation.prompts import build_messages, repair_evidence
-from studio.tasks import request_for
+from studio.tasks import request_for as build_request
+
+
+def request_for(run, base, findings):
+    run.invocations = Mock()
+    run.invocations.order_by.return_value.first.return_value = SimpleNamespace(
+        request={"generation_contract": {"pipeline_version": 2}}
+    )
+    run.max_repair_attempts = 1
+    run.completion_policy = 1
+    if base is not None:
+        base.accepted = True
+        base.checks = __import__(
+            "generation.providers.fake", fromlist=["fixture_response"]
+        ).fixture_response()["checks"]
+    return build_request(run, base, findings)
 
 
 @pytest.mark.parametrize("operation", ["create", "edit", "repair"])
@@ -30,7 +45,11 @@ def test_recorded_prompt_hash_matches_the_instructions_actually_sent_for_each_op
     assert (
         request["generation_contract"]["system_prompt_sha256"] == hashlib.sha256(prompt.encode()).hexdigest()
     )
-    assert f"Operation: {operation}." in prompt
+    assert {
+        "create": "CURRENT STEP: CREATE",
+        "edit": "CURRENT STEP: APPLY",
+        "repair": "CURRENT STEP: REPAIR",
+    }[operation] in prompt
 
 
 def browser_report():

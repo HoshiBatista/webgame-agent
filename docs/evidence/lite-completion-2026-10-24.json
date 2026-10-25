@@ -1,0 +1,573 @@
+{
+  "scope": "Bounded diagnostic scout, not controlled A/B or physical WebView testing",
+  "model_profile": {
+    "id": "lite",
+    "name": "Lite",
+    "description": "Модель через API",
+    "provider": "relay",
+    "model": "qwen38",
+    "available": true,
+    "unavailable_reason": ""
+  },
+  "limits": {
+    "max_calls": 24,
+    "max_seconds": 5400
+  },
+  "closure_reason": "Three fixed creation cases complete; no independently playable accepted base for edits. Unused budget is not automatically renewed.",
+  "generation_window_seconds": 1058.885,
+  "closed_elapsed_seconds": 1170.427,
+  "provenance": {
+    "source_sha256": {
+      "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+      "generation/artifacts.py": "ba0aea7cafd4dc778d1cb0a057b5b8b931d5d68b190dba3e997814b36b6e3944",
+      "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+      "generation/feedback.py": "a4e8e8ea13ed372f176e275049c01c259e0688144740ac38d28d967fd7815c43",
+      "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+      "generation/prompts.py": "2ea19cf87bd52d06b328392c7f79836630f218349d0dffec21d9df8758fd6f5c",
+      "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+      "generation/providers/codex.py": "49257a0dcc3569d6b0952fa95ec1e2b29fbb9b0873fe51acb7487d09e55ddb1d",
+      "generation/providers/fake.py": "1a093b162869e43fe719f5c4c9dd37eb1fd6cbd32aec8a18545fed03fa86c747",
+      "generation/providers/relay.py": "e8e04e873515df5b0323e52b8678cba76a4a0af630d9709b57b3f8349ba0a9da",
+      "generation/providers/vllm.py": "7d35a09752ecaa6f046188e7b3029ea1d51a925a120b891aa515ec1501b0b81c",
+      "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+      "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+      "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+      "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+      "generation/schema.py": "b4e6a20f875670b417aa40c4ff2847dc2e95e97c124e1a950f4ccfde4ccbf8eb",
+      "generation/service.py": "6375d4ecdd5e037d77eb27d8722be69caec64cc3072e8102b476be051e7fa554",
+      "generation/source_map.py": "4bf21f3213211486f873fd0f7f5727ad054c43f89afeaf9c7a33b5ad5c9ca503",
+      "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+      "studio/acceptance.py": "949a6fe3f3a842ceda3721887c4cf7c14181699e59ad163ba3b544d125507c47",
+      "studio/models.py": "281016fc8d8a2d7ff6ad081897d7160d583d0840a9293a6d724ec630800044f5",
+      "studio/services.py": "497ea97b2915f9620dc3811892b53478b14d0417e252c10f00721c2031589c5c",
+      "studio/tasks.py": "786244d904293a14a36e187f99069b0db1fba3ce913572df907d25118f7e6a1c",
+      "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+      "validation/checks.py": "b5b8e64a2bae062e220775633f983be0c23281152c9b5ba11537a2609d3b07a7",
+      "validation/contracts.py": "17a45a4410535d1fb96fa6dcd4a4bb37232ffe1ff5f52dfbc57a4a28e432c8d6",
+      "validation/daemon.py": "d5147e7d25ed9b3d2681f0efe9b55fb1814064f7f661bb206d5027c9d9ccca4b",
+      "validation/native.py": "3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+      "validation/protocol.py": "01c76424b763d989b0e49c7e9f49f1fd95c417bfce07117a5e5788f9210904bd",
+      "validation/runner.py": "353719a7488b43b500bb4a44bd7ae1ea867ddcbd101fdbf097367b27684bd9ad",
+      "validation/service.py": "ba628ad38c8fe810b22de977011d7d02a3b9eb724735b4ce372696cd776ed52f",
+      "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd"
+    },
+    "weight_revision": "Not exposed by the relay API; model alias only",
+    "sampling_defaults": "Provider defaults; inspect captured request for explicit values"
+  },
+  "summary": {
+    "counts": {
+      "operations": 3,
+      "automatic": 0,
+      "playable": 0,
+      "broken": 3,
+      "unverified": 0,
+      "unreviewed": 0,
+      "playable_not_accepted": 0,
+      "false_acceptances": 0,
+      "unknown_usage": 0
+    },
+    "tokens": {
+      "input_tokens": 25604,
+      "output_tokens": 15773
+    },
+    "remaining_calls": 14,
+    "results": [
+      {
+        "case": "grid",
+        "kind": "create",
+        "run_id": "b58bb4d6-2af9-44e5-960e-ff1a2c1fd45f",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "5b1cb4ff-229e-4520-bd1c-f52da7f50457": "broken"
+        },
+        "calls": 4,
+        "reserved_ceiling": 4,
+        "first_candidate_seconds": 126.6636757850647,
+        "decision_seconds": 337.41908979415894,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "snake",
+        "kind": "create",
+        "run_id": "384fbd9a-6a7c-411d-9226-d90a8add488d",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "709bd43f-b82b-459b-85c9-ee4b20b7da92": "broken",
+          "fd9f0d1e-c3d0-46f6-83bc-67f9da99913f": "broken"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "first_candidate_seconds": 276.32798194885254,
+        "decision_seconds": 372.3245279788971,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "create",
+        "run_id": "24259dc9-ce21-45c0-a6c1-b553a4dc8a61",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "eeda21a4-6dee-44f1-968a-ee568cacb02e": "broken"
+        },
+        "calls": 4,
+        "reserved_ceiling": 4,
+        "first_candidate_seconds": 89.44977807998657,
+        "decision_seconds": 347.58015608787537,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      }
+    ],
+    "skipped_edits": [
+      {
+        "case": "grid",
+        "reason": "Creation needs independent review and an accepted base"
+      },
+      {
+        "case": "snake",
+        "reason": "Creation needs independent review and an accepted base"
+      },
+      {
+        "case": "memory",
+        "reason": "Creation needs independent review and an accepted base"
+      }
+    ],
+    "note": "Unreviewed/uncertain outcomes remain in the denominator. Application status is not an independent verdict."
+  },
+  "operations": [
+    {
+      "case": "grid",
+      "run_id": "b58bb4d6-2af9-44e5-960e-ff1a2c1fd45f",
+      "completion_policy": 2,
+      "error_code": "repair_exhausted",
+      "metrics": {
+        "model_calls": 4,
+        "check_seconds": 1.371,
+        "model_seconds": 334.47294700000003,
+        "queue_seconds": 0.178968,
+        "total_seconds": 337.41909,
+        "packaging_seconds": 0.0055232500890269876
+      },
+      "invocations": [
+        {
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1223,
+            "output_tokens": 1893,
+            "cached_input_tokens": 0
+          },
+          "error_code": null,
+          "elapsed_seconds": 126.431283,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 4,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "2342bcb4783db2682b01736a210162e45bc94003bb262c4b1bfb6219758f4c6c",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          }
+        },
+        {
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2950,
+            "output_tokens": 892,
+            "cached_input_tokens": 0
+          },
+          "error_code": "whole_file_patch",
+          "elapsed_seconds": 68.132046,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 4,
+            "reported_findings": 10,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        },
+        {
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2975,
+            "output_tokens": 636,
+            "cached_input_tokens": 0
+          },
+          "error_code": "whole_file_patch",
+          "elapsed_seconds": 44.042145,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 4,
+            "reported_findings": 10,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        },
+        {
+          "attempt": 4,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2975,
+            "output_tokens": 1534,
+            "cached_input_tokens": 0
+          },
+          "error_code": "ambiguous_patch",
+          "elapsed_seconds": 95.867473,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 4,
+            "reported_findings": 10,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "5b1cb4ff-229e-4520-bd1c-f52da7f50457",
+          "artifact_hash": "352e2555a9c50f727ae7d4f0bf7a65495ba0eb4cdf32a669116bda4b000e7e08",
+          "report_status": "failed",
+          "finding_codes": [
+            "canvas_missing",
+            "invalid_check"
+          ],
+          "corrections": [],
+          "independent_review": {
+            "artifact_hash": "352e2555a9c50f727ae7d4f0bf7a65495ba0eb4cdf32a669116bda4b000e7e08",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent browser inspection of saved preview, separate from generated checks",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Saved preview is blank: no canvas, board, controls or game text. Browser inspection found 0 canvas elements; source contains only a doctype/comment and two empty files."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Saved preview is blank: no canvas, board, controls or game text. Browser inspection found 0 canvas elements; source contains only a doctype/comment and two empty files."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Saved preview is blank: no canvas, board, controls or game text. Browser inspection found 0 canvas elements; source contains only a doctype/comment and two empty files."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Saved preview is blank: no canvas, board, controls or game text. Browser inspection found 0 canvas elements; source contains only a doctype/comment and two empty files."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "run_id": "384fbd9a-6a7c-411d-9226-d90a8add488d",
+      "completion_policy": 2,
+      "error_code": "no_progress",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 24.517000000000003,
+        "model_seconds": 345.24277099999995,
+        "queue_seconds": 0.038771,
+        "total_seconds": 372.324528,
+        "packaging_seconds": 0.0142292509553954
+      },
+      "invocations": [
+        {
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1170,
+            "output_tokens": 4574,
+            "cached_input_tokens": 0
+          },
+          "error_code": null,
+          "elapsed_seconds": 276.239898,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 4,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "2342bcb4783db2682b01736a210162e45bc94003bb262c4b1bfb6219758f4c6c",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          }
+        },
+        {
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5586,
+            "output_tokens": 1074,
+            "cached_input_tokens": 0
+          },
+          "error_code": null,
+          "elapsed_seconds": 69.002873,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 2,
+            "pipeline_version": 4,
+            "reported_findings": 2,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "709bd43f-b82b-459b-85c9-ee4b20b7da92",
+          "artifact_hash": "c7a8fcf2bc2df3c05410c6398f741ab8c8138eafeec64b97151b037181719dc2",
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch"
+          ],
+          "corrections": [],
+          "independent_review": {
+            "artifact_hash": "c7a8fcf2bc2df3c05410c6398f741ab8c8138eafeec64b97151b037181719dc2",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "method": "Independent real button clicks in browser at 390x844; no game state mutation",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Clicked Играть, then Играть ещё раз: both immediately display Поражение and score 0; no playable round starts."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "The synchronous first tick already ends the round, so the visible turn buttons cannot steer a live snake. Source confirms head at x=2 moving right into its own segment at x=3."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "The actual initial self-collision displays Поражение and restart, repeated twice through real clicks. This does not validate normal traversal or victory."
+              },
+              "mobile": {
+                "status": "unverified",
+                "evidence": "At 390x844 the canvas is 366x366 and large buttons are visible; playable pace and real touch steering cannot be assessed because start instantly loses."
+              }
+            }
+          }
+        },
+        {
+          "id": "fd9f0d1e-c3d0-46f6-83bc-67f9da99913f",
+          "artifact_hash": "cb0656164bb37b4134e47d2a17756b42f85ea92e58823711a9a4b93a57accb4a",
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch"
+          ],
+          "corrections": [],
+          "independent_review": {
+            "artifact_hash": "cb0656164bb37b4134e47d2a17756b42f85ea92e58823711a9a4b93a57accb4a",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "method": "Independent browser click of Играть in repaired preview at 390x844; same immediate loss, no state mutation",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Clicked Играть in the repaired candidate: immediately displays Поражение with score 0, so no playable round starts."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "The synchronous first tick already ends the round, so the visible turn buttons cannot steer a live snake. Source confirms head at x=2 moving right into its own segment at x=3."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "The actual starting self-collision displays Поражение and restart after a real click. Normal traversal and victory were not validated."
+              },
+              "mobile": {
+                "status": "unverified",
+                "evidence": "At 390x844 the canvas is 366x366 and large buttons are visible; playable pace and real touch steering cannot be assessed because start instantly loses."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "run_id": "24259dc9-ce21-45c0-a6c1-b553a4dc8a61",
+      "completion_policy": 2,
+      "error_code": "repair_exhausted",
+      "metrics": {
+        "model_calls": 4,
+        "check_seconds": 1.434,
+        "model_seconds": 344.706317,
+        "queue_seconds": 0.032437,
+        "total_seconds": 347.580156,
+        "packaging_seconds": 0.005395208951085806
+      },
+      "invocations": [
+        {
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1223,
+            "output_tokens": 1354,
+            "cached_input_tokens": 0
+          },
+          "error_code": null,
+          "elapsed_seconds": 89.376779,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 4,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "2342bcb4783db2682b01736a210162e45bc94003bb262c4b1bfb6219758f4c6c",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          }
+        },
+        {
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2484,
+            "output_tokens": 2756,
+            "cached_input_tokens": 0
+          },
+          "error_code": "whole_file_patch",
+          "elapsed_seconds": 175.278214,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 4,
+            "reported_findings": 6,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        },
+        {
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2509,
+            "output_tokens": 529,
+            "cached_input_tokens": 0
+          },
+          "error_code": "whole_file_patch",
+          "elapsed_seconds": 37.793944,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 4,
+            "reported_findings": 6,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        },
+        {
+          "attempt": 4,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2509,
+            "output_tokens": 531,
+            "cached_input_tokens": 0
+          },
+          "error_code": "ambiguous_patch",
+          "elapsed_seconds": 42.25738,
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 3,
+            "pipeline_version": 4,
+            "reported_findings": 6,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "91f3422ff612a05bf0c1e3983a6e2505a1b345ca581111a5691e4fedac17ef0c",
+            "response_schema_sha256": "dfe48c8c656040795c538ef13cb29857b581ae51c0b8f012886fc6c0c0ed1967"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "eeda21a4-6dee-44f1-968a-ee568cacb02e",
+          "artifact_hash": "311f4afafcd4da6f18878463098806044f60bf74fb3bceb029c6ad987913deb6",
+          "report_status": "failed",
+          "finding_codes": [
+            "canvas_missing",
+            "invalid_check"
+          ],
+          "corrections": [
+            {
+              "to": "text_number",
+              "code": "explicit_numeric_observation",
+              "from": "text",
+              "reason": "Числовое ожидание требует строгого числового наблюдения.",
+              "check_id": "tap-opens-cards"
+            }
+          ],
+          "independent_review": {
+            "artifact_hash": "311f4afafcd4da6f18878463098806044f60bf74fb3bceb029c6ad987913deb6",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "method": "Independent browser inspection at 390x844; no canvas or controls",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Saved mobile preview is blank: no cards, canvas, start button or game text. Independent browser inspection found 0 canvas elements; source entry is only 26 characters."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Saved mobile preview is blank: no cards, canvas, start button or game text. Independent browser inspection found 0 canvas elements; source entry is only 26 characters."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Saved mobile preview is blank: no cards, canvas, start button or game text. Independent browser inspection found 0 canvas elements; source entry is only 26 characters."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Saved mobile preview is blank: no cards, canvas, start button or game text. Independent browser inspection found 0 canvas elements; source entry is only 26 characters."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "post_pilot_recheck": {
+    "run_id": "9ad3d0f9-9164-4e6a-84a8-c583380edeaa",
+    "status": "needs_attention",
+    "calls": 0,
+    "candidate_id": "5b1cb4ff-229e-4520-bd1c-f52da7f50457",
+    "artifact_hash": "352e2555a9c50f727ae7d4f0bf7a65495ba0eb4cdf32a669116bda4b000e7e08",
+    "unchanged": true
+  }
+}

@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+import traceback
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +14,19 @@ import pytest
 from validation.contracts import browser_watchdog_seconds, implementation_hash
 from validation.runner import InvalidCheck, compare
 from validation.service import validate
+
+
+@pytest.fixture(autouse=True)
+def browser_failure_diagnostics(request, monkeypatch):
+    if "browser" not in request.keywords:
+        return
+    # Only synthetic test games run here. Keep detailed errors out of ordinary
+    # product reports, but expose the underlying failure in CI instead of losing
+    # the browser's diagnostic behind the generic infrastructure_error message.
+    def failed(*args):
+        pytest.fail("Isolated test browser failed: " + traceback.format_exc())
+
+    monkeypatch.setattr("validation.service._failure", failed)
 
 
 def test_observations_do_not_accept_counter_when_position_is_unchanged():
@@ -122,7 +136,7 @@ def fixture_report(html, checks):
     }
 
 
-@pytest.mark.parametrize("transport", ["socket", "docker"])
+@pytest.mark.parametrize("transport", ["socket", "docker", "native"])
 @pytest.mark.parametrize(
     "fault",
     [
@@ -163,7 +177,10 @@ def test_all_transports_require_actual_complete_browser_receipts(monkeypatch, tr
         report["artifact_hash"] = "another-candidate"
     elif fault == "findings":
         report["findings"] = [{"code": "effect_mismatch"}]
-    if transport == "socket":
+    monkeypatch.setenv("VALIDATOR_BACKEND", "native" if transport == "native" else "docker")
+    if transport == "native":
+        monkeypatch.setattr("validation.native.execute", lambda *_: report)
+    elif transport == "socket":
         monkeypatch.setenv("VALIDATOR_SOCKET", "/private-test/validator.sock")
         monkeypatch.setattr("validation.service._socket_validate", lambda *_: report)
     else:
@@ -182,27 +199,19 @@ def test_all_transports_require_actual_complete_browser_receipts(monkeypatch, tr
     assert result["elapsed_seconds"] >= 0
 
 
-def test_incomplete_mobile_suite_never_launches_browser(monkeypatch):
-    from validation.runner import run
+def test_incomplete_mobile_suite_cannot_claim_complete_effect_coverage():
+    from validation.contracts import suite_findings
 
     checks = fixture_checks()
     checks[1]["viewport"] = "desktop"
-    html = fixture_html()
-    monkeypatch.setattr("validation.runner.identity", lambda: "unit-test")
-    with patch("validation.runner.sync_playwright") as launch:
-        report = run(
-            {"html": html, "checks": checks, "artifact_hash": hashlib.sha256(html.encode()).hexdigest()}
-        )
-    launch.assert_not_called()
-    assert report["status"] == "unverified"
-    assert report["findings"][0]["code"] == "missing_mobile_control"
+    assert suite_findings(checks)[0]["code"] == "missing_mobile_control"
 
 
 def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
     import validation.contracts as contracts
 
     directory = Path(contracts.__file__).parent
-    for name in ("runner.py", "contracts.py", "protocol.py"):
+    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py"):
         (tmp_path / name).write_bytes((directory / name).read_bytes())
     assert implementation_hash(tmp_path) == implementation_hash()
     original = implementation_hash(tmp_path)
@@ -210,6 +219,74 @@ def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
         (tmp_path / "contracts.py").read_text().replace('"width": 390', '"width": 400')
     )
     assert implementation_hash(tmp_path) != original
+    original = implementation_hash(tmp_path)
+    with (tmp_path / "syntax.py").open("a") as source:
+        source.write("\n# parser version changed\n")
+    assert implementation_hash(tmp_path) != original
+
+
+def test_syntax_parser_keeps_script_bytes_and_source_locations():
+    from validation.syntax import Scripts
+
+    parser = Scripts()
+    parser.feed(
+        "<!-- <script>not executable</script> -->\n"
+        '<script type="application/json">{"not": "javascript"}</script>\n'
+        '<script\n type="text/javascript">const text = "&amp;";\n// keep newline\nstart();</script>'
+    )
+    parser.close()
+    assert parser.scripts == [
+        {
+            "content": 'const text = "&amp;";\n// keep newline\nstart();',
+            "line": 4,
+            "column": 24,
+        }
+    ]
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize(
+    "broken_source",
+    [
+        "function start(){const active=true; // initialize game draw();}",
+        "\nfunction start() {\nconst active = ;\n}\n",
+    ],
+)
+def test_syntax_gate_reports_one_error_and_skips_game_execution(broken_source):
+    # The first script would throw immediately if the parser executed game code.
+    # Both scripts must compile before ANY game page or gameplay check is opened.
+    html = fixture_html().replace(
+        "</script>",
+        "</script><script>throw new Error('game must not execute');</script>"
+        f"<script>{broken_source}</script>",
+    )
+    report = validate(html, fixture_checks(), artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report["status"] == "failed", report
+    assert report["stage"] == "syntax"
+    assert report["stages"] == [{"stage": "syntax", "status": "failed", "scripts": 3}]
+    assert report["facts"] == []
+    assert report["screenshot_base64"] == ""
+    assert len(report["findings"]) == 1
+    finding = report["findings"][0]
+    assert finding["code"] == "javascript_syntax"
+    assert finding["file"] == "index.html"
+    assert finding["script_index"] == 3
+    assert finding["script_line"] == (1 if broken_source.startswith("function") else 3)
+    assert finding["location"] == "bundled_html"
+    assert "Собранный HTML" in finding["message"]
+    assert f'скрипт №3, строка {finding["script_line"]}' in finding["message"]
+    assert finding["line"] >= finding["script_line"]
+    assert finding["column"] > 0
+    assert "SyntaxError" in finding["message"]
+
+
+@pytest.mark.browser
+def test_syntax_gate_ignores_non_javascript_data_blocks():
+    html = fixture_html() + '<script type="application/json">{"example":"function ("}</script>'
+    report = validate(html, fixture_checks(), artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report["status"] == "passed", report["findings"]
+    assert report["stages"][0] == {"stage": "syntax", "status": "passed", "scripts": 1}
+    assert len(report["facts"]) == len(fixture_checks())
 
 
 @pytest.mark.parametrize("probe", [{"environment": "mini-browser-v1:stale:browser"}, [], None])
@@ -362,6 +439,9 @@ def test_real_input_and_offline_surface(broken, network, expected):
     report = validate(html, fixture_checks(), artifact_hash=hashlib.sha256(html.encode()).hexdigest())
     assert report["status"] == expected, report["findings"]
     assert len(report["facts"]) == 3
+    assert report["stage"] == "browser"
+    assert report["stages"][0] == {"stage": "syntax", "status": "passed", "scripts": 1}
+    assert report["stages"][1] == {"stage": "browser", "status": expected}
 
 
 @pytest.mark.browser
@@ -474,3 +554,74 @@ def test_browser_does_not_execute_invalid_fraction_input(coordinate):
 
     with pytest.raises(InvalidCheck):
         action(None, None, {"action": "click_fraction", "selector": "canvas", "x": coordinate, "y": 0.5})
+
+
+@pytest.mark.browser
+def test_incomplete_scenarios_do_not_hide_javascript_syntax():
+    html = '<canvas width="300" height="200"></canvas><script>return 1;</script>'
+    report = validate(html, [], artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report['status'] == 'failed'
+    assert any(f['code'] == 'javascript_syntax' for f in report['findings'])
+    assert report['stages'][0]['stage'] == 'syntax'
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('kind', ['empty', 'runtime', 'network', 'type', 'missing', 'getter'])
+def test_independent_receipts_and_bounded_diagnostics(kind):
+    from generation.feedback import focus_findings
+    from validation.checks import gates_verified
+
+    html = fixture_html(network=kind == 'network')
+    checks = fixture_checks()
+    if kind == 'empty':
+        checks = []
+    elif kind == 'runtime':
+        html += '<script>throw new Error("broken game")</script>'
+        checks = []
+    elif kind == 'type':
+        html += '<script>window.visibleData=[1,2];</script>'
+        checks[1]['observation'] = {'source': 'state', 'path': 'visibleData'}
+        checks[1]['expect'] = {'operator': 'eq', 'value': 'wrong type'}
+    elif kind == 'getter':
+        html += '<script>Object.defineProperty(window,"hiddenData",{get(){throw new Error("getter executed")}});</script>'
+        checks[1]['observation'] = {'source': 'state', 'path': 'hiddenData'}
+    elif kind == 'missing':
+        checks[1]['observation'] = {'source': 'text', 'selector': '#missing'}
+    report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report['artifact_evidence']['artifact_hash'] == report['artifact_hash']
+    assert {v['viewport'] for v in report['artifact_evidence']['viewports']} == {'mobile', 'desktop'}
+    if kind in {'runtime', 'network'}:
+        assert report['status'] == 'failed'
+        assert not gates_verified(report, checks)
+    elif kind == 'empty':
+        assert report['status'] == 'unverified'
+        assert gates_verified(report, checks)
+        assert not report['facts']
+    else:
+        finding = next(f for f in report['findings'] if f.get('check_id') == checks[1]['id'])
+        diagnostic = finding['diagnostic']
+        assert len(json.dumps(diagnostic, ensure_ascii=False).encode()) <= 8192
+        assert diagnostic['controls'] and 'viewport' in diagnostic
+        assert 'diagnostic' in focus_findings([finding])[0]
+        if kind == 'type':
+            assert diagnostic['actual_type'] == 'list'
+        if kind == 'missing':
+            assert diagnostic['selector_matches'] == 0
+        if kind == 'getter':
+            assert diagnostic['state']['missing'] is True
+            assert not any('getter executed' in e for v in report['artifact_evidence']['viewports'] for e in v['errors'])
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('started', [False, True])
+def test_canvas_created_only_after_start_is_not_inferred_broken_from_initial_probe(started):
+    html = fixture_html().replace('<canvas ', '<canvas style="display:none" ')
+    html = html.replace('state.active=true;', 'state.active=true;c.style.display="block";')
+    checks = fixture_checks() if started else []
+    report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    if started:
+        assert report['status'] == 'passed', report['findings']
+    else:
+        assert report['status'] == 'unverified'
+        assert report['gates']['surface'] is False
+        assert 'canvas_missing' not in {f['code'] for f in report['findings']}

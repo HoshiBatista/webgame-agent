@@ -16,3 +16,16 @@ class GenerationError(Exception):
 
 class ContractError(GenerationError):
     pass
+
+
+class GenerationPending(Exception):
+    """A durable external job still exists; retry delivery/polling, never inference."""
+
+    def __init__(self, message, *, code="relay_pending", operator_required=False,
+                 retry_after=5, metadata=None):
+        super().__init__(message)
+        self.message = message
+        self.code = code
+        self.operator_required = operator_required
+        self.retry_after = retry_after
+        self.metadata = metadata or {}

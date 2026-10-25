@@ -1,26 +1,66 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Check, Moon, Sun, Trash2 } from 'lucide-react';
-import { BudgetDetails, ErrorNotice, Modal } from './components';
+import { ArrowLeft, Check, Monitor, Moon, Sun, Trash2 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { BudgetDetails, ErrorNotice } from './components';
 import { errorText, request } from './api';
 import { useSession } from './context';
 import type { Preferences as PreferencesType } from './types';
 import SyntheticAnalytics, { DEMO_RECOMMENDATION } from './SyntheticAnalytics';
+import { ModelChoices, selectedProfile } from './ModelSelector';
+import { useTheme } from './theme';
 
-export default function Preferences({ onClose }: { onClose: () => void }) {
+const themes = [
+  { value: 'system', label: 'Системная', Icon: Monitor },
+  { value: 'light', label: 'Светлая', Icon: Sun },
+  { value: 'dark', label: 'Тёмная', Icon: Moon },
+] as const;
+
+export default function Preferences() {
   const { session, updateSession, refresh } = useSession();
+  const { theme, setTheme } = useTheme();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [saved, setSaved] = useState(false);
+  function goBack() {
+    if (location.state?.from) navigate(-1);
+    else navigate('/', { replace: true });
+  }
   const refreshed = useRef(false);
   useEffect(() => {
     if (refreshed.current) return;
     refreshed.current = true;
+    window.scrollTo(0, 0);
     void refresh();
   }, [refresh]);
   const [notes, setNotes] = useState(session.preferences.notes.join('\n'));
-  const [theme, setTheme] = useState(session.preferences.theme);
+  const notesDirty = useRef(false);
+  const modelProfile = selectedProfile(session);
+  const [modelBusy, setModelBusy] = useState(false);
+  const [modelError, setModelError] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [demoApplied, setDemoApplied] = useState(
     session.preferences.notes.includes(DEMO_RECOMMENDATION),
   );
+  useEffect(() => {
+    if (!notesDirty.current) setNotes(session.preferences.notes.join('\n'));
+    setDemoApplied(session.preferences.notes.includes(DEMO_RECOMMENDATION));
+  }, [session.preferences.notes]);
+  async function chooseModel(value: string) {
+    setModelBusy(true);
+    setModelError('');
+    try {
+      const preferences = await request<PreferencesType>('/api/preferences/', {
+        method: 'PATCH',
+        body: JSON.stringify({ model_profile: value }),
+      });
+      updateSession({ ...session, preferences });
+    } catch (cause) {
+      setModelError(errorText(cause));
+    } finally {
+      setModelBusy(false);
+    }
+  }
   async function applyDemoRecommendation() {
     const nextNotes = [
       ...new Set([
@@ -37,12 +77,14 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
     }
     setBusy(true);
     setError('');
+    setSaved(false);
     try {
       const preferences = await request<PreferencesType>('/api/preferences/', {
         method: 'PATCH',
-        body: JSON.stringify({ theme, notes: nextNotes }),
+        body: JSON.stringify({ notes: nextNotes }),
       });
       updateSession({ ...session, preferences });
+      notesDirty.current = false;
       setNotes(preferences.notes.join('\n'));
       setDemoApplied(true);
     } catch (cause) {
@@ -54,11 +96,12 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
   async function save(event: FormEvent) {
     event.preventDefault();
     setBusy(true);
+    setError('');
+    setSaved(false);
     try {
       const preferences = await request<PreferencesType>('/api/preferences/', {
         method: 'PATCH',
         body: JSON.stringify({
-          theme,
           notes: notes
             .split('\n')
             .map((note) => note.trim())
@@ -66,7 +109,9 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
         }),
       });
       updateSession({ ...session, preferences });
-      onClose();
+      notesDirty.current = false;
+      setNotes(preferences.notes.join('\n'));
+      setSaved(true);
     } catch (cause) {
       setError(errorText(cause));
     } finally {
@@ -74,72 +119,126 @@ export default function Preferences({ onClose }: { onClose: () => void }) {
     }
   }
   return (
-    <Modal title="Всё по-вашему" onClose={onClose}>
-      <form onSubmit={save} className="form-stack">
-        <label>Оформление</label>
-        <div className="segmented">
-          <button
-            type="button"
-            className={theme === 'light' ? 'selected' : ''}
-            onClick={() => setTheme('light')}
-          >
-            <Sun size={17} /> Светлое
-          </button>
-          <button
-            type="button"
-            className={theme === 'dark' ? 'selected' : ''}
-            onClick={() => setTheme('dark')}
-          >
-            <Moon size={17} /> Тёмное
+    <div className="settings-page">
+      <header className="settings-header">
+        <div className="settings-header-inner">
+          <button className="button button-outline settings-back" onClick={goBack}>
+            <ArrowLeft size={18} /> Назад
           </button>
         </div>
-        <label>
-          Что учитывать в новых играх
-          <textarea
-            rows={5}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Каждое пожелание — с новой строки. Например: крупное управление и спокойные цвета."
-          />
-        </label>
-        <p className="field-help">
-          Ваши оценки добавляют сюда пожелания. Можно оставить до десяти коротких пожеланий,
-          отредактировать или удалить их. Изменение настроек не запускает модель.
-        </p>
-        <button type="button" className="text-button danger-text" onClick={() => setNotes('')}>
-          <Trash2 size={15} /> Сбросить пожелания
-        </button>
-        {error && <ErrorNotice message={error} />}
-        <button className="button button-coral" disabled={busy}>
-          <Check size={17} />
-          {busy ? 'Сохраняем…' : 'Сохранить'}
-        </button>
-      </form>
-      <SyntheticAnalytics
-        onApply={applyDemoRecommendation}
-        applied={demoApplied && notes.includes(DEMO_RECOMMENDATION)}
-        busy={busy}
-      />
-      <details className="disclosure settings-budget">
-        <summary>Модель и общий бюджет</summary>
-        <p>
-          {session.capabilities.provider} · {session.capabilities.model}
-        </p>
-        {session.capabilities.local_only && (
-          <p className="field-help">Локальный доступ через ваш вход в Codex.</p>
-        )}
-        <BudgetDetails budget={session.budget} />
-      </details>
-      {session.user?.is_staff && (
-        <a
-          className="text-button admin-link"
-          href="/admin/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Управление демонстрационными аккаунтами ↗
-        </a>
-      )}
-    </Modal>
+      </header>
+      <main className="settings-main">
+        <div className="settings-page-title">
+          <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
+          <h1>Настройки</h1>
+          <p>Всё по-вашему — от оформления до пожеланий для новых игр.</p>
+        </div>
+        <div className="settings-layout">
+          <div className="form-stack settings-card">
+            {!!session.capabilities.model_profiles?.length && (
+              <div>
+                <p>Модель по умолчанию</p>
+                <ModelChoices
+                  options={session.capabilities.model_profiles}
+                  value={modelProfile}
+                  onChange={chooseModel}
+                  disabled={busy || modelBusy}
+                />
+                {modelError && <ErrorNotice message={modelError} />}
+                {modelBusy && (
+                  <p className="field-help" role="status">
+                    Сохраняем выбор модели…
+                  </p>
+                )}
+                <p className="field-help">
+                  Выбор сохраняется сразу. Можно менять и в шапке чата. Текущая генерация
+                  продолжится с прежней моделью.
+                </p>
+              </div>
+            )}
+            <fieldset className="settings-theme">
+              <legend>Оформление</legend>
+              <div className="segmented">
+                {themes.map(({ value, label, Icon }) => (
+                  <button
+                    type="button"
+                    key={value}
+                    className={theme === value ? 'selected' : ''}
+                    aria-pressed={theme === value}
+                    onClick={() => setTheme(value)}
+                  >
+                    <Icon size={17} /> {label}
+                  </button>
+                ))}
+              </div>
+              <p className="field-help">Применяется сразу и сохраняется в этом браузере.</p>
+            </fieldset>
+            <form onSubmit={save} className="form-stack" aria-label="Настройки аккаунта">
+              <label>
+                Что учитывать в новых играх
+                <textarea
+                  rows={5}
+                  value={notes}
+                  disabled={busy}
+                  onChange={(event) => {
+                    notesDirty.current = true;
+                    setNotes(event.target.value);
+                    setSaved(false);
+                  }}
+                  placeholder="Каждое пожелание — с новой строки. Например: крупное управление и спокойные цвета."
+                />
+              </label>
+              <p className="field-help">
+                Ваши оценки добавляют сюда пожелания. Можно оставить до десяти коротких пожеланий,
+                отредактировать или удалить их. Изменение настроек не запускает модель.
+              </p>
+              <button
+                type="button"
+                className="text-button danger-text"
+                disabled={busy}
+                onClick={() => {
+                  notesDirty.current = true;
+                  setNotes('');
+                  setSaved(false);
+                }}
+              >
+                <Trash2 size={15} /> Сбросить пожелания
+              </button>
+              {error && <ErrorNotice message={error} />}
+              {saved && (
+                <p className="settings-saved" role="status">
+                  <Check size={17} /> Пожелания сохранены
+                </p>
+              )}
+              <button className="button button-primary" disabled={busy || modelBusy}>
+                <Check size={17} />
+                {busy ? 'Сохраняем…' : 'Сохранить'}
+              </button>
+            </form>
+          </div>
+          <aside className="settings-side" aria-label="Дополнительные настройки">
+            <SyntheticAnalytics
+              onApply={applyDemoRecommendation}
+              applied={demoApplied && notes.includes(DEMO_RECOMMENDATION)}
+              busy={busy || modelBusy}
+            />
+            <details className="disclosure settings-budget">
+              <summary>Общий бюджет</summary>
+              <BudgetDetails budget={session.budget} />
+            </details>
+            {session.user?.is_staff && (
+              <a
+                className="text-button admin-link"
+                href="/admin/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Управление демонстрационными аккаунтами ↗
+              </a>
+            )}
+          </aside>
+        </div>
+      </main>
+    </div>
   );
 }

@@ -2,14 +2,26 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from types import SimpleNamespace
 
 import pytest
 
 from generation.errors import GenerationError
-from generation.prompts import schema_prompt, system_prompt
 from generation.providers import codex, vllm
 from generation.providers.fake import fixture_response
 from generation.service import generate as generate_operation
+
+
+@pytest.mark.parametrize("version", ["0.163.0-alpha.10.2", "0.163.0-alpha.11.2", "0.999.0"])
+def test_codex_cli_contract_allows_only_reviewed_versions(monkeypatch, version):
+    monkeypatch.setattr(codex, "binary", lambda: "codex")
+    monkeypatch.setattr(codex.subprocess, "run", lambda *a, **kw: SimpleNamespace(stdout=f"codex-cli {version}"))
+    if version == "0.999.0":
+        with pytest.raises(GenerationError) as exc:
+            codex.verify_cli_contract()
+        assert exc.value.code == "codex_profile_unverified"
+    else:
+        assert codex.verify_cli_contract() == f"codex-cli {version}"
 
 
 def generate(request, **kwargs):
@@ -18,24 +30,34 @@ def generate(request, **kwargs):
     return generate_operation(request, **kwargs)
 
 
-def response_for_operation(operation):
-    response = fixture_response()
-    if operation != "create":
-        response.update(
-            status="unchanged",
-            operation=operation,
-            base_revision="revision-1",
-            files=[],
-            patches=[],
-            checks=[],
-            message="Запрос уже реализован в текущей версии.",
-        )
-    return response
+@pytest.mark.parametrize("operation", ["create", "edit", "repair", "check_repair"])
+def test_codex_receives_selected_operation_schema_through_actual_rpc_adapter(codex_rpc, operation):
+    from generation.schema import response_schema
+
+    request = {"provider": "codex", "operation": operation, "model": "gpt-6-luna"}
+    reply = fixture_response()
+    if operation == "check_repair":
+        from generation.check_repair import permission
+
+        policy = permission("a" * 64, reply["checks"], reply["design"])
+        request.update(base_revision="base", check_repair=policy)
+        reply = {"operation": operation, "status": "ok", "base_revision": "base",
+                 "artifact_hash": policy["artifact_hash"], "checks_hash": policy["checks_hash"],
+                 "checks": reply["checks"], "message": "Сценарии проверки."}
+    elif operation != "create":
+        request["base_revision"] = "base"
+        reply.update(operation=operation, base_revision="base", files=[], checks=[])
+    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(reply)
+    result = generate_operation(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    params = next(params for method, params in codex_rpc["calls"] if method == "turn/start")
+    assert params["outputSchema"] == response_schema(request)
+    assert params["outputSchema"]["properties"]["operation"]["enum"] == [operation]
+    assert result["response"]["operation"] == operation
 
 
 @pytest.fixture
 def api(monkeypatch):
-    state = {"requests": [], "mode": "ok", "status": 200, "request_header": True}
+    state = {"requests": [], "headers": [], "mode": "ok", "status": 200, "request_header": True}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -50,8 +72,12 @@ def api(monkeypatch):
         def do_POST(self):
             payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             state["requests"].append(payload)
+            state["headers"].append(dict(self.headers))
             self.send_response(state["status"])
             self.send_header("Content-Type", "text/event-stream")
+            self.send_header("X-Proxy-Request-ID", "proxy-test-1")
+            if state["mode"] == "broken_chunked":
+                self.send_header("Transfer-Encoding", "chunked")
             if state["request_header"]:
                 self.send_header("x-request-id", "request-test-1")
             self.end_headers()
@@ -60,7 +86,15 @@ def api(monkeypatch):
             if state["mode"] == "idle":
                 time.sleep(0.5)
                 return
-            text = json.dumps(state.get("response", fixture_response()), ensure_ascii=False)
+            if state["mode"] == "bad_sse":
+                self.wfile.write(b'data: {secret malformed provider response\n\n')
+                return
+            if state["mode"] == "broken_chunked":
+                self.wfile.write(b'ff\r\ndata: {')
+                self.wfile.flush()
+                self.close_connection = True
+                return
+            text = json.dumps(fixture_response(), ensure_ascii=False)
             if state["mode"] == "invalid":
                 text = "{incomplete"
             chunks = [
@@ -118,32 +152,40 @@ def api(monkeypatch):
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     monkeypatch.setenv("GAMEFORGE_VLLM_URL", f"http://127.0.0.1:{server.server_port}/v1")
+    monkeypatch.setenv("GAMEFORGE_VLLM_API_KEY", "local-test-token")
     monkeypatch.setenv("GAMEFORGE_VLLM_JSON_MODE", "json_schema")
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "conservative")
     monkeypatch.setenv("GAMEFORGE_VLLM_STREAM", "true")
     yield state
     server.shutdown()
     server.server_close()
 
 
-@pytest.mark.parametrize("operation", ["create", "edit", "repair"])
-@pytest.mark.parametrize("mode", ["json_schema", "json_object", "none"])
-def test_vllm_sends_the_selected_operation_prompt_without_extra_model_calls(
-    api, monkeypatch, operation, mode
-):
-    monkeypatch.setenv("GAMEFORGE_VLLM_JSON_MODE", mode)
-    api["response"] = response_for_operation(operation)
-    result = generate(
-        {"provider": "vllm", "model": "local-test-model", "operation": operation},
-        on_event=lambda _: None,
-        is_cancelled=lambda: False,
-    )
-    assert result["response"] == api["response"]
-    assert len(api["requests"]) == 1
-    actual = api["requests"][0]["messages"][0]["content"]
-    expected = system_prompt(operation)
-    if mode != "json_schema":
-        expected += "\nRequired JSON schema: " + schema_prompt()
-    assert actual == expected
+def test_vllm_accepts_llm_env_aliases_and_explicit_settings_take_precedence(monkeypatch):
+    for key in ("GAMEFORGE_VLLM_URL", "GAMEFORGE_VLLM_API_KEY", "GAMEFORGE_VLLM_CONNECT_TIMEOUT",
+                "GAMEFORGE_VLLM_READ_TIMEOUT"):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("LLM_BASE_URL", "https://proxy.example/v1/")
+    monkeypatch.setenv("LLM_API_KEY", "example-token")
+    config = vllm.configuration()
+    assert config["url"] == "https://proxy.example/v1"
+    assert config["key"] == "example-token"
+    assert config["connect_timeout"] == 15
+    assert config["read_timeout"] == 660
+    monkeypatch.setenv("GAMEFORGE_VLLM_URL", "https://explicit.example/v1")
+    monkeypatch.setenv("GAMEFORGE_VLLM_API_KEY", "explicit-token")
+    monkeypatch.setenv("GAMEFORGE_VLLM_READ_TIMEOUT", "120")
+    assert vllm.configuration()["url"] == "https://explicit.example/v1"
+    assert vllm.configuration()["key"] == "explicit-token"
+    assert vllm.configuration()["read_timeout"] == 120
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "nan", "inf", "invalid"])
+def test_vllm_rejects_invalid_inactivity_timeout(monkeypatch, value):
+    monkeypatch.setenv("GAMEFORGE_VLLM_URL", "https://proxy.example/v1")
+    monkeypatch.setenv("GAMEFORGE_VLLM_READ_TIMEOUT", value)
+    with pytest.raises(GenerationError, match="Таймауты"):
+        vllm.configuration()
 
 
 def test_vllm_protocol_models_and_complete_stream(api):
@@ -257,6 +299,69 @@ def test_vllm_nonstream_capability(api, monkeypatch):
     assert "Required JSON schema" in api["requests"][0]["messages"][0]["content"]
 
 
+def test_vllm_correlates_actual_request_and_records_safe_timings(api):
+    trace_id = "b" * 32
+    result = generate(
+        {"provider": "vllm", "model": "local-test-model", "transport_trace_id": trace_id},
+        on_event=lambda _: None, is_cancelled=lambda: False,
+    )
+    metadata = result["provider_metadata"]
+    assert api["headers"][0]["X-GameForge-Trace-ID"] == metadata["trace_id"] == trace_id
+    diag = metadata["transport"]
+    assert diag["proxy_request_id"] == "proxy-test-1"
+    assert diag["provider_response_id"] == "chatcmpl-test-1"
+    assert diag["request_bytes"] == int(api["headers"][0]["Content-Length"])
+    assert diag["received_bytes"] > diag["output_bytes"] > 0
+    assert diag["sse_events"] == 3
+    assert diag["done_received"] and diag["http_status"] == 200
+    assert 0 <= diag["first_byte_seconds"] <= diag["elapsed_seconds"]
+    assert diag["http_events"] and len(diag["http_events"]) <= 32
+    assert diag["outcome"] == "completed"
+    assert "local-test-token" not in json.dumps(metadata)
+    assert "messages" not in json.dumps(metadata)
+
+
+@pytest.mark.parametrize("mode,exception,code", [
+    ("idle", "ReadTimeout", "provider_disconnected"),
+    ("bad_sse", "JSONDecodeError", "provider_protocol_error"),
+    ("broken_chunked", "RemoteProtocolError", "provider_disconnected"),
+])
+def test_vllm_distinguishes_timeout_corrupt_frame_and_broken_http(api, monkeypatch, mode, exception, code):
+    api["mode"] = mode
+    monkeypatch.setenv("GAMEFORGE_VLLM_READ_TIMEOUT", "0.15")
+    with pytest.raises(GenerationError) as error:
+        generate({"provider": "vllm", "model": "local-test-model"},
+                 on_event=lambda _: None, is_cancelled=lambda: False)
+    metadata = error.value.provider_metadata
+    assert error.value.code == code
+    assert metadata["transport_error"] == exception
+    assert metadata["transport"]["errors"][0]["type"] == exception
+    assert metadata["transport"]["http_status"] == 200
+    assert metadata["transport"]["done_received"] is False
+    assert error.value.outcome_unknown
+    assert len(api["requests"]) == 1
+    assert "secret malformed" not in json.dumps(metadata)
+    if mode == "idle":
+        assert metadata["transport"]["idle_seconds"] >= 0.1
+    if mode == "bad_sse":
+        assert metadata["transport"]["error_phase"] == "decoding_sse"
+
+
+def test_vllm_eof_and_cancellation_have_distinct_diagnostics(api):
+    for mode, cancelled, expected in [("partial", False, "incomplete_response"),
+                                      ("idle", True, "cancelled")]:
+        api["mode"] = mode
+        started = time.monotonic()
+        with pytest.raises(GenerationError) as error:
+            generate({"provider": "vllm", "model": "local-test-model"}, on_event=lambda _: None,
+                     is_cancelled=lambda: cancelled and time.monotonic() - started > .1)
+        diag = error.value.provider_metadata["transport"]
+        assert diag["outcome"] == expected
+        assert not diag["done_received"]
+        if not cancelled:
+            assert diag["eof_received"]
+
+
 @pytest.fixture
 def codex_rpc(monkeypatch):
     state = {"calls": [], "events": [], "closed": False}
@@ -314,20 +419,6 @@ def codex_rpc(monkeypatch):
         {"method": "turn/completed", "params": {"turn": {"id": "turn-1", "status": "completed"}}},
     ]
     return state
-
-
-@pytest.mark.parametrize("operation", ["create", "edit", "repair"])
-def test_codex_sends_the_selected_operation_prompt_in_one_turn(codex_rpc, operation):
-    response = response_for_operation(operation)
-    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(response)
-    result = generate(
-        {"provider": "codex", "operation": operation}, on_event=lambda _: None, is_cancelled=lambda: False
-    )
-    assert result["response"] == response
-    calls = codex_rpc["calls"]
-    thread = next(params for method, params in calls if method == "thread/start")
-    assert thread["baseInstructions"] == system_prompt(operation)
-    assert sum(method == "turn/start" for method, _ in calls) == 1
 
 
 def test_codex_protocol_single_turn_environments_disabled_and_usage(codex_rpc):
@@ -526,6 +617,62 @@ def test_vllm_rejects_unbounded_or_overlarge_input_before_network(api):
         )
     assert error.value.code == "context_limit"
     assert api["requests"] == []
+
+
+@pytest.mark.parametrize("mode", ["json_object", "json_schema", "none"])
+def test_verified_server_context_allows_larger_output_without_changing_prompt(monkeypatch, mode):
+    request = {
+        "model": "local-test-model", "prompt": "Создай игру с русским текстом",
+        "execution_limits": {"context_window": 32768, "max_output_tokens": 6144},
+    }
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "conservative")
+    original = vllm.build_payload(request, json_mode=mode)
+    request["execution_limits"]["max_output_tokens"] = 16384
+    with pytest.raises(GenerationError) as error:
+        vllm.build_payload(request, json_mode=mode)
+    assert error.value.code == "context_limit"
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "server")
+    larger = vllm.build_payload(request, json_mode=mode)
+    assert larger == {**original, "max_tokens": 16384}
+    assert "truncate_prompt_tokens" not in larger
+
+
+def test_server_context_still_requires_valid_limits_and_bounded_utf8_payload(monkeypatch):
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "server")
+    request = {"model": "local-test-model", "execution_limits": {
+        "context_window": 32768, "max_output_tokens": 32768,
+    }}
+    with pytest.raises(GenerationError) as error:
+        vllm.build_payload(request)
+    assert error.value.code == "provider_limits_unknown"
+    request["execution_limits"]["max_output_tokens"] = 16384
+    request["prompt"] = "я" * 1_000_000
+    with pytest.raises(GenerationError) as error:
+        vllm.build_payload(request)
+    assert error.value.code == "request_too_large"
+
+
+def test_invalid_context_policy_fails_closed(monkeypatch):
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "typo")
+    with pytest.raises(GenerationError) as error:
+        vllm.build_payload({"model": "local-test-model", "execution_limits": {
+            "context_window": 32768, "max_output_tokens": 16384,
+        }})
+    assert error.value.code == "invalid_provider_config"
+
+
+def test_server_context_rejection_is_terminal_without_retry(api, monkeypatch):
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "server")
+    api["status"] = 400
+    with pytest.raises(GenerationError) as error:
+        generate_operation({"provider": "vllm", "model": "local-test-model", "execution_limits": {
+            "context_window": 32768, "max_output_tokens": 16384,
+        }}, on_event=lambda _: None, is_cancelled=lambda: False)
+    assert error.value.code == "provider_http_error"
+    assert error.value.outcome_unknown is False
+    assert len(api["requests"]) == 1
+    assert api["requests"][0]["max_tokens"] == 16384
+
 
 
 @pytest.mark.parametrize("multiplier", ["NaN", "Infinity", "-1", "0"])

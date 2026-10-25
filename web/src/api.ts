@@ -22,10 +22,37 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   if (options.body) headers.set('Content-Type', 'application/json');
   if (!['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase()))
     headers.set('X-CSRFToken', csrfToken);
-  let response: Response;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener('abort', abort, { once: true });
+  // Django endpoints acknowledge saved work; they never wait for the model.
+  const timer = setTimeout(abort, 15000);
   try {
-    response = await fetch(path, { ...options, headers, credentials: 'same-origin' });
-  } catch {
+    const response = await fetch(path, {
+      ...options,
+      signal: controller.signal,
+      headers,
+      cache: 'no-store',
+      credentials: 'same-origin',
+    });
+    if (response.status === 204) return undefined as T;
+    const contentType = response.headers.get('content-type') ?? '';
+    const body = contentType.includes('json') ? await response.json() : null;
+    if (!response.ok)
+      throw new ApiError(
+        body?.error ?? {
+          code: 'request_failed',
+          message:
+            response.status === 403
+              ? 'Доступ закрыт или сессия устарела. Обновите страницу и повторите действие.'
+              : 'Не получилось выполнить действие. Попробуйте ещё раз.',
+        },
+        response.status,
+      );
+    return body as T;
+  } catch (cause) {
+    if (cause instanceof ApiError) throw cause;
     throw new ApiError(
       {
         code: 'network',
@@ -33,22 +60,10 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
       },
       0,
     );
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener('abort', abort);
   }
-  if (response.status === 204) return undefined as T;
-  const contentType = response.headers.get('content-type') ?? '';
-  const body = contentType.includes('json') ? await response.json() : null;
-  if (!response.ok)
-    throw new ApiError(
-      body?.error ?? {
-        code: 'request_failed',
-        message:
-          response.status === 403
-            ? 'Доступ закрыт или сессия устарела. Обновите страницу и повторите действие.'
-            : 'Не получилось выполнить действие. Попробуйте ещё раз.',
-      },
-      response.status,
-    );
-  return body as T;
 }
 export function post<T>(path: string, body: unknown = {}) {
   return request<T>(path, { method: 'POST', body: JSON.stringify(body) });

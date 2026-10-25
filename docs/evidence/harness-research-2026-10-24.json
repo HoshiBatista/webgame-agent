@@ -1,0 +1,22 @@
+{
+  "source": "lite-v6-pilot-2026-10-24.json",
+  "source_sha256": "0d0d9da1109d3b341481372a080743c357e77cc55e11565f84eee6a156cb50ee",
+  "new_model_calls": 0,
+  "aggregation": "All 16 stored invocation receipts, including two targeted check repairs; provider time excludes complete user-facing latency.",
+  "operations": {
+    "check_repair": {
+      "calls": 7,
+      "input_tokens": 33637,
+      "output_tokens": 11996,
+      "provider_inference_seconds": 754.88,
+      "median_provider_inference_seconds": 100.79
+    },
+    "create": {
+      "calls": 9,
+      "input_tokens": 11378,
+      "output_tokens": 48012,
+      "provider_inference_seconds": 2988.83,
+      "median_provider_inference_seconds": 266.26
+    }
+  }
+}

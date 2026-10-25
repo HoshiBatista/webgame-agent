@@ -1,0 +1,10 @@
+# Ubuntu 24.04+: allow the system sandbox builder to create user namespaces.
+# GameForge still enforces its mount/PID/network namespaces and drops all caps.
+# No host-wide sysctl change, setuid binary or access to the host desktop bus.
+# Do not load alongside another profile attached to /usr/bin/bwrap.
+abi <abi/4.0>,
+include <tunables/global>
+
+profile gameforge-bwrap /usr/bin/bwrap flags=(unconfined) {
+  userns,
+}

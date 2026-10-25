@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.utils import timezone
 
+from .continuations import unacknowledged_unknowns
 from .services import budget_snapshot
 
 
@@ -30,10 +31,13 @@ def revision_data(revision):
         "export_url": f"/api/revisions/{revision.id}/export/",
         "parent_id": str(revision.parent_id) if revision.parent_id else None,
         "report": {
+            "id": report.id,
             "status": report.status,
             "findings": report.findings,
             "facts": report.facts,
+            "stages": report.stages,
             "elapsed_seconds": report.elapsed_seconds,
+            "assessment": report.assessment,
         }
         if report
         else None,
@@ -44,7 +48,11 @@ def run_data(run, budget=None):
     if run is None:
         return None
     elapsed = ((run.finished_at or timezone.now()) - run.created_at).total_seconds()
-    unknown = run.invocations.filter(state="unknown").exists()
+    unknown = bool(unacknowledged_unknowns(run))
+    from .acceptance import confirmation_report
+
+    confirmation = confirmation_report(run)
+    candidate_report = run.candidate_revision.reports.order_by("-id").first() if run.candidate_revision_id else None
     message, error = run.message, run.error
     if run.status == "unknown":
         message = "Полный результат запроса не подтверждён. Сохранённые данные не потеряны."
@@ -54,6 +62,10 @@ def run_data(run, budget=None):
         "id": str(run.id),
         "chat_id": str(run.chat_id),
         "operation": run.operation,
+        "model_profile": run.model_profile,
+        "model": run.model,
+        "provider": run.provider,
+        "model_label": {"pro": "Pro", "lite": "Lite"}.get(run.model_profile, run.model),
         "status": run.status,
         "stage": run.stage,
         "message": message,
@@ -66,12 +78,20 @@ def run_data(run, budget=None):
         "result_revision_id": str(run.result_revision_id) if run.result_revision_id else None,
         "error": error,
         "can_cancel": run.status in run.ACTIVE,
-        "can_continue": run.status in ("needs_attention", "unverified", "failed", "cancelled")
-        and not unknown,
-        "can_retry_unknown": run.status in ("unknown", "cancelled") and unknown
+        "can_continue": run.status in ("needs_attention", "failed", "cancelled") and not unknown
+        and (not candidate_report or candidate_report.assessment.get("action") != "review"),
+        "can_retry_unknown": run.status in ("unknown", "cancelled", "needs_attention", "failed", "unverified") and unknown
         and run.chat.current_revision_id == run.base_revision_id,
-        "can_confirm": run.status == "unverified" and bool(run.candidate_revision_id),
+        "can_confirm": confirmation is not None,
+        "confirmation": {"artifact_hash": run.candidate_revision.artifact_hash,
+                         "report_id": confirmation.id,
+                         "requirements": confirmation.assessment["outstanding"]} if confirmation else None,
+        "can_recheck": bool(run.candidate_revision_id) and run.status not in (*run.ACTIVE, "succeeded")
+        and run.chat.current_revision_id == run.base_revision_id,
         "attempts": run.attempts,
+        "max_repair_attempts": run.max_repair_attempts,
+        "max_model_calls": run.max_model_calls,
+        "model_call_deadline": run.model_call_deadline.isoformat() if run.model_call_deadline else None,
         "elapsed_seconds": elapsed,
         "events_url": f"/api/runs/{run.id}/events/",
         "budget": budget if budget is not None else budget_snapshot(),

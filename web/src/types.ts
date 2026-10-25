@@ -6,6 +6,14 @@ export interface User {
 export interface Preferences {
   theme: 'light' | 'dark';
   notes: string[];
+  model_profile?: string;
+}
+export interface ModelProfile {
+  id: string;
+  name: string;
+  description: string;
+  available: boolean;
+  unavailable_reason: string;
 }
 export interface Budget {
   limit_usd: number | string;
@@ -23,6 +31,8 @@ export interface Session {
     model: string;
     models: Array<string | { id: string; name?: string; priced?: boolean }>;
     local_only: boolean;
+    model_profiles?: ModelProfile[];
+    default_model_profile?: string;
   };
   budget: Budget;
 }
@@ -32,10 +42,13 @@ export interface Finding {
   [key: string]: unknown;
 }
 export interface Report {
+  id?: number;
   status: string;
   findings: Array<Finding | string>;
   facts: unknown[];
+  stages?: Array<{ stage: string; status: string }>;
   elapsed_seconds?: number;
+  assessment?: { action: string; outstanding: string[]; corrections: unknown[] };
 }
 export interface Revision {
   id: string;
@@ -71,6 +84,10 @@ export interface Run {
   id: string;
   chat_id: string;
   operation: string;
+  model_profile?: string;
+  model_label?: string;
+  model?: string;
+  provider?: string;
   status: RunStatus;
   stage: string;
   message: string;
@@ -86,7 +103,11 @@ export interface Run {
   can_continue: boolean;
   can_retry_unknown?: boolean;
   can_confirm: boolean;
+  can_recheck?: boolean;
+  confirmation?: { artifact_hash: string; report_id: number; requirements: string[] } | null;
   attempts: number;
+  max_repair_attempts?: number;
+  max_model_calls?: number;
   elapsed_seconds: number;
   events_url: string;
   budget: Budget;

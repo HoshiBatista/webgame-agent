@@ -89,18 +89,17 @@ def test_ok_edit_cannot_claim_a_change_when_final_sources_and_checks_are_identic
     assert base == candidate()
 
 
-def test_check_only_repair_remains_allowed_without_changing_game_code():
+def test_check_only_change_requires_application_review_without_claiming_a_game_fix():
     base = candidate()
     response = edited(base)
     correction = deepcopy(base["checks"][1])
     correction["steps"] = [{"action": "tap_fraction", "selector": "#arena", "x": 0.5, "y": 0.5}]
     response.update(patches=[], checks=[correction])
-    result = materialize(
-        response, operation="edit", base_revision="version-1", files=base["files"], previous_checks=base["checks"]
-    )
-    assert result["files"] == base["files"]
-    assert result["checks"] != base["checks"]
-    assert result["diff"] == ""
+    with pytest.raises(ContractError) as caught:
+        materialize(response, operation="edit", base_revision="version-1", files=base["files"],
+                    previous_checks=base["checks"])
+    assert caught.value.code == "test_only_change"
+
 
 
 def test_explicit_unchanged_returns_neutral_receipt_for_the_exact_existing_base():
@@ -270,7 +269,7 @@ def test_repair_inherits_checks_and_cannot_silently_remove_requirements():
     response["checks"][1]["requirement"] = "Просто видна любая кнопка"
     with pytest.raises(ContractError) as error:
         materialize(response, operation="repair", base_revision="version-1", files=base["files"], previous_checks=base["checks"])
-    assert error.value.code == "changed_requirement"
+    assert error.value.code == "repair_checks_locked"
 
 
 def test_intentional_edit_updates_effect_then_repair_keeps_that_new_requirement():
@@ -301,7 +300,7 @@ def test_intentional_edit_updates_effect_then_repair_keeps_that_new_requirement(
             files=result["files"],
             previous_checks=result["checks"],
         )
-    assert error.value.code == "changed_requirement"
+    assert error.value.code == "repair_checks_locked"
 
 
 def test_model_cannot_claim_edit_permissions_during_a_trusted_repair():

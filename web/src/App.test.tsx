@@ -1,83 +1,253 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import App from './App';
 import { getSession, post, request } from './api';
-import { chatsChanged } from './context';
-import type { Chat, Session } from './types';
+import type { Session } from './types';
+import { THEME_STORAGE_KEY } from './theme';
 
-vi.mock('./api', () => ({
+vi.mock('./api', async (original) => ({
+  ...(await original<typeof import('./api')>()),
+  getSession: vi.fn(),
   request: vi.fn(),
   post: vi.fn(),
-  getSession: vi.fn(),
-  newKey: () => crypto.randomUUID(),
-  errorText: (error: Error) => error.message,
-  formatMoney: () => '$0',
-  formatDuration: () => '',
+}));
+vi.mock('./Feed', () => ({ default: () => <h1>Игры сообщества</h1> }));
+vi.mock('./Studio', () => ({ default: () => <h1>Текущий чат</h1> }));
+vi.mock('./components', async (original) => ({
+  ...(await original<typeof import('./components')>()),
+  PhonePreview: () => <div>Игровой предпросмотр</div>,
 }));
 
-it('updates the sidebar immediately after rename and ignores an older pending list response', async () => {
-  Element.prototype.scrollIntoView = vi.fn();
-  const chat = {
-    id: 'one',
-    title: 'Старое название',
-    audience: 'everyone',
-    updated_at: '2026-10-25T10:00:00Z',
-    current_revision: null,
-    candidate_revision: null,
-    messages: [],
-    revisions: [],
-    runs: [],
-    active_run: null,
-    source_publication: null,
-  } as unknown as Chat;
-  const session = {
-    user: { id: 'u', username: 'demo', is_staff: false },
-    csrfToken: 'csrf',
-    preferences: { theme: 'light', notes: [] },
-    capabilities: { provider: 'fake', model: 'fixture', models: ['fixture'], local_only: true },
-    budget: { limit_usd: 50, spent_usd: 0, reserved_usd: 0, unknown_usd: 0, available_usd: 50 },
-  } as Session;
-  let holdLists = false;
-  const pending: Array<(data: { results: Chat[] }) => void> = [];
-  vi.mocked(getSession).mockResolvedValue(session);
-  vi.mocked(request).mockImplementation(
-    async <T,>(path: string, options?: RequestInit): Promise<T> => {
-      if (path === '/api/chats/one/') {
-        return (
-          options?.method === 'PATCH'
-            ? { ...chat, title: 'Новый сад', updated_at: '2026-10-25T10:01:00Z' }
-            : chat
-        ) as T;
-      }
-      if (path === '/api/chats/') {
-        if (holdLists)
-          return new Promise<T>((resolve) => pending.push((data) => resolve(data as T)));
-        return { results: [chat] } as T;
-      }
-      throw new Error(`Unexpected request: ${path}`);
-    },
+const session: Session = {
+  user: { id: 'u', username: 'operator', is_staff: false },
+  csrfToken: 'csrf',
+  preferences: { theme: 'light', notes: [] },
+  capabilities: { provider: 'relay', model: 'qwen38', models: [], local_only: true },
+  budget: { limit_usd: 50, spent_usd: 0, reserved_usd: 0, unknown_usd: 0, available_usd: 50 },
+};
+
+function Location() {
+  const location = useLocation();
+  return (
+    <output data-testid="location">{location.pathname + location.search + location.hash}</output>
   );
+}
+function setup(path = '/chats/one?revision=2#preview') {
   render(
-    <MemoryRouter initialEntries={['/chats/one']}>
+    <MemoryRouter initialEntries={[path]}>
       <App />
+      <Location />
     </MemoryRouter>,
   );
-  const sidebar = await screen.findByRole('navigation', { name: 'Ваши игры' });
-  await within(sidebar).findByRole('link', { name: /Старое название/ });
-  await screen.findByRole('button', { name: 'Переименовать чат' });
-  holdLists = true;
-  act(() => chatsChanged());
-  const oldRequest = pending[0];
-  fireEvent.click(screen.getByRole('button', { name: 'Переименовать чат' }));
-  fireEvent.change(screen.getByRole('textbox', { name: 'Название чата' }), {
-    target: { value: 'Новый сад' },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Сохранить название' }));
-  await screen.findByRole('heading', { name: 'Новый сад' });
-  // List refreshes have not returned yet; the confirmed PATCH already updates the label.
-  expect(within(sidebar).getByRole('link', { name: /Новый сад/ })).toBeInTheDocument();
-  await act(async () => oldRequest({ results: [chat] }));
-  expect(within(sidebar).getByRole('link', { name: /Новый сад/ })).toBeInTheDocument();
+}
+beforeEach(() => {
+  vi.clearAllMocks();
+  window.localStorage.clear();
+  window.scrollTo = vi.fn();
+  vi.mocked(getSession).mockResolvedValue(session);
+  vi.mocked(request).mockResolvedValue({ results: [] });
+});
+afterEach(() => vi.unstubAllGlobals());
+
+it('keeps the username static and opens settings at their own URL', async () => {
+  setup();
+  const username = await screen.findByText('operator');
+  expect(username.closest('button, a')).toBeNull();
+  expect(screen.queryByRole('button', { name: /Включить.*тему/ })).not.toBeInTheDocument();
+  const settings = screen.getByRole('link', { name: 'Настройки' });
+  expect(settings).toHaveAttribute('href', '/settings');
+  fireEvent.click(settings);
+  await screen.findByRole('heading', { name: 'Настройки', level: 1 });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/settings$/);
+  expect(screen.getByRole('form', { name: 'Настройки аккаунта' })).toBeInTheDocument();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByRole('navigation', { name: 'Ваши игры' })).not.toBeInTheDocument();
   expect(post).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  expect(screen.getByTestId('location')).toHaveTextContent('/chats/one?revision=2#preview');
+});
+
+it('supports a direct visit to settings with a safe back destination', async () => {
+  setup('/settings');
+  await screen.findByRole('heading', { name: 'Настройки', level: 1 });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+  await screen.findByRole('heading', { name: 'Игры сообщества' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+});
+
+it('releases the mobile menu scroll lock when opening the settings page', async () => {
+  setup();
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  const previousOverflow = document.body.style.overflow;
+  fireEvent.click(screen.getByRole('button', { name: 'Открыть список чатов' }));
+  expect(document.body.style.overflow).toBe('hidden');
+  fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+  await screen.findByRole('heading', { name: 'Настройки', level: 1 });
+  await waitFor(() => expect(document.body.style.overflow).toBe(previousOverflow));
+});
+
+it('uses the browser theme independently of the account theme returned by the API', async () => {
+  window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+  setup('/settings');
+  await screen.findByRole('heading', { name: 'Настройки', level: 1 });
+  expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  expect(screen.getByRole('button', { name: 'Тёмная' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Светлая' }));
+  expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+  expect(request).not.toHaveBeenCalled();
+});
+
+it('does not let a delayed session refresh undo a saved model choice', async () => {
+  const initial: Session = {
+    ...session,
+    preferences: { ...session.preferences, model_profile: 'lite' },
+    capabilities: {
+      ...session.capabilities,
+      default_model_profile: 'lite',
+      model_profiles: ['lite', 'pro'].map((id) => ({
+        id,
+        name: id === 'pro' ? 'Pro' : 'Lite',
+        description: id,
+        available: true,
+        unavailable_reason: '',
+      })),
+    },
+  };
+  let finishRefresh!: (value: Session) => void;
+  vi.mocked(getSession)
+    .mockResolvedValueOnce(initial)
+    .mockReturnValue(
+      new Promise((resolve) => {
+        finishRefresh = resolve;
+      }),
+    );
+  vi.mocked(request).mockResolvedValue({ ...initial.preferences, model_profile: 'pro' });
+  setup('/settings');
+  fireEvent.click(await screen.findByRole('radio', { name: /Pro/ }));
+  await waitFor(() => expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked());
+  await act(async () => finishRefresh(initial));
+  expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked();
+  expect(post).not.toHaveBeenCalled();
+});
+
+const guestSession: Session = { ...session, user: null };
+
+it.each(['Войти', 'Создать свою игру'])('opens the login page from "%s"', async (label) => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  setup('/');
+  const link = await screen.findByRole('link', { name: label });
+  expect(link).toHaveAttribute('href', '/login');
+  fireEvent.click(link);
+  await screen.findByRole('heading', { name: 'С возвращением!', level: 1 });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /Придумайте/ })).not.toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('supports a direct login URL and a return to the landing without signing in', async () => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  setup('/login');
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
+  expect(screen.getByLabelText('Имя пользователя')).toHaveFocus();
+  expect(screen.getByText('Учётную запись выдаёт администратор.')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('link', { name: 'На главную' }));
+  await screen.findByRole('link', { name: 'Создать свою игру' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  expect(post).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['/login', '/', 'Игры сообщества'],
+  ['/chats/one?revision=2#preview', '/chats/one?revision=2#preview', 'Текущий чат'],
+])('signs in from %s and restores the destination', async (entry, destination, heading) => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  let finishLogin!: (value: Session) => void;
+  vi.mocked(post).mockReturnValue(new Promise((resolve) => (finishLogin = resolve)));
+  setup(entry);
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
+  fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'test-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
+  await waitFor(() =>
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/login/', {
+      username: 'operator',
+      password: 'test-password',
+    }),
+  );
+  expect(getSession).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole('button', { name: 'Входим…' })).toBeDisabled();
+  await act(async () => finishLogin(session));
+  await screen.findByRole('heading', { name: heading });
+  expect(screen.getByTestId('location').textContent).toBe(destination);
+  expect(screen.queryByRole('form', { name: 'Вход в beeGame' })).not.toBeInTheDocument();
+});
+
+it('keeps the login form usable after rejected credentials', async () => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  vi.mocked(post).mockRejectedValue(new Error('Неверное имя пользователя или пароль.'));
+  setup('/login');
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
+  fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'wrong-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Неверное имя пользователя или пароль.',
+  );
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/login$/);
+  expect(screen.getByLabelText('Имя пользователя')).toHaveValue('operator');
+  expect(screen.getByRole('button', { name: 'Войти в мастерскую' })).toBeEnabled();
+  expect(post).toHaveBeenCalledTimes(1);
+});
+
+it('redirects a signed-in visitor away from the login page', async () => {
+  setup('/login');
+  await screen.findByRole('heading', { name: 'Игры сообщества' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  expect(screen.queryByRole('form', { name: 'Вход в beeGame' })).not.toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('returns to a public game after cancelling or completing sign-in for a remix', async () => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn().mockReturnValue({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }),
+  );
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  vi.mocked(post).mockResolvedValue(session);
+  vi.mocked(request).mockResolvedValue({
+    id: 'public-one',
+    title: 'Лунная игра',
+    author: { username: 'creator' },
+    artifact_hash: 'public-hash',
+    preview_url: 'https://preview.example/one',
+  });
+  setup('/games/public-one');
+  await screen.findByRole('heading', { name: 'Лунная игра' });
+  fireEvent.click(screen.getByRole('button', { name: 'Доработать' }));
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
+  fireEvent.click(screen.getByRole('link', { name: 'Вернуться к игре' }));
+  await screen.findByRole('heading', { name: 'Лунная игра' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/games\/public-one$/);
+  expect(post).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Доработать' }));
+  await screen.findByRole('form', { name: 'Вход в beeGame' });
+  fireEvent.change(screen.getByLabelText('Имя пользователя'), { target: { value: 'operator' } });
+  fireEvent.change(screen.getByLabelText('Пароль'), { target: { value: 'test-password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Войти в мастерскую' }));
+  await screen.findByRole('heading', { name: 'Лунная игра' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/games\/public-one$/);
+  expect(post).toHaveBeenCalledExactlyOnceWith('/api/login/', {
+    username: 'operator',
+    password: 'test-password',
+  });
 });

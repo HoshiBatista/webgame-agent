@@ -20,6 +20,7 @@ urlpatterns = [
     path("api/runs/<uuid:ident>/cancel/", v.cancel_view),
     path("api/runs/<uuid:ident>/continue/", v.continue_view),
     path("api/runs/<uuid:ident>/confirm/", v.confirm_view),
+    path("api/runs/<uuid:ident>/recheck/", v.recheck_view),
     path("api/runs/<uuid:ident>/events/", v.events_view),
     path("api/runs/<uuid:ident>/diagnostics/", v.diagnostics_view),
     path("api/revisions/<uuid:ident>/", v.revision_view),

@@ -1,0 +1,14 @@
+{
+  "purpose": "Synthetic regression programs only; never used by production generation",
+  "cases": {
+    "grid": "Real alternating input, occupied cell, win, draw and reset",
+    "memory": "Mismatch closes, matching pair remains, win and reset",
+    "stale_start": "Handler belongs to a detached Start button",
+    "face_down": "Mismatch stays visible",
+    "hit_test": "Visible bottom card maps to wrong index",
+    "snake": "Two real turns and wall loss",
+    "ignored_turn": "Motion alone passes a weak test while turn fails",
+    "pause": "Positions remain fixed while paused",
+    "broken_pause": "Pause flag changes but movement continues"
+  }
+}

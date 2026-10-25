@@ -1,0 +1,79 @@
+{
+  "baseline_head": "9a4bc9da0e8fa45dc0d7f3cf3062dca93e4ec7f2",
+  "baseline_manifest": ".data/harness-v7-s0-20261024/manifest.json",
+  "baseline_manifest_sha256": "d4e9595f54b8095e5d4bb5afcb30a38f8d9356e80bf4bfce2bbb24b73bb735a4",
+  "model_inference_performed": false,
+  "gpu_server_changes": false,
+  "deployment_performed": false,
+  "preserved_sources": {
+    "generation/providers/codex.py": "49257a0dcc3569d6b0952fa95ec1e2b29fbb9b0873fe51acb7487d09e55ddb1d",
+    "generation/providers/relay.py": "e8e04e873515df5b0323e52b8678cba76a4a0af630d9709b57b3f8349ba0a9da",
+    "generation/providers/vllm.py": "7d35a09752ecaa6f046188e7b3029ea1d51a925a120b891aa515ec1501b0b81c",
+    "scripts/live_eval.py": "439a10868caa88a436b4cc30ff7f86b6d64173b55b8fde40f80c40d264d227ea"
+  },
+  "checks": {
+    "backend": {
+      "log": ".data/harness-v7-backend-tests.log",
+      "summary": "498 passed, 49 deselected in 51.93s",
+      "passed": true
+    },
+    "native_browser": {
+      "log": ".data/harness-v7-browser-tests.log",
+      "summary": "46 passed, 139 deselected in 110.52s (0:01:50)",
+      "passed": true
+    },
+    "native_boundary": {
+      "log": ".data/harness-v7-native-tests.log",
+      "summary": "6 passed in 1.39s",
+      "passed": true
+    },
+    "docker_protocol": {
+      "log": ".data/harness-v7-docker-tests.log",
+      "summary": "8 passed, 54 deselected in 36.95s",
+      "passed": true
+    },
+    "ui": {
+      "log": ".data/harness-v7-ui-tests.log",
+      "summary": "75 tests passed, 11 files",
+      "passed": true
+    },
+    "ruff": {
+      "log": ".data/harness-v7-ruff.log",
+      "summary": "All checks passed!",
+      "passed": true
+    },
+    "mypy": {
+      "log": ".data/harness-v7-mypy.log",
+      "summary": "Success: no issues found in 33 source files",
+      "passed": true
+    },
+    "django": {
+      "log": ".data/harness-v7-django-check.log",
+      "summary": "System check identified no issues (0 silenced).",
+      "passed": true
+    },
+    "migrations": {
+      "log": ".data/harness-v7-migrations.log",
+      "summary": "No changes detected",
+      "passed": true
+    },
+    "ui_typecheck": {
+      "log": ".data/harness-v7-ui-typecheck.log",
+      "summary": "Passed",
+      "passed": true
+    },
+    "ui_lint": {
+      "log": ".data/harness-v7-ui-lint.log",
+      "summary": "Passed",
+      "passed": true
+    },
+    "ui_build": {
+      "log": ".data/harness-v7-ui-build.log",
+      "summary": "Passed",
+      "passed": true
+    }
+  },
+  "saved_html_replays": 7,
+  "closed_pilot_manifest_unchanged": true,
+  "owned_test_container_removed": "f472771392cdc2a34a99b53acf137b47495764260ec79ffe1f0e79a054fe3f6b"
+}

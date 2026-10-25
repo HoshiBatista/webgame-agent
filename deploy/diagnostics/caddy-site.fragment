@@ -1,0 +1,24 @@
+    # GAMEFORGE_DIAGNOSTICS_V1
+    log llm_access {
+        output file /var/log/caddy/llm-access.jsonl {
+            mode 0600
+            roll_size 5MiB
+            roll_keep 6
+            roll_keep_for 168h
+        }
+        format filter {
+            wrap json
+            fields {
+                request>headers delete
+                request>uri delete
+                request>tls delete
+                resp_headers delete
+            }
+        }
+    }
+    @diagnostic_trace header_regexp X-GameForge-Trace-ID ^[0-9a-f]{32}$
+    log_append @diagnostic_trace <trace_id {http.request.header.X-GameForge-Trace-ID}
+    log_append <proxy_request_id {http.request.uuid}
+    log_append upstream_duration_ms {rp.upstream.duration_ms}
+    log_append upstream_latency_ms {rp.upstream.latency_ms}
+    header X-Proxy-Request-ID {http.request.uuid}
