@@ -1133,12 +1133,13 @@ svg {
   min-height: 100svh;
 }
 .sidebar {
+  --sidebar-padding-inline: 18px;
   position: sticky;
   top: 0;
   height: 100svh;
   display: flex;
   flex-direction: column;
-  padding: 27px 18px 20px;
+  padding: 27px var(--sidebar-padding-inline) 20px;
   border-right: 1px solid var(--border);
   background: var(--surface);
   z-index: 15;
@@ -1176,7 +1177,7 @@ svg {
   align-items: center;
   gap: 9px;
   font-size: var(--text-small);
-  padding: 13px 10px;
+  padding: 12px 14px;
   border-radius: 9px;
   margin-top: 14px;
   color: var(--muted);
@@ -1262,30 +1263,15 @@ svg {
   padding: 7px 10px;
 }
 .sidebar-bottom {
+  position: relative;
   padding-top: 20px;
 }
-.sidebar-tip {
-  border: 1px dashed var(--border);
-  border-radius: 11px;
-  padding: 14px 10px;
-  display: flex;
-  gap: 11px;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.sidebar-tip > span {
-  font-size: 28px;
-  line-height: 1;
-  color: var(--accent-text);
-  transform: rotate(-12deg);
-}
-.sidebar-tip > p {
-  font-size: var(--text-small);
-  line-height: 1.6;
-  color: var(--muted);
-}
-.sidebar-tip br {
-  display: none;
+.sidebar-bottom::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: calc(-1 * var(--sidebar-padding-inline));
+  border-top: 1px solid var(--border);
 }
 .account-line {
   display: flex;
@@ -1346,7 +1332,7 @@ svg {
   grid-template-columns: 77px minmax(0, 1fr);
 }
 .sidebar-collapsed .sidebar {
-  padding-inline: 13px;
+  --sidebar-padding-inline: 13px;
 }
 .sidebar-collapsed .sidebar-brand {
   flex-direction: column;
@@ -1364,7 +1350,6 @@ svg {
 .sidebar-collapsed .chat-nav-label,
 .sidebar-collapsed .active-run-dot,
 .sidebar-collapsed .sidebar-empty,
-.sidebar-collapsed .sidebar-tip,
 .sidebar-collapsed .account-name,
 .sidebar-collapsed .account-actions .text-button > span {
   display: none;
@@ -2712,7 +2697,7 @@ svg {
     grid-template-columns: 240px minmax(0, 1fr);
   }
   .sidebar {
-    padding-inline: 13px;
+    --sidebar-padding-inline: 13px;
   }
   .sidebar .brand {
     font-size: 17px;
@@ -2825,7 +2810,7 @@ svg {
     grid-template-columns: 68px minmax(0, 1fr);
   }
   .sidebar {
-    padding-inline: 10px;
+    --sidebar-padding-inline: 10px;
   }
   .sidebar-brand {
     justify-content: center;
@@ -2838,7 +2823,6 @@ svg {
   .sidebar-section-label,
   .chat-nav-label,
   .sidebar-empty,
-  .sidebar-tip,
   .account-name,
   .account-actions .text-button > span {
     display: none;
@@ -3157,6 +3141,7 @@ svg {
   }
   .sidebar,
   .sidebar-collapsed .sidebar {
+    --sidebar-padding-inline: 20px;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -3166,7 +3151,7 @@ svg {
     transform: translateX(-100%);
     z-index: 40;
     transition: transform 0.2s;
-    padding: 27px 20px;
+    padding: 27px var(--sidebar-padding-inline);
   }
   .sidebar-mobile-open .sidebar {
     transform: translateX(0);
@@ -3212,9 +3197,6 @@ svg {
   .sidebar-collapsed .account-name,
   .sidebar-collapsed .account-actions .text-button > span {
     display: revert;
-  }
-  .sidebar-collapsed .sidebar-tip {
-    display: flex;
   }
   .sidebar-collapsed .sidebar-feed-link {
     justify-content: flex-start;
