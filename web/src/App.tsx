@@ -189,14 +189,6 @@ function Shell({
           )}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-tip">
-            <span>✳</span>
-            <p>
-              Идея не обязана быть
-              <br />
-              серьёзной. Только вашей.
-            </p>
-          </div>
           <div className="account-line">
             <span className="avatar">{session.user?.username.slice(0, 1).toUpperCase()}</span>
             <div className="account-name">
