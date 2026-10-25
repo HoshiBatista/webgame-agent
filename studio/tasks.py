@@ -219,13 +219,13 @@ def store_candidate(run, materialized, base):
 def request_for(run, base, findings):
     import hashlib
 
-    from generation.prompts import SYSTEM_PROMPT
+    from generation.prompts import repair_evidence, system_prompt
     from generation.schema import RESPONSE_SCHEMA
 
+    # Only a materialized candidate establishes fixed requirements for repair.
+    operation = "create" if base is None else "edit" if base.id == run.base_revision_id else "repair"
     request = {
-        # A rejected response has not established new game requirements yet.
-        # Only a materialized candidate becomes the fixed base of a repair.
-        "operation": "create" if base is None else "edit" if base.id == run.base_revision_id else "repair",
+        "operation": operation,
         "prompt": run.prompt,
         "audience": run.audience,
         "preferences": preference_for(run.chat.owner).notes,
@@ -237,10 +237,16 @@ def request_for(run, base, findings):
         "provider": run.provider,
         "model": run.model,
         "generation_contract": {
-            "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+            "system_prompt_sha256": hashlib.sha256(system_prompt(operation).encode()).hexdigest(),
             "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
         },
     }
+
+    if base is not None and findings:
+        report = base.reports.order_by("-id").first()
+        # A patch/packaging error must not be paired with an unrelated older browser report.
+        if report and report.findings == findings and report.status in {"failed", "unverified"}:
+            request["validation_evidence"] = repair_evidence({"status": report.status, "facts": report.facts})
 
     if run.provider == "vllm":
         from .services import tariff

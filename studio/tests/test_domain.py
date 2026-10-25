@@ -731,7 +731,7 @@ class DomainTests(TestCase):
         self.assertEqual(run.error["code"], "internal_error")
 
     def test_private_provider_receipt_and_generation_fingerprints_are_saved(self):
-        from generation.prompts import SYSTEM_PROMPT
+        from generation.prompts import system_prompt
         from generation.schema import RESPONSE_SCHEMA
         from studio.services import fingerprint
 
@@ -754,7 +754,9 @@ class DomainTests(TestCase):
         self.assertEqual(
             inv.request["generation_contract"],
             {
-                "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+                "system_prompt_sha256": hashlib.sha256(
+                    system_prompt(inv.request["operation"]).encode()
+                ).hexdigest(),
                 "response_schema_sha256": fingerprint(RESPONSE_SCHEMA),
             },
         )

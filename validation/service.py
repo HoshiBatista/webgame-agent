@@ -8,7 +8,7 @@ import struct
 import subprocess
 import time
 
-from .contracts import browser_watchdog_seconds, implementation_hash
+from .contracts import browser_watchdog_seconds, implementation_hash, suite_findings
 
 ENVIRONMENT = "mini-browser-v1"
 
@@ -85,7 +85,7 @@ def _validated_report(report, checks, artifact_hash, started):
         facts = {fact.get("id"): fact for fact in report["facts"]}
         if (
             not checks
-            or not {"start", "control", "outcome"}.issubset({check.get("category") for check in checks})
+            or suite_findings(checks)
             or len(expected) != len(checks)
             or len(facts) != len(report["facts"])
             or set(expected) != set(facts)

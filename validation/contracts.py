@@ -2,11 +2,45 @@
 
 import hashlib
 from pathlib import Path
+from typing import Any
 
 VIEWPORTS = {
     "mobile": {"width": 390, "height": 844},
     "desktop": {"width": 1280, "height": 800},
 }
+
+
+def suite_findings(checks: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Minimum effects required before a suite can establish playability."""
+    findings = []
+    if not {"start", "control", "outcome"}.issubset({check.get("category") for check in checks}):
+        findings.append(
+            {
+                "code": "missing_effects",
+                "message": "Нужны проверки начала, управления и победы либо поражения конкретной игры.",
+            }
+        )
+    if not any(check.get("category") == "start" and check.get("viewport") == "mobile" for check in checks):
+        findings.append(
+            {
+                "code": "missing_mobile_start",
+                "message": "Проверьте понятное начало игры в мобильном viewport.",
+            }
+        )
+    if not any(
+        check.get("category") == "control"
+        and check.get("viewport") == "mobile"
+        and any(step.get("action") in {"tap", "tap_fraction"} for step in check.get("steps", []))
+        and not any(step.get("action") in {"press", "key_down", "key_up"} for step in check.get("steps", []))
+        for check in checks
+    ):
+        findings.append(
+            {
+                "code": "missing_mobile_control",
+                "message": "Добавьте мобильный сценарий control: реальное касание вызывает игровой эффект без клавиатуры.",
+            }
+        )
+    return findings
 
 
 def implementation_hash(root=None):

@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 from playwright.sync_api import TimeoutError as BrowserTimeout
 from playwright.sync_api import ViewportSize, sync_playwright
 
-from .contracts import VIEWPORTS, implementation_hash
+from .contracts import VIEWPORTS, implementation_hash, suite_findings
 
 ENVIRONMENT = "mini-browser-v1"
 
@@ -212,11 +212,12 @@ def run(payload):
         raise ValueError("artifact hash mismatch")
     facts, findings = [], []
     screenshot = None
-    required = {"start", "control", "outcome"}
-    if not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12:
+    incomplete = suite_findings(checks)
+    if incomplete or not 3 <= len(checks) <= 12:
         return {
             "status": "unverified",
-            "findings": [
+            "findings": incomplete
+            or [
                 {
                     "code": "incomplete_checks",
                     "message": "Нужны короткие проверки начала, управления и игрового исхода.",
@@ -286,7 +287,7 @@ def run(payload):
                 steps = check.get("steps", [])
                 if len(steps) > 30 or sum(s.get("ms", 0) for s in steps) > 10000:
                     raise InvalidCheck("Сценарий слишком длинный для короткой автоматической проверки.")
-                if check.get("category") in {"control", "outcome"} and not any(
+                if check.get("category") in {"control", "outcome", "restart"} and not any(
                     s.get("action")
                     in {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
                     for s in steps

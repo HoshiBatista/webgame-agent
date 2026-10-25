@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import pytest
 
 from generation.errors import GenerationError
+from generation.prompts import schema_prompt, system_prompt
 from generation.providers import codex, vllm
 from generation.providers.fake import fixture_response
 from generation.service import generate as generate_operation
@@ -15,6 +16,21 @@ def generate(request, **kwargs):
     if request.get("provider") == "vllm":
         request = {**request, "execution_limits": {"context_window": 64000, "max_output_tokens": 8000}}
     return generate_operation(request, **kwargs)
+
+
+def response_for_operation(operation):
+    response = fixture_response()
+    if operation != "create":
+        response.update(
+            status="unchanged",
+            operation=operation,
+            base_revision="revision-1",
+            files=[],
+            patches=[],
+            checks=[],
+            message="Запрос уже реализован в текущей версии.",
+        )
+    return response
 
 
 @pytest.fixture
@@ -44,7 +60,7 @@ def api(monkeypatch):
             if state["mode"] == "idle":
                 time.sleep(0.5)
                 return
-            text = json.dumps(fixture_response(), ensure_ascii=False)
+            text = json.dumps(state.get("response", fixture_response()), ensure_ascii=False)
             if state["mode"] == "invalid":
                 text = "{incomplete"
             chunks = [
@@ -107,6 +123,27 @@ def api(monkeypatch):
     yield state
     server.shutdown()
     server.server_close()
+
+
+@pytest.mark.parametrize("operation", ["create", "edit", "repair"])
+@pytest.mark.parametrize("mode", ["json_schema", "json_object", "none"])
+def test_vllm_sends_the_selected_operation_prompt_without_extra_model_calls(
+    api, monkeypatch, operation, mode
+):
+    monkeypatch.setenv("GAMEFORGE_VLLM_JSON_MODE", mode)
+    api["response"] = response_for_operation(operation)
+    result = generate(
+        {"provider": "vllm", "model": "local-test-model", "operation": operation},
+        on_event=lambda _: None,
+        is_cancelled=lambda: False,
+    )
+    assert result["response"] == api["response"]
+    assert len(api["requests"]) == 1
+    actual = api["requests"][0]["messages"][0]["content"]
+    expected = system_prompt(operation)
+    if mode != "json_schema":
+        expected += "\nRequired JSON schema: " + schema_prompt()
+    assert actual == expected
 
 
 def test_vllm_protocol_models_and_complete_stream(api):
@@ -277,6 +314,20 @@ def codex_rpc(monkeypatch):
         {"method": "turn/completed", "params": {"turn": {"id": "turn-1", "status": "completed"}}},
     ]
     return state
+
+
+@pytest.mark.parametrize("operation", ["create", "edit", "repair"])
+def test_codex_sends_the_selected_operation_prompt_in_one_turn(codex_rpc, operation):
+    response = response_for_operation(operation)
+    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(response)
+    result = generate(
+        {"provider": "codex", "operation": operation}, on_event=lambda _: None, is_cancelled=lambda: False
+    )
+    assert result["response"] == response
+    calls = codex_rpc["calls"]
+    thread = next(params for method, params in calls if method == "thread/start")
+    assert thread["baseInstructions"] == system_prompt(operation)
+    assert sum(method == "turn/start" for method, _ in calls) == 1
 
 
 def test_codex_protocol_single_turn_environments_disabled_and_usage(codex_rpc):
