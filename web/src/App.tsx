@@ -305,11 +305,7 @@ function Shell({
               />
             </div>
           ))}
-          {!chats.length && (
-            <p className="sidebar-empty">
-              Здесь будут ваши игры.
-            </p>
-          )}
+          {!chats.length && <p className="sidebar-empty">Здесь будут ваши игры.</p>}
         </nav>
         <div className="sidebar-bottom">
           <div className="account-line">
