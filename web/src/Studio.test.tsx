@@ -69,6 +69,7 @@ beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
   vi.mocked(request).mockResolvedValue(chat);
 });
+
 describe('playing while generation runs', () => {
   const run = {
     id: 'generating-run',
@@ -205,6 +206,68 @@ describe('playing while generation runs', () => {
   );
 });
 describe('saved work and mutation submission', () => {
+  it('keeps a manually named new chat when submitting its first game request', async () => {
+    setup('/chats/new');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Новая игра');
+    fireEvent.click(screen.getByRole('button', { name: 'Переименовать чат' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Название чата' }), {
+      target: { value: 'Мой сад' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить название' }));
+    await screen.findByRole('heading', { name: 'Мой сад' });
+    expect(request).not.toHaveBeenCalled();
+    expect(post).not.toHaveBeenCalled();
+    vi.mocked(post)
+      .mockResolvedValueOnce({ ...chat, title: 'Мой сад' })
+      .mockResolvedValueOnce({ id: 'run' });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Описание вашей игры' }), {
+      target: { value: 'Звёздный сад' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(post).toHaveBeenNthCalledWith(1, '/api/chats/', {
+      audience: 'everyone',
+      title: 'Мой сад',
+    });
+  });
+
+  it('does not let an in-flight poll restore the old title after a successful rename', async () => {
+    const polling = vi.spyOn(window, 'setInterval');
+    const run = {
+      id: 'running',
+      status: 'generating',
+      message: 'Генерация',
+      budget: session.budget,
+    } as Run;
+    const active = { ...chat, active_run: run, runs: [run] };
+    vi.mocked(request).mockResolvedValueOnce(active).mockResolvedValueOnce({ results: [] });
+    setup();
+    await screen.findByRole('button', { name: 'Переименовать чат' });
+    const poll = polling.mock.calls.find(([, ms]) => ms === 2500)![0] as () => void;
+    let resolveOld!: (data: Chat) => void;
+    vi.mocked(request).mockReturnValueOnce(new Promise((resolve) => (resolveOld = resolve)));
+    await act(async () => poll());
+    vi.mocked(request).mockResolvedValueOnce({
+      ...active,
+      title: 'Ручное название',
+      updated_at: '2026-10-25',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Переименовать чат' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Название чата' }), {
+      target: { value: 'Ручное название' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить название' }));
+    await screen.findByRole('heading', { name: 'Ручное название' });
+    await act(async () => resolveOld(active));
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Ручное название');
+    expect(request).toHaveBeenCalledWith('/api/chats/one/', {
+      method: 'PATCH',
+      body: '{"title":"Ручное название"}',
+    });
+    expect(post).not.toHaveBeenCalled();
+    polling.mockRestore();
+  });
+
   it('sends explicit unknown-cost consent once and reuses its key if the HTTP response is lost', async () => {
     vi.mocked(request).mockResolvedValue({
       ...chat,

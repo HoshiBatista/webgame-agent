@@ -11,12 +11,38 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Run, RunEvent
+from .titles import DEFAULT_CHAT_TITLE, title_from_prompt
 
 
 class DomainError(Exception):
     def __init__(self, code, message, status=400, details=None):
         self.code, self.message, self.status, self.details = code, message, status, details
         super().__init__(message)
+
+
+def validate_chat_title(value: object, *, allow_empty: bool = False) -> str:
+    if not isinstance(value, str) or len(value) > 160:
+        raise DomainError("invalid_title", "Укажите название до 160 символов.")
+    title = " ".join(value.split())
+    if not title and not allow_empty:
+        raise DomainError("invalid_title", "Название чата не должно быть пустым.")
+    return title or DEFAULT_CHAT_TITLE
+
+
+@transaction.atomic
+def rename_chat(chat: Chat, title: object) -> Chat:
+    title = validate_chat_title(title)
+    locked = (
+        Chat.objects.select_for_update()
+        .filter(pk=chat.pk, owner_id=chat.owner_id, deleted_at__isnull=True)
+        .first()
+    )
+    if locked is None:
+        raise DomainError("chat_not_found", "Чат не найден.", 404)
+    locked.title = title
+    locked.title_is_custom = True
+    locked.save(update_fields=["title", "title_is_custom", "updated_at"])
+    return locked
 
 
 def fingerprint(value):
@@ -253,6 +279,8 @@ def create_run(chat, data, *, continued_from=None):
     base = chat.current_revision
     candidate = continued_from.candidate_revision if continued_from else None
     operation = "repair" if candidate or continued_from else ("edit" if base else "create")
+    if not chat.title_is_custom and chat.current_revision_id is None and not chat.runs.exists():
+        chat.title = title_from_prompt(prompt)
     run = Run.objects.create(
         chat=chat,
         operation=operation,
@@ -267,7 +295,7 @@ def create_run(chat, data, *, continued_from=None):
         continued_from=continued_from,
     )
     chat.audience = audience
-    chat.save(update_fields=["audience", "updated_at"])
+    chat.save(update_fields=["audience", "title", "updated_at"])
     Message.objects.create(chat=chat, run=run, role="user", content=prompt.strip())
     event(run, "queued", "Запрос принят. Ожидаем свободное место для генерации.")
     if unknown:
@@ -325,7 +353,7 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
                 "base_changed", "Рабочая версия уже изменилась. Результат сохранён как черновик.", 409
             )
         chat.current_revision = revision
-        if not chat.title:
+        if not chat.title_is_custom:
             chat.title = revision.title
         chat.save(update_fields=["current_revision", "title", "updated_at"])
     run.save()

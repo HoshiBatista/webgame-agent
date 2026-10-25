@@ -20,7 +20,17 @@ from rest_framework.views import exception_handler as drf_exception_handler
 
 from .models import Chat, Feedback, Like, Message, Publication, Revision, Run
 from .serialization import chat_data, preview_url, publication_data, revision_data, run_data
-from .services import DomainError, budget_snapshot, cancel_run, create_run, event, preference_for, tariff
+from .services import (
+    DomainError,
+    budget_snapshot,
+    cancel_run,
+    create_run,
+    event,
+    preference_for,
+    rename_chat,
+    tariff,
+    validate_chat_title,
+)
 
 
 def exception_handler(exc, context):
@@ -142,20 +152,22 @@ def chats_view(request):
         )
     title = request.data.get("title", "")
     audience = request.data.get("audience", "everyone")
-    if (
-        not isinstance(title, str)
-        or len(title) > 160
-        or audience not in ("everyone", "gamers", "children", "seniors")
-    ):
+    normalized_title = validate_chat_title(title, allow_empty=True)
+    if audience not in ("everyone", "gamers", "children", "seniors"):
         raise DomainError("invalid_chat", "Проверьте название и аудиторию.")
-    chat = Chat.objects.create(owner=request.user, title=title.strip(), audience=audience)
+    chat = Chat.objects.create(
+        owner=request.user, title=normalized_title, title_is_custom=bool(title.strip()), audience=audience
+    )
     return Response(chat_data(chat, True), status=201)
 
 
-@api_view(["GET", "DELETE"])
+@api_view(["GET", "PATCH", "DELETE"])
 def chat_view(request, ident):
     chat = owned_chat(request, ident)
     if request.method == "GET":
+        return Response(chat_data(chat, True))
+    if request.method == "PATCH":
+        chat = rename_chat(chat, request.data.get("title"))
         return Response(chat_data(chat, True))
     with transaction.atomic():
         chat = Chat.objects.select_for_update().get(pk=chat.pk)
@@ -227,7 +239,7 @@ def confirm_view(request, ident):
         revision.verification = "manual"
         revision.save(update_fields=["accepted", "verification"])
         chat.current_revision = revision
-        if not chat.title:
+        if not chat.title_is_custom:
             chat.title = revision.title
         chat.save(update_fields=["current_revision", "title", "updated_at"])
         run.status = "succeeded"
@@ -441,7 +453,7 @@ def remix_view(request, ident):
     with transaction.atomic():
         source = publication.revision
         chat = Chat.objects.create(
-            owner=request.user, title=publication.title, source_publication=publication
+            owner=request.user, title=publication.title, title_is_custom=True, source_publication=publication
         )
         revision = Revision.objects.create(
             chat=chat,

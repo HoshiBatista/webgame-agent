@@ -33,6 +33,14 @@ The feed is fetched once per active run, without model calls or in-chat game fra
 On success, a ready action selects the exact accepted result revision and opens it
 in the existing fullscreen preview. Failed or unverified candidates do not get it.
 
+Chats start as «Новая игра», get a short prompt label on the first run, then the
+accepted game's title unless manually renamed. The header editor supports save,
+cancel/Escape and inline errors; polling does not replace its draft. A title chosen
+before the first prompt is sent when the chat is created. Existing chats use
+`PATCH /api/chats/:id/`; a confirmed rename updates the sidebar immediately and
+invalidates older pending title/list responses. It changes no game or publication.
+Apply backend migration `0005_chat_titles` before running this version.
+
 Tests cover CSRF and error transport, no automatic mutation retry, preserved idempotency
 after a lost response, candidate/manual-review selection, immutable preview lifecycle,
 fullscreen frame identity, history without generation, feed hover/like behavior,

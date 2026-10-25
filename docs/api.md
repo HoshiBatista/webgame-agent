@@ -5,7 +5,7 @@ All authenticated mutation requests require the CSRF token from `GET /api/sessio
 - `GET /api/session/`: `{user:null|{id,username,is_staff},csrfToken,preferences:{theme,notes},capabilities:{provider,model,models,local_only},budget:null|{limit_usd,spent_usd,reserved_usd,unknown_usd,available_usd}}`. Guest budget is null. Model catalog entries include `{id,name,priced}`; `priced` means a tariff is configured, not that sufficient budget is available.
 - `POST /api/login/`: `{username,password}` → session response. `POST /api/logout/` → `{ok:true}`.
 - `GET /api/chats/`: owned chat summaries `{id,title,audience,updated_at,current_revision,active_run}`.
-- `POST /api/chats/`: optional `{title,audience}` → full chat. Empty title allowed. `GET /api/chats/:id/` → `{id,title,audience,created_at,updated_at,current_revision:Revision|null,candidate_revision:Revision|null,messages:Message[],revisions:Revision[],runs:Run[],active_run:Run|null,source_publication:null|uuid}`. `DELETE` → 204. Publications survive deletion.
+- `POST /api/chats/`: optional `{title,audience}` → full chat. Missing/empty title becomes `Новая игра`; an explicitly supplied nonempty title is treated as a manual choice. `GET /api/chats/:id/` → `{id,title,audience,created_at,updated_at,current_revision:Revision|null,candidate_revision:Revision|null,messages:Message[],revisions:Revision[],runs:Run[],active_run:Run|null,source_publication:null|uuid}`. `PATCH {title}` → full chat; owner only, authenticated session and CSRF required, allowed during generation. Title must be nonempty after whitespace normalization and at most 160 characters. Even saving the same title marks it as manual; clients cannot reset this flag. `DELETE` → 204. Publications survive deletion.
 - `POST /api/chats/:id/runs/`: `{prompt,audience?,model?,idempotency_key}` → `Run` (202). Same idempotency key returns the same run, conflicting payload rejected. `GET /api/runs/:id/` → `Run`.
 - `POST /api/runs/:id/cancel/`: cancel even in flight; preserves accepted version. `POST /api/runs/:id/continue/`: optional `{prompt,idempotency_key,accept_unknown_cost}` resumes saved candidate/last exact response; does not replay planning. Provider and model default to those of the original run. An unresolved unknown invocation requires explicit boolean `accept_unknown_cost:true` for a new attempt. The old liability remains untouched, the new invocation is accounted separately, and the accepted revision must still match the original base (`retry_base_changed` otherwise). The same idempotency key and payload return the same new run; no automatic retry/reconciliation is implied.
 - `POST /api/runs/:id/confirm/`: `{confirmed:true}` accepts an unverified candidate with explicit human verification; failed/infrastructure-error candidates cannot be manually marked green.
@@ -18,6 +18,16 @@ All authenticated mutation requests require the CSRF token from `GET /api/sessio
 - `GET /api/health/`: health liveness; no secrets.
 
 `Message`: `{id,role:user|assistant|system,content,created_at,run_id}`.
+
+Chat naming makes no additional model calls. On a new automatically named chat,
+the first run uses a whitespace-normalized prompt prefix (at most 60 characters,
+with an ellipsis when truncated). Later prompts do not replace this provisional
+name. Accepting a generated revision, automatically or through explicit manual
+confirmation, uses the game title unless the chat has been manually named.
+Renaming and result acceptance lock the same chat row; a late result cannot replace
+a manual name. Publication titles and revision/game content are unaffected.
+Migration `0005_chat_titles` preserves existing nonempty names as manual choices
+because their original provenance is unavailable; empty names get the default.
 
 `Revision`: `{id,title,number,artifact_hash,design,checks,created_at,accepted,verification:automatic|manual|none,preview_url,export_url,parent_id,report:{status,findings,facts,elapsed_seconds}|null}`. Source files are only returned by private source/diagnostics endpoints. Candidate may be previewed safely but is not accepted/publishable.
 

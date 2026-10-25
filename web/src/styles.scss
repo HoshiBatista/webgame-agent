@@ -1599,6 +1599,63 @@ svg {
   display: flex;
   gap: 1px;
 }
+.chat-heading > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.chat-heading-actions {
+  flex-shrink: 0;
+}
+.chat-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.chat-title h1 {
+  flex: 1;
+  min-width: 0;
+}
+.chat-title .icon-button {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+.chat-title-editor {
+  margin-top: 8px;
+}
+.chat-title-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 2px;
+  align-items: center;
+}
+.chat-title-fields input {
+  min-width: 0;
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+}
+.chat-title-fields .icon-button {
+  width: 44px;
+  height: 44px;
+}
+.chat-title-error {
+  color: var(--coral);
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 760px) {
+  .chat-heading:has(.chat-title-editor) {
+    flex-wrap: wrap;
+  }
+  .chat-heading:has(.chat-title-editor) > div:first-child {
+    flex-basis: 100%;
+  }
+  .chat-heading:has(.chat-title-editor) .chat-heading-actions {
+    margin-left: auto;
+  }
+}
 .chat-heading-actions .icon-button {
   width: 27px;
 }

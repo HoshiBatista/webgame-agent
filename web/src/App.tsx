@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   ChevronLeft,
@@ -15,7 +15,7 @@ import {
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request } from './api';
 import { Brand, ErrorNotice, Spinner } from './components';
-import { SessionContext } from './context';
+import { SessionContext, type ChatTitleChange } from './context';
 import Landing from './Landing';
 import Feed from './Feed';
 import Preferences from './Preferences';
@@ -38,20 +38,34 @@ function Shell({
   const [error, setError] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  const chatsLoadVersion = useRef(0);
   useEffect(() => {
     let alive = true;
-    const load = () =>
-      request<{ results: ChatSummary[] }>('/api/chats/')
+    const load = (event?: Event) => {
+      const version = ++chatsLoadVersion.current;
+      const change =
+        event instanceof CustomEvent ? (event.detail as ChatTitleChange | undefined) : undefined;
+      if (change)
+        setChats((current) =>
+          current.map((chat) =>
+            chat.id === change.id
+              ? { ...chat, title: change.title, updated_at: change.updated_at }
+              : chat,
+          ),
+        );
+      return request<{ results: ChatSummary[] }>('/api/chats/')
         .then((data) => {
-          if (alive) setChats(data.results);
+          if (alive && chatsLoadVersion.current === version) setChats(data.results);
         })
         .catch((cause) => {
           if (alive) setError(errorText(cause));
         });
+    };
     void load();
     window.addEventListener('gameforge:chats', load);
     return () => {
       alive = false;
+      ++chatsLoadVersion.current;
       window.removeEventListener('gameforge:chats', load);
     };
   }, []);
@@ -63,8 +77,11 @@ function Shell({
   useEffect(() => {
     if (!activeChatIds) return;
     const timer = window.setInterval(() => {
+      const version = ++chatsLoadVersion.current;
       void request<{ results: ChatSummary[] }>('/api/chats/')
-        .then((data) => setChats(data.results))
+        .then((data) => {
+          if (chatsLoadVersion.current === version) setChats(data.results);
+        })
         .catch((cause) => setError(errorText(cause)));
     }, 5000);
     return () => window.clearInterval(timer);

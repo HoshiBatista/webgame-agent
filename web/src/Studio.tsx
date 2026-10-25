@@ -25,6 +25,7 @@ import {
 import { chatsChanged, useSession } from './context';
 import type { Chat, Publication, Revision, Run, RunEvent } from './types';
 import WaitingGames from './WaitingGames';
+import ChatTitle from './ChatTitle';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех', icon: '✦' },
@@ -47,6 +48,7 @@ export default function Studio() {
   const navigate = useNavigate();
   const { session, refresh } = useSession();
   const [chat, setChat] = useState<Chat | null>(null);
+  const [newTitle, setNewTitle] = useState<string | null>(null);
   const [loading, setLoading] = useState(!isNew);
   const [error, setError] = useState('');
   const [prompt, setPrompt] = useState('');
@@ -80,14 +82,17 @@ export default function Studio() {
   }
   const endRef = useRef<HTMLDivElement>(null);
   const currentId = useRef(id);
+  const loadVersion = useRef(0);
   currentId.current = id;
   const load = useCallback(async () => {
     if (isNew) return;
+    const version = ++loadVersion.current;
     const data = await request<Chat>(`/api/chats/${id}/`);
-    if (currentId.current === id) setChat(data);
+    if (currentId.current === id && loadVersion.current === version) setChat(data);
   }, [id, isNew]);
   useEffect(() => {
     setChat(null);
+    setNewTitle(null);
     setError('');
     setEvents([]);
     setPrompt('');
@@ -106,9 +111,10 @@ export default function Studio() {
       return;
     }
     let alive = true;
+    const version = ++loadVersion.current;
     request<Chat>(`/api/chats/${id}/`)
       .then((data) => {
-        if (alive) {
+        if (alive && loadVersion.current === version) {
           setChat(data);
           setAudience(data.audience);
         }
@@ -182,6 +188,25 @@ export default function Studio() {
     latestRun?.status === 'succeeded'
       ? chat?.revisions.find((item) => item.id === latestRun.result_revision_id && item.accepted)
       : undefined;
+  async function renameTitle(title: string) {
+    if (!chat) {
+      setNewTitle(title);
+      return;
+    }
+    const renamed = await request<Chat>(`/api/chats/${chat.id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title }),
+    });
+    if (currentId.current === chat.id) {
+      ++loadVersion.current;
+      setChat((current) =>
+        current && current.id === renamed.id
+          ? { ...current, title: renamed.title, updated_at: renamed.updated_at }
+          : current,
+      );
+    }
+    chatsChanged({ id: renamed.id, title: renamed.title, updated_at: renamed.updated_at });
+  }
   async function send(event: FormEvent) {
     event.preventDefault();
     if (!prompt.trim() || busy || activeRun) return;
@@ -190,7 +215,10 @@ export default function Studio() {
     try {
       let target = chat;
       if (!target) {
-        target = await post<Chat>('/api/chats/', { audience });
+        target = await post<Chat>('/api/chats/', {
+          audience,
+          ...(newTitle === null ? {} : { title: newTitle }),
+        });
         setChat(target);
         chatsChanged();
       }
@@ -361,7 +389,11 @@ export default function Studio() {
         <header className="chat-heading">
           <div>
             <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
-            <h1>{chat?.title || 'Новая маленькая вселенная'}</h1>
+            <ChatTitle
+              key={id}
+              title={chat?.title || newTitle || 'Новая игра'}
+              onSave={renameTitle}
+            />
           </div>
           <div className="chat-heading-actions">
             {revision && (
