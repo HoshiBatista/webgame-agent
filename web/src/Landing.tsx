@@ -121,7 +121,7 @@ export default function Landing() {
         </section>
         <section className="how-section">
           <div>
-            <span className="eyebrow">Три шага к вашей игре</span>
+            <span className="eyebrow">Всего три шага</span>
             <h2>От идеи к готовой игре</h2>
           </div>
           <div className="how-steps">
@@ -132,7 +132,7 @@ export default function Landing() {
             </article>
             <article>
               <span>02</span>
-              <h3>Сделайте своим</h3>
+              <h3>Настройте</h3>
               <p>Сыграйте. Настройте цвета, темп или добавьте пару уровней — одним сообщением.</p>
             </article>
             <article>
