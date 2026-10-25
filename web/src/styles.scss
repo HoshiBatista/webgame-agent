@@ -325,6 +325,12 @@ svg {
 .boot-screen .notice {
   max-width: 500px;
 }
+.logout-screen {
+  position: fixed;
+  inset: 0;
+  padding: 24px;
+  background: var(--bg);
+}
 .modal {
   padding: 0;
   border: 1px solid var(--border);
@@ -1825,7 +1831,6 @@ svg {
   margin-inline: auto;
   height: 100%;
   background: var(--surface);
-  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -2160,6 +2165,15 @@ svg {
   transition:
     opacity 380ms var(--ease-panel) 160ms,
     visibility 0s;
+}
+.preview-pane::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  background: var(--border);
+  pointer-events: none;
+  z-index: 1;
 }
 .preview-title {
   display: flex;
@@ -3850,6 +3864,9 @@ svg {
     visibility: visible;
     transition: none;
   }
+  .studio .preview-pane::before {
+    display: none;
+  }
   .studio .phone-stage:not(.fullscreen-preview) {
     display: none;
   }
@@ -4195,10 +4212,8 @@ svg {
   background: var(--ink);
   color: var(--surface);
 }
-.settings-layout {
-  grid-template-columns: minmax(0, 1fr);
-  max-width: 780px;
-  margin-inline: auto;
+.settings-side:not(:empty) {
+  margin-top: 24px;
 }
 .settings-side:empty {
   display: none;

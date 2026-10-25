@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowUpRight,
   Check,
@@ -10,6 +10,8 @@ import {
   LoaderCircle,
   Minimize2,
   Sparkles,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -130,17 +132,55 @@ export function GameFrame({
   title,
   artifactKey = url,
   className = '',
+  muted,
 }: {
   url: string;
   title: string;
   artifactKey?: string;
   className?: string;
+  muted?: boolean;
 }) {
+  const frame = useRef<HTMLIFrameElement>(null);
+  const controlled = muted !== undefined;
+  const identity = `${artifactKey}:${controlled}`;
+  function source() {
+    if (!controlled) return url;
+    const target = new URL(url, window.location.href);
+    target.searchParams.set('audio_control', '1');
+    return target.href;
+  }
   // Signed URLs rotate during status refreshes; unchanged game bytes must keep playing.
-  const loaded = useRef({ key: artifactKey, url });
-  if (loaded.current.key !== artifactKey) loaded.current = { key: artifactKey, url };
+  const loaded = useRef({ key: identity, url: source() });
+  if (loaded.current.key !== identity) loaded.current = { key: identity, url: source() };
+  const sendAudio = useCallback(() => {
+    if (!controlled) return;
+    // The sandbox has an opaque origin; this message contains only an audio preference.
+    frame.current?.contentWindow?.postMessage(
+      { type: 'gameforge:audio', artifactKey, muted: muted || document.hidden },
+      '*',
+    );
+  }, [controlled, muted, artifactKey]);
+  useEffect(() => {
+    const ready = (event: MessageEvent) => {
+      if (
+        event.source === frame.current?.contentWindow &&
+        event.data?.type === 'gameforge:audio-ready' &&
+        event.data.artifactKey === artifactKey
+      )
+        sendAudio();
+    };
+    window.addEventListener('message', ready);
+    document.addEventListener('visibilitychange', sendAudio);
+    sendAudio();
+    return () => {
+      window.removeEventListener('message', ready);
+      document.removeEventListener('visibilitychange', sendAudio);
+    };
+  }, [sendAudio, artifactKey]);
   return (
     <iframe
+      ref={frame}
+      onLoad={sendAudio}
       className={`game-frame ${className}`}
       src={loaded.current.url}
       title={title}
@@ -148,6 +188,33 @@ export function GameFrame({
       referrerPolicy="no-referrer"
       allow="fullscreen"
     />
+  );
+}
+export function SoundButton({
+  muted,
+  onToggle,
+  disabled = false,
+  label = false,
+}: {
+  muted: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+  label?: boolean;
+}) {
+  const text = muted ? 'Включить звук' : 'Выключить звук';
+  return (
+    <button
+      type="button"
+      className="icon-button"
+      onClick={onToggle}
+      disabled={disabled}
+      aria-label={text}
+      title={text}
+      aria-pressed={!muted}
+    >
+      {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+      {label && <span>{text}</span>}
+    </button>
   );
 }
 export function CopyHtmlButton({
@@ -226,6 +293,9 @@ export function PhonePreview({
   onEnterFullscreen,
   onExitFullscreen,
   hideToolbar = false,
+  muted,
+  onMutedChange,
+  visible = true,
 }: {
   url?: string;
   title: string;
@@ -238,6 +308,9 @@ export function PhonePreview({
   onEnterFullscreen?: () => void;
   onExitFullscreen?: () => void;
   hideToolbar?: boolean;
+  muted?: boolean;
+  onMutedChange?: () => void;
+  visible?: boolean;
 }) {
   const [expanded, setExpanded] = useState(forceFullscreen);
   const [copyError, setCopyError] = useState('');
@@ -305,7 +378,13 @@ export function PhonePreview({
     };
   }, [expanded]);
   const screen = url ? (
-    <GameFrame key={artifactKey ?? url} artifactKey={artifactKey} url={url} title={title} />
+    <GameFrame
+      key={artifactKey ?? url}
+      artifactKey={artifactKey}
+      url={url}
+      title={title}
+      muted={muted === undefined ? undefined : muted || !visible}
+    />
   ) : (
     <div className="phone-empty">
       <span className="empty-orbit">
@@ -331,6 +410,9 @@ export function PhonePreview({
             {badge ?? (url ? 'Можно играть' : 'Место для вашей идеи')}
           </span>
           <div>
+            {onMutedChange && (
+              <SoundButton muted={!!muted} onToggle={onMutedChange} disabled={!url} />
+            )}
             {playUrl && (
               <a
                 className="icon-button"
@@ -370,6 +452,9 @@ export function PhonePreview({
         {expanded && (
           <div className="fullscreen-toolbar">
             <span>{title}</span>
+            {onMutedChange && (
+              <SoundButton muted={!!muted} onToggle={onMutedChange} disabled={!url} />
+            )}
             <button className="button button-small" onClick={close} autoFocus>
               <Minimize2 size={16} /> Вернуться
             </button>

@@ -34,7 +34,7 @@ export interface Session {
     model_profiles?: ModelProfile[];
     default_model_profile?: string;
   };
-  budget: Budget;
+  budget: Budget | null;
 }
 export interface Finding {
   message?: string;

@@ -593,6 +593,22 @@ class DomainTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content.decode(), HTML)
         self.assertIn("connect-src 'none'", response["Content-Security-Policy"])
+        controlled = self.client.get(path + '?audio_control=1', HTTP_HOST="localhost:8001")
+        self.assertEqual(controlled.status_code, 200)
+        self.assertTrue(controlled.content.decode().endswith(HTML))
+        self.assertIn('gameforge:audio-ready', controlled.content.decode())
+        self.assertEqual(controlled['Content-Security-Policy'], response['Content-Security-Policy'])
+        revision.refresh_from_db()
+        self.assertEqual(revision.html, HTML)
+
+    def test_logout_returns_a_clean_guest_session_without_another_round_trip(self):
+        result = self.client.post('/api/logout/').json()
+        self.assertTrue(result['ok'])
+        self.assertIsNone(result['user'])
+        self.assertIsNone(result['budget'])
+        self.assertEqual(result['preferences']['notes'], [])
+        self.assertTrue(result['csrfToken'])
+        self.assertEqual(self.client.get(f'/api/chats/{self.chat.id}/').status_code, 403)
 
     def test_contract_error_gets_one_repair(self):
         from generation.errors import ContractError

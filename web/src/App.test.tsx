@@ -50,6 +50,87 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
+it('goes straight from a chat through logout to the landing, ignoring a late private session', async () => {
+  const guest = {
+    ...session,
+    user: null,
+    budget: null,
+    preferences: { theme: 'light', notes: [] },
+  } as Session;
+  let finishLogout!: (value: unknown) => void;
+  let finishRefresh!: (value: Session) => void;
+  vi.mocked(post).mockReturnValue(
+    new Promise((resolve) => {
+      finishLogout = resolve;
+    }),
+  );
+  setup('/chats/one');
+  await screen.findByText('operator');
+  vi.mocked(getSession).mockReturnValue(
+    new Promise((resolve) => {
+      finishRefresh = resolve;
+    }),
+  );
+  fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+  await screen.findByRole('heading', { name: 'Настройки', level: 1 });
+  fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Выйти' }));
+  expect(screen.getByText('Выходим из аккаунта…')).toBeInTheDocument();
+  expect(screen.getByTestId('location')).toHaveTextContent('/chats/one');
+  expect(screen.queryByText('operator')).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Игры сообщества' })).not.toBeInTheDocument();
+  await act(async () => finishLogout(guest));
+  await screen.findByRole('link', { name: 'Создать свою игру' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  await act(async () => finishRefresh(session));
+  expect(screen.getByRole('link', { name: 'Создать свою игру' })).toBeInTheDocument();
+  expect(screen.queryByText('operator')).not.toBeInTheDocument();
+});
+
+it('reconciles a lost logout acknowledgement without returning private UI', async () => {
+  setup();
+  await screen.findByText('operator');
+  vi.mocked(post).mockRejectedValue(new Error('Connection lost'));
+  vi.mocked(getSession).mockResolvedValue({ ...session, user: null, budget: null });
+  fireEvent.click(screen.getByRole('button', { name: 'Выйти' }));
+  await screen.findByRole('link', { name: 'Создать свою игру' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
+  expect(screen.queryByRole('heading', { name: 'Игры сообщества' })).not.toBeInTheDocument();
+});
+
+it('ignores a preferences save from the old account after logout has completed', async () => {
+  const signedIn = {
+    ...session,
+    preferences: { ...session.preferences, model_profile: 'lite' },
+    capabilities: {
+      ...session.capabilities,
+      model_profiles: [
+        { id: 'lite', name: 'Lite', description: '', available: true, unavailable_reason: '' },
+        { id: 'pro', name: 'Pro', description: '', available: true, unavailable_reason: '' },
+      ],
+    },
+  };
+  vi.mocked(getSession).mockResolvedValue(signedIn);
+  let finishSave!: (value: unknown) => void;
+  vi.mocked(request).mockImplementation(async (path) =>
+    path === '/api/preferences/'
+      ? new Promise((resolve) => {
+          finishSave = resolve;
+        })
+      : { results: [] },
+  );
+  setup('/chats/one');
+  fireEvent.click(await screen.findByRole('link', { name: 'Настройки' }));
+  fireEvent.click(await screen.findByRole('radio', { name: 'Pro' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
+  vi.mocked(post).mockResolvedValue({ ...session, user: null, budget: null });
+  fireEvent.click(await screen.findByRole('button', { name: 'Выйти' }));
+  await screen.findByRole('link', { name: 'Создать свою игру' });
+  await act(async () => finishSave({ ...session.preferences, model_profile: 'pro' }));
+  expect(screen.getByRole('link', { name: 'Создать свою игру' })).toBeInTheDocument();
+  expect(screen.queryByText('operator')).not.toBeInTheDocument();
+});
+
 it('keeps the username static and opens settings at their own URL', async () => {
   setup();
   const username = await screen.findByText('operator');

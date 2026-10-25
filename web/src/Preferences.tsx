@@ -97,7 +97,7 @@ export default function Preferences() {
           <p>Всё по-вашему — от оформления до пожеланий для новых игр.</p>
         </div>
         <div className="settings-layout">
-          <div className="form-stack settings-card">
+          <section className="form-stack settings-card" aria-label="Модель и оформление">
             {!!session.capabilities.model_profiles?.length && (
               <div>
                 <p>Модель по умолчанию</p>
@@ -136,6 +136,8 @@ export default function Preferences() {
               </div>
               <p className="field-help">Применяется сразу и сохраняется в этом браузере.</p>
             </fieldset>
+          </section>
+          <section className="form-stack settings-card" aria-label="Пожелания к играм">
             <form onSubmit={save} className="form-stack" aria-label="Настройки аккаунта">
               <label>
                 Что учитывать в новых играх
@@ -178,20 +180,20 @@ export default function Preferences() {
                 {busy ? 'Сохраняем…' : 'Сохранить'}
               </button>
             </form>
-          </div>
-          <aside className="settings-side" aria-label="Дополнительные настройки">
-            {session.user?.is_staff && (
-              <a
-                className="text-button admin-link"
-                href="/admin/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Управление аккаунтами
-              </a>
-            )}
-          </aside>
+          </section>
         </div>
+        <aside className="settings-side" aria-label="Дополнительные настройки">
+          {session.user?.is_staff && (
+            <a
+              className="text-button admin-link"
+              href="/admin/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Управление аккаунтами
+            </a>
+          )}
+        </aside>
       </main>
     </div>
   );

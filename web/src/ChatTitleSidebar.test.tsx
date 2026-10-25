@@ -10,6 +10,7 @@ vi.mock('./api', () => ({
   request: vi.fn(),
   post: vi.fn(),
   getSession: vi.fn(),
+  setCsrfToken: vi.fn(),
   newKey: () => crypto.randomUUID(),
   errorText: (error: Error) => error.message,
   formatMoney: () => '$0',

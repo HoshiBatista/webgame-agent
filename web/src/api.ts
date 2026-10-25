@@ -68,9 +68,9 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
 export function post<T>(path: string, body: unknown = {}) {
   return request<T>(path, { method: 'POST', body: JSON.stringify(body) });
 }
-export async function getSession() {
+export async function getSession({ updateCsrf = true } = {}) {
   const session = await request<Session>('/api/session/');
-  setCsrfToken(session.csrfToken);
+  if (updateCsrf) setCsrfToken(session.csrfToken);
   return session;
 }
 export function formatMoney(value: number | string) {

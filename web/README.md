@@ -28,7 +28,10 @@ artifact. Only one live hover preview is mounted in the feed. Publishing still c
 an accepted revision; automatic validation and accounting remain server-side. The normal
 conversation has no manual-acceptance dialog, diagnostics, budget or duplicate run cards.
 A completed answer is a message labelled beeGame Lite/Pro with its duration. While work
-is active, elapsed time advances locally every second; stopping is available in the composer.
+is active, elapsed time advances locally every second, starting at submission before HTTP
+acknowledgement. The pending prompt reconciles with the saved message without duplication;
+stopping is available once the server assigns the run ID. Enter sends, Shift+Enter inserts
+a newline, and IME composition never sends prematurely.
 An unobtrusive community-feed link opens in another tab without fetching recommendations.
 
 The sidebar lists «Недавние» without a count. Each row reserves space for a vertical-dot
@@ -39,13 +42,24 @@ title, while manual names remain protected. The backend keeps ownership and row 
 Apply existing migrations including `0011_chat_titles` and `0013_merge_titles_and_compact`.
 
 The chat header contains the model selector and desktop preview toggle or mobile fullscreen.
-A menu beside the send button contains version selection, fullscreen, copy, download, share,
-rating and restoration. Menu actions do not submit the prompt form. Fullscreen and panel
+A menu beside the send button contains version selection, fullscreen, copy, audio, download,
+restoration, rating and sharing (last). Desktop preview also has its top toolbar and bottom
+version/actions bar. Menu actions do not submit the prompt form. Fullscreen and panel
 transitions preserve the existing frame. The chat keeps its 800px maximum width in both
 preview states, preventing expansion at the start of the 600ms opening transition.
 Mobile uses its own viewport-height conversation scroller. Opening/reloading starts at the
 bottom, including late font/content layout; reading older messages is respected during polling.
 The empty invitation is centered. Reduced-motion preferences disable panel transitions.
+The divider belongs to the preview and disappears with it. Audio controls appear in the
+desktop preview, fullscreen and composer menu. Hiding the preview or browser tab mutes it
+without reloading the game. Managed previews add a trusted audio prelude on the isolated
+origin; stored artifacts and offline exports are unchanged. Commands check the parent
+origin/window and artifact hash. Web Audio uses a master gain; media elements preserve
+their own mute setting. No same-origin permission is added to the sandbox.
+
+Logout replaces private UI with a themed loading screen until the anonymous session and
+landing route are ready. Late session/preference responses cannot restore the prior account
+or replace its accepted CSRF token. The normal logout response includes the guest session.
 
 Tests cover transport/CSRF, retry identity, cancellation, exact displayed source revision,
 immutable preview lifecycle, version/fullscreen actions, sidebar renaming, simple replies,
@@ -77,7 +91,8 @@ directory served by Django. The landing footer and login card identify beeGame a
 a hackathon development, not an official Beeline product. This notice does not establish
 permission to use the trademark; that depends on the event's terms or the rights holder.
 
-Settings contain model choice, browser theme and editable wishes. Expenses and synthetic
+Settings have two columns: immediate model/theme choices on the left, wishes with their own
+Save button on the right. They stack on narrow screens. Expenses and synthetic
 analytics are omitted from the interface. Audience choices use four local authored SVGs
 in `public/assets/audience-*.svg`; the request carries both the selected ID and concrete
 instructions for pace, readability, difficulty and controls. No model call is made for a

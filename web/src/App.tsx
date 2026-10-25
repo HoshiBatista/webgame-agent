@@ -18,7 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { errorText, getSession, post, request } from './api';
+import { errorText, getSession, post, request, setCsrfToken } from './api';
 import { Brand, ErrorNotice, Modal, Spinner } from './components';
 import { SessionContext, useSession, type StudioDraft, type ChatTitleChange } from './context';
 import Landing from './Landing';
@@ -32,13 +32,7 @@ import type { ChatSummary, Session } from './types';
 import { ThemeProvider } from './theme';
 import ChatMenu from './ChatMenu';
 
-function Shell({
-  session,
-  updateSession,
-}: {
-  session: Session;
-  updateSession: (session: Session) => void;
-}) {
+function Shell({ session, onLogout }: { session: Session; onLogout: () => void }) {
   const { studioDrafts } = useSession();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [collapsed, setCollapsed] = useState(false);
@@ -198,15 +192,6 @@ function Shell({
       window.removeEventListener('keydown', escape);
     };
   }, [mobileOpen, closeMobileMenu, editingChat, deletingChat]);
-  async function logout() {
-    try {
-      await post('/api/logout/');
-      navigate('/', { replace: true });
-      updateSession(await getSession());
-    } catch (cause) {
-      setError(errorText(cause));
-    }
-  }
   return (
     <div
       className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'sidebar-mobile-open' : ''}`}
@@ -325,7 +310,7 @@ function Shell({
               <Settings2 size={15} />
               <span>Настройки</span>
             </Link>
-            <button className="text-button" onClick={logout} title="Выйти">
+            <button className="text-button" onClick={onLogout} title="Выйти">
               <LogOut size={15} />
               <span>Выйти</span>
             </button>
@@ -396,7 +381,12 @@ function Shell({
 function Application() {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
+  const logoutLock = useRef(false);
+  const accountEpoch = useRef(0);
   const location = useLocation();
+  const navigate = useNavigate();
   const sessionVersion = useRef(0);
   useEffect(() => {
     if (!location.pathname.startsWith('/chats/')) document.title = 'beeGame';
@@ -404,15 +394,24 @@ function Application() {
   // Drafts live only for this signed-in user and this tab, never in persistent storage.
   const studioDrafts = useMemo(() => new Map<string, StudioDraft>(), [session?.user?.id]);
   const updateSession = useCallback((value: Session) => {
+    if (logoutLock.current) return;
     sessionVersion.current += 1;
     setSession(value);
     setError('');
   }, []);
+  const scopedUpdateSession = useMemo(() => {
+    const epoch = accountEpoch.current;
+    return (value: Session) => {
+      if (epoch === accountEpoch.current) updateSession(value);
+    };
+  }, [session?.user?.id, updateSession]);
   const refresh = useCallback(async () => {
+    if (logoutLock.current) return;
     const version = ++sessionVersion.current;
     try {
-      const value = await getSession();
-      if (sessionVersion.current === version) {
+      const value = await getSession({ updateCsrf: false });
+      if (sessionVersion.current === version && !logoutLock.current) {
+        setCsrfToken(value.csrfToken);
         setSession(value);
         setError('');
       }
@@ -423,6 +422,52 @@ function Application() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+  async function logout() {
+    if (logoutLock.current && !logoutError) return;
+    logoutLock.current = true;
+    ++accountEpoch.current;
+    ++sessionVersion.current;
+    setLoggingOut(true);
+    setLogoutError('');
+    try {
+      let guest: Session;
+      try {
+        guest = await post<Session>('/api/logout/');
+      } catch (cause) {
+        // A lost acknowledgement may still mean logout succeeded on the server.
+        guest = await getSession({ updateCsrf: false });
+        if (guest.user) throw cause;
+      }
+      if (guest.user !== null) throw new Error('Не удалось выйти. Попробуйте ещё раз.');
+      ++sessionVersion.current;
+      setCsrfToken(guest.csrfToken);
+      setSession(guest);
+      navigate('/', { replace: true });
+    } catch (cause) {
+      setLogoutError(errorText(cause));
+    }
+  }
+  useEffect(() => {
+    if (loggingOut && session?.user === null && location.pathname === '/') {
+      logoutLock.current = false;
+      setLoggingOut(false);
+    }
+  }, [loggingOut, session?.user, location.pathname]);
+  if (loggingOut)
+    return (
+      <div className="boot-screen logout-screen">
+        {logoutError ? (
+          <>
+            <ErrorNotice message={logoutError} />
+            <button className="button" onClick={() => void logout()}>
+              Повторить выход
+            </button>
+          </>
+        ) : (
+          <Spinner text="Выходим из аккаунта…" />
+        )}
+      </div>
+    );
   if (!session)
     return (
       <div className="boot-screen">
@@ -442,7 +487,7 @@ function Application() {
   return (
     <SessionContext.Provider
       key={session.user?.id ?? 'guest'}
-      value={{ session, updateSession, refresh, studioDrafts }}
+      value={{ session, updateSession: scopedUpdateSession, refresh, studioDrafts }}
     >
       {location.pathname.startsWith('/games/') ? (
         <Routes>
@@ -456,7 +501,7 @@ function Application() {
           />
           <Route path="/play/:id" element={<RevisionPlayer />} />
           <Route path="/settings" element={<Preferences />} />
-          <Route path="*" element={<Shell session={session} updateSession={updateSession} />} />
+          <Route path="*" element={<Shell session={session} onLogout={() => void logout()} />} />
         </Routes>
       ) : (
         <Routes>

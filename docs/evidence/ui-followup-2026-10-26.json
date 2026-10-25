@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-26",
+  "scope": "Seven UI follow-ups: settings, logout, desktop/mobile game controls, preview divider/audio, Enter submission and immediate elapsed time.",
+  "frontend": {
+    "passed": 103,
+    "failed": 0,
+    "command": "npm test --prefix web"
+  },
+  "backend": {
+    "passed": 53,
+    "command": "DATABASE_URL=postgresql:///gameforge_ui_followup_20261026 TZ=UTC .venv/bin/pytest studio/tests/test_domain.py -m 'not browser and not live'",
+    "database": "dedicated temporary PostgreSQL test database"
+  },
+  "preview_audio": {
+    "passed": 2,
+    "command": "GAMEFORGE_TEST_BROWSER_CHANNEL=chrome .venv/bin/pytest tests/test_preview_audio.py",
+    "evidence": "Native Web Audio and HTML media in opaque iframe; existing/future sources, author mute, clock continuity, invalid-source/hash messages, exact raw export preserved."
+  },
+  "checks": {
+    "frontend_lint": "passed",
+    "build": "passed",
+    "ruff": "passed",
+    "mypy_generation_validation": "passed, 35 modules",
+    "django_check": "passed",
+    "git_diff_check": "passed",
+    "model_or_migration_changes": false
+  },
+  "browser": [
+    {
+      "desktop_controls": true,
+      "sound_collapse_keeps_game": true,
+      "settings_columns": true,
+      "logout_without_feed": true,
+      "preview_no_width_jump": true
+    },
+    {
+      "mobile_width": 320,
+      "sound_fullscreen_and_menu": true,
+      "settings_stacked": true,
+      "no_overflow": true
+    },
+    {
+      "mobile_width": 390,
+      "sound_fullscreen_and_menu": true,
+      "settings_stacked": true,
+      "no_overflow": true
+    },
+    {
+      "mobile_width": 760,
+      "sound_fullscreen_and_menu": true,
+      "settings_stacked": true,
+      "no_overflow": true
+    },
+    {
+      "enter_sends": true,
+      "shift_enter_newline": true,
+      "timer_before_acknowledgement": [
+        "0 с",
+        "1 с",
+        "2 с"
+      ],
+      "timer_after_acknowledgement": "3 с",
+      "no_duplicate_message": true
+    },
+    {
+      "new_chat_timer_across_creation": true,
+      "cancel_enabled_on_acknowledgement": true,
+      "no_duplicate_message": true
+    }
+  ],
+  "artifacts": ".data/ui-followup-20261026/",
+  "regressions_prevented": [
+    "Late session and preference responses after logout cannot revive an account or replace accepted CSRF.",
+    "A first submission keeps its ownership across asynchronous route navigation and enables cancellation on HTTP acknowledgement.",
+    "Hidden preview audio is muted without destroying the iframe or restarting game state.",
+    "Optimistic message and timer reconcile with saved messages without duplication or resetting the initial seconds."
+  ],
+  "limitations": [
+    "Browser UI uses controlled HTTP fixtures and a synthetic game with native audio.",
+    "No real model calls, physical iOS/Android, Safari or deployment.",
+    "Backend coverage is the targeted domain suite, not a repeat of the entire repository suite."
+  ]
+}

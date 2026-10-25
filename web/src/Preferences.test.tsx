@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -46,6 +46,16 @@ it('keeps settings focused on model, theme and wishes without expenses or synthe
     session.preferences.notes.join('\n'),
   );
   expect(request).not.toHaveBeenCalled();
+  expect(
+    within(screen.getByRole('region', { name: 'Модель и оформление' })).queryByRole('button', {
+      name: 'Сохранить',
+    }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(screen.getByRole('region', { name: 'Пожелания к играм' })).getByRole('button', {
+      name: 'Сохранить',
+    }),
+  ).toBeInTheDocument();
 });
 it('applies theme immediately and only sends notes on Save without closing the page', async () => {
   const result = { theme: 'light', notes: ['Крупное управление'] };

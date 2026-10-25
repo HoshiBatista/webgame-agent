@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -99,6 +99,110 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('saved work and mutation submission', () => {
+  it('sends on Enter, preserves Shift+Enter and does not submit composition events', async () => {
+    setup();
+    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    fireEvent.change(input, { target: { value: 'Добавь звёзды' } });
+    vi.mocked(post).mockReturnValue(new Promise(() => {}));
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 });
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(post).toHaveBeenCalledExactlyOnceWith(
+      '/api/chats/one/runs/',
+      expect.objectContaining({ prompt: 'Добавь звёзды' }),
+    );
+    expect(screen.getByText('Добавь звёзды')).toBeInTheDocument();
+    expect(screen.getByText('Отправляю запрос…')).toBeInTheDocument();
+    expect(screen.getByLabelText('Время генерации')).toBeInTheDocument();
+    expect(input).toHaveValue('');
+  });
+  it('shows the submission before either HTTP response and reconciles it without duplicates', async () => {
+    setup();
+    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    const queued = {
+      id: 'sent-run',
+      status: 'queued',
+      can_cancel: true,
+      elapsed_seconds: 0.3,
+      model_profile: 'lite',
+    } as Run;
+    let finishPost!: (value: unknown) => void;
+    let finishRead!: (value: Chat) => void;
+    vi.mocked(post).mockReturnValue(
+      new Promise((resolve) => {
+        finishPost = resolve;
+      }),
+    );
+    vi.mocked(request).mockReturnValue(
+      new Promise((resolve) => {
+        finishRead = resolve;
+      }),
+    );
+    fireEvent.change(input, { target: { value: 'Добавь планету' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    expect(screen.getByText('Добавь планету')).toBeInTheDocument();
+    expect(screen.getByText('Отправляю запрос…')).toBeInTheDocument();
+    await act(async () => finishPost(queued));
+    expect(screen.getByRole('button', { name: 'Остановить генерацию' })).toBeEnabled();
+    await act(async () =>
+      finishRead({
+        ...chat,
+        active_run: queued,
+        runs: [queued],
+        messages: [
+          {
+            id: 'saved-prompt',
+            role: 'user',
+            content: 'Добавь планету',
+            run_id: queued.id,
+            created_at: '',
+          },
+        ],
+      }),
+    );
+    expect(screen.getAllByText('Добавь планету')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Время генерации')).toHaveLength(1);
+  });
+  it('keeps a first submission active across the new chat route before its acknowledgement', async () => {
+    const created = { ...chat, id: 'created', current_revision: null, revisions: [] };
+    vi.mocked(request).mockResolvedValue(created);
+    let finishCreate!: (value: Chat) => void;
+    let finishRun!: (value: Run) => void;
+    vi.mocked(post)
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          finishCreate = resolve;
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          finishRun = resolve;
+        }),
+      );
+    setupNavigation('/chats/new');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Описание вашей игры' }), {
+      target: { value: 'Игра про кометы' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+    expect(screen.getByText('Игра про кометы')).toBeInTheDocument();
+    await act(async () => finishCreate(created));
+    expect(post).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('Игра про кометы')).toBeInTheDocument();
+    expect(screen.getByText('Отправляю запрос…')).toBeInTheDocument();
+    await act(async () =>
+      finishRun({
+        id: 'sent-run',
+        status: 'queued',
+        can_cancel: true,
+        elapsed_seconds: 0,
+      } as Run),
+    );
+    expect(screen.getByRole('button', { name: 'Остановить генерацию' })).toBeEnabled();
+    expect(screen.getByText('Ожидаю начала работы…')).toBeInTheDocument();
+    expect(screen.getAllByText('Игра про кометы')).toHaveLength(1);
+  });
   it('opens a usable new-game form from a missing chat without submitting automatically', async () => {
     vi.mocked(request).mockRejectedValue(
       new ApiError({ code: 'request_error', message: 'No Chat matches the given query.' }, 404),
@@ -204,15 +308,21 @@ describe('saved work and mutation submission', () => {
     expect(screen.getByTitle('Игра')).toBe(frame);
     fireEvent.click(screen.getByRole('button', { name: 'Вернуться' }));
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    expect(screen.getByRole('combobox', { name: 'Версия игры' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Скопировать HTML для WebView' })).toHaveAttribute(
-      'type',
-      'button',
-    );
-    expect(screen.getByRole('link', { name: 'Скачать игру HTML' })).toHaveAttribute(
-      'href',
-      revision.export_url,
-    );
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('combobox', {
+        name: 'Версия игры',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Скопировать HTML для WebView',
+      }),
+    ).toHaveAttribute('type', 'button');
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('link', {
+        name: 'Скачать игру HTML',
+      }),
+    ).toHaveAttribute('href', revision.export_url);
     act(() => {
       viewport.matches = false;
       viewport.dispatchEvent(new Event('change'));
@@ -277,13 +387,21 @@ describe('saved work and mutation submission', () => {
     setupNavigation();
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
-      target: { value: 'older' },
-    });
+    fireEvent.change(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('combobox', {
+        name: 'Версия игры',
+      }),
+      {
+        target: { value: 'older' },
+      },
+    );
     fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
     fireEvent.click(screen.getByRole('link', { name: 'Чат один' }));
     await waitFor(() =>
-      expect(screen.getByTitle('Игра')).toHaveAttribute('src', 'http://localhost:8001/p/old'),
+      expect(screen.getByTitle('Игра')).toHaveAttribute(
+        'src',
+        'http://localhost:8001/p/old?audio_control=1',
+      ),
     );
     expect(post).not.toHaveBeenCalled();
   });
@@ -324,12 +442,15 @@ describe('saved work and mutation submission', () => {
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
     expect(
-      screen.getByRole('button', { name: 'Скопировать HTML для WebView' }),
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Скопировать HTML для WebView',
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Скачать игру HTML' })).toHaveAttribute(
-      'href',
-      revision.export_url,
-    );
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('link', {
+        name: 'Скачать игру HTML',
+      }),
+    ).toHaveAttribute('href', revision.export_url);
   });
   it('sends explicit unknown-cost consent once and reuses its key if the HTTP response is lost', async () => {
     vi.mocked(request).mockResolvedValue({
@@ -350,9 +471,14 @@ describe('saved work and mutation submission', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
-      target: { value: 'older' },
-    });
+    fireEvent.change(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('combobox', {
+        name: 'Версия игры',
+      }),
+      {
+        target: { value: 'older' },
+      },
+    );
     fireEvent.click(screen.getByRole('button', { name: /Для детей/ }));
     fireEvent.change(input, { target: { value: 'Попробуй снова' } });
     fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
@@ -409,7 +535,11 @@ describe('saved work and mutation submission', () => {
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
     vi.mocked(post).mockResolvedValue({ rating: 4 });
-    fireEvent.click(screen.getByRole('button', { name: 'Оценить результат' }));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Оценить результат',
+      }),
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Оценка 4 из 5' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Крупнее текст и элементы управления' }));
     fireEvent.change(screen.getByLabelText('Своё пожелание'), {
@@ -489,7 +619,11 @@ describe('saved work and mutation submission', () => {
     setup();
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    expect(screen.getByRole('button', { name: 'Поделиться' })).toBeDisabled();
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Поделиться',
+      }),
+    ).toBeDisabled();
     expect(document.querySelectorAll('iframe')).toHaveLength(1);
   });
   it('shows the actual candidate requiring manual review rather than the last accepted game', async () => {
@@ -528,8 +662,15 @@ describe('saved work and mutation submission', () => {
     setup();
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    expect(screen.getByTitle('Игра')).toHaveAttribute('src', 'http://localhost:8001/p/candidate');
-    expect(screen.getByRole('button', { name: 'Поделиться' })).toBeDisabled();
+    expect(screen.getByTitle('Игра')).toHaveAttribute(
+      'src',
+      'http://localhost:8001/p/candidate?audio_control=1',
+    );
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Поделиться',
+      }),
+    ).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Я проверил игру' })).not.toBeInTheDocument();
     expect(screen.queryByText('Подробности запуска')).not.toBeInTheDocument();
     vi.mocked(post).mockResolvedValue({});
@@ -564,12 +705,24 @@ describe('saved work and mutation submission', () => {
     setup();
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
-      target: { value: 'older' },
-    });
-    expect(screen.getByRole('button', { name: 'Восстановить' })).toBeInTheDocument();
+    fireEvent.change(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('combobox', {
+        name: 'Версия игры',
+      }),
+      {
+        target: { value: 'older' },
+      },
+    );
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Восстановить',
+      }),
+    ).toBeInTheDocument();
     expect(post).not.toHaveBeenCalled();
-    expect(screen.getByTitle('Игра')).toHaveAttribute('src', 'http://localhost:8001/p/old');
+    expect(screen.getByTitle('Игра')).toHaveAttribute(
+      'src',
+      'http://localhost:8001/p/old?audio_control=1',
+    );
   });
 });
 
@@ -656,7 +809,11 @@ describe('simple conversation', () => {
     setupNavigation();
     await screen.findByTitle('Игра');
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    fireEvent.click(screen.getByRole('button', { name: 'Поделиться' }));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Поделиться',
+      }),
+    );
     fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));
     const second = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
     await act(async () => finish({ results: [] }));

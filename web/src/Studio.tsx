@@ -15,7 +15,14 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { errorText, newKey, post, request } from './api';
-import { ErrorNotice, CopyHtmlButton, Modal, PhonePreview, Spinner } from './components';
+import {
+  ErrorNotice,
+  CopyHtmlButton,
+  Modal,
+  PhonePreview,
+  SoundButton,
+  Spinner,
+} from './components';
 import { chatsChanged, useSession } from './context';
 import type { Chat, Preferences, Publication, Revision, Run } from './types';
 import { useSavedChat } from './useSavedChat';
@@ -59,10 +66,22 @@ export default function Studio() {
   const selectedModel = profiles.find((item) => item.id === modelProfile);
   const modelUnavailable = profiles.length > 0 && !selectedModel?.available;
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<{
+    key: string;
+    chatId: string;
+    createdChatId?: string;
+    prompt: string;
+    startedAt: number;
+    model_profile: string;
+    previousMessages: string[];
+    run?: Run;
+  } | null>(null);
+  const pendingHere = pending?.chatId === id || pending?.createdChatId === id ? pending : null;
   const [selectedRevision, setSelectedRevision] = useState<string | null>(
     initialDraft?.selectedRevision ?? null,
   );
   const [previewOpen, setPreviewOpen] = useState(true);
+  const [soundMuted, setSoundMuted] = useState(false);
   const toolsMenu = useRef<HTMLDetailsElement>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [mobile, setMobile] = useState(
@@ -120,8 +139,13 @@ export default function Studio() {
   const openedChat = useRef('');
   const currentId = useRef(id);
   currentId.current = id;
-  const view = useRef({ id });
-  if (view.current.id !== id) view.current = { id };
+  const view = useRef<{ id: string; nextId?: string }>({ id });
+  if (view.current.id !== id) {
+    if (view.current.nextId === id) {
+      view.current.id = id;
+      delete view.current.nextId;
+    } else view.current = { id };
+  }
   useEffect(() => {
     view.current = { id: currentId.current };
     return () => {
@@ -144,6 +168,7 @@ export default function Studio() {
     setCustomReason('');
     setShareDone('');
     if (submissionChat.current !== id) {
+      setPending(null);
       setBusy(false);
       setError('');
       setPrompt(remembered?.prompt ?? '');
@@ -159,8 +184,25 @@ export default function Studio() {
       audienceReady.current = true;
     }
   }, [chat?.id]);
-  const latestRun = chat?.active_run ?? chat?.runs[0] ?? null;
-  const activeRun = chat?.active_run;
+  const activeRun =
+    chat?.active_run ??
+    (pendingHere?.run && ['queued', 'generating', 'checking'].includes(pendingHere.run.status)
+      ? pendingHere.run
+      : null);
+  const latestRun = activeRun ?? chat?.runs[0] ?? null;
+  const savedSubmission = chat?.messages.find(
+    (message) =>
+      pendingHere &&
+      message.role === 'user' &&
+      message.content === pendingHere.prompt &&
+      !pendingHere.previousMessages.includes(message.id),
+  );
+  useEffect(() => {
+    const saved = chat?.runs.find(
+      (run) => run.id === (pendingHere?.run?.id ?? savedSubmission?.run_id),
+    );
+    if (saved && !['queued', 'generating', 'checking'].includes(saved.status)) setPending(null);
+  }, [chat, pendingHere, savedSubmission]);
   const refreshedRun = useRef('');
   useEffect(() => {
     if (!latestRun || ['queued', 'generating', 'checking'].includes(latestRun.status)) return;
@@ -183,7 +225,7 @@ export default function Studio() {
   }, [chat?.title, id]);
   useLayoutEffect(() => {
     const scroller = scrollRef.current;
-    if (!scroller || loading) return;
+    if (!scroller || (loading && !pendingHere)) return;
     if (openedChat.current !== id) {
       openedChat.current = id;
       pinnedToBottom.current = true;
@@ -194,7 +236,7 @@ export default function Studio() {
     toBottom();
     const frame = requestAnimationFrame(toBottom);
     return () => cancelAnimationFrame(frame);
-  }, [id, loading, chat?.id, chat?.messages.length, activeRun?.id]);
+  }, [id, loading, chat?.id, chat?.messages.length, activeRun?.id, pendingHere?.key]);
   useEffect(() => {
     const scroller = scrollRef.current;
     const history = historyRef.current;
@@ -250,7 +292,8 @@ export default function Studio() {
   }
   async function send(event: FormEvent) {
     event.preventDefault();
-    if (!prompt.trim() || busy || activeRun || modelUnavailable || (!isNew && !chat)) return;
+    if (!prompt.trim() || busy || activeRun || pendingHere || modelUnavailable || (!isNew && !chat))
+      return;
     if (latestRun?.can_retry_unknown) {
       if (
         !window.confirm('Ответ на предыдущий запрос не получен полностью. Отправить новый запрос?')
@@ -273,6 +316,16 @@ export default function Studio() {
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
     };
     const key = operationKey(payload);
+    pinnedToBottom.current = true;
+    setPending({
+      key,
+      chatId: id,
+      prompt: payload.prompt,
+      startedAt: Date.now(),
+      model_profile: modelProfile || 'lite',
+      previousMessages: chat?.messages.map((m) => m.id) ?? [],
+    });
+    setPrompt('');
     let targetId = chat?.id;
     try {
       if (!targetId) {
@@ -283,14 +336,18 @@ export default function Studio() {
         targetId = target.id;
         if (isCurrent()) {
           submissionChat.current = targetId;
+          setPending((value) =>
+            value?.key === key ? { ...value, createdChatId: target.id } : value,
+          );
           // This navigation belongs to this submission, not to a different open chat.
-          startedView.id = targetId;
+          // React can render the old route before committing the navigation.
+          startedView.nextId = targetId;
           // Persist the chat URL before starting generation, even if its 202 is lost.
           navigate(`/chats/${targetId}`, { replace: true });
         }
         chatsChanged();
       }
-      await post<Run>(`/api/chats/${targetId}/runs/`, {
+      const accepted = await post<Run>(`/api/chats/${targetId}/runs/`, {
         ...payload,
         idempotency_key: key,
       });
@@ -303,6 +360,7 @@ export default function Studio() {
         studioDrafts?.delete(id);
       void refresh();
       if (!isCurrent()) return;
+      setPending((value) => (value?.key === key ? { ...value, run: accepted } : value));
       idempotency.current = newKey();
       lastPayload.current = '';
       setPrompt('');
@@ -310,6 +368,7 @@ export default function Studio() {
       chatsChanged();
     } catch (cause) {
       if (isCurrent()) {
+        setPending(null);
         setError(errorText(cause));
         setPrompt(payload.prompt);
       }
@@ -420,87 +479,103 @@ export default function Studio() {
       if (view.current === startedView) setBusy(false);
     }
   }
-  const gameTools = chat && (
-    <div className="game-tools-content" role="group" aria-label="Инструменты игры">
-      <div className="version-selector">
-        <History size={15} />
-        <select
-          aria-label="Версия игры"
-          value={selectedRevision ?? 'latest'}
-          onChange={(event) =>
-            setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
-          }
-        >
-          <option value="latest">
-            {defaultRevision ? `Последняя версия · ${defaultRevision.number}` : 'Пока нет версии'}
-          </option>
-          {chat.revisions.map((item) => (
-            <option key={item.id} value={item.id}>
-              Версия {item.number}
-              {item.id === current?.id ? ' · текущая' : ''}
+  const gameTools = (inMenu = true) =>
+    chat && (
+      <div
+        className={inMenu ? 'game-tools-content' : 'preview-bottom'}
+        role="group"
+        aria-label={inMenu ? 'Инструменты игры' : 'Действия предпросмотра'}
+      >
+        <div className="version-selector">
+          <History size={15} />
+          <select
+            aria-label="Версия игры"
+            value={selectedRevision ?? 'latest'}
+            onChange={(event) =>
+              setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
+            }
+          >
+            <option value="latest">
+              {defaultRevision ? `Последняя версия · ${defaultRevision.number}` : 'Пока нет версии'}
             </option>
-          ))}
-        </select>
-      </div>
-      <div className="preview-actions">
-        {revision && (
+            {chat.revisions.map((item) => (
+              <option key={item.id} value={item.id}>
+                Версия {item.number}
+                {item.id === current?.id ? ' · текущая' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="preview-actions">
+          {inMenu && revision && (
+            <button
+              type="button"
+              className="icon-button"
+              disabled={!revision?.preview_url}
+              aria-label="Открыть игру на весь экран"
+              title="На весь экран"
+              onClick={() => {
+                setPreviewOpen(true);
+                setGameFullscreen(true);
+              }}
+            >
+              <Expand size={18} /> <span>На весь экран</span>
+            </button>
+          )}
+          {inMenu && revision && (
+            <CopyHtmlButton exportUrl={revision.export_url} onError={setError} label />
+          )}
+          {inMenu && (
+            <SoundButton
+              muted={soundMuted}
+              disabled={!revision}
+              onToggle={() => setSoundMuted((value) => !value)}
+              label
+            />
+          )}
+          {revision?.accepted && selectedRevision && revision.id !== current?.id && (
+            <button
+              type="button"
+              className="button button-small button-outline"
+              disabled={busy || !!activeRun}
+              onClick={restoreRevision}
+            >
+              Восстановить
+            </button>
+          )}
+          {revision && (
+            <a
+              className="icon-button"
+              href={revision.export_url}
+              aria-label="Скачать игру HTML"
+              title="Скачать HTML"
+            >
+              <ArrowDownToLine size={18} /> {inMenu && <span>Скачать HTML</span>}
+            </a>
+          )}
           <button
             type="button"
-            className="icon-button"
-            disabled={!revision?.preview_url}
-            aria-label="Открыть игру на весь экран"
-            title="На весь экран"
-            onClick={() => {
-              setPreviewOpen(true);
-              setGameFullscreen(true);
-            }}
+            className={`icon-button ${feedbackDone ? 'rated' : ''}`}
+            disabled={!current || busy}
+            onClick={() => setShowFeedback(true)}
+            aria-label="Оценить результат"
+            title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
           >
-            <Expand size={18} /> <span>На весь экран</span>
+            <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} />{' '}
+            {inMenu && <span>Оценить</span>}
           </button>
-        )}
-        {revision && <CopyHtmlButton exportUrl={revision.export_url} onError={setError} label />}
-        {revision?.accepted && selectedRevision && revision.id !== current?.id && (
           <button
             type="button"
             className="button button-small button-outline"
-            disabled={busy || !!activeRun}
-            onClick={restoreRevision}
+            disabled={!revision?.accepted || busy}
+            onClick={openShare}
           >
-            Восстановить
+            <Share2 size={15} /> Поделиться
           </button>
-        )}
-        <button
-          type="button"
-          className="button button-small button-outline"
-          disabled={!revision?.accepted || busy}
-          onClick={openShare}
-        >
-          <Share2 size={15} /> Поделиться
-        </button>
-        <button
-          type="button"
-          className={`icon-button ${feedbackDone ? 'rated' : ''}`}
-          disabled={!current || busy}
-          onClick={() => setShowFeedback(true)}
-          aria-label="Оценить результат"
-          title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
-        >
-          <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} /> <span>Оценить</span>
-        </button>
-        {revision && (
-          <a
-            className="icon-button"
-            href={revision.export_url}
-            aria-label="Скачать игру HTML"
-            title="Скачать HTML"
-          >
-            <ArrowDownToLine size={18} /> <span>Скачать HTML</span>
-          </a>
-        )}
+        </div>
       </div>
-    </div>
-  );
-  if (loading) return <Spinner text="Открываем вашу мастерскую…" />;
+    );
+  if (loading && !pendingHere) return <Spinner text="Открываем вашу мастерскую…" />;
   if (!isNew && notFound)
     return (
       <main className="empty-state">
@@ -601,7 +676,7 @@ export default function Studio() {
                 </button>
               </div>
             )}
-            {!chat?.messages.length && (
+            {!chat?.messages.length && !pendingHere && (
               <div className="chat-welcome">
                 <div className="welcome-mark">
                   <Gamepad2 size={36} />
@@ -631,8 +706,28 @@ export default function Studio() {
                 </article>
               );
             })}
-            {activeRun && <RunMessage run={activeRun} />}
+            {pendingHere && !savedSubmission && (
+              <article className="chat-message message-user">
+                <span className="message-author">Вы</span>
+                <div>{pendingHere.prompt}</div>
+              </article>
+            )}
+            {(activeRun || pendingHere) && (
+              <RunMessage
+                run={
+                  activeRun ?? {
+                    id: pendingHere!.key,
+                    status: 'queued',
+                    elapsed_seconds: 0,
+                    model_profile: pendingHere!.model_profile,
+                  }
+                }
+                startedAt={pendingHere?.startedAt}
+                sending={!!pendingHere && !pendingHere.run && !savedSubmission}
+              />
+            )}
             {!activeRun &&
+              !pendingHere &&
               latestRun &&
               !chat?.messages.some(
                 (message) => message.role === 'assistant' && message.run_id === latestRun.id,
@@ -678,9 +773,14 @@ export default function Studio() {
                   : 'Опишите вашу мини-игру…'
               }
               rows={3}
-              disabled={busy || !!activeRun}
+              disabled={busy || !!activeRun || !!pendingHere}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing &&
+                  event.keyCode !== 229
+                ) {
                   event.preventDefault();
                   event.currentTarget.form?.requestSubmit();
                 }
@@ -711,7 +811,7 @@ export default function Studio() {
                   <ChevronDown size={19} />
                 </summary>
                 <div className="game-tools-popover" hidden={!toolsOpen}>
-                  {gameTools || (
+                  {gameTools() || (
                     <p className="field-help">Здесь появятся версии и действия с вашей игрой.</p>
                   )}
                 </div>
@@ -730,7 +830,12 @@ export default function Studio() {
                 <button
                   className="send-button"
                   disabled={
-                    !prompt.trim() || busy || !!activeRun || modelUnavailable || (!isNew && !chat)
+                    !prompt.trim() ||
+                    busy ||
+                    !!activeRun ||
+                    !!pendingHere ||
+                    modelUnavailable ||
+                    (!isNew && !chat)
                   }
                   aria-label={revision ? 'Отправить доработку' : 'Создать игру'}
                 >
@@ -748,7 +853,10 @@ export default function Studio() {
         inert={(mobile ? !gameFullscreen : !previewOpen) || undefined}
       >
         <PhonePreview
-          hideToolbar
+          hideToolbar={mobile}
+          muted={soundMuted}
+          onMutedChange={() => setSoundMuted((value) => !value)}
+          visible={gameFullscreen || (!mobile && previewOpen)}
           forceFullscreen={gameFullscreen}
           onEnterFullscreen={() => setGameFullscreen(true)}
           onExitFullscreen={() => setGameFullscreen(false)}
@@ -758,6 +866,7 @@ export default function Studio() {
           exportUrl={revision?.export_url}
           playUrl={revision ? `/play/${revision.id}` : undefined}
         />
+        {!mobile && gameTools(false)}
       </aside>
       {showShare && shareRevision && (
         <Modal

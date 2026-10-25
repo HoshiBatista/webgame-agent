@@ -4,6 +4,23 @@ import { ApiError, getSession, post, request, setCsrfToken } from './api';
 afterEach(() => vi.useRealTimers());
 
 describe('session API transport', () => {
+  it('allows an ignored session read without replacing the accepted CSRF token', async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrfToken: 'stale-token' }), {
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response('{}', { headers: { 'content-type': 'application/json' } }),
+      );
+    vi.stubGlobal('fetch', fetcher);
+    setCsrfToken('accepted-token');
+    await getSession({ updateCsrf: false });
+    await post('/api/login/', {});
+    expect(new Headers(fetcher.mock.calls[1][1].headers).get('X-CSRFToken')).toBe('accepted-token');
+  });
   it('uses the latest session CSRF token and same-origin credentials for mutations', async () => {
     const fetcher = vi
       .fn()

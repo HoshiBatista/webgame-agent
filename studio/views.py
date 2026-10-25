@@ -151,7 +151,7 @@ def login_view(request):
 @api_view(["POST"])
 def logout_view(request):
     logout(request)
-    return Response({"ok": True})
+    return Response({"ok": True, **session_data(request)})
 
 
 @api_view(["GET", "POST"])
@@ -410,7 +410,13 @@ def preview_view(request, token):
     except signing.BadSignature:
         return HttpResponse("Ссылка устарела. Откройте игру заново.", status=403)
     revision = get_object_or_404(Revision, pk=payload.get("revision"), artifact_hash=payload.get("hash"))
-    response = HttpResponse(revision.html, content_type="text/html; charset=utf-8")
+    html = revision.html
+    if request.GET.get("audio_control") == "1":
+        from generation.preview import with_audio_control
+
+        html = with_audio_control(html, artifact_hash=revision.artifact_hash,
+                                  app_origin=settings.GAMEFORGE_APP_ORIGIN)
+    response = HttpResponse(html, content_type="text/html; charset=utf-8")
     response["Content-Security-Policy"] = (
         "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; worker-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'; sandbox allow-scripts; frame-ancestors "
         + settings.GAMEFORGE_APP_ORIGIN

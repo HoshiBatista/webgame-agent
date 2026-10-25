@@ -3,6 +3,56 @@ import { describe, expect, it, vi } from 'vitest';
 import { GameFrame, PhonePreview } from './components';
 
 describe('sandbox and preview lifecycle', () => {
+  it('sends audio controls only to the displayed frame and retains it while muted', () => {
+    const { rerender } = render(
+      <GameFrame
+        url="http://localhost:8001/p/signed"
+        title="Игра"
+        artifactKey="game-hash"
+        muted={false}
+      />,
+    );
+    const frame = screen.getByTitle('Игра') as HTMLIFrameElement;
+    expect(frame.src).toBe('http://localhost:8001/p/signed?audio_control=1');
+    const send = vi.spyOn(frame.contentWindow!, 'postMessage');
+    rerender(
+      <GameFrame
+        url="http://localhost:8001/p/new-signature"
+        title="Игра"
+        artifactKey="game-hash"
+        muted
+      />,
+    );
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    expect(send).toHaveBeenLastCalledWith(
+      { type: 'gameforge:audio', artifactKey: 'game-hash', muted: true },
+      '*',
+    );
+    send.mockClear();
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        source: window,
+        data: { type: 'gameforge:audio-ready', artifactKey: 'game-hash' },
+      }),
+    );
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        source: frame.contentWindow,
+        data: { type: 'gameforge:audio-ready', artifactKey: 'wrong-game' },
+      }),
+    );
+    expect(send).not.toHaveBeenCalled();
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        source: frame.contentWindow,
+        data: { type: 'gameforge:audio-ready', artifactKey: 'game-hash' },
+      }),
+    );
+    expect(send).toHaveBeenCalledOnce();
+  });
   it('scales the whole validated viewport in a small bezel and keeps the frame on resize/fullscreen', () => {
     let resize = () => {};
     const observe = vi.fn();

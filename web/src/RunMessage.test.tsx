@@ -35,6 +35,22 @@ it('catches up when returning to the tab and resets for another run', () => {
   expect(screen.getByLabelText('Время генерации')).toHaveTextContent('0 с');
 });
 
+it('starts on submit and keeps the second boundary when the server acknowledges mid-tick', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-10-26T00:00:00Z'));
+  const startedAt = Date.now();
+  const { rerender } = render(
+    <RunTime run={{ ...run, id: 'pending', elapsed_seconds: 0 }} startedAt={startedAt} />,
+  );
+  expect(screen.getByLabelText('Время генерации')).toHaveTextContent('0 с');
+  act(() => vi.advanceTimersByTime(1000));
+  expect(screen.getByLabelText('Время генерации')).toHaveTextContent('1 с');
+  act(() => vi.advanceTimersByTime(400));
+  rerender(<RunTime run={{ ...run, elapsed_seconds: 0 }} startedAt={startedAt} />);
+  act(() => vi.advanceTimersByTime(600));
+  expect(screen.getByLabelText('Время генерации')).toHaveTextContent('2 с');
+});
+
 it('offers one unobtrusive link without recommendations or technical run cards', () => {
   render(
     <MemoryRouter>
