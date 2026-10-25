@@ -74,7 +74,10 @@ def csrf_failure(request, reason=""):
 
 
 def owned_chat(request, ident):
-    return get_object_or_404(Chat, pk=ident, owner=request.user, deleted_at__isnull=True)
+    chat = Chat.objects.filter(pk=ident, owner=request.user, deleted_at__isnull=True).first()
+    if chat is None:
+        raise DomainError("chat_not_found", "Этот чат удалён или недоступен. Создайте новую игру.", 404)
+    return chat
 
 
 def owned_run(request, ident):
@@ -271,7 +274,9 @@ def confirm_view(request, ident):
         revision.save(update_fields=["accepted", "verification", "checks_review_required"])
         chat.current_revision = revision
         if not chat.title_is_custom:
-            chat.title = revision.title
+            from .titles import short_game_title
+
+            chat.title = short_game_title(revision.title)
         chat.save(update_fields=["current_revision", "title", "updated_at"])
         run.status = "succeeded"
         run.stage = "succeeded"

@@ -146,9 +146,12 @@ it('continues Lite with the newly selected Pro, without automatically generating
   fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
   await screen.findByLabelText('Выбрать модель: Pro');
   expect(post).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: /Продолжить/ }));
+  fireEvent.change(screen.getByLabelText('Описание вашей игры'), {
+    target: { value: 'Продолжи создание' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
   await waitFor(() => expect(post).toHaveBeenCalled());
-  expect(vi.mocked(post).mock.calls[0][0]).toBe('/api/runs/failed/continue/');
+  expect(vi.mocked(post).mock.calls[0][0]).toBe('/api/chats/one/runs/');
   expect(vi.mocked(post).mock.calls[0][1]).toMatchObject({ model_profile: 'pro' });
 });
 

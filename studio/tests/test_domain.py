@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import uuid
 from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
@@ -90,6 +91,28 @@ class DomainTests(TestCase):
             content_type="application/json",
         )
         self.assertEqual(s.status_code, 200)
+
+    def test_unavailable_chat_has_safe_message_and_cannot_start_generation(self):
+        foreign = Chat.objects.create(owner=self.other)
+        self.chat.deleted_at = timezone.now()
+        self.chat.save(update_fields=['deleted_at'])
+        for ident in [self.chat.id, foreign.id, uuid.uuid4()]:
+            with self.subTest(chat=ident):
+                for response in [
+                    self.client.get(f'/api/chats/{ident}/'),
+                    self.client.post(f'/api/chats/{ident}/runs/',
+                                     {'prompt': 'Make a game', 'idempotency_key': 'missing-chat'},
+                                     content_type='application/json'),
+                ]:
+                    self.assertEqual(response.status_code, 404)
+                    self.assertEqual(response.json(), {'error': {
+                        'code': 'chat_not_found',
+                        'message': 'Этот чат удалён или недоступен. Создайте новую игру.',
+                        'details': None,
+                    }})
+        self.assertFalse(Invocation.objects.exists())
+        self.assertFalse(self.chat.runs.exists())
+        self.assertFalse(foreign.runs.exists())
 
     def test_csrf_login_and_authenticated_mutation(self):
         c = Client(enforce_csrf_checks=True)
@@ -285,6 +308,69 @@ class DomainTests(TestCase):
         self.assertEqual(rejected.status_code, 409)
         self.assertEqual(rejected.json()["error"]["code"], "retry_base_changed")
         self.assertFalse(self.client.get(f"/api/runs/{run.id}/").json()["can_retry_unknown"])
+
+    def test_new_request_after_unknown_uses_displayed_source_and_keeps_liability(self):
+        historical = Revision.objects.create(chat=self.chat, number=1, accepted=True, **artifact("First"))
+        current = Revision.objects.create(chat=self.chat, number=2, accepted=True, **artifact("Current"))
+        self.chat.current_revision = current
+        self.chat.save(update_fields=["current_revision"])
+        original = self.make_run(prompt="Old instruction")
+        original.status = "unknown"
+        original.save(update_fields=["status"])
+        inv = Invocation.objects.create(run=original, attempt=1, state="unknown", request={},
+                                        reservation_usd=Decimal("0.314"))
+        Budget.objects.get_or_create(pk=1)
+        path = f"/api/chats/{self.chat.id}/runs/"
+        body = {
+            "prompt": "New instruction", "audience": "children", "idempotency_key": "new-after-unknown",
+            "source_revision_id": str(historical.id), "source_artifact_hash": historical.artifact_hash,
+            "source_is_historical": True, "acknowledge_unknown_run_id": str(original.id),
+        }
+        self.assertEqual(self.client.post(path, body, content_type="application/json").status_code, 409)
+        body["accept_unknown_cost"] = True
+        created = self.client.post(path, body, content_type="application/json")
+        self.assertEqual(created.status_code, 202, created.content)
+        duplicate = self.client.post(path, body, content_type="application/json")
+        self.assertEqual(created.json()["id"], duplicate.json()["id"])
+        run = self.chat.runs.get(pk=created.json()["id"])
+        self.assertEqual(run.operation, "edit")
+        self.assertEqual(run.source_revision_id, historical.id)
+        self.assertEqual(run.base_revision_id, current.id)
+        self.assertIsNone(run.continued_from_id)
+        self.assertEqual(run.audience, "children")
+        self.assertEqual(run.events.get(kind="explicit_retry").details["unknown_invocation_ids"], [str(inv.id)])
+        with patch("generation.service.generate", return_value=response()) as model, \
+             patch("generation.artifacts.materialize", return_value=artifact()), \
+             patch("validation.service.validate", return_value=PASS):
+            process_run(str(run.id))
+        self.assertEqual(model.call_args.args[0]["base_revision"], str(historical.id))
+        self.assertEqual(model.call_args.args[0]["prompt"], "New instruction")
+        self.assertEqual(model.call_args.args[0]["audience"], "children")
+        self.assertEqual(budget_snapshot()["unknown_usd"], 0.314)
+        inv.refresh_from_db()
+        self.assertEqual(inv.state, "unknown")
+
+    def test_unknown_acknowledgement_cannot_reference_another_chat(self):
+        other = self.make_run(Chat.objects.create(owner=self.other))
+        result = self.client.post(f"/api/chats/{self.chat.id}/runs/", {
+            "prompt": "New game", "idempotency_key": "foreign-unknown",
+            "acknowledge_unknown_run_id": str(other.id), "accept_unknown_cost": True,
+        }, content_type="application/json")
+        self.assertEqual(result.status_code, 409)
+        self.assertFalse(self.chat.runs.exists())
+
+    def test_cancellation_reply_is_saved_once_and_survives_a_new_request(self):
+        run = self.make_run()
+        path = f"/api/runs/{run.id}/cancel/"
+        for _ in range(2):
+            self.assertEqual(self.client.post(path, {}, content_type="application/json").status_code, 200)
+        self.make_run(key="next", prompt="Another game")
+        messages = run.chat_messages.filter(role="assistant")
+        self.assertEqual(messages.count(), 1)
+        self.assertIn("Генерация остановлена", messages.get().content)
+        history = self.client.get(f"/api/chats/{self.chat.id}/").json()["messages"]
+        saved = next(item for item in history if item["id"] == str(messages.get().id))
+        self.assertEqual(saved["generation"]["status"], "cancelled")
 
     def test_infrastructure_continue_rechecks_without_model(self):
         run = self.make_run()

@@ -31,7 +31,6 @@ export function ModelChoices({ options, value, disabled, onChange }: Props) {
           />
           <span>
             <strong>{option.name}</strong>
-            <small>{option.description}</small>
             {!option.available && <small>{option.unavailable_reason}</small>}
           </span>
           {value === option.id && <Check size={16} aria-hidden="true" />}

@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import {
   ArrowUpRight,
   Check,
-  ChevronDown,
   CircleAlert,
   Copy,
   Expand,
@@ -14,9 +13,8 @@ import {
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatDuration, formatMoney } from './api';
 import { copyGameHtml } from './webview';
-import type { Budget, Publication, Revision, Run, RunEvent } from './types';
+import type { Publication } from './types';
 
 export function GameThumbnail({
   game,
@@ -33,7 +31,7 @@ export function GameThumbnail({
         <span />
         <span />
         <Gamepad2 size={58} />
-        <i>✦</i>
+        <Sparkles className="thumbnail-spark" size={20} />
       </div>
       {game.thumbnail_url && (
         <img src={game.thumbnail_url} alt={`Кадр игры «${game.title}»`} loading="lazy" />
@@ -127,33 +125,6 @@ export function Modal({
     </dialog>
   );
 }
-export function BudgetDetails({ budget }: { budget: Budget }) {
-  return (
-    <div className="budget-details">
-      <div>
-        <span>Подтверждённый расход</span>
-        <strong>{formatMoney(budget.spent_usd)}</strong>
-      </div>
-      <div>
-        <span>В работе</span>
-        <strong>{formatMoney(budget.reserved_usd)}</strong>
-      </div>
-      <div>
-        <span>Неуточнённый расход</span>
-        <strong>{formatMoney(budget.unknown_usd)}</strong>
-      </div>
-      <div>
-        <span>Доступно из {formatMoney(budget.limit_usd)}</span>
-        <strong>{formatMoney(budget.available_usd)}</strong>
-      </div>
-      <p>
-        Эквивалент по тарифам API. При входе через подписку Codex это учёт работы модели, а не
-        списание с карты.
-      </p>
-    </div>
-  );
-}
-
 export function GameFrame({
   url,
   title,
@@ -182,9 +153,11 @@ export function GameFrame({
 export function CopyHtmlButton({
   exportUrl,
   onError,
+  label = false,
 }: {
   exportUrl: string;
   onError: (message: string) => void;
+  label?: boolean;
 }) {
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -218,6 +191,7 @@ export function CopyHtmlButton({
   return (
     <>
       <button
+        type="button"
         className="icon-button"
         onClick={copyHtml}
         disabled={copying}
@@ -231,6 +205,7 @@ export function CopyHtmlButton({
         ) : (
           <Copy size={18} />
         )}
+        {label && <span>{copied ? 'Скопировано' : 'Скопировать HTML'}</span>}
       </button>
       <span className="sr-only" role="status">
         {copied ? 'HTML скопирован одной строкой для WebView' : ''}
@@ -335,7 +310,7 @@ export function PhonePreview({
     <div className="phone-empty">
       <span className="empty-orbit">
         <Gamepad2 size={44} />
-        <span className="orbit-star">✦</span>
+        <Sparkles className="orbit-star" size={20} aria-hidden="true" />
       </span>
       {empty ?? (
         <>
@@ -419,254 +394,5 @@ export function PhonePreview({
         )}
       </div>
     </>
-  );
-}
-
-export const runLabels: Record<Run['status'], string> = {
-  queued: 'Ожидаем свободную модель',
-  generating: 'Создаём вашу игру',
-  checking: 'Проверяем код и работу игры',
-  succeeded: 'Готово, можно играть',
-  needs_attention: 'Нужно ваше решение',
-  unverified: 'Игра сохранена — нужна ваша проверка',
-  failed: 'Не получилось завершить',
-  cancelled: 'Задание отменено',
-  unknown: 'Ответ не получен полностью',
-};
-const pendingRunLabels: Record<string, string> = {
-  repairing: 'Исправляем найденную проблему',
-  repairing_checks: 'Уточняем проверки сохранённой игры',
-  waiting_model: 'Ожидаем ответ модели',
-  waiting_admin: 'Нужна помощь администратора',
-};
-export function RunStatus({
-  run,
-  events,
-  onCancel,
-  onContinue,
-  onConfirm,
-  onRecheck,
-  busy,
-}: {
-  run: Run;
-  events: RunEvent[];
-  onCancel: () => void;
-  onContinue: (prompt: string, acceptUnknownCost?: boolean) => void;
-  onConfirm: () => void;
-  onRecheck?: () => void;
-  busy: boolean;
-}) {
-  const [comment, setComment] = useState('');
-  const [acceptUnknownCost, setAcceptUnknownCost] = useState(false);
-  useEffect(() => setAcceptUnknownCost(false), [run.id]);
-  const active = ['queued', 'generating', 'checking'].includes(run.status);
-  const label = active
-    ? pendingRunLabels[run.stage] || runLabels[run.status]
-    : runLabels[run.status];
-  const latest = events.at(-1);
-  return (
-    <section className={`run-card run-${run.status}`} aria-live="polite">
-      <div className="run-heading">
-        <span className="run-icon">
-          {active ? (
-            <LoaderCircle className="spin" size={19} />
-          ) : run.status === 'succeeded' ? (
-            <Check size={19} />
-          ) : (
-            <CircleAlert size={19} />
-          )}
-        </span>
-        <div>
-          <strong>
-            {label}
-            {run.model_label && <span className="model-badge">{run.model_label}</span>}
-          </strong>
-          <span>{run.message || latest?.message || run.stage}</span>
-        </div>
-        {run.elapsed_seconds > 0 && <small>{formatDuration(run.elapsed_seconds)}</small>}
-      </div>
-      {run.error && <p className="run-error">{run.error.message}</p>}
-      {run.confirmation?.requirements.length ? (
-        <ul>
-          {run.confirmation.requirements.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
-        </ul>
-      ) : null}
-      {run.status === 'unknown' && (
-        <p>
-          Сохранённые версии и данные запроса не потеряны. Неизвестный расход остаётся в бюджете;
-          автоматической сверки сейчас нет. Мы не запускаем платный повтор вслепую.
-        </p>
-      )}
-      {run.can_retry_unknown && (
-        <label className="retry-consent">
-          <input
-            type="checkbox"
-            checked={acceptUnknownCost}
-            onChange={(event) => setAcceptUnknownCost(event.target.checked)}
-          />
-          <span>
-            Разрешаю новый запрос с отдельным расходом. Сумма за оборвавшийся запрос пока останется
-            в «Неуточнённый расход».
-          </span>
-        </label>
-      )}
-      {run.can_continue && (
-        <label className="continue-note">
-          Уточнение для продолжения <span>необязательно</span>
-          <textarea
-            rows={2}
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-            placeholder="Что стоит учесть при исправлении?"
-          />
-        </label>
-      )}
-      <div className="run-actions">
-        {run.can_retry_unknown && (
-          <button
-            className="button button-small"
-            disabled={busy || !acceptUnknownCost}
-            onClick={() => onContinue('', true)}
-          >
-            <Sparkles size={15} /> Повторить запрос
-          </button>
-        )}
-        {run.can_cancel && (
-          <button className="button button-small button-quiet" disabled={busy} onClick={onCancel}>
-            <X size={15} /> Отменить
-          </button>
-        )}
-        {run.can_continue && (
-          <button
-            className="button button-small"
-            disabled={busy}
-            onClick={() => onContinue(comment)}
-          >
-            <Sparkles size={15} /> Продолжить исправление
-          </button>
-        )}
-        {run.can_confirm && (
-          <button className="button button-small" disabled={busy} onClick={onConfirm}>
-            <Check size={15} /> Я проверил игру
-          </button>
-        )}
-        {run.can_recheck && onRecheck && (
-          <button className="button button-small button-quiet" disabled={busy} onClick={onRecheck}>
-            Повторить проверку без генерации
-          </button>
-        )}
-      </div>
-      <details className="disclosure">
-        <summary>
-          Что происходит <ChevronDown size={15} />
-        </summary>
-        <p>
-          Вызовов модели: {run.attempts}
-          {run.max_model_calls ? ` из ${run.max_model_calls}` : ''}. Доработка использует
-          сохранённый результат.
-        </p>
-        {events.length > 0 && (
-          <ol className="event-list">
-            {events.slice(-12).map((event) => (
-              <li key={event.id}>
-                <time>
-                  {new Date(event.created_at).toLocaleTimeString('ru-RU', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </time>
-                <span>{event.message}</span>
-              </li>
-            ))}
-          </ol>
-        )}
-        <BudgetDetails budget={run.budget} />
-      </details>
-    </section>
-  );
-}
-function readable(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (Array.isArray(value)) return value.map(readable).join('\n');
-  if (value === null || value === undefined) return '';
-  return JSON.stringify(value, null, 2);
-}
-export function RevisionDetails({ revision }: { revision: Revision }) {
-  return (
-    <details className="disclosure revision-details">
-      <summary>
-        Замысел и результаты проверки <ChevronDown size={15} />
-      </summary>
-      <div className="revision-meta">
-        <span>Версия {revision.number}</span>
-        <span>
-          {revision.verification === 'automatic'
-            ? 'Проверена автоматически'
-            : revision.verification === 'manual'
-              ? 'Подтверждена человеком'
-              : 'Кандидат, ещё не принят'}
-        </span>
-      </div>
-      {Object.entries(revision.design ?? {}).map(([key, value]) => (
-        <div className="design-field" key={key}>
-          <strong>
-            {(
-              {
-                summary: 'Идея',
-                title: 'Название',
-                controls: 'Управление',
-                visual: 'Оформление',
-                visual_style: 'Оформление',
-                goal: 'Цель',
-                end_condition: 'Конечный исход',
-                outcome: 'Победа или поражение',
-                audience: 'Аудитория',
-              } as Record<string, string>
-            )[key] ?? key.replaceAll('_', ' ')}
-          </strong>
-          <p>{readable(value)}</p>
-        </div>
-      ))}
-      {revision.report && (
-        <div className="report">
-          <h4>Проверка</h4>
-          <p>
-            {(
-              {
-                passed: 'Проверки пройдены',
-                failed: 'Найдены ошибки',
-                unverified: 'Часть эффектов требует ручной проверки',
-                infrastructure_error: 'Не удалось завершить проверку',
-              } as Record<string, string>
-            )[revision.report.status] ?? revision.report.status}
-          </p>
-          {revision.report.stages?.map((item) => (
-            <p key={item.stage}>
-              {item.stage === 'syntax' ? 'Синтаксис кода' : 'Игровые сценарии'}:{' '}
-              {item.status === 'passed'
-                ? 'проверено'
-                : item.status === 'failed'
-                  ? 'найдены ошибки'
-                  : 'требует проверки'}
-            </p>
-          ))}
-          {revision.report.findings.map((finding, index) => (
-            <p className="report-finding" key={index}>
-              {typeof finding === 'string' ? finding : (finding.message ?? readable(finding))}
-            </p>
-          ))}
-          {revision.report.facts.length > 0 && (
-            <details>
-              <summary>Наблюдения ({revision.report.facts.length})</summary>
-              {revision.report.facts.map((fact, index) => (
-                <pre key={index}>{readable(fact)}</pre>
-              ))}
-            </details>
-          )}
-        </div>
-      )}
-    </details>
   );
 }

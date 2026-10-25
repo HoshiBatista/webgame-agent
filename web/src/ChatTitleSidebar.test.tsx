@@ -65,16 +65,16 @@ it('updates the sidebar immediately after rename and ignores an older pending li
   );
   const sidebar = await screen.findByRole('navigation', { name: 'Ваши игры' });
   await within(sidebar).findByRole('link', { name: /Старое название/ });
-  await screen.findByRole('button', { name: 'Переименовать чат' });
+  fireEvent.click(screen.getByRole('button', { name: 'Действия с чатом «Старое название»' }));
   holdLists = true;
   act(() => chatsChanged());
   const oldRequest = pending[0];
-  fireEvent.click(screen.getByRole('button', { name: 'Переименовать чат' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Переименовать' }));
   fireEvent.change(screen.getByRole('textbox', { name: 'Название чата' }), {
     target: { value: 'Новый сад' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Сохранить название' }));
-  await screen.findByRole('heading', { name: 'Новый сад' });
+  await within(sidebar).findByRole('link', { name: 'Новый сад' });
   // List refreshes have not returned yet; the confirmed PATCH already updates the label.
   expect(within(sidebar).getByRole('link', { name: /Новый сад/ })).toBeInTheDocument();
   await act(async () => oldRequest({ results: [chat] }));

@@ -14,6 +14,7 @@ model request was sent are separate, potentially unknown outcomes.
 - `GET /api/session/`: `{user:null|{id,username,is_staff},csrfToken,preferences:{theme,notes},capabilities:{provider,model,models,local_only},budget:null|{limit_usd,spent_usd,reserved_usd,unknown_usd,available_usd}}`. Guest budget is null. Model catalog entries include `{id,name,priced}`; `priced` means a tariff is configured, not that sufficient budget is available.
 - `POST /api/login/`: `{username,password}` → session response. `POST /api/logout/` → `{ok:true}`.
 - `GET /api/chats/`: owned chat summaries `{id,title,audience,updated_at,current_revision,active_run}`.
+- Requests scoped to a missing, deleted or another user's chat return the same `404` with `error.code=chat_not_found` and a Russian user-facing message. Clients show an unavailable-chat screen with an explicit way to `/chats/new`; observing a 404 must not create a replacement chat or submit generation automatically.
 - `POST /api/chats/`: optional `{title,audience}` → full chat. Missing/empty title becomes `Новая игра`; an explicitly supplied nonempty title is treated as a manual choice. `GET /api/chats/:id/` → `{id,title,audience,created_at,updated_at,current_revision:Revision|null,candidate_revision:Revision|null,messages:Message[],revisions:Revision[],runs:Run[],active_run:Run|null,source_publication:null|uuid}`. `PATCH {title}` → full chat; owner only, authenticated session and CSRF required, allowed during generation. Title must be nonempty after whitespace normalization and at most 160 characters. Even saving the same title marks it as manual; clients cannot reset this flag. `DELETE` → 204. Publications survive deletion.
 - `POST /api/chats/:id/runs/`: `{prompt,audience?,model?,idempotency_key,source_revision_id?,source_artifact_hash?,source_is_historical?,generation_profile?,source_format?}` → `Run` (202). An existing game requires the exact displayed source UUID/hash; an unaccepted draft is a valid edit source. Stale/foreign sources fail, never silently become create. A deliberately selected older source uses `source_is_historical:true`. `Run.source_revision_id` is separate from the accepted `base_revision_id` used for concurrency checks. Same key and payload return the same run. `generation_profile` is `full|compact`, `source_format` is `string|lines` (lines only for compact). Source/continuation profile is immutable; switching Lite/Pro does not change the artifact format. `GET /api/runs/:id/` → `Run`.
 - `POST /api/runs/:id/cancel/`: cancel even in flight; preserves accepted version. `POST /api/runs/:id/continue/`: optional `{prompt,idempotency_key,accept_unknown_cost}` resumes saved candidate/last exact response; does not replay planning. Provider and model default to those of the original run. An unresolved unknown invocation requires explicit boolean `accept_unknown_cost:true` for a new attempt. The old liability remains untouched, the new invocation is accounted separately, and the accepted revision must still match the original base (`retry_base_changed` otherwise). The same idempotency key and payload return the same new run; no automatic retry/reconciliation is implied.
@@ -30,14 +31,17 @@ model request was sent are separate, potentially unknown outcomes.
 `Message`: `{id,role:user|assistant|system,content,created_at,run_id}`.
 
 Chat naming makes no additional model calls. On a new automatically named chat,
-the first run uses a whitespace-normalized prompt prefix (at most 60 characters,
-with an ellipsis when truncated). Later prompts do not replace this provisional
-name. Accepting a generated revision, automatically or through explicit manual
-confirmation, uses the game title unless the chat has been manually named.
+the first run uses a normalized provisional label of 1–3 words (at most 48 characters). Later prompts do not replace this provisional
+name. Saving the first generated candidate refines the label from its model title; acceptance
+keeps the same short-name rule. Manually named chats are never renamed automatically.
 Renaming and result acceptance lock the same chat row; a late result cannot replace
 a manual name. Publication titles and revision/game content are unaffected.
 Migration `0011_chat_titles` preserves existing nonempty names as manual choices
 because their original provenance is unavailable; empty names get the default.
+
+`Message`: `{id,role,content,created_at,run_id,generation}`. Assistant messages include `generation:{id,status,model_profile,elapsed_seconds}` even when their run is outside the latest 30 entries in `Chat.runs`; messages without a run and user messages have `generation:null`. Cancellation stores one assistant reply, so later requests do not erase the stop from the conversation.
+
+For a new composer request following an unknown outcome, `POST /api/chats/:id/runs/` also accepts `acknowledge_unknown_run_id` and explicit boolean `accept_unknown_cost:true`. The referenced run must belong to this chat and have an unresolved unknown invocation. Consent records the exact invocation IDs and preserves their liability. This starts a new create/edit using the displayed source UUID/hash, audience and prompt; it does not inherit the old continuation's source or replay a saved reply. These fields participate in idempotency. The existing `/continue/` endpoint retains its saved-candidate semantics.
 
 `Revision`: `{id,title,number,artifact_hash,design,checks,created_at,accepted,verification:automatic|manual|none,preview_url,export_url,parent_id,report:{status,findings,facts,elapsed_seconds}|null}`. Source files are only returned by private source/diagnostics endpoints. Candidate may be previewed safely but is not accepted/publishable.
 

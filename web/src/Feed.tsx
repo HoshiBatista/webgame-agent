@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   Share2,
+  Sparkles,
   Trash2,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -118,12 +119,8 @@ export default function Feed() {
     <main className="feed">
       <section className="feed-hero">
         <div>
-          <span className="eyebrow">Играть — тоже часть творчества</span>
-          <h1>
-            Маленькие миры,
-            <br />
-            <span>большое «ещё раз».</span>
-          </h1>
+          <span className="eyebrow">Создано в beeGame</span>
+          <h1>Игры сообщества</h1>
           <p>Посмотрите, что придумали другие. Или начните с чистого листа.</p>
           <Link className="button button-primary" to="/chats/new">
             <Plus size={18} /> Создать игру
@@ -132,7 +129,7 @@ export default function Feed() {
         <div className="feed-hero-art" aria-hidden="true">
           <span className="feed-orbit" />
           <Gamepad2 size={95} strokeWidth={1.5} />
-          <i>✦</i>
+          <Sparkles className="feed-art-spark" size={25} />
           <b>
             PLAY
             <br />

@@ -26,7 +26,8 @@ export default function Landing() {
         <section className="hero">
           <div className="hero-copy">
             <span className="eyebrow">
-              <span className="tiny-star">✦</span> От «а что, если…» до «сыграем?»
+              <Sparkles className="tiny-star" size={15} aria-hidden="true" /> От «а что, если…» до
+              «сыграем?»
             </span>
             <h1>
               Придумайте.
@@ -51,8 +52,8 @@ export default function Landing() {
             </div>
           </div>
           <div className="hero-art" aria-hidden="true">
-            <span className="art-spark art-spark-one">✦</span>
-            <span className="art-spark art-spark-two">✳</span>
+            <Sparkles className="art-spark art-spark-one" size={42} />
+            <Star className="art-spark art-spark-two" size={30} />
             <div className="idea-label">
               <Sparkles size={16} /> Всё начинается с идеи
             </div>
@@ -85,7 +86,7 @@ export default function Landing() {
                 <span>
                   <Gamepad2 size={17} /> Идея становится игрой
                 </span>
-                <span>✦</span>
+                <Sparkles size={18} />
               </div>
             </div>
             <div className="art-mini-card">
@@ -120,11 +121,8 @@ export default function Landing() {
         </section>
         <section className="how-section">
           <div>
-            <span className="eyebrow">Никакой магии. Ну, почти.</span>
-            <h2>
-              Маленький путь
-              <br />к «ещё одну партию».
-            </h2>
+            <span className="eyebrow">Три шага к вашей игре</span>
+            <h2>От идеи к готовой игре</h2>
           </div>
           <div className="how-steps">
             <article>
@@ -150,7 +148,6 @@ export default function Landing() {
       <footer className="landing-footer">
         <div className="landing-footer-main">
           <Brand />
-          <span>Маленькие игры. Большие идеи.</span>
         </div>
         <BrandDisclaimer />
       </footer>

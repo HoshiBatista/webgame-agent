@@ -128,8 +128,18 @@ def chat_data(chat, detail=False):
                         "content": m.content,
                         "created_at": m.created_at.isoformat(),
                         "run_id": str(m.run_id) if m.run_id else None,
+                        "generation": {
+                            "id": str(m.run_id),
+                            "status": m.run.status,
+                            "model_profile": m.run.model_profile or (
+                                "pro" if m.run.provider == "codex" else "lite"
+                            ),
+                            "elapsed_seconds": (
+                                (m.run.finished_at or timezone.now()) - m.run.created_at
+                            ).total_seconds(),
+                        } if m.run_id and m.role != "user" else None,
                     }
-                    for m in chat.messages.all()
+                    for m in chat.messages.select_related("run")
                 ],
                 "revisions": [revision_data(v) for v in chat.revisions.all()],
                 "runs": [run_data(r, budget) for r in chat.runs.order_by("-created_at")[:30]],

@@ -119,6 +119,10 @@ export interface Message {
   content: string;
   created_at: string;
   run_id: string | null;
+  generation?: Pick<
+    Run,
+    'id' | 'status' | 'model_profile' | 'model_label' | 'elapsed_seconds'
+  > | null;
 }
 export interface ChatSummary {
   id: string;

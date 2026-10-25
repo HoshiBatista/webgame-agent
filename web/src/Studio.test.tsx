@@ -4,7 +4,7 @@ import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Studio from './Studio';
 import { SessionContext, type StudioDraft } from './context';
-import { post, request } from './api';
+import { ApiError, post, request } from './api';
 import type { Chat, Revision, Run, Session } from './types';
 
 vi.mock('./api', async (original) => ({
@@ -99,6 +99,59 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('saved work and mutation submission', () => {
+  it('opens a usable new-game form from a missing chat without submitting automatically', async () => {
+    vi.mocked(request).mockRejectedValue(
+      new ApiError({ code: 'request_error', message: 'No Chat matches the given query.' }, 404),
+    );
+    setupNavigation();
+    await screen.findByRole('heading', { name: 'Чат недоступен' });
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByText('No Chat matches the given query.')).not.toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Создать новую игру' }));
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Описание вашей игры' }), {
+      target: { value: 'Собирай звёзды' },
+    });
+    expect(screen.getByRole('button', { name: 'Создать игру' })).toBeEnabled();
+    expect(post).not.toHaveBeenCalled();
+    vi.mocked(request).mockResolvedValue({
+      ...chat,
+      id: 'two',
+      current_revision: null,
+      revisions: [],
+    });
+    vi.mocked(post).mockImplementation(async (path) =>
+      path === '/api/chats/' ? { ...chat, id: 'two' } : {},
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(post).toHaveBeenNthCalledWith(1, '/api/chats/', { audience: 'everyone' });
+    expect(post).toHaveBeenNthCalledWith(
+      2,
+      '/api/chats/two/runs/',
+      expect.objectContaining({ prompt: 'Собирай звёзды', source_revision_id: null }),
+    );
+  });
+
+  it('preserves unsent text when a loaded chat is removed, without reusing its revision', async () => {
+    setupNavigation();
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Что изменить в игре' }), {
+      target: { value: 'Сделай игру про звёзды' },
+    });
+    vi.mocked(request).mockRejectedValue(
+      new ApiError({ code: 'chat_not_found', message: 'Чат недоступен' }, 404),
+    );
+    act(() => window.dispatchEvent(new Event('focus')));
+    await screen.findByRole('heading', { name: 'Чат недоступен' });
+    expect(screen.queryByTitle('Игра')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Создать новую игру' }));
+    expect(await screen.findByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue(
+      'Сделай игру про звёзды',
+    );
+    expect(screen.getByRole('button', { name: 'Создать игру' })).toBeEnabled();
+    expect(post).not.toHaveBeenCalled();
+  });
+
   it('addresses the displayed unaccepted draft when there is no accepted game', async () => {
     const draft = { ...revision, id: 'draft', artifact_hash: 'draft-hash', accepted: false };
     vi.mocked(request).mockResolvedValue({
@@ -140,61 +193,33 @@ describe('saved work and mutation submission', () => {
     expect(post).not.toHaveBeenCalled();
   });
 
-  it('offers mobile game tools and direct fullscreen, retaining the frame across viewport changes', async () => {
+  it('offers fullscreen in the mobile header and version actions beside the composer, keeping one frame', async () => {
     viewport.matches = true;
     setup();
     const frame = await screen.findByTitle('Игра');
-    expect(screen.queryByRole('button', { name: 'Свернуть предпросмотр' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Удалить чат' })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Открыть игру на весь экран' }),
-    ).not.toBeInTheDocument();
-    const toolsToggle = screen.getByRole('button', { name: 'Развернуть действия с игрой' });
-    expect(toolsToggle).toHaveAttribute('aria-expanded', 'false');
-    expect(document.querySelector('#mobile-game-tools')).toHaveAttribute('inert');
-    fireEvent.click(toolsToggle);
-    expect(toolsToggle).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('button', { name: 'Удалить чат' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Версия игры' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Открыть игру на весь экран' }));
+    expect(screen.getByRole('dialog', { name: 'Игра: Игра' })).toBeInTheDocument();
+    expect(screen.getByTitle('Игра')).toBe(frame);
+    fireEvent.click(screen.getByRole('button', { name: 'Вернуться' }));
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
     expect(screen.getByRole('combobox', { name: 'Версия игры' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Скопировать HTML для WebView' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Скопировать HTML для WebView' })).toHaveAttribute(
+      'type',
+      'button',
+    );
     expect(screen.getByRole('link', { name: 'Скачать игру HTML' })).toHaveAttribute(
       'href',
       revision.export_url,
     );
-    expect(screen.getByRole('button', { name: 'Поделиться' })).toBeEnabled();
-    const play = screen.getByRole('button', { name: 'Открыть игру на весь экран' });
-    fireEvent.click(play);
-    expect(screen.getByRole('dialog', { name: 'Игра: Игра' })).toBeInTheDocument();
-    expect(document.querySelectorAll('iframe')).toHaveLength(1);
-    expect(screen.getByTitle('Игра')).toBe(frame);
-    fireEvent.click(screen.getByRole('button', { name: 'Вернуться' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(document.querySelector('#studio-preview')).toHaveAttribute('inert');
-    fireEvent.click(screen.getByRole('button', { name: 'Свернуть действия с игрой' }));
-    expect(document.querySelector('#mobile-game-tools')).toHaveAttribute('inert');
-    expect(screen.queryByRole('combobox', { name: 'Версия игры' })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Скопировать HTML для WebView' }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByTitle('Игра')).toBe(frame);
-    fireEvent.click(screen.getByRole('button', { name: 'Развернуть действия с игрой' }));
     act(() => {
       viewport.matches = false;
       viewport.dispatchEvent(new Event('change'));
     });
     expect(screen.getByRole('button', { name: 'Свернуть предпросмотр' })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Скопировать HTML для WebView' })).toHaveLength(1);
     expect(screen.getByTitle('Игра')).toBe(frame);
-    fireEvent.click(screen.getByRole('button', { name: 'Открыть игру на весь экран' }));
-    act(() => {
-      viewport.matches = true;
-      viewport.dispatchEvent(new Event('change'));
-    });
-    expect(screen.getByRole('dialog', { name: 'Игра: Игра' })).toBeInTheDocument();
-    expect(document.querySelector('#studio-preview')).not.toHaveAttribute('inert');
-    expect(screen.getByTitle('Игра')).toBe(frame);
+    expect(document.querySelectorAll('iframe')).toHaveLength(1);
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -250,7 +275,9 @@ describe('saved work and mutation submission', () => {
       ],
     });
     setupNavigation();
-    fireEvent.change(await screen.findByRole('combobox', { name: 'Версия игры' }), {
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
       target: { value: 'older' },
     });
     fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
@@ -292,9 +319,13 @@ describe('saved work and mutation submission', () => {
     );
   });
 
-  it('offers copying above the phone while preserving the lower download link', async () => {
+  it('offers copying and download in the composer menu', async () => {
     setup();
-    await screen.findByRole('button', { name: 'Скопировать HTML для WebView' });
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    expect(
+      screen.getByRole('button', { name: 'Скопировать HTML для WebView' }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Скачать игру HTML' })).toHaveAttribute(
       'href',
       revision.export_url,
@@ -303,6 +334,7 @@ describe('saved work and mutation submission', () => {
   it('sends explicit unknown-cost consent once and reuses its key if the HTTP response is lost', async () => {
     vi.mocked(request).mockResolvedValue({
       ...chat,
+      revisions: [revision, { ...revision, id: 'older', number: 0, artifact_hash: 'older-hash' }],
       runs: [
         {
           id: 'unknown-run',
@@ -315,20 +347,38 @@ describe('saved work and mutation submission', () => {
     });
     vi.mocked(post).mockRejectedValue(new Error('Соединение потеряно'));
     setup();
-    const retry = await screen.findByRole('button', { name: 'Повторить запрос' });
-    expect(retry).toBeDisabled();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
+      target: { value: 'older' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Для детей/ }));
+    fireEvent.change(input, { target: { value: 'Попробуй снова' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
     expect(post).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(retry);
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
     await screen.findByText('Соединение потеряно');
     const first = vi.mocked(post).mock.calls[0];
     expect(first).toEqual([
-      '/api/runs/unknown-run/continue/',
-      { prompt: '', accept_unknown_cost: true, idempotency_key: expect.any(String) },
+      '/api/chats/one/runs/',
+      {
+        prompt: 'Попробуй снова',
+        audience: 'children',
+        model: 'gpt-6.1-sol',
+        source_revision_id: 'older',
+        source_artifact_hash: 'older-hash',
+        source_is_historical: true,
+        acknowledge_unknown_run_id: 'unknown-run',
+        accept_unknown_cost: true,
+        idempotency_key: expect.any(String),
+      },
     ]);
-    fireEvent.click(retry);
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
     expect(vi.mocked(post).mock.calls[1]).toEqual(first);
+    confirm.mockRestore();
   });
   it('refreshes shared session totals once when a run is terminal rather than polling the session', async () => {
     const refresh = vi.fn().mockResolvedValue(undefined);
@@ -346,7 +396,7 @@ describe('saved work and mutation submission', () => {
       ],
     });
     setup('/chats/one', refresh);
-    await screen.findByText('Готово, можно играть');
+    await screen.findByText('Готово');
     expect(refresh).toHaveBeenCalledTimes(1);
     fireEvent.change(screen.getByRole('textbox', { name: 'Что изменить в игре' }), {
       target: { value: 'Сделай фон тёплым' },
@@ -356,7 +406,8 @@ describe('saved work and mutation submission', () => {
   });
   it('records specific font-size and free-form feedback without starting another model run', async () => {
     setup();
-    await screen.findByRole('button', { name: 'Оценить результат' });
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
     vi.mocked(post).mockResolvedValue({ rating: 4 });
     fireEvent.click(screen.getByRole('button', { name: 'Оценить результат' }));
     fireEvent.click(screen.getByRole('button', { name: 'Оценка 4 из 5' }));
@@ -436,7 +487,8 @@ describe('saved work and mutation submission', () => {
       revisions: [{ ...revision, accepted: false }],
     });
     setup();
-    await screen.findByText('Сохранённый кандидат — требуется проверка');
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
     expect(screen.getByRole('button', { name: 'Поделиться' })).toBeDisabled();
     expect(document.querySelectorAll('iframe')).toHaveLength(1);
   });
@@ -474,19 +526,25 @@ describe('saved work and mutation submission', () => {
       ],
     });
     setup();
-    await screen.findByText('Сохранённый кандидат — требуется проверка');
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
     expect(screen.getByTitle('Игра')).toHaveAttribute('src', 'http://localhost:8001/p/candidate');
     expect(screen.getByRole('button', { name: 'Поделиться' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Я проверил игру' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Я проверил игру' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Подробности запуска')).not.toBeInTheDocument();
     vi.mocked(post).mockResolvedValue({});
-    fireEvent.click(screen.getByRole('button', { name: 'Я проверил игру' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Я проверил механику, принять версию' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Что изменить в игре' }), {
+      target: { value: 'Исправь управление' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
     await waitFor(() =>
-      expect(post).toHaveBeenCalledWith('/api/runs/run/confirm/', {
-        confirmed: true,
-        artifact_hash: 'candidate-hash',
-        report_id: 42,
-      }),
+      expect(post).toHaveBeenCalledWith(
+        '/api/chats/one/runs/',
+        expect.objectContaining({
+          source_revision_id: 'candidate',
+          source_artifact_hash: 'candidate-hash',
+        }),
+      ),
     );
   });
   it('browsing history does not run a model or overwrite the current version', async () => {
@@ -504,7 +562,8 @@ describe('saved work and mutation submission', () => {
       ],
     });
     setup();
-    await screen.findByRole('combobox', { name: 'Версия игры' });
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
     fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
       target: { value: 'older' },
     });
@@ -514,7 +573,7 @@ describe('saved work and mutation submission', () => {
   });
 });
 
-describe('playing while generation runs', () => {
+describe('simple conversation', () => {
   const run = {
     id: 'generating-run',
     status: 'generating',
@@ -523,193 +582,176 @@ describe('playing while generation runs', () => {
     can_cancel: true,
     attempts: 1,
     elapsed_seconds: 2,
-    budget: session.budget,
-    events_url: '/api/runs/generating-run/events/',
+    model_label: 'Lite',
   } as Run;
-  const publications = {
-    results: [
-      {
-        id: 'community-game',
-        title: 'Звёздный мир',
-        author: { username: 'Автор' },
-        source_chat_id: 'another-chat',
-        thumbnail_url: null,
-        verification: 'automatic',
-      },
-    ],
-  };
-
   it.each(['queued', 'generating', 'checking'] as const)(
-    'offers games while %s without affecting the existing preview or submitting another run',
-    async (status) => {
-      const active = { ...run, status };
-      vi.mocked(request)
-        .mockResolvedValueOnce({ ...chat, active_run: active, runs: [active] })
-        .mockResolvedValueOnce(publications);
-      setup();
-      const link = await screen.findByRole('link', {
-        name: 'Играть в «Звёздный мир» — новая вкладка',
-      });
-      const frame = screen.getByTitle('Игра');
-      fireEvent.click(link);
-      expect(screen.getByRole('heading', { level: 1, name: 'Игра' })).toBeInTheDocument();
-      expect(screen.getByTitle('Игра')).toBe(frame);
-      expect(screen.getByRole('button', { name: 'Отменить' })).toBeEnabled();
-      expect(document.querySelectorAll('iframe')).toHaveLength(1);
-      expect(post).not.toHaveBeenCalled();
-    },
-  );
-
-  it('keeps recommendations through polling, then opens the exact accepted result after completion', async () => {
-    vi.mocked(request)
-      .mockResolvedValueOnce({ ...chat, active_run: run, runs: [run] })
-      .mockResolvedValueOnce(publications);
-    setup();
-    await screen.findByText('Звёздный мир');
-    // A status refresh must not fetch the publication feed again or replace the old game.
-    vi.mocked(request).mockResolvedValue({
-      ...chat,
-      active_run: { ...run, status: 'checking' },
-      runs: [run],
-    });
-    await act(async () => {
-      window.dispatchEvent(new Event('focus'));
-    });
-    expect(screen.getByText('Звёздный мир')).toBeInTheDocument();
-    expect(
-      vi.mocked(request).mock.calls.filter(([path]) => path.includes('/publications/')),
-    ).toHaveLength(1);
-
-    const result = {
-      ...revision,
-      id: 'r2',
-      title: 'Новая игра',
-      artifact_hash: 'new-hash',
-      number: 2,
-      preview_url: 'http://localhost:8001/p/two',
-    };
-    vi.mocked(request).mockResolvedValue({
-      ...chat,
-      active_run: null,
-      current_revision: result,
-      revisions: [result, revision],
-      runs: [{ ...run, status: 'succeeded', can_cancel: false, result_revision_id: result.id }],
-    });
-    await act(async () => {
-      window.dispatchEvent(new Event('focus'));
-    });
-    expect(
-      screen.queryByRole('region', { name: 'Игры на время ожидания' }),
-    ).not.toBeInTheDocument();
-    const open = screen.getByRole('button', { name: 'Открыть вашу игру' });
-    fireEvent.change(screen.getByRole('combobox', { name: 'Версия игры' }), {
-      target: { value: revision.id },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Свернуть предпросмотр' }));
-    fireEvent.click(open);
-    expect(await screen.findByRole('dialog', { name: 'Игра: Новая игра' })).toBeInTheDocument();
-    expect(screen.getByTitle('Новая игра')).toHaveAttribute('src', result.preview_url);
-    expect(post).not.toHaveBeenCalled();
-  });
-
-  it('removes recommendations when the user cancels and keeps the last saved version playable', async () => {
-    vi.mocked(request)
-      .mockResolvedValueOnce({ ...chat, active_run: run, runs: [run] })
-      .mockResolvedValueOnce(publications);
-    setup();
-    await screen.findByText('Звёздный мир');
-    vi.mocked(post).mockResolvedValue({ ...run, status: 'cancelled' });
-    vi.mocked(request).mockResolvedValue({
-      ...chat,
-      runs: [{ ...run, status: 'cancelled', can_cancel: false }],
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Отменить' }));
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('region', { name: 'Игры на время ожидания' }),
-      ).not.toBeInTheDocument(),
-    );
-    expect(post).toHaveBeenCalledExactlyOnceWith('/api/runs/generating-run/cancel/', {});
-    expect(screen.getByTitle('Игра')).toHaveAttribute('src', revision.preview_url);
-    expect(screen.queryByRole('button', { name: 'Открыть вашу игру' })).not.toBeInTheDocument();
-  });
-
-  it.each(['failed', 'unknown', 'unverified', 'needs_attention'] as const)(
-    'does not call an old accepted revision a newly ready game when the run is %s',
+    'offers a quiet community link while %s, without fetching recommendations',
     async (status) => {
       vi.mocked(request).mockResolvedValue({
         ...chat,
-        runs: [{ ...run, status, can_cancel: false }],
+        active_run: { ...run, status },
+        runs: [run],
       });
       setup();
-      await screen.findByRole('heading', { level: 1, name: 'Игра' });
-      expect(screen.queryByRole('button', { name: 'Открыть вашу игру' })).not.toBeInTheDocument();
+      const link = await screen.findByRole('link', { name: 'поиграть в игры сообщества' });
+      expect(link).toHaveAttribute('href', '/');
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(screen.getByRole('button', { name: 'Остановить генерацию' })).toBeEnabled();
+      expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
       expect(request).toHaveBeenCalledExactlyOnceWith('/api/chats/one/', {
         signal: expect.any(AbortSignal),
       });
+      expect(post).not.toHaveBeenCalled();
     },
   );
-});
-
-describe('chat naming', () => {
-  it('keeps a manually named new chat when submitting its first game request', async () => {
-    setup('/chats/new');
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Новая игра');
-    fireEvent.click(screen.getByRole('button', { name: 'Переименовать чат' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Название чата' }), {
-      target: { value: 'Мой сад' },
+  it('stops generation from the composer and keeps the saved game', async () => {
+    vi.mocked(request).mockResolvedValue({ ...chat, active_run: run, runs: [run] });
+    setup();
+    const frame = await screen.findByTitle('Игра');
+    vi.mocked(request).mockResolvedValue({ ...chat, runs: [{ ...run, status: 'cancelled' }] });
+    vi.mocked(post).mockResolvedValue({});
+    fireEvent.click(screen.getByRole('button', { name: 'Остановить генерацию' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('link', { name: 'поиграть в игры сообщества' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/runs/generating-run/cancel/', {});
+    expect(screen.getByTitle('Игра')).toBe(frame);
+  });
+  it('ignores a late submission response after switching to another chat', async () => {
+    vi.mocked(request).mockImplementation(
+      async <T,>(path: string): Promise<T> =>
+        ({ ...chat, id: path.includes('/two/') ? 'two' : 'one' }) as T,
+    );
+    let finish!: (value: unknown) => void;
+    vi.mocked(post).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    setupNavigation();
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Что изменить в игре' }), {
+      target: { value: 'Измени первую игру' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Сохранить название' }));
-    await screen.findByRole('heading', { name: 'Мой сад' });
-    expect(request).not.toHaveBeenCalled();
-    expect(post).not.toHaveBeenCalled();
-    vi.mocked(post)
-      .mockResolvedValueOnce({ ...chat, title: 'Мой сад' })
-      .mockResolvedValueOnce({ id: 'run' });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));
+    const second = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    expect(second).toBeEnabled();
+    fireEvent.change(second, { target: { value: 'Черновик второй игры' } });
+    await act(async () => finish({}));
+    expect(second).toHaveValue('Черновик второй игры');
+    expect(screen.getByRole('button', { name: 'Отправить доработку' })).toBeEnabled();
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+  it('does not open the previous game publication dialog in another chat', async () => {
+    let finish!: (value: unknown) => void;
+    vi.mocked(request).mockImplementation(async <T,>(path: string): Promise<T> => {
+      if (path.startsWith('/api/publications/'))
+        return new Promise<T>((resolve) => {
+          finish = (value) => resolve(value as T);
+        });
+      return { ...chat, id: path.includes('/two/') ? 'two' : 'one' } as T;
+    });
+    setupNavigation();
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    fireEvent.click(screen.getByRole('button', { name: 'Поделиться' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));
+    const second = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    await act(async () => finish({ results: [] }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(second).toBeEnabled();
+  });
+  it('finishes a new-chat submission without pulling the user back from another chat', async () => {
+    let created!: (value: unknown) => void;
+    vi.mocked(post).mockImplementation(async (path) => {
+      if (path === '/api/chats/')
+        return new Promise((resolve) => {
+          created = resolve;
+        });
+      return {};
+    });
+    vi.mocked(request).mockResolvedValue({ ...chat, id: 'two' });
+    setupNavigation('/chats/new');
     fireEvent.change(screen.getByRole('textbox', { name: 'Описание вашей игры' }), {
-      target: { value: 'Звёздный сад' },
+      target: { value: 'Новая игра про звёзды' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
-    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
-    expect(post).toHaveBeenNthCalledWith(1, '/api/chats/', {
-      audience: 'everyone',
-      title: 'Мой сад',
-    });
+    fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));
+    const second = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    fireEvent.change(second, { target: { value: 'Черновик другой игры' } });
+    await act(async () => created({ ...chat, id: 'created' }));
+    expect(post).toHaveBeenLastCalledWith(
+      '/api/chats/created/runs/',
+      expect.objectContaining({
+        prompt: 'Новая игра про звёзды',
+        source_revision_id: null,
+      }),
+    );
+    expect(second).toHaveValue('Черновик другой игры');
+    fireEvent.click(screen.getByRole('link', { name: 'Новый чат' }));
+    expect(await screen.findByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue('');
   });
-
-  it('does not let an in-flight poll restore the old title after a successful rename', async () => {
-    const run = {
-      id: 'running',
-      status: 'generating',
-      message: 'Генерация',
-      budget: session.budget,
-    } as Run;
-    const active = { ...chat, active_run: run, runs: [run] };
-    vi.mocked(request).mockResolvedValueOnce(active).mockResolvedValueOnce({ results: [] });
-    setup();
-    await screen.findByRole('button', { name: 'Переименовать чат' });
-    let resolveOld!: (data: Chat) => void;
-    vi.mocked(request).mockReturnValueOnce(new Promise((resolve) => (resolveOld = resolve)));
-    await act(async () => {
-      window.dispatchEvent(new Event('focus'));
-    });
+  it('keeps model and duration for messages older than the recent run list', async () => {
     vi.mocked(request).mockResolvedValue({
-      ...active,
-      title: 'Ручное название',
-      updated_at: '2026-10-25',
+      ...chat,
+      runs: [],
+      messages: [
+        {
+          id: 'old-answer',
+          role: 'assistant',
+          run_id: 'old-pro',
+          content: 'Старая игра готова.',
+          generation: {
+            id: 'old-pro',
+            model_profile: 'pro',
+            status: 'succeeded',
+            elapsed_seconds: 42,
+          },
+        },
+      ],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Переименовать чат' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Название чата' }), {
-      target: { value: 'Ручное название' },
+    setup();
+    await screen.findByText('Старая игра готова.');
+    expect(screen.getByText('beeGame Pro')).toBeInTheDocument();
+    expect(screen.getByLabelText('Время генерации')).toBeInTheDocument();
+  });
+  it('shows only the reply with model and elapsed time after completion', async () => {
+    vi.mocked(request).mockResolvedValue({
+      ...chat,
+      runs: [{ ...run, status: 'unverified' }],
+      messages: [
+        {
+          id: 'answer',
+          role: 'assistant',
+          run_id: run.id,
+          content: 'Игра сохранена. Попробуйте сыграть.',
+        },
+      ],
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Сохранить название' }));
-    await screen.findByRole('heading', { name: 'Ручное название' });
-    await act(async () => resolveOld(active));
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Ручное название');
-    expect(request).toHaveBeenCalledWith('/api/chats/one/', {
-      method: 'PATCH',
-      body: '{"title":"Ручное название"}',
-    });
-    expect(post).not.toHaveBeenCalled();
+    setup();
+    await screen.findByText('Игра сохранена. Попробуйте сыграть.');
+    expect(screen.getAllByText('beeGame Lite')).toHaveLength(2);
+    expect(screen.getByLabelText('Время генерации')).toBeInTheDocument();
+    expect(screen.queryByText('Замысел и результаты проверки')).not.toBeInTheDocument();
+    expect(screen.queryByText('Подробности запуска')).not.toBeInTheDocument();
+    expect(screen.queryByText('Игра сохранена — нужна ваша проверка')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Я проверил игру' })).not.toBeInTheDocument();
+  });
+  it('centres the new conversation invitation without a suggested prompt', () => {
+    setup('/chats/new');
+    expect(
+      screen.getByText('Расскажите идею в нескольких словах. Игровой мир мы соберём вместе.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Например')).not.toBeInTheDocument();
+    expect(document.querySelector('.chat-scroll-empty')).toBeInTheDocument();
+  });
+  it('uses the open chat title for the browser and resets it on leaving', async () => {
+    setupNavigation();
+    await waitFor(() => expect(document.title).toBe('Игра'));
+    expect(screen.queryByRole('button', { name: 'Переименовать чат' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+    expect(document.title).toBe('beeGame');
   });
 });

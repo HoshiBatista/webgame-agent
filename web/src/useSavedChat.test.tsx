@@ -84,7 +84,26 @@ describe('reconnecting to saved work', () => {
       await vi.advanceTimersByTimeAsync(60000);
     });
     expect(result.current.chat).toBeNull();
+    expect(result.current.notFound).toBe(true);
     expect(result.current.connectionError).toBe('Нет доступа');
     expect(request).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears a missing-chat state when navigating to a new or available chat', async () => {
+    vi.mocked(request).mockRejectedValue(
+      new ApiError({ code: 'chat_not_found', message: 'Чат недоступен' }, 404),
+    );
+    const hook = renderHook(({ id }: { id: string | undefined }) => useSavedChat(id), {
+      initialProps: { id: 'one' as string | undefined },
+    });
+    await waitFor(() => expect(hook.result.current.notFound).toBe(true));
+    hook.rerender({ id: undefined });
+    expect(hook.result.current.notFound).toBe(false);
+    expect(hook.result.current.connectionError).toBe('');
+    expect(hook.result.current.loading).toBe(false);
+    vi.mocked(request).mockResolvedValue(finished);
+    hook.rerender({ id: 'one' });
+    await waitFor(() => expect(hook.result.current.chat).toEqual(finished));
+    expect(hook.result.current.notFound).toBe(false);
   });
 });

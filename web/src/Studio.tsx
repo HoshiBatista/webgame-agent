@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import {
   ArrowDownToLine,
   ArrowUp,
   ChevronDown,
+  Square,
   Expand,
   Gamepad2,
   History,
@@ -11,31 +12,21 @@ import {
   Share2,
   Sparkles,
   Star,
-  Trash2,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { errorText, newKey, post, request } from './api';
-import {
-  ErrorNotice,
-  CopyHtmlButton,
-  Modal,
-  PhonePreview,
-  RevisionDetails,
-  RunStatus,
-  Spinner,
-} from './components';
+import { ErrorNotice, CopyHtmlButton, Modal, PhonePreview, Spinner } from './components';
 import { chatsChanged, useSession } from './context';
-import type { Chat, Preferences, Publication, Revision, Run, RunEvent } from './types';
+import type { Chat, Preferences, Publication, Revision, Run } from './types';
 import { useSavedChat } from './useSavedChat';
-import WaitingGames from './WaitingGames';
-import ChatTitle from './ChatTitle';
+import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { selectedProfile } from './ModelSelector';
 
 const audiences = [
-  { id: 'everyone', label: 'Для всех', icon: '✦' },
-  { id: 'gamers', label: 'Для геймеров', icon: '↗' },
-  { id: 'children', label: 'Для детей', icon: '☺' },
-  { id: 'seniors', label: 'Для старших', icon: '☀' },
+  { id: 'everyone', label: 'Для всех' },
+  { id: 'gamers', label: 'Для геймеров' },
+  { id: 'children', label: 'Для детей' },
+  { id: 'seniors', label: 'Для старших' },
 ];
 const feedbackReasons = [
   'Более понятное управление',
@@ -56,8 +47,8 @@ export default function Studio() {
     chat,
     loading,
     connectionError,
+    notFound,
     reload: load,
-    updateTitle,
   } = useSavedChat(isNew ? undefined : id);
   const [newTitle, setNewTitle] = useState<string | null>(initialDraft?.chatTitle ?? null);
   const [error, setError] = useState('');
@@ -68,12 +59,12 @@ export default function Studio() {
   const selectedModel = profiles.find((item) => item.id === modelProfile);
   const modelUnavailable = profiles.length > 0 && !selectedModel?.available;
   const [busy, setBusy] = useState(false);
-  const [events, setEvents] = useState<RunEvent[]>([]);
   const [selectedRevision, setSelectedRevision] = useState<string | null>(
     initialDraft?.selectedRevision ?? null,
   );
   const [previewOpen, setPreviewOpen] = useState(true);
-  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
+  const toolsMenu = useRef<HTMLDetailsElement>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [mobile, setMobile] = useState(
     () => window.matchMedia?.('(max-width: 760px)').matches ?? false,
   );
@@ -96,10 +87,6 @@ export default function Studio() {
   const [reasons, setReasons] = useState<string[]>([]);
   const [customReason, setCustomReason] = useState('');
   const [feedbackDone, setFeedbackDone] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmEvidence, setConfirmEvidence] = useState<Run['confirmation']>(null);
-  const [diagnostics, setDiagnostics] = useState<unknown | null>(null);
-  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
@@ -127,23 +114,37 @@ export default function Studio() {
     lastPayload.current = fingerprint;
     return idempotency.current;
   }
-  const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const historyRef = useRef<HTMLDivElement>(null);
+  const pinnedToBottom = useRef(true);
+  const openedChat = useRef('');
   const currentId = useRef(id);
   currentId.current = id;
+  const view = useRef({ id });
+  if (view.current.id !== id) view.current = { id };
+  useEffect(() => {
+    view.current = { id: currentId.current };
+    return () => {
+      view.current = { id: '' };
+    };
+  }, []);
   useEffect(() => {
     const remembered = studioDrafts?.get(id);
     setNewTitle(remembered?.chatTitle ?? null);
     audienceReady.current = isNew || remembered?.audience != null;
-    setEvents([]);
     setSelectedRevision(remembered?.selectedRevision ?? null);
     setGameFullscreen(false);
-    setMobileToolsOpen(false);
+    setToolsOpen(false);
+    setShowShare(false);
+    setShareRevision(null);
+    setShowFeedback(false);
     setFeedbackDone(false);
     setRating(0);
     setReasons([]);
     setCustomReason('');
     setShareDone('');
     if (submissionChat.current !== id) {
+      setBusy(false);
       setError('');
       setPrompt(remembered?.prompt ?? '');
       idempotency.current = remembered?.idempotencyKey ?? newKey();
@@ -172,27 +173,53 @@ export default function Studio() {
     if (chat) chatsChanged();
   }, [chat?.id, chat?.title, chat?.active_run?.id]);
   useEffect(() => {
-    if (!activeRun || !('EventSource' in window)) return;
-    setEvents([]);
-    const source = new EventSource(activeRun.events_url, { withCredentials: true });
-    const receive = (event: MessageEvent) => {
-      try {
-        const item = JSON.parse(event.data) as RunEvent;
-        setEvents((previous) =>
-          previous.some((value) => value.id === item.id)
-            ? previous
-            : [...previous, item].slice(-100),
-        );
-      } catch {
-        /* Polling remains the authority when a transport event is malformed. */
-      }
+    if (notFound) chatsChanged();
+  }, [notFound]);
+  useLayoutEffect(() => {
+    document.title = chat?.title || 'beeGame';
+    return () => {
+      document.title = 'beeGame';
     };
-    source.addEventListener('progress', receive as EventListener);
-    return () => source.close();
-  }, [activeRun?.id]);
+  }, [chat?.title, id]);
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller || loading) return;
+    if (openedChat.current !== id) {
+      openedChat.current = id;
+      pinnedToBottom.current = true;
+    }
+    const toBottom = () => {
+      if (pinnedToBottom.current) scroller.scrollTop = scroller.scrollHeight;
+    };
+    toBottom();
+    const frame = requestAnimationFrame(toBottom);
+    return () => cancelAnimationFrame(frame);
+  }, [id, loading, chat?.id, chat?.messages.length, activeRun?.id]);
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [chat?.messages.length]);
+    const scroller = scrollRef.current;
+    const history = historyRef.current;
+    if (!scroller || !history) return;
+    let alive = true;
+    const toBottom = () => {
+      if (alive && pinnedToBottom.current) scroller.scrollTop = scroller.scrollHeight;
+    };
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(toBottom) : null;
+    observer?.observe(scroller);
+    observer?.observe(history);
+    void document.fonts?.ready.then(toBottom);
+    return () => {
+      alive = false;
+      observer?.disconnect();
+    };
+  }, [id, loading]);
+  useEffect(() => {
+    const close = (event: PointerEvent) => {
+      if (toolsMenu.current && !toolsMenu.current.contains(event.target as Node))
+        setToolsOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, []);
   const candidateNeedsReview = !!(
     latestRun &&
     ['unverified', 'needs_attention', 'failed'].includes(latestRun.status) &&
@@ -205,23 +232,8 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
-  const readyRevision =
-    latestRun?.status === 'succeeded'
-      ? chat?.revisions.find((item) => item.id === latestRun.result_revision_id && item.accepted)
-      : undefined;
-  async function renameTitle(title: string) {
-    if (!chat) {
-      setNewTitle(title);
-      return;
-    }
-    const renamed = await request<Chat>(`/api/chats/${chat.id}/`, {
-      method: 'PATCH',
-      body: JSON.stringify({ title }),
-    });
-    if (currentId.current === chat.id) updateTitle(renamed);
-    chatsChanged({ id: renamed.id, title: renamed.title, updated_at: renamed.updated_at });
-  }
   async function chooseModel(value: string) {
+    const startedView = view.current;
     setBusy(true);
     setError('');
     try {
@@ -231,14 +243,22 @@ export default function Studio() {
       });
       updateSession({ ...session, preferences });
     } catch (cause) {
-      setError(errorText(cause));
+      if (view.current === startedView) setError(errorText(cause));
     } finally {
-      setBusy(false);
+      if (view.current === startedView) setBusy(false);
     }
   }
   async function send(event: FormEvent) {
     event.preventDefault();
     if (!prompt.trim() || busy || activeRun || modelUnavailable || (!isNew && !chat)) return;
+    if (latestRun?.can_retry_unknown) {
+      if (
+        !window.confirm('Ответ на предыдущий запрос не получен полностью. Отправить новый запрос?')
+      )
+        return;
+    }
+    const startedView = view.current;
+    const isCurrent = () => view.current === startedView;
     setBusy(true);
     setError('');
     const payload = {
@@ -247,6 +267,9 @@ export default function Studio() {
       source_revision_id: revision?.id ?? null,
       source_artifact_hash: revision?.artifact_hash ?? null,
       source_is_historical: !!selectedRevision,
+      ...(latestRun?.can_retry_unknown
+        ? { acknowledge_unknown_run_id: latestRun.id, accept_unknown_cost: true }
+        : {}),
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
     };
     const key = operationKey(payload);
@@ -258,122 +281,87 @@ export default function Studio() {
           ...(newTitle === null ? {} : { title: newTitle }),
         });
         targetId = target.id;
-        submissionChat.current = targetId;
-        // Persist the chat URL before starting generation, even if its 202 is lost.
-        navigate(`/chats/${targetId}`, { replace: true });
+        if (isCurrent()) {
+          submissionChat.current = targetId;
+          // This navigation belongs to this submission, not to a different open chat.
+          startedView.id = targetId;
+          // Persist the chat URL before starting generation, even if its 202 is lost.
+          navigate(`/chats/${targetId}`, { replace: true });
+        }
         chatsChanged();
       }
       await post<Run>(`/api/chats/${targetId}/runs/`, {
         ...payload,
         idempotency_key: key,
       });
-      if (currentId.current !== targetId && currentId.current !== id) return;
+      const savedDraft = studioDrafts?.get(id);
+      if (
+        isNew &&
+        savedDraft?.idempotencyKey === key &&
+        savedDraft.prompt.trim() === payload.prompt
+      )
+        studioDrafts?.delete(id);
+      void refresh();
+      if (!isCurrent()) return;
       idempotency.current = newKey();
       lastPayload.current = '';
       setPrompt('');
       setSelectedRevision(null);
       chatsChanged();
-      void refresh();
     } catch (cause) {
-      if (currentId.current === targetId || currentId.current === id) {
+      if (isCurrent()) {
         setError(errorText(cause));
         setPrompt(payload.prompt);
       }
     } finally {
-      setBusy(false);
-      load();
+      if (isCurrent()) {
+        setBusy(false);
+        load();
+      }
       chatsChanged();
     }
   }
-  async function act(
-    action: 'cancel' | 'continue' | 'confirm' | 'recheck',
-    note = '',
-    acceptUnknownCost = false,
-  ) {
-    if (!latestRun) return;
-    if (action === 'continue' && modelUnavailable) {
-      setError('Выберите доступную модель для продолжения.');
-      return;
-    }
+  async function cancel() {
+    if (!activeRun || busy) return;
+    const startedView = view.current;
     setBusy(true);
     setError('');
     try {
-      await post<Run>(
-        `/api/runs/${latestRun.id}/${action}/`,
-        action === 'continue'
-          ? {
-              prompt: note,
-              ...(modelProfile ? { model_profile: modelProfile } : {}),
-              accept_unknown_cost: acceptUnknownCost,
-              idempotency_key: operationKey({
-                action,
-                run: latestRun.id,
-                prompt: note,
-                acceptUnknownCost,
-                modelProfile,
-              }),
-            }
-          : action === 'confirm'
-            ? {
-                confirmed: true,
-                artifact_hash: confirmEvidence?.artifact_hash,
-                report_id: confirmEvidence?.report_id,
-              }
-            : action === 'recheck'
-              ? { idempotency_key: operationKey({ action, run: latestRun.id }) }
-              : {},
-      );
-      idempotency.current = newKey();
-      lastPayload.current = '';
-      setShowConfirm(false);
-      setSelectedRevision(null);
+      await post<Run>(`/api/runs/${activeRun.id}/cancel/`, {});
       chatsChanged();
       void refresh();
     } catch (cause) {
-      setError(errorText(cause));
+      if (view.current === startedView) setError(errorText(cause));
     } finally {
-      setBusy(false);
-      load();
+      if (view.current === startedView) {
+        setBusy(false);
+        load();
+      }
     }
   }
   async function restoreRevision() {
     if (!chat || !revision?.accepted) return;
+    const startedView = view.current;
     setBusy(true);
     try {
       await post(`/api/chats/${chat.id}/restore/`, { revision_id: revision.id });
+      chatsChanged();
+      if (view.current !== startedView) return;
       setSelectedRevision(null);
       load();
-      chatsChanged();
     } catch (cause) {
-      setError(errorText(cause));
+      if (view.current === startedView) setError(errorText(cause));
     } finally {
-      setBusy(false);
-    }
-  }
-  async function removeChat() {
-    if (
-      !chat ||
-      !window.confirm(
-        `Удалить чат «${chat.title || 'Новая игра'}»? Его опубликованные игры останутся в ленте.`,
-      )
-    )
-      return;
-    setBusy(true);
-    try {
-      await request(`/api/chats/${chat.id}/`, { method: 'DELETE' });
-      chatsChanged();
-      navigate('/');
-    } catch (cause) {
-      setError(errorText(cause));
-    } finally {
-      setBusy(false);
+      if (view.current === startedView) setBusy(false);
     }
   }
   async function openShare() {
     if (!revision?.accepted || !chat) return;
+    const startedView = view.current;
     setBusy(true);
     try {
       const data = await request<{ results: Publication[] }>('/api/publications/?mine=1');
+      if (view.current !== startedView) return;
       const existing = data.results.find((item) => item.source_chat_id === chat.id) ?? null;
       setPublication(existing);
       setShareRevision(revision);
@@ -381,14 +369,15 @@ export default function Studio() {
       setShareDone('');
       setShowShare(true);
     } catch (cause) {
-      setError(errorText(cause));
+      if (view.current === startedView) setError(errorText(cause));
     } finally {
-      setBusy(false);
+      if (view.current === startedView) setBusy(false);
     }
   }
   async function share(event: FormEvent) {
     event.preventDefault();
     if (!shareRevision || !chat) return;
+    const startedView = view.current;
     setBusy(true);
     try {
       const game = publication
@@ -401,17 +390,19 @@ export default function Studio() {
             title: publicationTitle,
             revision_id: shareRevision.id,
           });
+      if (view.current !== startedView) return;
       setPublication(game);
       setShareDone(new URL(game.public_url, window.location.origin).href);
     } catch (cause) {
-      setError(errorText(cause));
+      if (view.current === startedView) setError(errorText(cause));
     } finally {
-      setBusy(false);
+      if (view.current === startedView) setBusy(false);
     }
   }
   async function rate(event: FormEvent) {
     event.preventDefault();
     if (!chat || !rating) return;
+    const startedView = view.current;
     setBusy(true);
     try {
       await post(`/api/chats/${chat.id}/feedback/`, {
@@ -419,42 +410,18 @@ export default function Studio() {
         reasons:
           rating < 5 ? [...reasons, ...(customReason.trim() ? [customReason.trim()] : [])] : [],
       });
+      void refresh();
+      if (view.current !== startedView) return;
       setShowFeedback(false);
       setFeedbackDone(true);
-      void refresh();
     } catch (cause) {
-      setError(errorText(cause));
+      if (view.current === startedView) setError(errorText(cause));
     } finally {
-      setBusy(false);
+      if (view.current === startedView) setBusy(false);
     }
   }
-  async function inspect() {
-    if (!latestRun) return;
-    setShowDiagnostics(true);
-    setDiagnostics(null);
-    try {
-      setDiagnostics(await request(`/api/runs/${latestRun.id}/diagnostics/`));
-    } catch (cause) {
-      setDiagnostics({ error: errorText(cause) });
-    }
-  }
-  const deleteChatButton = chat && (
-    <button
-      className="icon-button"
-      onClick={removeChat}
-      disabled={busy}
-      aria-label="Удалить чат"
-      title="Удалить чат"
-    >
-      <Trash2 size={16} />
-    </button>
-  );
   const gameTools = chat && (
-    <div
-      className={`preview-bottom ${mobile ? 'studio-game-tools' : ''}`}
-      role="group"
-      aria-label="Действия с игрой"
-    >
+    <div className="game-tools-content" role="group" aria-label="Инструменты игры">
       <div className="version-selector">
         <History size={15} />
         <select
@@ -465,22 +432,21 @@ export default function Studio() {
           }
         >
           <option value="latest">
-            {defaultRevision
-              ? `${defaultRevision.accepted ? 'Рабочая версия' : 'Кандидат'} · ${defaultRevision.number}`
-              : 'Пока нет версии'}
+            {defaultRevision ? `Последняя версия · ${defaultRevision.number}` : 'Пока нет версии'}
           </option>
           {chat.revisions.map((item) => (
             <option key={item.id} value={item.id}>
               Версия {item.number}
-              {item.id === current?.id ? ' · рабочая' : item.accepted ? '' : ' · кандидат'}
+              {item.id === current?.id ? ' · текущая' : ''}
             </option>
           ))}
         </select>
       </div>
       <div className="preview-actions">
-        {mobile && (
+        {revision && (
           <button
-            className="icon-button mobile-play"
+            type="button"
+            className="icon-button"
             disabled={!revision?.preview_url}
             aria-label="Открыть игру на весь экран"
             title="На весь экран"
@@ -489,14 +455,13 @@ export default function Studio() {
               setGameFullscreen(true);
             }}
           >
-            <Expand size={18} />
+            <Expand size={18} /> <span>На весь экран</span>
           </button>
         )}
-        {mobile && revision && (
-          <CopyHtmlButton exportUrl={revision.export_url} onError={setError} />
-        )}
+        {revision && <CopyHtmlButton exportUrl={revision.export_url} onError={setError} label />}
         {revision?.accepted && selectedRevision && revision.id !== current?.id && (
           <button
+            type="button"
             className="button button-small button-outline"
             disabled={busy || !!activeRun}
             onClick={restoreRevision}
@@ -505,6 +470,7 @@ export default function Studio() {
           </button>
         )}
         <button
+          type="button"
           className="button button-small button-outline"
           disabled={!revision?.accepted || busy}
           onClick={openShare}
@@ -512,13 +478,14 @@ export default function Studio() {
           <Share2 size={15} /> Поделиться
         </button>
         <button
+          type="button"
           className={`icon-button ${feedbackDone ? 'rated' : ''}`}
           disabled={!current || busy}
           onClick={() => setShowFeedback(true)}
           aria-label="Оценить результат"
           title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
         >
-          <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} />
+          <Star size={18} fill={feedbackDone ? 'currentColor' : 'none'} /> <span>Оценить</span>
         </button>
         {revision && (
           <a
@@ -527,56 +494,69 @@ export default function Studio() {
             aria-label="Скачать игру HTML"
             title="Скачать HTML"
           >
-            <ArrowDownToLine size={18} />
+            <ArrowDownToLine size={18} /> <span>Скачать HTML</span>
           </a>
         )}
-        {mobile && deleteChatButton}
       </div>
     </div>
   );
   if (loading) return <Spinner text="Открываем вашу мастерскую…" />;
+  if (!isNew && notFound)
+    return (
+      <main className="empty-state">
+        <Gamepad2 size={36} aria-hidden="true" />
+        <h1>Чат недоступен</h1>
+        <p>Этот чат удалён или у вас нет к нему доступа. Можно начать новую игру.</p>
+        <button
+          className="button button-primary"
+          onClick={() => {
+            if (prompt.trim())
+              studioDrafts?.set('new', {
+                prompt,
+                audience,
+                selectedRevision: null,
+                idempotencyKey: newKey(),
+                lastPayload: '',
+              });
+            navigate('/chats/new', { replace: true });
+          }}
+        >
+          Создать новую игру
+        </button>
+      </main>
+    );
   return (
     <main className={`studio ${previewOpen ? '' : 'preview-hidden'}`}>
       <section className="chat-pane">
         <header className="chat-heading">
-          <div>
-            {profiles.length ? (
-              <ModelSelector
-                options={profiles}
-                value={modelProfile}
-                onChange={(value) => void chooseModel(value)}
-                disabled={busy}
-              />
-            ) : (
-              <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
-            )}
-            <ChatTitle
-              key={id}
-              title={chat?.title || newTitle || 'Новая игра'}
-              onSave={renameTitle}
+          {profiles.length ? (
+            <ModelSelector
+              options={profiles}
+              value={modelProfile}
+              onChange={(value) => void chooseModel(value)}
+              disabled={busy}
             />
-          </div>
+          ) : (
+            <span className="chat-model-name">beeGame Lite</span>
+          )}
           <div className="chat-heading-actions">
-            {mobile && (
-              <button
-                className="icon-button mobile-tools-toggle"
-                disabled={!chat}
-                aria-expanded={mobileToolsOpen}
-                aria-controls="mobile-game-tools"
-                aria-label={
-                  mobileToolsOpen ? 'Свернуть действия с игрой' : 'Развернуть действия с игрой'
-                }
-                title="Действия с игрой"
-                onClick={() => setMobileToolsOpen((open) => !open)}
-              >
-                <ChevronDown size={20} />
-              </button>
-            )}
-            {!mobile && deleteChatButton}
-            {!mobile && (
+            {mobile ? (
               <button
                 className="icon-button"
-                onClick={() => setPreviewOpen(!previewOpen)}
+                disabled={!revision?.preview_url}
+                aria-label="Открыть игру на весь экран"
+                title="На весь экран"
+                onClick={() => {
+                  setPreviewOpen(true);
+                  setGameFullscreen(true);
+                }}
+              >
+                <Expand size={20} />
+              </button>
+            ) : (
+              <button
+                className="icon-button"
+                onClick={() => setPreviewOpen((open) => !open)}
                 aria-expanded={previewOpen}
                 aria-controls="studio-preview"
                 aria-label={previewOpen ? 'Свернуть предпросмотр' : 'Развернуть предпросмотр'}
@@ -587,134 +567,85 @@ export default function Studio() {
             )}
           </div>
         </header>
-        {mobile && (
-          <div
-            id="mobile-game-tools"
-            className={`mobile-tools-panel ${mobileToolsOpen ? 'is-open' : ''}`}
-            aria-hidden={!mobileToolsOpen}
-            inert={!mobileToolsOpen || undefined}
-          >
-            <div className="mobile-tools-clip">{gameTools}</div>
-          </div>
-        )}
-        <div className="chat-scroll">
-          {chat?.source_publication && (
-            <div className="notice remix-notice">
-              <Sparkles size={17} />
-              <span>
-                Здесь копия опубликованной игры. Сделайте её своей — история другого автора не
-                переносится.
-              </span>
-            </div>
-          )}
-          {error && <ErrorNotice message={error} onClose={() => setError('')} />}{' '}
-          {modelUnavailable && (
-            <ErrorNotice
-              message={selectedModel?.unavailable_reason || 'Выберите доступную модель.'}
-            />
-          )}
-          {connectionError && (
-            <div className="notice" role="status">
-              <span>{connectionError}</span>
-              <button className="text-button" onClick={load}>
-                Проверить связь
-              </button>
-            </div>
-          )}
-          {activeRun && !connectionError && (
-            <p className="field-help" role="status">
-              Задание выполняется на сервере. Можно закрыть страницу — результат сохранится в этом
-              чате.
-            </p>
-          )}
-          {!chat?.messages.length && (
-            <div className="chat-welcome">
-              <div className="welcome-mark">
-                <Gamepad2 size={36} />
-                <span>✦</span>
+        <div
+          className={`chat-scroll ${!chat?.messages.length ? 'chat-scroll-empty' : ''}`}
+          ref={scrollRef}
+          onScroll={() => {
+            const scroller = scrollRef.current;
+            if (scroller)
+              pinnedToBottom.current =
+                scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop < 48;
+          }}
+        >
+          <div className="chat-history" ref={historyRef}>
+            {chat?.source_publication && (
+              <div className="notice remix-notice">
+                <Sparkles size={17} />
+                <span>
+                  Здесь копия опубликованной игры. Сделайте её своей — история другого автора не
+                  переносится.
+                </span>
               </div>
-              <h2>{revision ? 'Как изменим игру?' : 'Во что сегодня играем?'}</h2>
-              <p>
-                {current
-                  ? 'Поменяйте оформление, темп или добавьте пару уровней. Начнём с небольшого изменения.'
-                  : 'Расскажите идею в нескольких словах. Механику, оформление и первый игровой мир мы соберём вместе.'}
-              </p>
-              {!current && (
-                <div className="prompt-hint">
-                  <span>Например</span>
-                  <p>
-                    «Мини-игра про сбор падающих звёзд. Тёплые цвета, короткая партия, управление
-                    пальцем»
-                  </p>
+            )}
+            {error && <ErrorNotice message={error} onClose={() => setError('')} />}{' '}
+            {modelUnavailable && (
+              <ErrorNotice
+                message={selectedModel?.unavailable_reason || 'Выберите доступную модель.'}
+              />
+            )}
+            {connectionError && (
+              <div className="notice" role="status">
+                <span>{connectionError}</span>
+                <button className="text-button" onClick={load}>
+                  Проверить связь
+                </button>
+              </div>
+            )}
+            {!chat?.messages.length && (
+              <div className="chat-welcome">
+                <div className="welcome-mark">
+                  <Gamepad2 size={36} />
+                  <Sparkles size={20} aria-hidden="true" />
                 </div>
-              )}
-            </div>
-          )}
-          {chat?.messages.map((message) => (
-            <article className={`chat-message message-${message.role}`} key={message.id}>
-              <span className="message-author">
-                {message.role === 'user'
-                  ? 'Вы'
-                  : message.role === 'system'
-                    ? 'Мастерская'
-                    : 'beeGame'}
-                {message.role === 'assistant' &&
-                  (() => {
-                    const label = chat.runs.find((run) => run.id === message.run_id)?.model_label;
-                    return label ? <span className="model-badge">{label}</span> : null;
-                  })()}
-              </span>
-              <div>{message.content}</div>
-            </article>
-          ))}
-          {latestRun && (
-            <RunStatus
-              run={latestRun}
-              events={events}
-              busy={busy}
-              onCancel={() => void act('cancel')}
-              onContinue={(note, consent) => void act('continue', note, consent)}
-              onRecheck={() => void act('recheck')}
-              onConfirm={() => {
-                setConfirmEvidence(latestRun.confirmation);
-                if (chat?.candidate_revision) setSelectedRevision(chat.candidate_revision.id);
-                setShowConfirm(true);
-              }}
-            />
-          )}{' '}
-          {activeRun && chat && (
-            <WaitingGames
-              key={activeRun.id}
-              chatId={chat.id}
-              sourcePublicationId={chat.source_publication}
-            />
-          )}
-          {readyRevision && (
-            <div className="game-ready notice" role="status">
-              <Gamepad2 size={22} aria-hidden="true" />
-              <div>
-                <strong>Ваша игра готова!</strong>
-                <p>Можно открыть результат и начать играть.</p>
+                <h2>{revision ? 'Как изменим игру?' : 'Во что сегодня играем?'}</h2>
+                <p>Расскажите идею в нескольких словах. Игровой мир мы соберём вместе.</p>
               </div>
-              <button
-                className="button button-small"
-                onClick={() => {
-                  setSelectedRevision(readyRevision.id);
-                  setPreviewOpen(true);
-                  setGameFullscreen(true);
-                }}
-              >
-                Открыть вашу игру
-              </button>
-            </div>
-          )}
-          {revision && <RevisionDetails revision={revision} />}{' '}
-          {latestRun && (
-            <button className="text-button diagnostics-button" onClick={inspect}>
-              Подробности запуска
-            </button>
-          )}
-          <div ref={endRef} />
+            )}
+            {chat?.messages.map((message) => {
+              const run =
+                chat.runs.find((item) => item.id === message.run_id) ?? message.generation;
+              const label =
+                run?.model_label === 'Pro' || run?.model_profile === 'pro' ? 'Pro' : 'Lite';
+              return (
+                <article className={`chat-message message-${message.role}`} key={message.id}>
+                  <span className="message-author">
+                    {message.role === 'user' ? 'Вы' : run ? `beeGame ${label}` : 'beeGame'}
+                    {message.role !== 'user' && run && <RunTime run={run} />}
+                  </span>
+                  <div>
+                    {message.role !== 'user' &&
+                    /подтвердите результат|нужна ваша проверка/.test(message.content)
+                      ? 'Игра сохранена. Откройте её и попробуйте сыграть. Если нужно что-то изменить, напишите об этом.'
+                      : message.content}
+                  </div>
+                </article>
+              );
+            })}
+            {activeRun && <RunMessage run={activeRun} />}
+            {!activeRun &&
+              latestRun &&
+              !chat?.messages.some(
+                (message) => message.role === 'assistant' && message.run_id === latestRun.id,
+              ) && (
+                <article className="chat-message message-assistant">
+                  <span className="message-author">
+                    beeGame {latestRun.model_profile === 'pro' ? 'Pro' : 'Lite'}
+                    <RunTime run={latestRun} />
+                  </span>
+                  <div>{latestRun.error?.message || latestRun.message}</div>
+                </article>
+              )}
+          </div>
         </div>
         <form className="composer" onSubmit={send}>
           <div className="audience-row" role="group" aria-label="Аудитория игры">
@@ -727,7 +658,11 @@ export default function Studio() {
                 onClick={() => setAudience(item.id)}
                 aria-pressed={audience === item.id}
               >
-                <span>{item.icon}</span>
+                <span
+                  className="audience-icon"
+                  aria-hidden="true"
+                  style={{ maskImage: `url(/assets/audience-${item.id}.svg)` }}
+                />
                 {item.label}
               </button>
             ))}
@@ -752,16 +687,56 @@ export default function Studio() {
               }}
             />
             <div className="composer-bottom">
-              <Sparkles size={13} aria-hidden="true" />
-              <button
-                className="send-button"
-                disabled={
-                  !prompt.trim() || busy || !!activeRun || modelUnavailable || (!isNew && !chat)
-                }
-                aria-label={revision ? 'Отправить доработку' : 'Создать игру'}
+              <details
+                className="game-tools-menu"
+                ref={toolsMenu}
+                open={toolsOpen}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && toolsMenu.current) {
+                    setToolsOpen(false);
+                    toolsMenu.current.querySelector('summary')?.focus();
+                  }
+                }}
               >
-                <ArrowUp size={20} />
-              </button>
+                <summary
+                  aria-label="Действия с игрой"
+                  role="button"
+                  aria-expanded={toolsOpen}
+                  title="Действия с игрой"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setToolsOpen((open) => !open);
+                  }}
+                >
+                  <ChevronDown size={19} />
+                </summary>
+                <div className="game-tools-popover" hidden={!toolsOpen}>
+                  {gameTools || (
+                    <p className="field-help">Здесь появятся версии и действия с вашей игрой.</p>
+                  )}
+                </div>
+              </details>
+              {activeRun ? (
+                <button
+                  type="button"
+                  className="send-button stop-button"
+                  disabled={busy || !activeRun.can_cancel}
+                  aria-label="Остановить генерацию"
+                  onClick={() => void cancel()}
+                >
+                  <Square size={16} fill="currentColor" />
+                </button>
+              ) : (
+                <button
+                  className="send-button"
+                  disabled={
+                    !prompt.trim() || busy || !!activeRun || modelUnavailable || (!isNew && !chat)
+                  }
+                  aria-label={revision ? 'Отправить доработку' : 'Создать игру'}
+                >
+                  <ArrowUp size={20} />
+                </button>
+              )}
             </div>
           </div>
         </form>
@@ -773,7 +748,7 @@ export default function Studio() {
         inert={(mobile ? !gameFullscreen : !previewOpen) || undefined}
       >
         <PhonePreview
-          hideToolbar={mobile}
+          hideToolbar
           forceFullscreen={gameFullscreen}
           onEnterFullscreen={() => setGameFullscreen(true)}
           onExitFullscreen={() => setGameFullscreen(false)}
@@ -782,11 +757,7 @@ export default function Studio() {
           title={revision?.title || 'Ваша игра'}
           exportUrl={revision?.export_url}
           playUrl={revision ? `/play/${revision.id}` : undefined}
-          badge={
-            revision && !revision.accepted ? 'Сохранённый кандидат — требуется проверка' : undefined
-          }
         />
-        {!mobile && gameTools}
       </aside>
       {showShare && shareRevision && (
         <Modal
@@ -916,45 +887,6 @@ export default function Studio() {
               Сохранить оценку
             </button>
           </form>
-        </Modal>
-      )}
-      {showConfirm && (
-        <Modal title="Подтвердить ручную проверку" onClose={() => setShowConfirm(false)}>
-          {error && <ErrorNotice message={error} />}
-          <div className="form-stack">
-            <p>
-              Автоматическая проверка не смогла подтвердить все эффекты. Сыграйте в сохранённый
-              кандидат: проверьте управление, основное действие и условие победы или поражения.
-            </p>
-            <p>Эта версия будет отмечена как проверенная вами, а не автоматически.</p>
-            {confirmEvidence?.requirements.length ? (
-              <ul>
-                {confirmEvidence.requirements.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            ) : null}
-            <button
-              className="button button-primary"
-              disabled={busy}
-              onClick={() => void act('confirm')}
-            >
-              Я проверил механику, принять версию
-            </button>
-          </div>
-        </Modal>
-      )}
-      {showDiagnostics && (
-        <Modal
-          title="Подробности запуска · только для вас"
-          wide
-          onClose={() => setShowDiagnostics(false)}
-        >
-          {diagnostics ? (
-            <pre className="diagnostics">{JSON.stringify(diagnostics, null, 2)}</pre>
-          ) : (
-            <Spinner />
-          )}
         </Modal>
       )}
     </main>

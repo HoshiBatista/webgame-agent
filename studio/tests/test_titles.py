@@ -8,7 +8,7 @@ from generation.providers.fake import fixture_response
 from studio.acceptance import assess
 from studio.models import Chat, CheckReport, Invocation, Publication, Revision, User
 from studio.services import cancel_run, create_run, finish_run
-from studio.tasks import check_identity
+from studio.tasks import check_identity, store_candidate
 from studio.titles import title_from_prompt
 
 
@@ -55,7 +55,7 @@ class ChatTitleTests(TestCase):
     def test_first_prompt_sets_short_title_without_model_calls_and_generation_refines_it(self):
         run, revision = self.run_and_revision()
         self.chat.refresh_from_db()
-        self.assertEqual(self.chat.title, "Сделай игру про звёзды")
+        self.assertEqual(self.chat.title, "Звёзды")
         self.assertFalse(Invocation.objects.exists())
         duplicate = create_run(self.chat, {"prompt": run.prompt, "idempotency_key": "first"})
         self.assertEqual(duplicate.pk, run.pk)
@@ -95,13 +95,48 @@ class ChatTitleTests(TestCase):
     def test_same_name_still_counts_as_manual_and_is_not_overwritten(self):
         run, revision = self.run_and_revision()
         self.chat.refresh_from_db()
+        chosen_title = self.chat.title
         self.client.patch(
             f"/api/chats/{self.chat.id}/", {"title": self.chat.title}, content_type="application/json"
         )
         finish_run(run.id, run.fence, "succeeded", "Готово", revision=revision)
         self.chat.refresh_from_db()
-        self.assertEqual(self.chat.title, run.prompt)
+        self.assertEqual(self.chat.title, chosen_title)
         self.assertTrue(self.chat.title_is_custom)
+
+    def test_saved_candidate_gets_a_short_model_title_and_preserves_later_manual_names(self):
+        run, _ = self.run_and_revision()
+        artifact = {
+            "title": "Название игры: Космический раннер с монетами и уровнями",
+            "files": {"index.html": "<canvas></canvas>"},
+            "html": "<canvas></canvas>",
+            "artifact_hash": "candidate-fixture",
+        }
+        candidate = store_candidate(run, artifact, None)
+        self.chat.refresh_from_db()
+        self.assertEqual(self.chat.title, "Космический раннер")
+        self.assertIsNone(self.chat.current_revision_id)
+        self.assertFalse(candidate.accepted)
+        response = self.client.patch(
+            f"/api/chats/{self.chat.id}/", {"title": "Моё особое название"}, content_type="application/json"
+        )
+        self.assertEqual(response.status_code, 200)
+        store_candidate(run, {**artifact, "title": "Другая игра"}, candidate)
+        self.chat.refresh_from_db()
+        self.assertEqual(self.chat.title, "Моё особое название")
+        self.assertFalse(Invocation.objects.exists())
+
+    def test_verified_result_keeps_the_model_reply_in_the_conversation(self):
+        run, revision = self.run_and_revision()
+        Invocation.objects.create(
+            run=run, attempt=1, state="settled", request={},
+            response={"message": "Соберите пять звёзд касанием. Что хотите изменить?"},
+        )
+        finish_run(run.id, run.fence, "succeeded", "Внутреннее сообщение проверки", revision=revision)
+        self.assertEqual(
+            run.chat_messages.get(role="assistant").content,
+            "Соберите пять звёзд касанием. Что хотите изменить?",
+        )
 
     def test_invalid_title_and_foreign_or_deleted_chat_cannot_be_changed(self):
         for title in (None, "", " \n ", 7, [], {}, "x" * 161):
@@ -211,5 +246,5 @@ class PromptTitleTests(TestCase):
         self.assertEqual(title_from_prompt("  Лисёнок\nсобирает   звёзды  "), "Лисёнок собирает звёзды")
         title = title_from_prompt("Лисёнок собирает звёзды " * 8)
         self.assertLessEqual(len(title), 60)
-        self.assertTrue(title.endswith("…"))
+        self.assertEqual(title, "Лисёнок собирает звёзды")
         self.assertLessEqual(len(title_from_prompt("я" * 120)), 60)

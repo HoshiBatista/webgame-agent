@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,8 +19,8 @@ import {
 } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request } from './api';
-import { Brand, ErrorNotice, Spinner } from './components';
-import { SessionContext, type StudioDraft, type ChatTitleChange } from './context';
+import { Brand, ErrorNotice, Modal, Spinner } from './components';
+import { SessionContext, useSession, type StudioDraft, type ChatTitleChange } from './context';
 import Landing from './Landing';
 import Login, { loginDestination } from './Login';
 import Feed from './Feed';
@@ -22,6 +30,7 @@ import Studio from './Studio';
 import RevisionPlayer from './RevisionPlayer';
 import type { ChatSummary, Session } from './types';
 import { ThemeProvider } from './theme';
+import ChatMenu from './ChatMenu';
 
 function Shell({
   session,
@@ -30,6 +39,7 @@ function Shell({
   session: Session;
   updateSession: (session: Session) => void;
 }) {
+  const { studioDrafts } = useSession();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,8 +51,66 @@ function Shell({
   const restoreMenuFocus = useRef(false);
   const [error, setError] = useState('');
   const location = useLocation();
+  const currentPath = useRef(location.pathname);
+  currentPath.current = location.pathname;
   const navigate = useNavigate();
   const chatsLoadVersion = useRef(0);
+  const [editingChat, setEditingChat] = useState<ChatSummary | null>(null);
+  const [deletingChat, setDeletingChat] = useState<ChatSummary | null>(null);
+  const [titleDraft, setTitleDraft] = useState('');
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState('');
+  async function renameChat(event: FormEvent) {
+    event.preventDefault();
+    if (!editingChat || actionBusy) return;
+    const title = titleDraft.trim().replace(/\s+/g, ' ');
+    if (!title) {
+      setActionError('Название чата не должно быть пустым.');
+      return;
+    }
+    setActionBusy(true);
+    setActionError('');
+    try {
+      const renamed = await request<ChatSummary>(`/api/chats/${editingChat.id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify({ title }),
+      });
+      ++chatsLoadVersion.current;
+      setChats((current) =>
+        current.map((item) =>
+          item.id === renamed.id
+            ? { ...item, title: renamed.title, updated_at: renamed.updated_at }
+            : item,
+        ),
+      );
+      window.dispatchEvent(new CustomEvent('gameforge:chats', { detail: renamed }));
+      setEditingChat(null);
+    } catch (cause) {
+      setActionError(errorText(cause));
+    } finally {
+      setActionBusy(false);
+    }
+  }
+  async function deleteChat() {
+    if (!deletingChat || actionBusy) return;
+    setActionBusy(true);
+    setActionError('');
+    try {
+      await request(`/api/chats/${deletingChat.id}/`, { method: 'DELETE' });
+      ++chatsLoadVersion.current;
+      setChats((current) => current.filter((item) => item.id !== deletingChat.id));
+      studioDrafts?.delete(deletingChat.id);
+      if (currentPath.current === `/chats/${deletingChat.id}`)
+        navigate('/chats/new', { replace: true });
+      window.dispatchEvent(new CustomEvent('gameforge:chats'));
+      setDeletingChat(null);
+    } catch (cause) {
+      setActionError(errorText(cause));
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
   const closeMobileMenu = useCallback(() => {
     restoreMenuFocus.current = true;
     setMobileOpen(false);
@@ -121,19 +189,20 @@ function Shell({
     const prior = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeMobileMenu();
+      if (event.key === 'Escape' && !event.defaultPrevented && !editingChat && !deletingChat)
+        closeMobileMenu();
     };
     window.addEventListener('keydown', escape);
     return () => {
       document.body.style.overflow = prior;
       window.removeEventListener('keydown', escape);
     };
-  }, [mobileOpen, closeMobileMenu]);
+  }, [mobileOpen, closeMobileMenu, editingChat, deletingChat]);
   async function logout() {
     try {
       await post('/api/logout/');
+      navigate('/', { replace: true });
       updateSession(await getSession());
-      navigate('/');
     } catch (cause) {
       setError(errorText(cause));
     }
@@ -203,22 +272,38 @@ function Shell({
           <Gamepad2 size={19} />
           <span>Игры сообщества</span>
         </Link>
-        <div className="sidebar-section-label">
-          ВАШИ МИРЫ <span>{chats.length}</span>
-        </div>
+        <div className="sidebar-section-label">Недавние</div>
         <nav id="sidebar-navigation" className="chat-nav" aria-label="Ваши игры">
           {chats.map((chat) => (
-            <Link
-              className={location.pathname === `/chats/${chat.id}` ? 'active' : ''}
+            <div
+              className={`chat-nav-item ${location.pathname === `/chats/${chat.id}` ? 'active' : ''}`}
               key={chat.id}
-              to={`/chats/${chat.id}`}
-              title={chat.title || 'Новая игра'}
-              aria-label={chat.title || 'Новая игра'}
             >
-              <span className="chat-symbol">{chat.title?.slice(0, 1).toUpperCase() || '✦'}</span>
-              <span className="chat-nav-label">{chat.title || 'Новая игра'}</span>
-              {chat.active_run && <i className="active-run-dot" title="Генерация выполняется" />}
-            </Link>
+              <Link
+                className={location.pathname === `/chats/${chat.id}` ? 'active' : ''}
+                to={`/chats/${chat.id}`}
+                title={chat.title || 'Новая игра'}
+                aria-label={chat.title || 'Новая игра'}
+              >
+                <span className="chat-symbol">
+                  {chat.title?.slice(0, 1).toUpperCase() || <Gamepad2 size={14} />}
+                </span>
+                <span className="chat-nav-label">{chat.title || 'Новая игра'}</span>
+                {chat.active_run && <i className="active-run-dot" title="Генерация выполняется" />}
+              </Link>
+              <ChatMenu
+                chat={chat}
+                onRename={() => {
+                  setEditingChat(chat);
+                  setTitleDraft(chat.title);
+                  setActionError('');
+                }}
+                onDelete={() => {
+                  setDeletingChat(chat);
+                  setActionError('');
+                }}
+              />
+            </div>
           ))}
           {!chats.length && (
             <p className="sidebar-empty">
@@ -253,6 +338,51 @@ function Shell({
           </div>
         </div>
       </aside>
+      {editingChat && (
+        <Modal
+          title="Переименовать чат"
+          onClose={() => {
+            if (!actionBusy) setEditingChat(null);
+          }}
+        >
+          <form className="form-stack" onSubmit={renameChat}>
+            <label>
+              Название чата
+              <input
+                autoFocus
+                value={titleDraft}
+                maxLength={160}
+                disabled={actionBusy}
+                onChange={(event) => setTitleDraft(event.target.value)}
+              />
+            </label>
+            {actionError && <ErrorNotice message={actionError} />}
+            <button className="button button-primary" disabled={actionBusy}>
+              Сохранить название
+            </button>
+          </form>
+        </Modal>
+      )}
+      {deletingChat && (
+        <Modal
+          title="Удалить чат?"
+          onClose={() => {
+            if (!actionBusy) setDeletingChat(null);
+          }}
+        >
+          <div className="form-stack">
+            <p>Чат «{deletingChat.title}» будет удалён. Опубликованные игры останутся в ленте.</p>
+            {actionError && <ErrorNotice message={actionError} />}
+            <button
+              className="button button-primary"
+              disabled={actionBusy}
+              onClick={() => void deleteChat()}
+            >
+              Удалить чат
+            </button>
+          </div>
+        </Modal>
+      )}
       <div className="app-content" inert={mobileOpen}>
         {error && (
           <div className="shell-error">
@@ -274,6 +404,9 @@ function Application() {
   const [error, setError] = useState('');
   const location = useLocation();
   const sessionVersion = useRef(0);
+  useEffect(() => {
+    if (!location.pathname.startsWith('/chats/')) document.title = 'beeGame';
+  }, [location.pathname]);
   // Drafts live only for this signed-in user and this tab, never in persistent storage.
   const studioDrafts = useMemo(() => new Map<string, StudioDraft>(), [session?.user?.id]);
   const updateSession = useCallback((value: Session) => {

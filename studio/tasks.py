@@ -267,7 +267,7 @@ class Lease:
 
 @transaction.atomic
 def store_candidate(run, materialized, base):
-    Chat.objects.select_for_update().get(pk=run.chat_id)
+    chat = Chat.objects.select_for_update().get(pk=run.chat_id)
     current = Run.objects.select_for_update().get(pk=run.id)
     if current.fence != run.fence or current.cancel_requested:
         return None
@@ -291,6 +291,11 @@ def store_candidate(run, materialized, base):
         runtime_version=materialized.get("runtime_version", 0),
         pipeline_version=run.pipeline_version,
     )
+    if not chat.title_is_custom and chat.current_revision_id is None:
+        from .titles import short_game_title
+
+        chat.title = short_game_title(revision.title)
+        chat.save(update_fields=["title", "updated_at"])
     current.candidate_revision = revision
     current.status = "checking"
     current.stage = "checking"

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -6,7 +6,6 @@ import Preferences from './Preferences';
 import { ThemeProvider, THEME_STORAGE_KEY } from './theme';
 import { SessionContext } from './context';
 import { request } from './api';
-import { DEMO_RECOMMENDATION } from './SyntheticAnalytics';
 import type { Session } from './types';
 
 vi.mock('./api', () => ({
@@ -39,76 +38,15 @@ beforeEach(() => {
   window.localStorage.clear();
   window.scrollTo = vi.fn();
 });
-it('refreshes the shared budget when settings open without polling or a generation request', async () => {
-  const refresh = vi.fn();
-  function Harness() {
-    const [value, updateSession] = useState(session);
-    refresh.mockImplementation(async () => {
-      updateSession({
-        ...session,
-        budget: {
-          ...session.budget,
-          spent_usd: 12,
-          reserved_usd: 2,
-          unknown_usd: 3,
-          available_usd: 33,
-        },
-      });
-    });
-    return (
-      <SessionContext.Provider value={{ session: value, updateSession, refresh }}>
-        <MemoryRouter initialEntries={['/settings']}>
-          <ThemeProvider>
-            <Preferences />
-          </ThemeProvider>
-        </MemoryRouter>
-      </SessionContext.Provider>
-    );
-  }
-  render(<Harness />);
-  await screen.findByText('$33');
-  expect(screen.getByText('$12')).toBeInTheDocument();
-  expect(screen.getByText('$2')).toBeInTheDocument();
-  expect(screen.getByText('$3')).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Что учитывать в новых играх'), {
-    target: { value: 'Сохранить мою правку настроек' },
-  });
-  expect(refresh).toHaveBeenCalledTimes(1);
-  expect(request).not.toHaveBeenCalled();
-});
-it('clearly labels invented analytics and performs no request until explicit opt-in', () => {
+it('keeps settings focused on model, theme and wishes without expenses or synthetic data', () => {
   setup();
-  expect(screen.getByText('ДЕМО · СИНТЕТИЧЕСКИЕ ДАННЫЕ')).toBeInTheDocument();
-  expect(screen.getByText(/не статистика ваших игроков/)).toBeInTheDocument();
+  expect(screen.queryByText('Общий бюджет')).not.toBeInTheDocument();
+  expect(screen.queryByText(/СИНТЕТИЧЕСКИЕ/)).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue(
+    session.preferences.notes.join('\n'),
+  );
   expect(request).not.toHaveBeenCalled();
 });
-it('adds one editable recommendation preserving preferences, without a generation request', async () => {
-  const result = { theme: 'light', notes: [...session.preferences.notes, DEMO_RECOMMENDATION] };
-  vi.mocked(request).mockResolvedValue(result);
-  const update = setup();
-  fireEvent.click(screen.getByRole('button', { name: 'Учесть в следующих играх и сохранить' }));
-  await waitFor(() => expect(update).toHaveBeenCalledWith({ ...session, preferences: result }));
-  expect(request).toHaveBeenCalledTimes(1);
-  expect(request).toHaveBeenCalledWith('/api/preferences/', {
-    method: 'PATCH',
-    body: JSON.stringify({ notes: result.notes }),
-  });
-  expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue(result.notes.join('\n'));
-  expect(screen.getByRole('button', { name: 'Пожелание добавлено' })).toBeDisabled();
-});
-it('does not discard existing preferences when the list is full', () => {
-  setup({
-    ...session,
-    preferences: {
-      theme: 'light',
-      notes: Array.from({ length: 10 }, (_, index) => `Пожелание ${index}`),
-    },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Учесть в следующих играх и сохранить' }));
-  expect(screen.getByRole('alert')).toHaveTextContent('освободите место');
-  expect(request).not.toHaveBeenCalled();
-});
-
 it('applies theme immediately and only sends notes on Save without closing the page', async () => {
   const result = { theme: 'light', notes: ['Крупное управление'] };
   vi.mocked(request).mockResolvedValue(result);

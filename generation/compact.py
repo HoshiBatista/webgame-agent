@@ -332,6 +332,7 @@ def materialize_compact(response, request, *, files=None, previous_checks=None):
 
 
 PROMPT = """Write one small complete Canvas game mechanic. Return only the compact JSON schema.
+Use a clear title of 1-3 words naming the game's mechanic or subject, without a tagline or prompt recap. Write message as a short helpful Russian reply about the game or change, with controls when useful; never ask the user to approve technical checks. Apply audience_guidance to the actual mechanics, pace, text and controls.
 The application supplies Canvas scaling, offline HTML, responsive buttons, real pointer/keyboard events and an animation loop. You write ALL rules, state, outcomes and drawing. No tools, network, host access, imports or dependencies.
 Source MUST call GameForge.register(api => { const state={...}; return {state, input(event){...}, render(ctx){...}, update(dt){...}}; }); once. input/render are required, update is optional and dt is seconds. Use closure variables, not this. api.width/height are the chosen world dimensions; api.random() is normal game randomness.
 render(ctx) draws in logical world coordinates; no Canvas resizing or own animation loop. Preserve state across resize. No mandatory phase/score/lives/menu: implement what this request needs.

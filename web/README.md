@@ -24,38 +24,33 @@ origin in its frame policy. The normal local application address is `http://127.
 
 Games use `sandbox="allow-scripts"` without `allow-same-origin`. Fullscreen expands the
 existing frame so its game state survives. Rotating signed URLs do not reload an unchanged
-artifact. Only one live hover preview is mounted in the feed. Candidate versions are visibly
-separate from accepted versions; manual confirmation is explicit, and publication uses a
-captured accepted revision.
+artifact. Only one live hover preview is mounted in the feed. Publishing still captures
+an accepted revision; automatic validation and accounting remain server-side. The normal
+conversation has no manual-acceptance dialog, diagnostics, budget or duplicate run cards.
+A completed answer is a message labelled beeGame Lite/Pro with its duration. While work
+is active, elapsed time advances locally every second; stopping is available in the composer.
+An unobtrusive community-feed link opens in another tab without fetching recommendations.
 
-While a chat has an active queued/generating/checking run, it offers up to three
-popular published games using static thumbnails shared with the feed. Links open
-the public player in a separate tab with `noopener noreferrer`; the current run,
-chat and preview remain in place. The current chat's publications and the original
-publication of a remix are excluded. Empty/unavailable recommendations stay hidden.
-The feed is fetched once per active run, without model calls or in-chat game frames.
-On success, a ready action selects the exact accepted result revision and opens it
-in the existing fullscreen preview. Failed or unverified candidates do not get it.
+The sidebar lists «Недавние» without a count. Each row reserves space for a vertical-dot
+menu (visible on hover/focus, always visible on small/touch screens). Rename and delete
+operate without navigating through the row link. Renaming updates the open tab title;
+other pages use «beeGame». Automatic labels use 1–3 words, including a saved draft's model
+title, while manual names remain protected. The backend keeps ownership and row locks.
+Apply existing migrations including `0011_chat_titles` and `0013_merge_titles_and_compact`.
 
-Chats start as «Новая игра», get a short prompt label on the first run, then the
-accepted game's title unless manually renamed. The header editor supports save,
-cancel/Escape and inline errors; polling does not replace its draft. A title chosen
-before the first prompt is sent when the chat is created. Existing chats use
-`PATCH /api/chats/:id/`; a confirmed rename updates the sidebar immediately and
-invalidates older pending title/list responses. It changes no game or publication.
-Apply backend migration `0011_chat_titles` before running this version.
-The studio preview collapses with a 600ms width transition and a staggered opacity fade, keeping the same
-game frame mounted. The centered conversation has a continuous surface without side borders.
-At 760px and below, the phone mockup is hidden. A rotating chevron in the chat header
-opens a collapsed action bar with version selection, fullscreen, HTML copying/download,
-sharing, rating and chat deletion. Fullscreen opens the existing frame directly.
-The action bar expands over 480ms; hidden actions are inert and excluded from accessibility.
-Reduced-motion preferences disable panel transitions.
+The chat header contains the model selector and desktop preview toggle or mobile fullscreen.
+A menu beside the send button contains version selection, fullscreen, copy, download, share,
+rating and restoration. Menu actions do not submit the prompt form. Fullscreen and panel
+transitions preserve the existing frame. The chat keeps its 800px maximum width in both
+preview states, preventing expansion at the start of the 600ms opening transition.
+Mobile uses its own viewport-height conversation scroller. Opening/reloading starts at the
+bottom, including late font/content layout; reading older messages is respected during polling.
+The empty invitation is centered. Reduced-motion preferences disable panel transitions.
 
-Tests cover CSRF and error transport, no automatic mutation retry, preserved idempotency
-after a lost response, candidate/manual-review selection, immutable preview lifecycle,
-fullscreen frame identity, history without generation, feed hover/like behavior,
-and the waiting-games lifecycle through completion and cancellation.
+Tests cover transport/CSRF, retry identity, cancellation, exact displayed source revision,
+immutable preview lifecycle, version/fullscreen actions, sidebar renaming, simple replies,
+local timer ticks and preference persistence. Browser evidence additionally covers scroll,
+continuous panel widths, logout to the landing and narrow layouts.
 Component tests use fixtures and do not count as live model evidence. Real browser and model
 evidence belongs in the repository's integration report.
 
@@ -82,7 +77,9 @@ directory served by Django. The landing footer and login card identify beeGame a
 a hackathon development, not an official Beeline product. This notice does not establish
 permission to use the trademark; that depends on the event's terms or the rights holder.
 
-Settings include an explicitly labelled synthetic analytics example (three invented touch
-metrics). It is not collected player data. An opt-in action adds one editable recommendation
-to preferences through the existing API and makes no model request. Genre and implementation
-remain the model's choice; the recommendation is context, not a mandatory game template.
+Settings contain model choice, browser theme and editable wishes. Expenses and synthetic
+analytics are omitted from the interface. Audience choices use four local authored SVGs
+in `public/assets/audience-*.svg`; the request carries both the selected ID and concrete
+instructions for pace, readability, difficulty and controls. No model call is made for a
+setting change. The small landing illustration uses container units below 440px so its
+text, pixel art and decorations scale together.

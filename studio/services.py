@@ -15,7 +15,8 @@ from django.utils.dateparse import parse_datetime
 from .continuations import delivery_state, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
 from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Revision, Run, RunEvent
-from .titles import DEFAULT_CHAT_TITLE, title_from_prompt
+from .replies import assistant_reply
+from .titles import DEFAULT_CHAT_TITLE, short_game_title, title_from_prompt
 
 
 class DomainError(Exception):
@@ -270,6 +271,14 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if audience not in ("everyone", "gamers", "children", "seniors"):
         raise DomainError("invalid_audience", "Неизвестная аудитория.")
     previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
+    acknowledged_run = None
+    if data.get("acknowledge_unknown_run_id"):
+        if continued_from or check_only:
+            raise DomainError("invalid_retry", "Подтверждение относится к новому запросу.")
+        try:
+            acknowledged_run = Run.objects.get(pk=data["acknowledge_unknown_run_id"], chat=chat)
+        except (Run.DoesNotExist, ValueError, DjangoValidationError) as exc:
+            raise DomainError("invalid_retry", "Предыдущий запрос недоступен.", 409) from exc
     # Retries inherit the original choice even if the user's preference or server
     # configuration changed after a lost HTTP response. Continuations inherit it
     # unless the user explicitly selects another profile.
@@ -349,6 +358,8 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     accept_unknown_cost = data.get("accept_unknown_cost") is True
     if accept_unknown_cost:
         payload["accept_unknown_cost"] = True
+    if acknowledged_run:
+        payload["acknowledge_unknown_run_id"] = str(acknowledged_run.id)
     legacy_fingerprint = fingerprint(payload)
     payload.update(provider=provider, model_profile=profile_id)
     if previous:
@@ -375,8 +386,11 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         "unknown",
     ):
         raise DomainError("cannot_continue", "Задание не ожидает продолжения.", 409)
-    unknown_calls = unacknowledged_unknowns(continued_from) if continued_from else []
+    consent_run = acknowledged_run or continued_from
+    unknown_calls = unacknowledged_unknowns(consent_run) if consent_run else []
     unknown = bool(unknown_calls)
+    if acknowledged_run and (acknowledged_run.status in Run.ACTIVE or not unknown):
+        raise DomainError("cannot_retry", "Состояние предыдущего запроса изменилось. Обновите чат.", 409)
     if unknown and not accept_unknown_cost and not check_only:
         raise DomainError(
             "outcome_unknown",
@@ -445,7 +459,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     event(run, "queued", "Запрос принят. Ожидаем свободное место для генерации.")
     if unknown and not check_only:
         event(run, "explicit_retry", "Новый запрос подтверждён пользователем; прежний неизвестный расход сохранён.",
-              {"previous_run_id": str(continued_from.id),
+              {"previous_run_id": str(consent_run.id),
                "unknown_invocation_ids": sorted(str(call.id) for call in unknown_calls)})
     schedule(run)
     return run
@@ -461,6 +475,8 @@ def cancel_run(run):
         run.message = "Задание отменено. Последняя рабочая версия и черновик сохранены."
         run.finished_at = timezone.now()
         run.save()
+        Message.objects.create(chat=run.chat, run=run, role="assistant",
+                               content=assistant_reply("cancelled", run.message))
         event(run, "cancelled", run.message)
     return run
 
@@ -506,9 +522,18 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
             )
         chat.current_revision = revision
         if not chat.title_is_custom:
-            chat.title = revision.title
+            chat.title = short_game_title(revision.title)
         chat.save(update_fields=["current_revision", "title", "updated_at"])
     run.save()
-    Message.objects.create(chat=run.chat, run=run, role="assistant", content=message)
+    response = (
+        run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
+        .order_by("-attempt").values_list("response", flat=True).first()
+    )
+    model_message = response.get("message", "") if isinstance(response, dict) else ""
+    reply = assistant_reply(
+        status, message, model_message, has_candidate=bool(run.candidate_revision_id),
+        response_status=response.get("status", "") if isinstance(response, dict) else "",
+    )
+    Message.objects.create(chat=run.chat, run=run, role="assistant", content=reply)
     event(run, status, message, {"error": error} if error else {})
     return True

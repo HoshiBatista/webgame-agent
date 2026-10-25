@@ -79,14 +79,50 @@ it('supports a direct visit to settings with a safe back destination', async () 
 });
 
 it('releases the mobile menu scroll lock when opening the settings page', async () => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: query === '(max-width: 760px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
   setup();
   await screen.findByRole('heading', { name: 'Текущий чат' });
   const previousOverflow = document.body.style.overflow;
   fireEvent.click(screen.getByRole('button', { name: 'Открыть список чатов' }));
-  expect(document.body.style.overflow).toBe('hidden');
+  await waitFor(() => expect(document.body.style.overflow).toBe('hidden'));
   fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
   await screen.findByRole('heading', { name: 'Настройки', level: 1 });
   await waitFor(() => expect(document.body.style.overflow).toBe(previousOverflow));
+});
+
+it('Escape closes only the chat action menu inside the mobile sidebar', async () => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: query === '(max-width: 760px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+  vi.mocked(request).mockResolvedValue({ results: [{ id: 'one', title: 'Моя игра' }] });
+  setup('/chats/one');
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  const open = screen.getByRole('button', { name: 'Открыть список чатов' });
+  fireEvent.click(open);
+  const options = screen.getByRole('button', { name: 'Действия с чатом «Моя игра»' });
+  fireEvent.click(options);
+  fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Переименовать' }), { key: 'Escape' });
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  expect(open).toHaveAttribute('aria-expanded', 'true');
+  expect(options).toHaveFocus();
+  fireEvent.click(options);
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Переименовать' }));
+  fireEvent.keyDown(screen.getByRole('textbox', { name: 'Название чата' }), { key: 'Escape' });
+  expect(open).toHaveAttribute('aria-expanded', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Закрыть' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
 it('expands the collapsed logo control without navigating away or losing focus', async () => {

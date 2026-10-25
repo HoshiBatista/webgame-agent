@@ -1,0 +1,173 @@
+{
+  "date": "2026-10-25",
+  "scope": "19 requested interface changes and pre-commit review fixes; browser uses local API fixtures and a static sandboxed canvas, no model calls.",
+  "backend": {
+    "passed": 618,
+    "deselected": 86,
+    "command": "pytest -m 'not browser and not live and not native_browser'",
+    "database": "dedicated temporary PostgreSQL test database"
+  },
+  "frontend": {
+    "passed": 94,
+    "failed": 0
+  },
+  "checks": {
+    "build": "passed",
+    "frontend_lint": "passed",
+    "ruff": "passed",
+    "mypy_generation_validation": "passed, 34 modules",
+    "django_check": "passed",
+    "new_migrations": false
+  },
+  "browser": [
+    {
+      "desktop": true,
+      "initial_and_reload_bottom": true,
+      "preview_no_width_jump": true,
+      "samples": [
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        800,
+        781.734375,
+        747.65625,
+        714.5625,
+        682.421875,
+        651.765625,
+        622.890625,
+        596.15625,
+        571.421875,
+        549.125,
+        529.109375,
+        511.53125,
+        496.421875,
+        483.84375,
+        473.640625,
+        465.796875,
+        460.296875,
+        457.0625,
+        456,
+        456,
+        456,
+        456,
+        456,
+        456
+      ],
+      "rename_updates_document_title": true,
+      "logout_landing": true,
+      "page_errors": []
+    },
+    {
+      "mobile_width": 320,
+      "no_overflow": true,
+      "chat_bottom": true,
+      "version_fullscreen": true,
+      "welcome_center_delta": 0.0078125,
+      "sidebar_delete": true,
+      "escape_closes_only_active_layer": true
+    },
+    {
+      "mobile_width": 360,
+      "no_overflow": true,
+      "chat_bottom": true,
+      "version_fullscreen": true,
+      "welcome_center_delta": 0,
+      "sidebar_delete": true,
+      "escape_closes_only_active_layer": true
+    },
+    {
+      "mobile_width": 390,
+      "no_overflow": true,
+      "chat_bottom": true,
+      "version_fullscreen": true,
+      "welcome_center_delta": 0,
+      "sidebar_delete": true,
+      "escape_closes_only_active_layer": true
+    },
+    {
+      "mobile_width": 760,
+      "no_overflow": true,
+      "chat_bottom": true,
+      "version_fullscreen": true,
+      "welcome_center_delta": 0,
+      "sidebar_delete": true,
+      "escape_closes_only_active_layer": true
+    },
+    {
+      "timer_ticks": [
+        "7 с",
+        "8 с",
+        "9 с"
+      ],
+      "no_recommendation_requests": true,
+      "cancel_from_composer": true
+    },
+    {
+      "landing_width": 300,
+      "page": 20,
+      "titleFits": true,
+      "window": 241.9550018310547,
+      "title": 87.67669677734375
+    },
+    {
+      "landing_width": 320,
+      "page": 0,
+      "titleFits": true,
+      "window": 241.9550018310547,
+      "title": 87.67669677734375
+    },
+    {
+      "landing_width": 360,
+      "page": 0,
+      "titleFits": true,
+      "window": 272.7031555175781,
+      "title": 98.63752746582031
+    },
+    {
+      "landing_width": 390,
+      "page": 0,
+      "titleFits": true,
+      "window": 295.7486877441406,
+      "title": 106.80186462402344
+    },
+    {
+      "landing_width": 430,
+      "page": 0,
+      "titleFits": true,
+      "window": 326.48126220703125,
+      "title": 117.76406860351562
+    }
+  ],
+  "artifacts": ".data/ui-review-20261025/",
+  "limitations": [
+    "No real model generation or quality measurement",
+    "No physical iOS/Android or Safari test",
+    "Supported page minimum width remains 320px; decorative illustration also inspected at 300px",
+    "No deployment performed"
+  ],
+  "focused_domain_titles_replies": {
+    "passed": 71,
+    "command": "pytest studio/tests/test_domain.py studio/tests/test_titles.py tests/test_user_replies.py -m 'not browser and not live'"
+  },
+  "review_fixes": [
+    "New composer requests after unknown outcomes keep the displayed source, prompt and audience with explicit consent and idempotency; unknown liabilities remain.",
+    "Late async responses cannot reset another chat or open publication UI there; a submitted new-chat request still completes after navigation.",
+    "Cancellation replies are persisted once; unchanged responses preserve the explanation.",
+    "Messages outside the latest 30 runs retain model and elapsed-time metadata.",
+    "Escape dismisses only the active menu/dialog in the mobile sidebar."
+  ]
+}

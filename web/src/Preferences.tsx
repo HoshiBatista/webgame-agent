@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowLeft, Check, Monitor, Moon, Sun, Trash2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BudgetDetails, ErrorNotice } from './components';
+import { ErrorNotice } from './components';
 import { errorText, request } from './api';
 import { useSession } from './context';
 import type { Preferences as PreferencesType } from './types';
-import SyntheticAnalytics, { DEMO_RECOMMENDATION } from './SyntheticAnalytics';
 import { ModelChoices, selectedProfile } from './ModelSelector';
 import { useTheme } from './theme';
 
@@ -39,12 +38,8 @@ export default function Preferences() {
   const [modelError, setModelError] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [demoApplied, setDemoApplied] = useState(
-    session.preferences.notes.includes(DEMO_RECOMMENDATION),
-  );
   useEffect(() => {
     if (!notesDirty.current) setNotes(session.preferences.notes.join('\n'));
-    setDemoApplied(session.preferences.notes.includes(DEMO_RECOMMENDATION));
   }, [session.preferences.notes]);
   async function chooseModel(value: string) {
     setModelBusy(true);
@@ -59,38 +54,6 @@ export default function Preferences() {
       setModelError(errorText(cause));
     } finally {
       setModelBusy(false);
-    }
-  }
-  async function applyDemoRecommendation() {
-    const nextNotes = [
-      ...new Set([
-        ...notes
-          .split('\n')
-          .map((note) => note.trim())
-          .filter(Boolean),
-        DEMO_RECOMMENDATION,
-      ]),
-    ];
-    if (nextNotes.length > 10) {
-      setError('Сначала освободите место: можно сохранить до десяти пожеланий.');
-      return;
-    }
-    setBusy(true);
-    setError('');
-    setSaved(false);
-    try {
-      const preferences = await request<PreferencesType>('/api/preferences/', {
-        method: 'PATCH',
-        body: JSON.stringify({ notes: nextNotes }),
-      });
-      updateSession({ ...session, preferences });
-      notesDirty.current = false;
-      setNotes(preferences.notes.join('\n'));
-      setDemoApplied(true);
-    } catch (cause) {
-      setError(errorText(cause));
-    } finally {
-      setBusy(false);
     }
   }
   async function save(event: FormEvent) {
@@ -217,15 +180,6 @@ export default function Preferences() {
             </form>
           </div>
           <aside className="settings-side" aria-label="Дополнительные настройки">
-            <SyntheticAnalytics
-              onApply={applyDemoRecommendation}
-              applied={demoApplied && notes.includes(DEMO_RECOMMENDATION)}
-              busy={busy || modelBusy}
-            />
-            <details className="disclosure settings-budget">
-              <summary>Общий бюджет</summary>
-              <BudgetDetails budget={session.budget} />
-            </details>
             {session.user?.is_staff && (
               <a
                 className="text-button admin-link"
@@ -233,7 +187,7 @@ export default function Preferences() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Управление демонстрационными аккаунтами ↗
+                Управление аккаунтами
               </a>
             )}
           </aside>
