@@ -1,0 +1,166 @@
+{
+  "verified_at": "2026-10-26T02:40:59.249669+03:00",
+  "release": "56df10cc0cd3eaa425f58419a45f0495a4032901",
+  "release_directory": "/opt/gameforge/releases/20261026-56df10c",
+  "previous_release_directory": "/opt/gameforge/releases/20261025-a0e09ef",
+  "archive_sha256": "f30aec9fc6fd5e7c9169c199174c2631305d9400f68d3d1a00fa7bb28eb7d13f",
+  "source_commits": {
+    "upstream_landing": "3b7c82d",
+    "studio_settings_logout_preview_and_submission": "56df10c"
+  },
+  "server": {
+    "revision": "56df10cc0cd3eaa425f58419a45f0495a4032901",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 16,
+      "CheckReport": 9,
+      "Feedback": 0,
+      "Invocation": 68,
+      "Like": 0,
+      "Message": 60,
+      "Outbox": 32,
+      "Preference": 1,
+      "Publication": 0,
+      "Revision": 9,
+      "Run": 32,
+      "RunEvent": 346,
+      "User": 2
+    },
+    "all_record_hashes_unchanged": true,
+    "unknown_preserved": 4,
+    "visible_chats_before": 3,
+    "visible_chats_after": 3,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_settings_and_secrets_preserved": true,
+    "relay_db_redis_container_identity_preserved": true,
+    "images": {
+      "app": {
+        "image_id": "sha256:48cd6a46efa97145d3d2abb99660312186e2c24dcf6deb58ba2621f61f756f3b",
+        "image_tag": "gameforge-mini:cloud-56df10c-20261026",
+        "running": true
+      },
+      "preview": {
+        "image_id": "sha256:48cd6a46efa97145d3d2abb99660312186e2c24dcf6deb58ba2621f61f756f3b",
+        "image_tag": "gameforge-mini:cloud-56df10c-20261026",
+        "running": true
+      },
+      "worker": {
+        "image_id": "sha256:48cd6a46efa97145d3d2abb99660312186e2c24dcf6deb58ba2621f61f756f3b",
+        "image_tag": "gameforge-mini:cloud-56df10c-20261026",
+        "running": true
+      },
+      "beat": {
+        "image_id": "sha256:48cd6a46efa97145d3d2abb99660312186e2c24dcf6deb58ba2621f61f756f3b",
+        "image_tag": "gameforge-mini:cloud-56df10c-20261026",
+        "running": true
+      },
+      "validator": {
+        "image_id": "sha256:320ef360dd81a91499cdff7a28a6ec4b0585fbf99f9f73b6b4d86e5b95673572",
+        "image_tag": "gameforge-mini-validator:cloud-56df10c-20261026",
+        "running": true
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-56df10c-20261025T233853Z.dump",
+    "backup_sha256": "45c3714737dee142d7ad17b500da655ab0cc2eb94d7d6c15bb24f0fdf5a9dcef"
+  },
+  "validator": {
+    "status": "passed",
+    "passed_facts": 3,
+    "artifact_hash": "31f5703a5c0f6a76ffffdb83cc04d6ef731771dc57e6f7c00fc090bbfefb1d9f",
+    "validator_hash": "d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0",
+    "validator_environment": "mini-browser-v1:d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "chats_created": 0,
+    "invocations_created": 0,
+    "real_model_calls": 0
+  },
+  "http": {
+    "origin": "https://212.57.126.215",
+    "https_verified": true,
+    "health": "passed",
+    "login_route": "passed",
+    "branding": "beeGame",
+    "beeline_logo_exact_bytes": true,
+    "frontend_js_css_exact_bytes": true,
+    "authenticated_login": "passed",
+    "guest_and_admin_denied": "passed",
+    "secure_httponly_cookie": "passed",
+    "preview_exact_bytes_hash_and_isolation": "passed on existing revision",
+    "preview_optional_audio_control_exact_bytes": "passed on existing revision",
+    "logout_anonymous_session": "passed",
+    "missing_chat_localized_404": "passed",
+    "existing_visible_chats_for_tester": 3,
+    "profiles": [
+      {
+        "id": "pro",
+        "model": "gpt-6-sol",
+        "available": false
+      },
+      {
+        "id": "lite",
+        "model": "qwen38",
+        "available": true
+      }
+    ],
+    "chats_created": 0,
+    "real_model_calls": 0
+  },
+  "browser": {
+    "origin": "https://212.57.126.215",
+    "checks": [
+      {
+        "width": 1440,
+        "missing_chat_recovery": true,
+        "create_button_enabled": true,
+        "settings_layout": true,
+        "no_horizontal_overflow": true
+      },
+      {
+        "width": 390,
+        "missing_chat_recovery": true,
+        "create_button_enabled": true,
+        "settings_layout": true,
+        "no_horizontal_overflow": true
+      }
+    ],
+    "synthetic_analytics_absent": true,
+    "page_errors": [],
+    "logout_and_reload_stays_anonymous": true,
+    "mutations": [
+      {
+        "path": "/api/login/",
+        "method": "POST"
+      },
+      {
+        "path": "/api/logout/",
+        "method": "POST"
+      }
+    ],
+    "chats_created": 0,
+    "model_calls": 0,
+    "generation_submissions": 0
+  },
+  "local_checks": {
+    "frontend_tests": 103,
+    "domain_tests": 53,
+    "preview_audio_tests": 2,
+    "build": "passed",
+    "frontend_lint": "passed",
+    "ruff": "passed",
+    "git_diff_check": "passed"
+  },
+  "migrations_applied": [],
+  "chats_created": 0,
+  "records_retired": 0,
+  "model_calls": 0,
+  "gpu_server_access_or_changes": false,
+  "relay_restart": false,
+  "codex_configuration_changed": false,
+  "limitations": [
+    "No live model inference or physical WebView acceptance.",
+    "Validator smoke uses trusted in-memory fixture bytes without creating DB records or running the generation workflow.",
+    "Exact database row hashes were compared with ingress stopped, before later authentication checks.",
+    "Cloud Pro remains disabled as before this deployment; local Codex credentials were not transferred.",
+    "Browser logout assertion was corrected from /login to the intended guest landing /; no product fix was needed."
+  ]
+}
