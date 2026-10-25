@@ -12,7 +12,7 @@ import {
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request } from './api';
 import { Brand, ErrorNotice, Spinner } from './components';
-import { SessionContext, type StudioDraft } from './context';
+import { SessionContext, type StudioDraft, type ChatTitleChange } from './context';
 import Landing from './Landing';
 import Login, { loginDestination } from './Login';
 import Feed from './Feed';
@@ -36,12 +36,24 @@ function Shell({
   const [error, setError] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+  const chatsLoadVersion = useRef(0);
   useEffect(() => {
     let alive = true;
-    const load = () =>
-      request<{ results: ChatSummary[] }>('/api/chats/')
+    const load = (event?: Event) => {
+      const version = ++chatsLoadVersion.current;
+      const change =
+        event instanceof CustomEvent ? (event.detail as ChatTitleChange | undefined) : undefined;
+      if (change)
+        setChats((current) =>
+          current.map((chat) =>
+            chat.id === change.id
+              ? { ...chat, title: change.title, updated_at: change.updated_at }
+              : chat,
+          ),
+        );
+      return request<{ results: ChatSummary[] }>('/api/chats/')
         .then((data) => {
-          if (alive) {
+          if (alive && chatsLoadVersion.current === version) {
             setChats(data.results);
             setError('');
           }
@@ -49,12 +61,14 @@ function Shell({
         .catch((cause) => {
           if (alive) setError(errorText(cause));
         });
+    };
     void load();
     window.addEventListener('gameforge:chats', load);
     window.addEventListener('online', load);
     window.addEventListener('focus', load);
     return () => {
       alive = false;
+      ++chatsLoadVersion.current;
       window.removeEventListener('gameforge:chats', load);
       window.removeEventListener('online', load);
       window.removeEventListener('focus', load);
@@ -68,8 +82,11 @@ function Shell({
   useEffect(() => {
     if (!activeChatIds) return;
     const timer = window.setInterval(() => {
+      const version = ++chatsLoadVersion.current;
       void request<{ results: ChatSummary[] }>('/api/chats/')
-        .then((data) => setChats(data.results))
+        .then((data) => {
+          if (chatsLoadVersion.current === version) setChats(data.results);
+        })
         .catch((cause) => setError(errorText(cause)));
     }, 5000);
     return () => window.clearInterval(timer);

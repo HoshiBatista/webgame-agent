@@ -93,10 +93,11 @@ def test_memory_real_input_distinguishes_broken_programs(mutation):
 
 
 def snake_checks():
-    start = click('#start')
+    start = {**click('#start'), 'action': 'tap'}
+    up, left = ({**click(selector), 'action': 'tap'} for selector in ('#up', '#left'))
     return [scenario('start', 'start', [start], 'snake.active', True),
-            scenario('turn', 'control', [start, click('#up'), {'action': 'wait', 'ms': 250},
-                {'action': 'checkpoint'}, click('#left'), {'action': 'wait', 'ms': 250}],
+            scenario('turn', 'control', [start, up, {'action': 'wait', 'ms': 250},
+                {'action': 'checkpoint'}, left, {'action': 'wait', 'ms': 250}],
                 'snake.x', None, operator='decreased'),
             {**scenario('loss', 'outcome', [start, {'action': 'wait', 'ms': 1300}], 'snake.active', False),
              'observation':{'source':'text','selector':'#status'},'expect':{'operator':'eq','value':'lost'}},

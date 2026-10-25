@@ -53,7 +53,10 @@ def test_real_release_effect_after_checkpoint_keeps_setup_and_passes():
     for check in checks:
         check['expect'] = {'operator': 'changed', 'value': None}
     report = validate(html, checks, artifact_hash=sha256(html))
-    assert report['status'] == 'passed', report
+    # Keyboard evidence remains valid, but it cannot certify mobile touch coverage.
+    assert report['status'] == 'unverified', report
+    assert {f['code'] for f in report['findings']} == {'missing_mobile_control', 'incomplete_checks'}
+    assert all(fact['status'] == 'passed' for fact in report['facts'])
     for fact in report['facts'][1:]:
         assert fact['counterfactual']['execution_valid'] is True
         assert fact['counterfactual']['omitted_steps'] == [2]

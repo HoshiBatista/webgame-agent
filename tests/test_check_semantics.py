@@ -84,7 +84,7 @@ def game(broken=False, crash=False):
 
 def game_checks():
     start = {"action": "click", "selector": "#start", "x": None, "y": None}
-    click = {"action": "click", "selector": "canvas", "x": 40, "y": 40}
+    click = {"action": "tap", "selector": "canvas", "x": 40, "y": 40}
     wait = {"action": "wait_for", "ms": 500}
     return [
         {"id": "start", "category": "start", "requirement": "Старт начинает партию",

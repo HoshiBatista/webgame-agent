@@ -17,7 +17,7 @@ from playwright.sync_api import TimeoutError as BrowserTimeout
 from playwright.sync_api import ViewportSize, sync_playwright
 
 from .checks import INPUT, NUMERIC, RELATIVE, check_issue, comparable, numeric, parse_number
-from .contracts import VIEWPORTS, implementation_hash
+from .contracts import VIEWPORTS, implementation_hash, suite_findings
 from .diagnostics import INPUT_TARGET
 from .diagnostics import collect as collect_diagnostic
 from .evidence import gates as evidence_gates
@@ -324,7 +324,8 @@ def run(payload):
     findings: list[dict[str, Any]] = []
     screenshot = None
     required = {"start", "control", "outcome"}
-    incomplete = not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12 or len({c.get("id") for c in checks}) != len(checks)
+    findings.extend(suite_findings(checks))
+    incomplete = bool(findings) or not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12 or len({c.get("id") for c in checks}) != len(checks)
     if incomplete:
         findings.append({"code": "incomplete_checks", "message": "Нужны проверки начала, управления и исхода."})
     measurements = []

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, errorText, request } from './api';
 import type { Chat } from './types';
 
 // Only observes saved work. Reconnection must never submit a model request.
 export function useSavedChat(id: string | undefined) {
+  const readVersion = useRef(0);
   const [chat, setChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(!!id);
   const [connectionError, setConnectionError] = useState('');
@@ -27,11 +28,12 @@ export function useSavedChat(id: string | undefined) {
       if (!alive || running) return;
       clearTimeout(timer);
       running = true;
+      const sequence = ++readVersion.current;
       controller = new AbortController();
       let delay: number | null = null;
       try {
         const data = await request<Chat>(`/api/chats/${id}/`, { signal: controller.signal });
-        if (!alive) return;
+        if (!alive || sequence !== readVersion.current) return;
         setChat(data);
         setConnectionError('');
         failures = 0;
@@ -69,5 +71,17 @@ export function useSavedChat(id: string | undefined) {
     };
   }, [id, version]);
 
-  return { chat, loading, connectionError, reload };
+  const updateTitle = useCallback(
+    (updated: Pick<Chat, 'id' | 'title' | 'updated_at'>) => {
+      ++readVersion.current;
+      setChat((current) =>
+        current?.id === updated.id
+          ? { ...current, title: updated.title, updated_at: updated.updated_at }
+          : current,
+      );
+      reload();
+    },
+    [reload],
+  );
+  return { chat, loading, connectionError, reload, updateTitle };
 }

@@ -27,6 +27,8 @@ import {
 import { chatsChanged, useSession } from './context';
 import type { Chat, Preferences, Publication, Revision, Run, RunEvent } from './types';
 import { useSavedChat } from './useSavedChat';
+import WaitingGames from './WaitingGames';
+import ChatTitle from './ChatTitle';
 import ModelSelector, { selectedProfile } from './ModelSelector';
 
 const audiences = [
@@ -50,7 +52,14 @@ export default function Studio() {
   const navigate = useNavigate();
   const { session, refresh, updateSession, studioDrafts } = useSession();
   const initialDraft = useRef(studioDrafts?.get(id)).current;
-  const { chat, loading, connectionError, reload: load } = useSavedChat(isNew ? undefined : id);
+  const {
+    chat,
+    loading,
+    connectionError,
+    reload: load,
+    updateTitle,
+  } = useSavedChat(isNew ? undefined : id);
+  const [newTitle, setNewTitle] = useState<string | null>(initialDraft?.chatTitle ?? null);
   const [error, setError] = useState('');
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
@@ -95,8 +104,8 @@ export default function Studio() {
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
   const audienceReady = useRef(isNew || initialDraft?.audience != null);
-  const draft = useRef({ prompt, audience, selectedRevision });
-  draft.current = { prompt, audience, selectedRevision };
+  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle });
+  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle };
   useEffect(
     () => () => {
       if (id === 'new' && submissionChat.current === currentId.current) {
@@ -123,6 +132,7 @@ export default function Studio() {
   currentId.current = id;
   useEffect(() => {
     const remembered = studioDrafts?.get(id);
+    setNewTitle(remembered?.chatTitle ?? null);
     audienceReady.current = isNew || remembered?.audience != null;
     setEvents([]);
     setSelectedRevision(remembered?.selectedRevision ?? null);
@@ -195,6 +205,22 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  const readyRevision =
+    latestRun?.status === 'succeeded'
+      ? chat?.revisions.find((item) => item.id === latestRun.result_revision_id && item.accepted)
+      : undefined;
+  async function renameTitle(title: string) {
+    if (!chat) {
+      setNewTitle(title);
+      return;
+    }
+    const renamed = await request<Chat>(`/api/chats/${chat.id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title }),
+    });
+    if (currentId.current === chat.id) updateTitle(renamed);
+    chatsChanged({ id: renamed.id, title: renamed.title, updated_at: renamed.updated_at });
+  }
   async function chooseModel(value: string) {
     setBusy(true);
     setError('');
@@ -227,7 +253,10 @@ export default function Studio() {
     let targetId = chat?.id;
     try {
       if (!targetId) {
-        const target = await post<Chat>('/api/chats/', { audience });
+        const target = await post<Chat>('/api/chats/', {
+          audience,
+          ...(newTitle === null ? {} : { title: newTitle }),
+        });
         targetId = target.id;
         submissionChat.current = targetId;
         // Persist the chat URL before starting generation, even if its 202 is lost.
@@ -521,7 +550,11 @@ export default function Studio() {
             ) : (
               <span className="eyebrow">ВАША МАСТЕРСКАЯ</span>
             )}
-            <h1>{chat?.title || 'Новая маленькая вселенная'}</h1>
+            <ChatTitle
+              key={id}
+              title={chat?.title || newTitle || 'Новая игра'}
+              onSave={renameTitle}
+            />
           </div>
           <div className="chat-heading-actions">
             {mobile && (
@@ -649,6 +682,32 @@ export default function Studio() {
               }}
             />
           )}{' '}
+          {activeRun && chat && (
+            <WaitingGames
+              key={activeRun.id}
+              chatId={chat.id}
+              sourcePublicationId={chat.source_publication}
+            />
+          )}
+          {readyRevision && (
+            <div className="game-ready notice" role="status">
+              <Gamepad2 size={22} aria-hidden="true" />
+              <div>
+                <strong>Ваша игра готова!</strong>
+                <p>Можно открыть результат и начать играть.</p>
+              </div>
+              <button
+                className="button button-small"
+                onClick={() => {
+                  setSelectedRevision(readyRevision.id);
+                  setPreviewOpen(true);
+                  setGameFullscreen(true);
+                }}
+              >
+                Открыть вашу игру
+              </button>
+            </div>
+          )}
           {revision && <RevisionDetails revision={revision} />}{' '}
           {latestRun && (
             <button className="text-button diagnostics-button" onClick={inspect}>

@@ -14,7 +14,7 @@ def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol()
     text = system_prompt({"operation": "create"})
     assert text == SYSTEM_PROMPT
     assert len(text) < 6000
-    assert "3-5 focused checks" in text
+    assert "4-6 meaningful checks" in text
     assert "complete sources in files" in text
     assert "PATCH CONTRACT" not in text
     assert "old_text" not in text

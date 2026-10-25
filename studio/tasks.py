@@ -305,7 +305,7 @@ def request_for(run, base, findings, last_attempt_error=None):
 
     from generation.errors import ContractError
     from generation.feedback import focus_findings
-    from generation.prompts import system_prompt
+    from generation.prompts import repair_evidence, system_prompt
     from generation.schema import CONTRACT_VERSION, response_schema, validate_checks
 
     from .check_repair import attempted, needs_repair
@@ -374,6 +374,10 @@ def request_for(run, base, findings, last_attempt_error=None):
                 policy["files"] = {p: h for p, h in policy["files"].items()
                                    if base.files[p] != edit_source.files.get(p)}
             request["module_repair"] = policy
+    if base is not None and findings:
+        report = base.reports.order_by("-id").first()
+        if report and report.findings == findings and report.status in {"failed", "unverified"}:
+            request["validation_evidence"] = repair_evidence({"status": report.status, "facts": report.facts})
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         "response_schema_sha256": fingerprint(response_schema(request)),

@@ -13,6 +13,9 @@ CHECK_FINDINGS = {
     "check_unverified",
     "check_timeout",
     "incomplete_checks",
+    "missing_effects",
+    "missing_mobile_start",
+    "missing_mobile_control",
     "effect_mismatch",
     "surface_not_observed",
     "input_obstructed",
@@ -66,6 +69,16 @@ def permission(artifact_hash, checks, design):
                 "viewport": "mobile",
             }
         )
+    # New mobile coverage must not rewrite an inherited desktop assertion.
+    for category in ("start", "control"):
+        if any(r["category"] == category and r["viewport"] == "mobile" for r in requirements):
+            continue
+        original = next(r for r in requirements if r["category"] == category)
+        ident = "required_mobile_" + category
+        while ident in ids:
+            ident += "_"
+        ids.add(ident)
+        requirements.append({**original, "id": ident, "viewport": "mobile"})
     if len(requirements) > 12:
         raise ContractError(
             "check_review_required", "Для обязательных условий недостаточно места в наборе проверок."

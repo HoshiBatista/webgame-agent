@@ -81,6 +81,36 @@ def browser(html, checks, **kwargs):
 
 
 @pytest.mark.django_db
+@pytest.mark.browser
+@pytest.mark.parametrize("missing", ["mobile", "touch"])
+def test_mobile_coverage_repair_preserves_game_through_real_browser(maker, missing):
+    chat, _ = maker
+    run = start(chat)
+
+    def mobile_model(request, **kwargs):
+        if request["operation"] == "check_repair":
+            return model(request, **kwargs)
+        result = fake_generate(request, **kwargs)
+        if missing == "mobile":
+            for check in result["response"]["checks"]:
+                check["viewport"] = "desktop"
+        else:
+            result["response"]["checks"][1]["steps"] = [{"action": "press", "key": "Space"}]
+        return result
+
+    with patch("generation.providers.fake.generate", side_effect=mobile_model) as inference:
+        process_run(str(run.id))
+    run.refresh_from_db()
+    assert [c.args[0]["operation"] for c in inference.call_args_list] == ["create", "check_repair"]
+    original, revised = run.revisions.order_by("number")
+    assert original.files == revised.files and original.artifact_hash == revised.artifact_hash
+    assert run.status == "unverified" and revised.checks_review_required and not revised.accepted
+    report = revised.reports.get()
+    assert report.assessment["gates_passed"] is True
+    assert all(fact["status"] == "passed" for fact in report.facts)
+
+
+@pytest.mark.django_db
 def test_incomplete_checks_keep_sources_and_repaired_suite_requires_bound_human_confirmation(maker):
     chat, client = maker
     run = start(chat)

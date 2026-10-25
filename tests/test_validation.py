@@ -46,7 +46,9 @@ def test_mismatched_artifact_is_never_executed():
     execute.assert_not_called()
 
 
-def test_networked_or_mounted_browser_is_rejected():
+def test_networked_or_mounted_browser_is_rejected(monkeypatch):
+    monkeypatch.setenv("VALIDATOR_BACKEND", "docker")
+    monkeypatch.delenv("VALIDATOR_SOCKET", raising=False)
     html = "<html></html>"
     for changes in (
         {"NetworkMode": "bridge"},
@@ -157,10 +159,17 @@ def fixture_report(html, checks):
         "stale",
         "hash",
         "findings",
+        "desktop_only",
+        "mouse_only",
     ],
 )
 def test_all_transports_require_actual_complete_browser_receipts(monkeypatch, transport, fault):
     html, checks = fixture_html(), fixture_checks()
+    if fault == "desktop_only":
+        for check in checks:
+            check["viewport"] = "desktop"
+    elif fault == "mouse_only":
+        checks[1]["steps"][1]["action"] = "click"
     report = fixture_report(html, checks)
     if fault == "status":
         report["status"] = "looks_good"
@@ -198,6 +207,14 @@ def test_all_transports_require_actual_complete_browser_receipts(monkeypatch, tr
     result = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
     assert result["status"] == ("passed" if fault == "none" else "infrastructure_error")
     assert result["elapsed_seconds"] >= 0
+
+
+def test_incomplete_mobile_suite_cannot_claim_complete_effect_coverage():
+    from validation.contracts import suite_findings
+
+    checks = fixture_checks()
+    checks[1]["viewport"] = "desktop"
+    assert suite_findings(checks)[0]["code"] == "missing_mobile_control"
 
 
 def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
@@ -286,6 +303,7 @@ def test_syntax_gate_ignores_non_javascript_data_blocks():
 def test_unusable_socket_identity_never_reuses_old_browser_acceptance(monkeypatch, probe):
     from validation.service import environment_identity
 
+    monkeypatch.setenv("VALIDATOR_BACKEND", "docker")
     monkeypatch.setenv("VALIDATOR_SOCKET", "/private-test/validator.sock")
     monkeypatch.setattr("validation.service._socket_validate", lambda *_: probe)
     assert environment_identity() == f"mini-browser-v1:{implementation_hash()}:unavailable"
@@ -439,6 +457,30 @@ def test_real_input_and_offline_surface(broken, network, expected):
 
 
 @pytest.mark.browser
+@pytest.mark.parametrize("broken_restart", [False, True])
+def test_replay_requires_reset_and_playable_input_in_the_new_round(broken_restart):
+    html = fixture_html()
+    if not broken_restart:
+        html = html.replace("state.active=true;", "state.x=0;state.active=true;")
+    checks = fixture_checks()
+    start, tap = checks[1]["steps"]
+    checks.append(
+        {
+            "id": "replay",
+            "category": "restart",
+            "requirement": "Новый раунд принимает ввод с нуля",
+            "viewport": "mobile",
+            "steps": [start, tap, tap, start, tap],
+            "observation": {"source": "state", "path": "state.x"},
+            "expect": {"operator": "eq", "value": 1},
+        }
+    )
+    report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report["status"] == ("failed" if broken_restart else "passed"), report["findings"]
+    assert report["facts"][-1]["after"] == (3 if broken_restart else 1)
+
+
+@pytest.mark.browser
 def test_game_self_report_is_not_evidence():
     html = fixture_html().replace("x:0,active:false", "x:0,active:false,passed:true")
     checks = fixture_checks()
@@ -496,6 +538,12 @@ def test_fraction_input_measures_displayed_canvas_and_preserves_pixel_units(kind
     checks[1]["steps"] = [checks[0]["steps"][0], point]
     checks[1]["expect"] = {"operator": "eq", "value": 450}
     checks[2]["steps"] = [checks[0]["steps"][0], point, point]
+    if kind == "click_fraction":
+        touch = deepcopy(checks[1])
+        touch["id"] = "mobile-touch"
+        touch["steps"][-1]["action"] = "tap_fraction"
+        checks.append(touch)
+        checks[1]["viewport"] = "desktop"
     artifact_hash = hashlib.sha256(html.encode()).hexdigest()
     report = validate(html, checks, artifact_hash=artifact_hash)
     assert report["status"] == "passed", report["findings"]

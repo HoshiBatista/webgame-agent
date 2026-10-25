@@ -6,7 +6,7 @@ from validation.checks import VERSION, gates_verified, review_checks
 from validation.contracts import implementation_hash
 
 HARD_FAILURES = {"javascript_syntax", "runtime_or_network", "canvas_missing", "mobile_overflow", "module_not_registered", "control_obstructed"}
-CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal"}
+CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal", "missing_effects", "missing_mobile_start", "missing_mobile_control"}
 
 
 def complete_requirements(checks):

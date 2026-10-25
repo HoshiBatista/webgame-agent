@@ -3,11 +3,12 @@ from copy import deepcopy
 import pytest
 
 from generation.artifacts import materialize
-from generation.check_repair import permission
+from generation.check_repair import IDENTITY, needs_check_repair, permission
 from generation.errors import ContractError
 from generation.prompts import build_messages
 from generation.providers.fake import fixture_response
 from generation.schema import response_schema, validate_response
+from validation.contracts import suite_findings
 
 
 def proposal(base, checks=None):
@@ -52,6 +53,43 @@ def test_complete_source_is_retained_when_create_checks_are_incomplete():
     assert result["html"] == base["html"] and result["file_hashes"] == base["file_hashes"]
     assert result["checks_review_required"] and len(result["checks"]) == 3
     assert base["checks"] == response["checks"]  # Original suite is immutable.
+
+
+@pytest.mark.parametrize("missing", ["categories", "mobile", "touch"])
+def test_mobile_suite_findings_allow_only_source_preserving_scenario_repair(missing):
+    response = fixture_response()
+    if missing == "categories":
+        response["checks"] = response["checks"][:2]
+    elif missing == "mobile":
+        for check in response["checks"]:
+            check["viewport"] = "desktop"
+    else:
+        response["checks"][1]["steps"] = [{"action": "press", "key": "Space"}]
+    original = deepcopy(response["checks"])
+    findings = suite_findings(original)
+    assert findings and needs_check_repair(original, findings)
+    assert not needs_check_repair(original, findings + [{"code": "runtime_or_network"}])
+    base = materialize(response, operation="create")
+    fixed, policy = proposal(base)
+    result = apply(fixed, policy, base)
+    actual = {c["id"]: {key: c[key] for key in IDENTITY} for c in result["checks"]}
+    assert all(actual[c["id"]] == {key: c[key] for key in IDENTITY} for c in original)
+    assert not suite_findings(result["checks"])
+    assert result["checks_review_required"]
+    assert result["html"] == base["html"] and result["files"] == base["files"]
+    assert base["checks"] == original
+
+
+def test_mobile_coverage_does_not_drop_inherited_checks_to_fit_suite_limit():
+    response = fixture_response()
+    checks = response["checks"]
+    checks.extend({**deepcopy(checks[0]), "id": f"regression-{i}", "category": "regression"} for i in range(9))
+    for check in checks:
+        check["viewport"] = "desktop"
+    with pytest.raises(ContractError) as error:
+        permission("artifact", checks, response["design"])
+    assert error.value.code == "check_review_required"
+    assert len(checks) == 12
 
 
 @pytest.mark.parametrize(

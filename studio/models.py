@@ -5,6 +5,8 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
 
+from .titles import DEFAULT_CHAT_TITLE
+
 
 class User(AbstractUser):
     class Meta(AbstractUser.Meta):
@@ -21,7 +23,8 @@ class Preference(models.Model):
 class Chat(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=160, blank=True)
+    title = models.CharField(max_length=160, blank=True, default=DEFAULT_CHAT_TITLE)
+    title_is_custom = models.BooleanField(default=False)
     audience = models.CharField(max_length=32, default="everyone")
     current_revision = models.ForeignKey(
         "Revision", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"

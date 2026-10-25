@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
-import type { Session } from './types';
+import type { ChatSummary, Session } from './types';
 export interface StudioDraft {
+  chatTitle?: string | null;
   prompt: string;
   audience: string | null;
   selectedRevision: string | null;
@@ -16,6 +17,7 @@ export const SessionContext = createContext<{
 export function useSession() {
   return useContext(SessionContext);
 }
-export function chatsChanged() {
-  window.dispatchEvent(new Event('gameforge:chats'));
+export type ChatTitleChange = Pick<ChatSummary, 'id' | 'title' | 'updated_at'>;
+export function chatsChanged(change?: ChatTitleChange) {
+  window.dispatchEvent(new CustomEvent('gameforge:chats', { detail: change }));
 }

@@ -4,6 +4,8 @@ from copy import deepcopy
 
 from jsonschema import Draft202012Validator
 
+from validation.contracts import suite_findings
+
 from .errors import ContractError
 
 
@@ -151,6 +153,7 @@ CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
     obj({"action": {"enum": ["checkpoint"]}}),
     obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
 ])
+CHECK_SCHEMA["properties"]["category"]["enum"].append("restart")
 APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
 APPLICATION_SCHEMA["properties"]["checks"]["items"] = CHECK_SCHEMA
 EXACT_PATCH = deepcopy(RESPONSE_SCHEMA["properties"]["patches"]["items"])
@@ -263,7 +266,6 @@ def validate_checks(checks, *, require_complete=True):
             "too_many_checks", "Итоговый набор мини-игры должен содержать не более 12 проверок."
         )
     ids = set()
-    categories = set()
     for check in checks:
         error = next(Draft202012Validator(CHECK_SCHEMA).iter_errors(check), None)
         if error:
@@ -271,7 +273,6 @@ def validate_checks(checks, *, require_complete=True):
         if check["id"] in ids:
             raise ContractError("duplicate_check", "Идентификаторы проверок должны быть уникальны.")
         ids.add(check["id"])
-        categories.add(check["category"])
         if check["expect"]["operator"] == "contains" and (
             not isinstance(check["expect"]["value"], str) or not check["expect"]["value"].strip()
         ):
@@ -281,12 +282,12 @@ def validate_checks(checks, *, require_complete=True):
                 "long_check",
                 "Один smoke-сценарий может ожидать не более 10 секунд; долгий исход проверьте вручную.",
             )
-        if check["category"] in {"control", "outcome"} and not any(
+        if check["category"] in {"control", "outcome", "restart"} and not any(
             s["action"] in {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down"}
             for s in check["steps"]
         ):
             raise ContractError(
-                "no_real_input", "Проверка управления/исхода должна использовать реальный ввод."
+                "no_real_input", "Проверка управления/исхода/рестарта должна использовать реальный ввод."
             )
         observation = check["observation"]
         if observation["source"] == "state":
@@ -302,7 +303,5 @@ def validate_checks(checks, *, require_complete=True):
             if step["action"] in {"click", "tap"}:
                 if (step["x"] is None) != (step["y"] is None) or (not step["selector"] and step["x"] is None):
                     raise ContractError("invalid_pointer", "Укажите selector или обе координаты действия.")
-    if require_complete and not {"start", "control", "outcome"}.issubset(categories):
-        raise ContractError(
-            "missing_effects", "Нужны проверки начала, управления и победы либо поражения конкретной игры."
-        )
+    if require_complete and (findings := suite_findings(checks)):
+        raise ContractError(findings[0]["code"], findings[0]["message"])

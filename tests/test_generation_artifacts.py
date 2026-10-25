@@ -333,6 +333,82 @@ def test_check_contract_rejects_self_report_missing_input_and_unbounded_wait(cha
         validate_response(response)
 
 
+@pytest.mark.parametrize(
+    "mutation,code",
+    [
+        ("desktop_only", "missing_mobile_start"),
+        ("desktop_control", "missing_mobile_control"),
+        ("mouse_only", "missing_mobile_control"),
+        ("keyboard_only", "missing_mobile_control"),
+        ("keyboard_with_touch", "missing_mobile_control"),
+    ],
+)
+def test_full_suite_requires_mobile_start_and_touch_gameplay(mutation, code):
+    response = fixture_response()
+    control = response["checks"][1]
+    if mutation == "desktop_only":
+        for check in response["checks"]:
+            check["viewport"] = "desktop"
+    elif mutation == "desktop_control":
+        control["viewport"] = "desktop"
+    elif mutation == "mouse_only":
+        control["steps"][0]["action"] = "click"
+    elif mutation == "keyboard_only":
+        control["steps"] = [{"action": "press", "key": "Space"}]
+    else:
+        control["steps"].append({"action": "press", "key": "Space"})
+    with pytest.raises(ContractError) as error:
+        validate_response(response)
+    assert error.value.code == code
+
+
+def test_edit_cannot_remove_inherited_mobile_coverage():
+    base = candidate()
+    response = edited(base)
+    response["checks"] = [deepcopy(base["checks"][1])]
+    response["checks"][0]["viewport"] = "desktop"
+    # Partial model output is valid, but its merged suite is not playable on mobile.
+    validate_response(response)
+    with pytest.raises(ContractError) as error:
+        materialize(
+            response,
+            operation="edit",
+            base_revision="version-1",
+            files=base["files"],
+            previous_checks=base["checks"],
+        )
+    assert error.value.code == "missing_mobile_control"
+
+
+def test_desktop_keyboard_check_can_supplement_mobile_touch_gameplay():
+    response = fixture_response()
+    keyboard = deepcopy(response["checks"][1])
+    keyboard.update(id="keyboard", viewport="desktop", steps=[{"action": "press", "key": "Space"}])
+    response["checks"].append(keyboard)
+    validate_response(response)
+
+
+def test_restart_check_requires_real_input_and_survives_cosmetic_edits():
+    base = candidate()
+    restart = deepcopy(base["checks"][1])
+    restart.update(id="replay", category="restart", requirement="После повтора доступен новый раунд")
+    base["checks"].append(restart)
+    response = edited(base)
+    response["checks"] = []
+    result = materialize(
+        response,
+        operation="edit",
+        base_revision="version-1",
+        files=base["files"],
+        previous_checks=base["checks"],
+    )
+    assert restart in result["checks"]
+    response["checks"] = [{**restart, "steps": []}]
+    with pytest.raises(ContractError) as error:
+        validate_response(response)
+    assert error.value.code == "no_real_input"
+
+
 def test_compact_context_includes_current_hashes_and_preferences_not_past_chat():
     messages = build_messages(
         {
