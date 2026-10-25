@@ -24,9 +24,19 @@ artifact. Only one live hover preview is mounted in the feed. Candidate versions
 separate from accepted versions; manual confirmation is explicit, and publication uses a
 captured accepted revision.
 
+While a chat has an active queued/generating/checking run, it offers up to three
+popular published games using static thumbnails shared with the feed. Links open
+the public player in a separate tab with `noopener noreferrer`; the current run,
+chat and preview remain in place. The current chat's publications and the original
+publication of a remix are excluded. Empty/unavailable recommendations stay hidden.
+The feed is fetched once per active run, without model calls or in-chat game frames.
+On success, a ready action selects the exact accepted result revision and opens it
+in the existing fullscreen preview. Failed or unverified candidates do not get it.
+
 Tests cover CSRF and error transport, no automatic mutation retry, preserved idempotency
 after a lost response, candidate/manual-review selection, immutable preview lifecycle,
-fullscreen frame identity, history without generation, and feed hover/like behavior.
+fullscreen frame identity, history without generation, feed hover/like behavior,
+and the waiting-games lifecycle through completion and cancellation.
 Component tests use fixtures and do not count as live model evidence. Real browser and model
 evidence belongs in the repository's integration report.
 

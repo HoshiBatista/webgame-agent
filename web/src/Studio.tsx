@@ -24,6 +24,7 @@ import {
 } from './components';
 import { chatsChanged, useSession } from './context';
 import type { Chat, Publication, Revision, Run, RunEvent } from './types';
+import WaitingGames from './WaitingGames';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех', icon: '✦' },
@@ -177,6 +178,10 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  const readyRevision =
+    latestRun?.status === 'succeeded'
+      ? chat?.revisions.find((item) => item.id === latestRun.result_revision_id && item.accepted)
+      : undefined;
   async function send(event: FormEvent) {
     event.preventDefault();
     if (!prompt.trim() || busy || activeRun) return;
@@ -450,6 +455,32 @@ export default function Studio() {
               }}
             />
           )}{' '}
+          {activeRun && chat && (
+            <WaitingGames
+              key={activeRun.id}
+              chatId={chat.id}
+              sourcePublicationId={chat.source_publication}
+            />
+          )}
+          {readyRevision && (
+            <div className="game-ready notice" role="status">
+              <Gamepad2 size={22} aria-hidden="true" />
+              <div>
+                <strong>Ваша игра готова!</strong>
+                <p>Можно открыть результат и начать играть.</p>
+              </div>
+              <button
+                className="button button-small"
+                onClick={() => {
+                  setSelectedRevision(readyRevision.id);
+                  setPreviewOpen(true);
+                  setGameFullscreen(true);
+                }}
+              >
+                Открыть вашу игру
+              </button>
+            </div>
+          )}
           {revision && <RevisionDetails revision={revision} />}{' '}
           {latestRun && (
             <button className="text-button diagnostics-button" onClick={inspect}>

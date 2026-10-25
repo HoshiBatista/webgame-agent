@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { errorText, post, request } from './api';
-import { ErrorNotice, GameFrame, Modal, Spinner } from './components';
+import { ErrorNotice, GameFrame, GameThumbnail, Modal, Spinner } from './components';
 import { chatsChanged } from './context';
 import type { Chat, Publication } from './types';
 
@@ -190,16 +190,7 @@ export default function Feed() {
               }}
               onMouseLeave={() => setHovered((current) => (current === game.id ? null : current))}
             >
-              <div className={`game-thumbnail thumbnail-${index % 5}`}>
-                <div className="thumbnail-art" aria-hidden="true">
-                  <span />
-                  <span />
-                  <Gamepad2 size={58} />
-                  <i>✦</i>
-                </div>
-                {game.thumbnail_url && (
-                  <img src={game.thumbnail_url} alt={`Кадр игры «${game.title}»`} loading="lazy" />
-                )}
+              <GameThumbnail game={game} index={index}>
                 {hovered === game.id && (
                   <GameFrame
                     url={game.preview_url}
@@ -207,8 +198,7 @@ export default function Feed() {
                     className="hover-game"
                   />
                 )}
-                <span className="game-format">MINI GAME</span>
-              </div>
+              </GameThumbnail>
               <div className="game-card-body">
                 <div className="game-card-heading">
                   <h2>

@@ -15,7 +15,33 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDuration, formatMoney } from './api';
-import type { Budget, Revision, Run, RunEvent } from './types';
+import type { Budget, Publication, Revision, Run, RunEvent } from './types';
+
+export function GameThumbnail({
+  game,
+  index = 0,
+  children,
+}: {
+  game: Pick<Publication, 'title' | 'thumbnail_url'>;
+  index?: number;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={`game-thumbnail thumbnail-${index % 5}`}>
+      <div className="thumbnail-art" aria-hidden="true">
+        <span />
+        <span />
+        <Gamepad2 size={58} />
+        <i>✦</i>
+      </div>
+      {game.thumbnail_url && (
+        <img src={game.thumbnail_url} alt={`Кадр игры «${game.title}»`} loading="lazy" />
+      )}
+      {children}
+      <span className="game-format">MINI GAME</span>
+    </div>
+  );
+}
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
