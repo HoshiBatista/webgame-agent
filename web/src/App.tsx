@@ -308,8 +308,6 @@ function Shell({
           {!chats.length && (
             <p className="sidebar-empty">
               Здесь будут ваши игры.
-              <br />
-              Самое время придумать первую.
             </p>
           )}
         </nav>
