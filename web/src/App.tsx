@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -33,10 +33,35 @@ function Shell({
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobile, setMobile] = useState(
+    () => window.matchMedia?.('(max-width: 760px)').matches ?? false,
+  );
+  const mobileToggle = useRef<HTMLButtonElement>(null);
+  const mobileClose = useRef<HTMLButtonElement>(null);
+  const restoreMenuFocus = useRef(false);
   const [error, setError] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
   const chatsLoadVersion = useRef(0);
+  const closeMobileMenu = useCallback(() => {
+    restoreMenuFocus.current = true;
+    setMobileOpen(false);
+  }, []);
+  useEffect(() => {
+    const media = window.matchMedia?.('(max-width: 760px)');
+    if (!media) return;
+    const update = () => {
+      setMobile(media.matches);
+      if (!media.matches) setMobileOpen(false);
+    };
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  useLayoutEffect(() => {
+    if (mobileOpen) mobileClose.current?.focus();
+    else if (restoreMenuFocus.current) mobileToggle.current?.focus();
+    restoreMenuFocus.current = false;
+  }, [mobileOpen]);
   useEffect(() => {
     let alive = true;
     const load = (event?: Event) => {
@@ -96,14 +121,14 @@ function Shell({
     const prior = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileOpen(false);
+      if (event.key === 'Escape') closeMobileMenu();
     };
     window.addEventListener('keydown', escape);
     return () => {
       document.body.style.overflow = prior;
       window.removeEventListener('keydown', escape);
     };
-  }, [mobileOpen]);
+  }, [mobileOpen, closeMobileMenu]);
   async function logout() {
     try {
       await post('/api/logout/');
@@ -120,39 +145,52 @@ function Shell({
       <div className="mobile-app-header" inert={mobileOpen}>
         <Brand />
         <button
+          ref={mobileToggle}
           className="icon-button"
           aria-label="Открыть список чатов"
+          aria-expanded={mobileOpen}
+          aria-controls="app-sidebar"
           onClick={() => setMobileOpen(true)}
         >
           <Menu size={22} />
         </button>
       </div>
-      {mobileOpen && (
-        <button
-          className="sidebar-backdrop"
-          aria-label="Закрыть список чатов"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-      <aside className="sidebar">
+      <button
+        className="sidebar-backdrop"
+        aria-label="Закрыть список чатов"
+        aria-hidden={!mobileOpen}
+        tabIndex={mobileOpen ? 0 : -1}
+        onClick={closeMobileMenu}
+      />
+      <aside id="app-sidebar" className="sidebar" inert={mobile && !mobileOpen}>
         <div className="sidebar-brand">
-          <Brand compact={collapsed} />
+          <Brand />
           <button
             className="icon-button sidebar-collapse"
             aria-label={collapsed ? 'Развернуть список чатов' : 'Свернуть список чатов'}
-            onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? 'Развернуть список чатов' : 'Свернуть список чатов'}
+            aria-expanded={!collapsed}
+            aria-controls="sidebar-navigation"
+            onClick={() => setCollapsed((value) => !value)}
           >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            <img className="sidebar-toggle-logo" src="/assets/beeline-logo.svg" alt="" />
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
           <button
+            ref={mobileClose}
             className="icon-button mobile-sidebar-close"
             aria-label="Закрыть список чатов"
-            onClick={() => setMobileOpen(false)}
+            onClick={closeMobileMenu}
           >
             <X size={20} />
           </button>
         </div>
-        <Link className="button new-game-button" to="/chats/new" title="Новая игра">
+        <Link
+          className="button new-game-button"
+          to="/chats/new"
+          title="Новая игра"
+          aria-label="Новая игра"
+        >
           <Plus size={19} />
           <span>Новая игра</span>
         </Link>
@@ -160,6 +198,7 @@ function Shell({
           className={`sidebar-feed-link ${location.pathname === '/' ? 'active' : ''}`}
           to="/"
           title="Игры сообщества"
+          aria-label="Игры сообщества"
         >
           <Gamepad2 size={19} />
           <span>Игры сообщества</span>
@@ -167,13 +206,14 @@ function Shell({
         <div className="sidebar-section-label">
           ВАШИ МИРЫ <span>{chats.length}</span>
         </div>
-        <nav className="chat-nav" aria-label="Ваши игры">
+        <nav id="sidebar-navigation" className="chat-nav" aria-label="Ваши игры">
           {chats.map((chat) => (
             <Link
               className={location.pathname === `/chats/${chat.id}` ? 'active' : ''}
               key={chat.id}
               to={`/chats/${chat.id}`}
               title={chat.title || 'Новая игра'}
+              aria-label={chat.title || 'Новая игра'}
             >
               <span className="chat-symbol">{chat.title?.slice(0, 1).toUpperCase() || '✦'}</span>
               <span className="chat-nav-label">{chat.title || 'Новая игра'}</span>

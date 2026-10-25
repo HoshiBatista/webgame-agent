@@ -89,6 +89,48 @@ it('releases the mobile menu scroll lock when opening the settings page', async 
   await waitFor(() => expect(document.body.style.overflow).toBe(previousOverflow));
 });
 
+it('expands the collapsed logo control without navigating away or losing focus', async () => {
+  setup();
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  const toggle = screen.getByRole('button', { name: 'Свернуть список чатов' });
+  toggle.focus();
+  fireEvent.click(toggle);
+  expect(screen.getByRole('button', { name: 'Развернуть список чатов' })).toBe(toggle);
+  expect(toggle).toHaveFocus();
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  expect(screen.getByTestId('location')).toHaveTextContent('/chats/one?revision=2#preview');
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('closes the mobile menu without removing its backdrop and restores keyboard access', async () => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: query === '(max-width: 760px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+  setup();
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  const sidebar = screen.getByRole('complementary');
+  const backdrop = document.querySelector('.sidebar-backdrop');
+  const open = screen.getByRole('button', { name: 'Открыть список чатов' });
+  const previousOverflow = document.body.style.overflow;
+  expect(sidebar).toHaveAttribute('inert');
+  fireEvent.click(open);
+  expect(sidebar).not.toHaveAttribute('inert');
+  expect(document.body.style.overflow).toBe('hidden');
+  fireEvent.keyDown(window, { key: 'Escape' });
+  expect(sidebar).toHaveAttribute('inert');
+  expect(document.querySelector('.sidebar-backdrop')).toBe(backdrop);
+  expect(backdrop).toHaveAttribute('aria-hidden', 'true');
+  expect(open).toHaveFocus();
+  expect(document.body.style.overflow).toBe(previousOverflow);
+});
+
 it('uses the browser theme independently of the account theme returned by the API', async () => {
   window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
   setup('/settings');

@@ -1128,9 +1128,14 @@ svg {
 
 /* The workshop shell. */
 .app-shell {
+  --sidebar-rail-width: 77px;
+  --sidebar-logo-size: 31px;
+  --duration-sidebar: 320ms;
+  --ease-sidebar: cubic-bezier(0.22, 1, 0.36, 1);
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr);
   min-height: 100svh;
+  transition: grid-template-columns var(--duration-sidebar) var(--ease-sidebar);
 }
 .sidebar {
   --sidebar-padding-inline: 18px;
@@ -1144,24 +1149,48 @@ svg {
   background: var(--surface);
   z-index: 15;
   min-width: 0;
+  overflow: hidden;
+  transition: padding-inline var(--duration-sidebar) var(--ease-sidebar);
 }
 .sidebar-brand {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 29px;
+  height: 44px;
+  flex-shrink: 0;
+  margin-bottom: 16px;
 }
 .sidebar .brand {
   font-size: 19px;
   gap: 7px;
+  min-width: 0;
+  overflow: hidden;
+  transition: opacity 160ms var(--ease-sidebar);
 }
 .sidebar .brand-mark {
   width: 31px;
   height: 31px;
 }
 .sidebar-collapse {
-  width: 23px;
-  height: 26px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+}
+.sidebar-toggle-logo,
+.sidebar-collapse > svg {
+  position: absolute;
+  transition:
+    opacity 180ms var(--ease-sidebar),
+    transform 180ms var(--ease-sidebar);
+}
+.sidebar-toggle-logo {
+  width: var(--sidebar-logo-size);
+  height: var(--sidebar-logo-size);
+  opacity: 0;
+  pointer-events: none;
 }
 .new-game-button {
   background: var(--accent);
@@ -1198,6 +1227,8 @@ svg {
   font-weight: 600;
   letter-spacing: 0.04em;
   padding: 27px 10px 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .sidebar-section-label > span {
   font-size: var(--text-small);
@@ -1305,6 +1336,7 @@ svg {
   background: transparent;
   border: 0;
   padding: 0;
+  white-space: nowrap;
 }
 .account-name small {
   font-size: var(--text-small);
@@ -1328,47 +1360,110 @@ svg {
 .shell-error {
   padding: 12px 24px;
 }
-.sidebar-collapsed {
-  grid-template-columns: 77px minmax(0, 1fr);
-}
-.sidebar-collapsed .sidebar {
-  --sidebar-padding-inline: 13px;
-}
-.sidebar-collapsed .sidebar-brand {
-  flex-direction: column;
-  gap: 7px;
-  margin-bottom: 15px;
-}
-.sidebar-collapsed .sidebar .new-game-button {
-  justify-content: center;
-  padding-inline: 0;
-}
-.sidebar-collapsed .new-game-button > span,
-.sidebar-collapsed .sidebar-feed-link > span,
-.sidebar-collapsed .sidebar-feed-link > svg:last-child,
-.sidebar-collapsed .sidebar-section-label,
-.sidebar-collapsed .chat-nav-label,
-.sidebar-collapsed .active-run-dot,
-.sidebar-collapsed .sidebar-empty,
-.sidebar-collapsed .account-name,
-.sidebar-collapsed .account-actions .text-button > span {
-  display: none;
-}
-.sidebar-collapsed .sidebar-feed-link {
-  justify-content: center;
-  margin-bottom: 16px;
-}
-.sidebar-collapsed .chat-nav > a {
-  justify-content: center;
-  padding: 9px 0;
-}
-.sidebar-collapsed .account-line {
-  justify-content: center;
-}
-.sidebar-collapsed .account-actions {
-  justify-content: center;
-  gap: 13px;
-  padding: 0;
+@media (min-width: 1101px) {
+  .sidebar-brand .brand {
+    max-width: calc(100% - 44px);
+  }
+  .sidebar .new-game-button,
+  .sidebar-feed-link,
+  .chat-nav > a,
+  .account-line {
+    transition:
+      padding-inline var(--duration-sidebar) var(--ease-sidebar),
+      gap var(--duration-sidebar) var(--ease-sidebar),
+      background 180ms;
+  }
+  .sidebar .new-game-button > span,
+  .sidebar-feed-link > span,
+  .chat-nav-label,
+  .account-name,
+  .account-actions .text-button > span {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    transition:
+      max-width var(--duration-sidebar) var(--ease-sidebar),
+      opacity 160ms var(--ease-sidebar);
+  }
+  .sidebar-section-label,
+  .sidebar-empty,
+  .active-run-dot {
+    transition: opacity 160ms var(--ease-sidebar);
+  }
+  .sidebar-empty {
+    white-space: nowrap;
+  }
+  .sidebar-collapsed {
+    grid-template-columns: var(--sidebar-rail-width) minmax(0, 1fr);
+  }
+  .sidebar-collapsed .sidebar {
+    --sidebar-padding-inline: 13px;
+  }
+  .sidebar-collapsed .sidebar-brand .brand {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .sidebar-collapsed .sidebar-collapse {
+    right: auto;
+    left: calc((var(--sidebar-rail-width) - 1px - 2 * var(--sidebar-padding-inline) - 44px) / 2);
+  }
+  .sidebar-collapsed .sidebar-toggle-logo {
+    opacity: 1;
+  }
+  .sidebar-collapsed .sidebar-collapse > svg {
+    opacity: 0;
+    transform: translateX(-3px);
+  }
+  .sidebar-collapsed .sidebar-collapse:is(:hover, :focus-visible) .sidebar-toggle-logo {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  .sidebar-collapsed .sidebar-collapse:is(:hover, :focus-visible) > svg {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .sidebar-collapsed .new-game-button > span,
+  .sidebar-collapsed .sidebar-feed-link > span,
+  .sidebar-collapsed .chat-nav-label,
+  .sidebar-collapsed .account-name,
+  .sidebar-collapsed .account-actions .text-button > span {
+    max-width: 0;
+    opacity: 0;
+  }
+  .sidebar-collapsed .sidebar-section-label,
+  .sidebar-collapsed .sidebar-empty,
+  .sidebar-collapsed .active-run-dot {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .sidebar-collapsed .new-game-button,
+  .sidebar-collapsed .sidebar-feed-link {
+    gap: 0;
+    padding-inline: calc(
+      (var(--sidebar-rail-width) - 1px - 2 * var(--sidebar-padding-inline) - 19px) / 2
+    );
+  }
+  .sidebar-collapsed .chat-nav > a {
+    gap: 0;
+    padding-inline: calc(
+      (var(--sidebar-rail-width) - 1px - 2 * var(--sidebar-padding-inline) - 24px) / 2
+    );
+  }
+  .sidebar-collapsed .account-line {
+    gap: 0;
+    padding-inline: calc(
+      (var(--sidebar-rail-width) - 1px - 2 * var(--sidebar-padding-inline) - 32px) / 2
+    );
+  }
+  .sidebar-collapsed .account-actions {
+    justify-content: center;
+    gap: 13px;
+    padding: 0;
+  }
+  .sidebar-collapsed .account-actions .text-button {
+    gap: 0;
+  }
 }
 .mobile-app-header,
 .mobile-sidebar-close,
@@ -2844,6 +2939,8 @@ svg {
 }
 @media (max-width: 1200px) {
   .app-shell {
+    --sidebar-rail-width: 68px;
+    --sidebar-logo-size: 28px;
     grid-template-columns: 240px minmax(0, 1fr);
   }
   .sidebar {
@@ -2855,9 +2952,6 @@ svg {
   .sidebar .brand-mark {
     height: 28px;
     width: 28px;
-  }
-  .sidebar-collapse {
-    width: 18px;
   }
   .sidebar-collapsed {
     grid-template-columns: 68px minmax(0, 1fr);
@@ -3300,11 +3394,18 @@ svg {
     height: 100dvh;
     transform: translateX(-100%);
     z-index: 40;
-    transition: transform 0.2s;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      transform var(--duration-sidebar) var(--ease-sidebar),
+      visibility 0s var(--duration-sidebar);
     padding: 27px var(--sidebar-padding-inline);
   }
   .sidebar-mobile-open .sidebar {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
   }
   .sidebar-backdrop {
     display: block;
@@ -3313,6 +3414,18 @@ svg {
     background: #191c2280;
     border: 0;
     z-index: 35;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity var(--duration-sidebar) var(--ease-sidebar),
+      visibility 0s var(--duration-sidebar);
+  }
+  .sidebar-mobile-open .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
   }
   .sidebar-collapse {
     display: none;
@@ -3905,13 +4018,6 @@ svg {
   width: 100%;
 }
 @media (max-width: 760px) {
-  .sidebar,
-  .sidebar-collapsed .sidebar {
-    visibility: hidden;
-  }
-  .sidebar-mobile-open .sidebar {
-    visibility: visible;
-  }
   .mobile-play {
     display: inline-flex;
   }
