@@ -139,6 +139,8 @@ def decode_completion(completion, metadata):
             provider_metadata=metadata,
         )
     choice = choices[0]
+    metadata = {**metadata, "actual_model": completion.get("model"),
+                "finish_reason": choice.get("finish_reason")}
     message = choice.get("message") or {}
     if not isinstance(message, dict):
         message = {}

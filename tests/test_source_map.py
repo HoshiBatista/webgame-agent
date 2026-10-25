@@ -107,6 +107,37 @@ def test_unproven_source_location_preserves_export_facts(reason):
     assert locate_findings([finding], files=files, html=html) == [finding]
 
 
+def test_long_utf16_line_keeps_actual_error_in_final_model_feedback():
+    from generation.feedback import focus_findings
+    from generation.prompts import build_messages
+
+    source = 'const label="😀";' + 'const filler=1; ' * 400 + 'const offsets=[];offsets=[[1,2]];'
+    files = {"index.html": '<script src="game.js"></script>', "game.js": source}
+    html = bundle(files)
+    location = syntax_location(html, 'offsets=[[1,2]]')
+    mapped = locate_findings([location], files=files, html=html)[0]
+    focused = focus_findings([mapped])[0]
+    assert 'offsets=[[1,2]]' in focused['source_excerpt']
+    assert focused['excerpt_start_column'] < focused['column'] <= focused['excerpt_end_column']
+    assert focused['excerpt_truncated'] is True
+    assert 'offsets=[[1,2]]' in build_messages({'operation': 'repair', 'findings': [focused]})[1]['content']
+
+
+def test_moving_same_statement_retains_anchor_but_separate_identical_faults_do_not():
+    def mapped(source, token='offsets=[[1,2]]', last=False):
+        files = {'index.html': '<script src="game.js"></script>', 'game.js': source}
+        html = bundle(files)
+        line, column = coordinates(html, html.rindex(token) if last else html.index(token))
+        finding = {'code': 'runtime_or_network', 'locations': [{'line': line, 'column': column}]}
+        return locate_findings([finding], files=files, html=html)[0]
+
+    first = mapped('const offsets=[]; offsets=[[1,2]];')
+    shifted = mapped('let another=4; const offsets=[];   offsets=[[1,2]];')
+    assert first['column'] != shifted['column'] and first['source_anchor'] == shifted['source_anchor']
+    other = mapped('const offsets=[]; offsets=[[1,2]]; offsets=[[1,2]];', last=True)
+    assert first['source_anchor'] != other['source_anchor']
+
+
 @pytest.mark.browser
 @pytest.mark.native_browser
 @pytest.mark.parametrize("kind", ["syntax", "runtime"])

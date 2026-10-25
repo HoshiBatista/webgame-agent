@@ -7,10 +7,9 @@ import pytest
 from django.utils import timezone
 
 from generation.artifacts import materialize, sha256
-from generation.providers.fake import fixture_response
 from generation.providers.fake import generate as fake_generate
-from studio.models import Chat, Invocation, Publication, Revision, User
-from studio.services import create_run, reserve_invocation, settle_invocation
+from studio.models import Chat, Publication, User
+from studio.services import create_run
 from studio.tasks import process_run, recover_expired, request_for
 
 PASS = {"status": "passed", "findings": [], "facts": []}
@@ -29,7 +28,12 @@ def chat(settings):
 
 
 def start(chat, key="create", **kwargs):
-    return create_run(chat, {"prompt": "Небольшая игра", "idempotency_key": key, **kwargs})
+    chat.refresh_from_db()
+    data = {"prompt": "Небольшая игра", "idempotency_key": key, **kwargs}
+    if chat.current_revision:
+        data.update(source_revision_id=str(chat.current_revision_id),
+                    source_artifact_hash=chat.current_revision.artifact_hash)
+    return create_run(chat, data)
 
 
 def stub(request, **kwargs):
@@ -158,209 +162,6 @@ def test_cancellation_after_module_reply_preserves_receipt_without_applying_it(c
     inv = run.invocations.get(attempt=2)
     assert inv.state == "returned" and inv.response["patches"][0]["action"] == "replace_module"
     assert not inv.revision_id and not run.result_revision_id
-
-
-def legacy_stub(chat):
-    original = start(chat)
-    response = fixture_response()
-    response["files"] = [{"path": "index.html", "content": "<!DOCTYPE html> <!-- line -->"}]
-    artifact = materialize(response, operation="create", generation_contract={"pipeline_version": 4})
-    revision = Revision.objects.create(chat=chat, run=original, number=1, **artifact)
-    original.candidate_revision = revision
-    original.status = "needs_attention"
-    original.save()
-    return original, revision
-
-
-@pytest.mark.django_db
-def test_explicit_continuation_of_legacy_stub_restarts_create_and_keeps_history(chat):
-    original, previous = legacy_stub(chat)
-    run = create_run(chat, {"idempotency_key": "continue"}, continued_from=original)
-    with patch("generation.service.generate", side_effect=fake_generate) as model, \
-            patch("validation.service.validate", return_value=PASS):
-        process_run(str(run.id))
-    run.refresh_from_db()
-    previous.refresh_from_db()
-    assert run.status == "succeeded" and run.result_revision_id != previous.id
-    assert model.call_args.args[0]["operation"] == "create"
-    assert not model.call_args.args[0]["base_revision"]
-    assert previous.html == "<!DOCTYPE html> <!-- line -->" and not previous.accepted
-    assert run.events.get(kind="source_restart").details["revision_id"] == str(previous.id)
-    assert chat.revisions.count() == 2
-
-
-@pytest.mark.django_db(transaction=True)
-def test_restart_after_superseding_stub_does_not_replay_its_pending_patch(chat):
-    original, previous = legacy_stub(chat)
-    pending = Invocation.objects.create(run=original, attempt=1, state="returned",
-        request={"operation": "repair", "base_revision": str(previous.id),
-                 "generation_contract": {"pipeline_version": 4}}, response=fixture_response())
-    run = create_run(chat, {"idempotency_key": "continue"}, continued_from=original)
-    with patch("studio.tasks.request_for", side_effect=KeyboardInterrupt):
-        with pytest.raises(KeyboardInterrupt):
-            process_run(str(run.id))
-    run.refresh_from_db()
-    assert not run.candidate_revision_id and run.events.filter(kind="source_restart").count() == 1
-    run.lease_until = timezone.now() - timedelta(seconds=1)
-    run.save(update_fields=["lease_until"])
-    recover_expired()
-    with patch("generation.service.generate", side_effect=fake_generate) as model, \
-            patch("validation.service.validate", return_value=PASS):
-        process_run(str(run.id))
-    run.refresh_from_db()
-    pending.refresh_from_db()
-    assert run.status == "succeeded" and model.call_count == run.attempts == 1
-    assert model.call_args.args[0]["operation"] == "create"
-    assert model.call_args.args[0]["last_attempt_error"]["code"] == "incomplete_sources"
-    assert pending.state == "settled" and pending.error["code"] == "operation_mismatch"
-    assert pending.revision_id is None
-
-
-def saved_stub_patch(original, previous):
-    response = fixture_response()
-    files = {entry["path"]: entry["content"] for entry in response["files"]}
-    response.update(operation="repair", base_revision=str(previous.id), files=[], checks=[], patches=[
-        {"path": "index.html", "file_hash": previous.file_hashes["index.html"],
-         "old_text": "<!-- line -->", "new_text": files["index.html"]},
-        *[{"path": p, "file_hash": None, "old_text": "", "new_text": files[p]}
-          for p in ("styles.css", "game.js")],
-    ])
-    saved = Invocation.objects.create(run=original, attempt=1, state="returned", response=response,
-        request={"operation": "repair", "base_revision": str(previous.id),
-                 "generation_contract": {"pipeline_version": 4}})
-    return saved, files
-
-
-@pytest.mark.django_db
-def test_continuation_consumes_complete_saved_patch_before_restarting_create(chat):
-    original, previous = legacy_stub(chat)
-    saved, files = saved_stub_patch(original, previous)
-    run = create_run(chat, {"idempotency_key": "continue"}, continued_from=original)
-    with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=PASS):
-        process_run(str(run.id))
-    run.refresh_from_db()
-    saved.refresh_from_db()
-    assert run.status == "succeeded" and run.attempts == 0
-    assert saved.revision_id == run.result_revision_id and saved.state == "settled"
-    assert not run.events.filter(kind="source_restart").exists()
-    assert run.result_revision.files["game.js"] == files["game.js"]
-    model.assert_not_called()
-
-
-@pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("depth,crash,late", [(1, False, False), (3, True, False), (2, False, True)])
-def test_rechecks_keep_exact_saved_response_available_for_continuation_and_crash_recovery(chat, depth, crash, late):
-    original, previous = legacy_stub(chat)
-    saved, files = saved_stub_patch(original, previous)
-    original.status, original.cancel_requested = "cancelled", True
-    if late:
-        saved.state = original.status = "unknown"
-        saved.price = {"input": 0, "cached": 0, "output": 0}
-        saved.save(update_fields=["state", "price"])
-    original.save(update_fields=["status", "cancel_requested"])
-    parent = original
-    for index in range(depth):
-        parent = create_run(chat, {"idempotency_key": f"check-{index}"}, continued_from=parent, check_only=True)
-        with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=FAIL):
-            process_run(str(parent.id))
-        model.assert_not_called()
-        parent.refresh_from_db()
-        saved.refresh_from_db()
-        assert parent.candidate_revision_id == previous.id and saved.state == ("unknown" if late else "returned")
-    if late:
-        settle_invocation(saved.id, response=saved.response,
-                          usage={"input_tokens": 10, "output_tokens": 20, "cached_input_tokens": 0})
-    run = create_run(chat, {"idempotency_key": "continue-after-checks"}, continued_from=parent)
-    if crash:
-        with patch("generation.service.generate") as model, patch("studio.tasks.store_candidate", side_effect=KeyboardInterrupt):
-            with pytest.raises(KeyboardInterrupt):
-                process_run(str(run.id))
-        model.assert_not_called()
-        run.refresh_from_db()
-        run.lease_until = timezone.now() - timedelta(seconds=1)
-        run.save(update_fields=["lease_until"])
-        recover_expired()
-    with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=PASS):
-        process_run(str(run.id))
-    model.assert_not_called()
-    run.refresh_from_db()
-    saved.refresh_from_db()
-    assert run.status == "succeeded" and run.attempts == 0 and not run.invocations.exists()
-    assert saved.revision_id == run.result_revision_id and saved.state == "settled"
-    assert run.result_revision.files["game.js"] == files["game.js"]
-    assert not run.events.filter(kind="source_restart").exists()
-    previous.refresh_from_db()
-    assert previous.html == "<!DOCTYPE html> <!-- line -->" and not previous.accepted
-
-
-@pytest.mark.django_db
-def test_old_saved_response_cannot_replace_a_later_candidate_after_recheck(chat):
-    original, previous = legacy_stub(chat)
-    saved, _ = saved_stub_patch(original, previous)
-    newer = Revision.objects.create(chat=chat, run=original, parent=previous, number=2,
-                                    **materialize(fixture_response(), operation="create"))
-    original.candidate_revision = newer
-    original.save(update_fields=["candidate_revision"])
-    check = create_run(chat, {"idempotency_key": "check-newer"}, continued_from=original, check_only=True)
-    with patch("generation.service.generate"), patch("validation.service.validate", return_value=FAIL):
-        process_run(str(check.id))
-    check.refresh_from_db()
-    run = create_run(chat, {"idempotency_key": "continue-newer"}, continued_from=check)
-    with patch("generation.service.generate", side_effect=fake_generate) as model, \
-            patch("validation.service.validate", return_value=PASS):
-        process_run(str(run.id))
-    run.refresh_from_db()
-    saved.refresh_from_db()
-    assert run.status == "succeeded" and model.call_count == 1
-    assert run.result_revision.parent_id == newer.id
-    assert saved.state == "returned" and saved.revision_id is None
-
-
-@pytest.mark.django_db
-def test_operator_recovery_keeps_preversioned_fingerprint_metadata_on_v2(chat):
-    from studio.recovery import recover_saved_response
-
-    original = start(chat)
-    original.status = "failed"
-    original.save(update_fields=["status"])
-    response = fixture_response()
-    response["files"] = [{"path": "index.html", "content": "<!DOCTYPE html> <!-- line -->"}]
-    response["files"][0]["file_hash"] = None
-    saved = Invocation.objects.create(run=original, attempt=1, state="failed", finished_at=timezone.now(),
-        request={"operation": "create", "generation_contract": {"system_prompt_sha256": "old-metadata"}},
-        error={"code": "invalid_schema"}, raw_response=json.dumps(response))
-    result = recover_saved_response(saved.id)
-    assert result["dry_run"] and result["model_calls_allowed"] is False
-    assert result["artifact_hash"] == sha256("<!DOCTYPE html> <!-- line -->")
-
-
-@pytest.mark.django_db
-def test_model_free_recheck_and_inflight_v4_do_not_restart_legacy_sources(chat):
-    original, previous = legacy_stub(chat)
-    run = create_run(chat, {"idempotency_key": "recheck"}, continued_from=original, check_only=True)
-    with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=FAIL):
-        process_run(str(run.id))
-    run.refresh_from_db()
-    assert not run.events.filter(kind="source_restart").exists()
-    assert run.candidate_revision_id == previous.id and model.call_count == 0
-    v4 = create_run(chat, {"idempotency_key": "old"}, continued_from=original)
-    request = request_for(v4, previous, [])
-    request["generation_contract"]["pipeline_version"] = 4
-    saved = reserve_invocation(v4, request)
-    saved.state = "failed"
-    saved.save(update_fields=["state"])
-    v4.attempts = 1
-    v4.save(update_fields=["attempts"])
-    response = fixture_response()
-    response.update(status="unchanged", operation="repair", base_revision=str(previous.id),
-                    files=[], patches=[], checks=[], message="Нужна другая стратегия.")
-    with patch("generation.service.generate", return_value={"response": response, "usage": {}}) as model:
-        process_run(str(v4.id))
-    v4.refresh_from_db()
-    assert v4.status == "needs_attention" and v4.error["code"] == "unchanged"
-    assert model.call_count == 1 and "module_repair" not in model.call_args.args[0]
-    assert not v4.events.filter(kind="source_restart").exists()
-    assert request_for(v4, previous, FAIL["findings"])["generation_contract"]["pipeline_version"] == 4
 
 
 @pytest.mark.django_db

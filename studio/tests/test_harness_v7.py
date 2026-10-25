@@ -137,6 +137,8 @@ def test_controller_cannot_issue_source_permission_from_untrusted_or_stale_evide
             identity=check_identity(base), assessment=assess(result, base.checks, []))
         assert code_repair_basis(run, base) is not None
         if fault == 'old_version':
+            run.pipeline_version = 6
+            run.save(update_fields=['pipeline_version'])
             Invocation.objects.create(run=run, attempt=1, state='settled',
                 request={'generation_contract': {'pipeline_version': 6}})
         elif fault == 'stale_report':
@@ -380,7 +382,7 @@ def test_scenario_repair_for_unobserved_surface_requires_current_loading_evidenc
     from generation.artifacts import materialize
     from studio.acceptance import assess
     from studio.check_repair import code_repair_basis, needs_repair
-    from studio.models import CheckReport, Invocation
+    from studio.models import CheckReport
     from studio.tasks import check_identity, claim_run, store_candidate
     from validation.contracts import implementation_hash
     from validation.evidence import gates, receipt
@@ -412,7 +414,7 @@ def test_scenario_repair_for_unobserved_surface_requires_current_loading_evidenc
         elif fault == 'infrastructure':
             report.status = 'infrastructure_error'
         else:
-            Invocation.objects.create(run=run, attempt=1, state='settled',
-                request={'generation_contract': {'pipeline_version': 6}})
+            run.pipeline_version = 6
+            run.save(update_fields=['pipeline_version'])
         report.save()
         assert not needs_repair(run, base, report.findings)

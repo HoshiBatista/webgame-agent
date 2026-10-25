@@ -27,6 +27,8 @@ def browser_watchdog_seconds(checks):
         raise ValueError("invalid browser check count")
     waiting = 0.0
     longest_wait = 0.0
+    causal_waiting = 0.0
+    causal_count = 0
     for check in checks:
         if (
             not isinstance(check, dict)
@@ -45,7 +47,12 @@ def browser_watchdog_seconds(checks):
         if step_wait > 10000:
             raise ValueError("smoke check wait exceeds 10 seconds")
         waiting += step_wait / 1000
+        if check.get('category') in {'control', 'outcome'} and any(
+            step.get('action') in {'click','tap','click_fraction','tap_fraction','press','key_down','key_up'} for step in check['steps']
+        ):
+            causal_count += 1
+            causal_waiting += step_wait / 1000
         longest_wait = max(longest_wait, step_wait / 1000)
     # An uncovered viewport may replay one successful route for surface evidence.
     probes = len(set(VIEWPORTS) - {c.get("viewport", "mobile") for c in checks})
-    return min(15 + (len(checks) + probes) * 5 + waiting + probes * longest_wait, 180)
+    return min(15 + (len(checks) + probes + causal_count) * 5 + waiting + causal_waiting + probes * longest_wait, 300)

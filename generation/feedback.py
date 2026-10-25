@@ -64,7 +64,8 @@ def _finding(source):
     result = {}
     for key in ("code", "message", "check_id", "path", "file", "filename", "line", "column",
                 "script_index", "script_line", "script_column", "location", "column_unit", "file_hash",
-                "source_excerpt", "bundled_location"):
+                "source_excerpt", "bundled_location", "excerpt_start_column", "excerpt_end_column",
+                "excerpt_truncated", "source_anchor", "source_structure"):
         if key in source:
             result[key] = _text(source[key]) if isinstance(source[key], str) else _bounded_context(source[key])
     for key in ("before", "after", "expected"):
@@ -88,7 +89,8 @@ def _diagnostic(source):
             return [scrub(v) for v in value]
         return value
     allowed = {"check_id", "step_index", "step", "observation", "before", "after", "expected",
-               "actual_type", "viewport", "controls", "truncated", "state", "selector_matches", "unavailable"}
+               "actual_type", "viewport", "controls", "truncated", "state", "selector_matches", "unavailable",
+               "observations", "input_probe"}
     return bounded(scrub({k: v for k, v in source.items() if k in allowed}), 4096)
 
 

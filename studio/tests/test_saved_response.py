@@ -9,7 +9,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from generation.providers.fake import fixture_response
-from studio.models import Budget, Chat, Invocation, Outbox, Run, User
+from studio.models import Budget, Chat, Invocation, Outbox, Revision, Run, User
 from studio.recovery import recover_saved_response
 from studio.services import DomainError, reserve_invocation, settle_invocation
 from studio.tasks import process_run, recover_expired
@@ -32,7 +32,8 @@ class SavedResponseTests(TestCase):
             item["title"] = ""
         self.raw = json.dumps(response)
         self.source = Invocation.objects.create(
-            run=self.run, attempt=2, state="failed", request={"operation": "create", "base_revision": None},
+            run=self.run, attempt=2, state="failed", request={"operation": "create", "base_revision": None,
+                "generation_contract": {"pipeline_version": 8}},
             error={"code": "invalid_schema", "raw_response": self.raw},
             usage={"input_tokens": 12, "output_tokens": 34}, cost_usd=Decimal("0.1"),
             sent_at=timezone.now(), finished_at=timezone.now(), elapsed_seconds=42,
@@ -123,3 +124,90 @@ class SavedResponseTests(TestCase):
         self.assertEqual(inv.raw_response, self.raw)
         self.assertEqual(inv.response, fixture_response())
         self.assertIsNone(inv.error)
+
+    def compact_source(self, operation):
+        from tests.test_compact_generation import artifact
+
+        game = artifact()
+        game['title'] = 'Имя исходной игры'
+        base = Revision.objects.create(chat=self.chat, number=1, **game)
+        self.run.operation = operation
+        self.run.model_profile = 'lite'
+        self.run.generation_profile = 'compact'
+        self.run.candidate_revision = base
+        self.run.source_revision = base if operation == 'edit' else None
+        self.run.save()
+        self.source.request = {
+            'operation': operation, 'base_revision': str(base.id), 'generation_profile': 'compact',
+            'source_format': 'string', 'compact_manifest': base.compact_manifest,
+            'generation_contract': {'pipeline_version': 8},
+        }
+        return base
+
+    def test_compact_saved_edit_preserves_source_metadata_and_never_calls_model(self):
+        base = self.compact_source('edit')
+        self.source.raw_response = json.dumps({
+            'type': 'ok', 'message': 'Только цвет', 'observations': [], 'probes': [],
+            'edits': [{'old_text': "'#ffd84d'", 'new_text': "'#99bbff'"}],
+        })
+        self.source.save()
+        result = recover_saved_response(self.source.id, apply=True)
+        restored = Run.objects.get(pk=result['run_id'])
+        candidate = restored.candidate_revision
+        self.assertEqual(candidate.title, base.title)
+        self.assertEqual(candidate.design, base.design)
+        self.assertEqual(candidate.parent_id, base.id)
+        self.assertEqual(restored.source_revision_id, base.id)
+        self.assertEqual(restored.model_profile, self.run.model_profile)
+        self.assertIsNone(restored.base_revision_id)
+        self.assertFalse(restored.allow_model_calls)
+        self.assertEqual(candidate.checks, base.checks)
+        self.assertEqual(Invocation.objects.count(), 1)
+
+    def test_compact_saved_module_repair_requires_fresh_basis_and_preserves_incomplete_checks(self):
+        from generation.check_repair import checks_hash
+        from generation.source_policy import module_policy
+
+        base = self.compact_source('repair')
+        base.checks = base.checks[:1]
+        base.compact_manifest['probes'] = base.compact_manifest['probes'][:1]
+        base.save(update_fields=['checks', 'compact_manifest'])
+        basis = {'base_revision': str(base.id), 'artifact_hash': base.artifact_hash,
+                 'checks_hash': checks_hash(base.checks), 'report_id': 17,
+                 'report_identity': 'a' * 64, 'defects': ['runtime_or_network']}
+        self.source.request.update(
+            code_repair_basis=basis, module_repair=module_policy(base.files, [
+                {'code': 'runtime_or_network', 'path': 'game.js', 'file_hash': base.file_hashes['game.js']},
+            ]),
+        )
+        self.source.raw_response = json.dumps({
+            'type': 'ok', 'message': 'Малый ремонт',
+            'source': base.files['game.js'].replace("'#ffd84d'", "'#99bbff'"),
+        })
+        self.source.save()
+        with patch('studio.check_repair.code_repair_basis', return_value=None):
+            with self.assertRaises(DomainError) as error:
+                recover_saved_response(self.source.id, apply=True)
+        self.assertEqual(error.exception.code, 'stale_code_repair_basis')
+        self.assertEqual(Run.objects.count(), 1)
+        with patch('studio.check_repair.code_repair_basis', return_value=basis):
+            result = recover_saved_response(self.source.id, apply=True)
+        restored = Run.objects.get(pk=result['run_id'])
+        self.assertEqual(restored.candidate_revision.checks, base.checks)
+        self.assertEqual(restored.candidate_revision.title, base.title)
+        self.assertEqual(restored.candidate_revision.design, base.design)
+        self.assertFalse(restored.allow_model_calls)
+        self.assertEqual(Invocation.objects.count(), 1)
+
+    def test_compact_saved_refusal_is_not_materialized_as_a_game(self):
+        self.compact_source('edit')
+        self.source.raw_response = json.dumps({
+            'type': 'scope_refusal', 'message': 'Нужен более узкий запрос',
+            'observations': [], 'probes': [], 'edits': [],
+        })
+        self.source.save()
+        with self.assertRaises(DomainError) as error:
+            recover_saved_response(self.source.id, apply=True)
+        self.assertEqual(error.exception.code, 'no_saved_candidate')
+        self.assertEqual(Run.objects.count(), 1)
+        self.assertEqual(Invocation.objects.count(), 1)

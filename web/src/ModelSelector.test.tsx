@@ -111,6 +111,9 @@ it('saves the chat choice without generating, then uses it and retains the retry
   const first = vi.mocked(post).mock.calls[0];
   expect(first[1]).toEqual({
     prompt: 'Сделай змейку',
+    source_revision_id: null,
+    source_artifact_hash: null,
+    source_is_historical: false,
     audience: 'everyone',
     model_profile: 'pro',
     idempotency_key: expect.any(String),

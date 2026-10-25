@@ -1,5 +1,6 @@
 """Bounded read-only game-frame diagnostics. No host data or DOM serialization."""
 
+import hashlib
 import json
 
 MAX_BYTES = 8192
@@ -30,6 +31,69 @@ DOM = r"""() => {
  }
  return {viewport:{width:innerWidth,height:innerHeight},controls:rows,truncated:omitted};
 }"""
+
+INPUT_TARGET = r"""step => {
+ const elements = document.querySelectorAll(step.selector);
+ if (elements.length !== 1) return {status:'ambiguous',matches:elements.length};
+ const target = elements[0], r = target.getBoundingClientRect();
+ if (r.width <= 0 || r.height <= 0) return {status:'hidden'};
+ const fraction = step.action.endsWith('_fraction');
+ const x = r.x + (step.x == null ? r.width/2 : fraction ? r.width*step.x : step.x);
+ const y = r.y + (step.y == null ? r.height/2 : fraction ? r.height*step.y : step.y);
+ const hit = document.elementFromPoint(x,y);
+ const describe = e => e ? {tag:e.tagName.toLowerCase(),id:(e.id||'').slice(0,100),
+   label:(e.getAttribute('aria-label')||e.textContent||'').slice(0,120)} : null;
+ return {status:hit && (hit===target || target.contains(hit))?'reachable':'obstructed',
+   target:describe(target),hit:describe(hit),point:{x,y},
+   rect:{x:r.x,y:r.y,width:r.width,height:r.height}};
+}"""
+
+
+def observation_catalog(frame, check, state_script):
+    """Only inspect the requested plain-state root and bounded visible DOM facts."""
+    rows = []
+
+    def add(observation, value):
+        if value is not None and type(value) not in {str, int, float, bool}:
+            return
+        identity = hashlib.sha256(json.dumps(observation, sort_keys=True).encode()).hexdigest()[:12]
+        rows.append({"id": "obs_" + identity, "observation": observation,
+                     "type": type(value).__name__, "value": value, "phase": "diagnostic_snapshot"})
+
+    path = (check.get("observation") or {}).get("path", "")
+    parts = path.split(".")
+    if parts and parts[0] == "window":
+        parts = parts[1:]
+    if parts and parts[0] and parts[0] not in {"__proto__", "constructor", "prototype"}:
+        root = parts[0]
+        snapshot = frame.evaluate(state_script, root)
+
+        def walk(value, current, depth=0):
+            if len(rows) >= 12 or depth > 3:
+                return
+            if type(value) is dict:
+                for key, item in list(value.items())[:16]:
+                    if isinstance(key, str) and key.isidentifier():
+                        walk(item, current + "." + key, depth + 1)
+            elif type(value) is list:
+                for index,item in enumerate(value[:8]):
+                    walk(item, current + '.' + str(index), depth + 1)
+            elif type(value) is not list:
+                add({"source": "state", "path": current}, value)
+        if "value" in snapshot:
+            walk(snapshot["value"], root)
+    dom = frame.evaluate(r"""() => [...document.querySelectorAll('[id]')].slice(0,40).flatMap(e=>{
+      const r=e.getBoundingClientRect();
+      if(!r.width||!r.height||e.tagName==='SCRIPT'||e.tagName==='STYLE'||e.children.length) return [];
+      const selector='#'+CSS.escape(e.id), text=(e.textContent||'').trim();
+      return text && text.length<=120 && selector.length<=200 && document.querySelectorAll(selector).length===1
+        ? [{selector,value:text}] : [];
+    }).slice(0,8)""")
+    for item in dom:
+        if len(rows) >= 16:
+            break
+        add({"source": "text", "selector": item["selector"]}, item["value"])
+    return rows
 
 
 def bounded(value, maximum=MAX_BYTES):
@@ -76,6 +140,10 @@ def collect(frame, check, step_index, before, after, state_script):
         return bounded({**result, "unavailable": True})
     try:
         result.update(frame.evaluate(DOM))
+        result["observations"] = observation_catalog(frame, check, state_script)
+        step = result.get("step") or {}
+        if step.get("selector") and step.get("action") in {"click", "tap", "click_fraction", "tap_fraction"}:
+            result["input_probe"] = frame.evaluate(INPUT_TARGET, step)
         observation = check.get("observation") or {}
         if observation.get("source") == "state":
             # Reuse the descriptor-based safe reader; never enumerate window.

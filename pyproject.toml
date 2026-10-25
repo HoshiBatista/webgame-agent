@@ -20,6 +20,9 @@ dev = ["pytest>=8,<9", "pytest-django>=4.11,<5", "pytest-cov>=6,<8", "ruff>=0.12
 [tool.setuptools.packages.find]
 include = ["gameforge*", "studio*", "generation*", "validation*"]
 
+[tool.setuptools.package-data]
+generation = ["runtime/*.js", "runtime/*.css"]
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "gameforge.settings"
 pythonpath = ["."]

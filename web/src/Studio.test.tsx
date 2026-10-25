@@ -99,6 +99,31 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('saved work and mutation submission', () => {
+  it('addresses the displayed unaccepted draft when there is no accepted game', async () => {
+    const draft = { ...revision, id: 'draft', artifact_hash: 'draft-hash', accepted: false };
+    vi.mocked(request).mockResolvedValue({
+      ...chat,
+      current_revision: null,
+      candidate_revision: draft,
+      revisions: [draft],
+    });
+    vi.mocked(post).mockResolvedValue({});
+    setup();
+    fireEvent.change(await screen.findByRole('textbox', { name: 'Что изменить в игре' }), {
+      target: { value: 'Исправь кнопки' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    await waitFor(() => expect(post).toHaveBeenCalled());
+    expect(post).toHaveBeenCalledWith(
+      '/api/chats/one/runs/',
+      expect.objectContaining({
+        prompt: 'Исправь кнопки',
+        source_revision_id: 'draft',
+        source_artifact_hash: 'draft-hash',
+        source_is_historical: false,
+      }),
+    );
+  });
   it('keeps the loaded game when the desktop preview is collapsed and reopened', async () => {
     setup();
     const frame = await screen.findByTitle('Игра');

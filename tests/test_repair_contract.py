@@ -28,14 +28,10 @@ def test_operation_schema_prevents_wrong_files_patches_and_base(operation):
     assert RESPONSE_SCHEMA["properties"]["files"]["maxItems"] == 20
 
 
-def test_saved_v2_schema_is_preserved_and_unknown_version_fails_closed():
-    assert response_schema({"operation": "repair", "generation_contract": {"pipeline_version": 2}}) == RESPONSE_SCHEMA
-    with pytest.raises(ContractError, match="Неизвестная версия"):
-        response_schema({"generation_contract": {"pipeline_version": 99}})
 
 
 @pytest.mark.parametrize("change", ["steps", "observation", "expect", "requirement", "viewport", "add"])
-def test_legacy_repair_cannot_change_or_add_acceptance_checks(change):
+def test_repair_cannot_change_or_add_acceptance_checks(change):
     response = fixture_response()
     base = materialize(response, operation="create")
     repair = deepcopy(response)
@@ -89,3 +85,10 @@ def test_invalid_inherited_tests_request_application_review_instead_of_silent_we
         materialize(response, operation="repair", base_revision="base", files=base["files"],
                     previous_checks=base["checks"])
     assert caught.value.code == "invalid_baseline_checks"
+
+
+@pytest.mark.parametrize("version", [2,3,4,5,6,7,99])
+def test_unsupported_contracts_are_rejected_instead_of_migrated(version):
+    with pytest.raises(ContractError) as error:
+        response_schema({"generation_contract":{"pipeline_version":version}})
+    assert error.value.code == "unknown_contract"

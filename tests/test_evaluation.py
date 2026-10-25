@@ -87,3 +87,20 @@ def test_summary_does_not_treat_application_success_as_playability():
     review["artifact_hash"] = "wrong"
     with pytest.raises(ValueError, match="artifact"):
         summarize(state, {"rev": review})
+
+
+def test_check_repair_does_not_report_inherited_game_as_negative_generation_time():
+    criteria = {"outcome": "Win"}
+    state = {"limits": {"max_calls": 24}, "operations": [{
+        "case": "grid", "kind": "targeted_check_repair", "criteria": criteria,
+        "run": {"id": "repair", "status": "unverified", "attempts": 1,
+                "created_at": "2026-10-24T10:02:00Z", "candidate_revision_id": "base"},
+        "revisions": [{"id": "base", "artifact_hash": "abc", "created_at": "2026-10-24T10:00:00Z"}],
+    }]}
+    review = {"artifact_hash": "abc", "criteria_hash": digest(criteria),
+              "criteria": {"outcome": {"status": "passed", "evidence": "Existing game still wins"}}}
+    row = summarize(state, {"base": review})["results"][0]
+    assert row["first_candidate_seconds"] is None
+    assert row["first_playable_seconds"] is None
+    assert row["inherited_candidate"] is True
+    assert row["verdict"] == "playable"

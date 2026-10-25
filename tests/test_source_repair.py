@@ -1,16 +1,13 @@
-import hashlib
 from copy import deepcopy
 
 import pytest
-from jsonschema import Draft202012Validator
 
 from generation.artifacts import materialize, sha256
 from generation.errors import ContractError
-from generation.prompts import build_messages, system_prompt
+from generation.prompts import build_messages
 from generation.providers.fake import fixture_response
 from generation.schema import response_schema
 from generation.source_policy import MAX_MODULE_BYTES, module_policy
-from studio.services import fingerprint
 
 
 def base_game():
@@ -63,13 +60,6 @@ def test_structural_admission_does_not_require_static_canvas_or_specific_file_la
     assert materialize(response, operation="create")["html"] == document
 
 
-def test_saved_v4_stub_is_not_reinterpreted_by_new_admission():
-    response = fixture_response()
-    response["files"] = [{"path": "index.html", "content": "<!DOCTYPE html> <!-- line -->"}]
-    assert materialize(response, operation="create", generation_contract={"pipeline_version": 4})["html"]
-    request = {"operation": "create", "generation_contract": {"pipeline_version": 4}}
-    assert hashlib.sha256(system_prompt(request).encode()).hexdigest() == "2342bcb4783db2682b01736a210162e45bc94003bb262c4b1bfb6219758f4c6c"
-    assert fingerprint(response_schema(request)) == "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
 
 
 def test_unknown_materialization_contract_is_not_interpreted_as_the_latest():
@@ -113,26 +103,6 @@ def test_replacement_failures_are_atomic_and_preserve_the_original(mutation, cod
     assert base == original
 
 
-@pytest.mark.parametrize("version", [2, 3, 4, 5])
-def test_replacement_requires_explicit_v5_repair_permission(version):
-    base = base_game()
-    response = replacement(base)
-    request = {"operation": "repair", "generation_contract": {"pipeline_version": version}}
-    assert not Draft202012Validator(response_schema(request)).is_valid(response)
-    if version < 5:
-        with pytest.raises(ContractError) as caught:
-            repair(response, base, generation_contract=request["generation_contract"],
-                   module_repair=module_policy(base["files"], [{"code": "effect_mismatch"}]))
-        assert caught.value.code == "module_scope"
-    else:
-        request["module_repair"] = module_policy(base["files"], [{"code": "effect_mismatch"}])
-        assert Draft202012Validator(response_schema(request)).is_valid(response)
-        request["operation"] = response["operation"] = "edit"
-        assert not Draft202012Validator(response_schema(request)).is_valid(response)
-        with pytest.raises(ContractError) as caught:
-            materialize(response, operation="edit", base_revision="base", files=base["files"],
-                        previous_checks=base["checks"], module_repair=request["module_repair"])
-        assert caught.value.code == "module_scope"
 
 
 def test_permission_is_not_inferred_from_a_small_helper_or_stale_file_location():
@@ -141,6 +111,19 @@ def test_permission_is_not_inferred_from_a_small_helper_or_stale_file_location()
     assert not module_policy(files, [{"code": "javascript_syntax", "path": "small.js", "file_hash": "wrong"}])["files"]
     policy = module_policy(files, [{"code": "javascript_syntax", "path": "small.js", "file_hash": sha256(files["small.js"])}])
     assert policy["files"] == {"small.js": sha256(files["small.js"])}
+
+
+def test_module_permission_filters_owned_paths_before_selection_without_blacklisting_full_profile_names():
+    files = {'runtime.js': 'const utility=1;', 'game.js': 'const game=1;'}
+    findings = [{'code': 'runtime_or_network', 'path': 'runtime.js'},
+                {'code': 'module_not_registered', 'path': 'game.js'}]
+    assert module_policy(files, findings)['files'] == {'runtime.js': sha256(files['runtime.js'])}
+    assert module_policy(files, findings, allowed_paths={'game.js'})['files'] == {
+        'game.js': sha256(files['game.js']),
+    }
+    assert not module_policy(files, [
+        {'code': 'module_not_registered', 'path': 'game.js', 'file_hash': 'stale'},
+    ], allowed_paths={'game.js'})['files']
 
 
 def test_generated_schemas_do_not_share_mutable_patch_definitions():

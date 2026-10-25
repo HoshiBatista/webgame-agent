@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -17,6 +18,7 @@ from playwright.sync_api import ViewportSize, sync_playwright
 
 from .checks import INPUT, NUMERIC, RELATIVE, check_issue, comparable, numeric, parse_number
 from .contracts import VIEWPORTS, implementation_hash
+from .diagnostics import INPUT_TARGET
 from .diagnostics import collect as collect_diagnostic
 from .evidence import gates as evidence_gates
 from .evidence import receipt as artifact_receipt
@@ -47,9 +49,10 @@ OBSERVE_STATE = """path => {
     let value = window;
     for (const part of path.split('.')) {
       if (part === 'window' && value === window) continue;
-      if (!value || !['object','function'].includes(typeof value)) return {missing:true};
+      if (!value || !['object','function'].includes(typeof value)) return {missing:true,reason:'absent'};
       const d = Object.getOwnPropertyDescriptor(value, part);
-      if (!d || !('value' in d)) return {missing:true};
+      if (!d) return {missing:true,reason:'absent'};
+      if (!('value' in d)) return {missing:true,reason:'accessor'};
       value = d.value;
     }
     let remaining = 8192, nodes = 512;
@@ -86,12 +89,38 @@ OBSERVE_STATE = """path => {
       return output;
     };
     return {value:copy(value, 0)};
-  } catch { return {missing:true}; }
+  } catch { return {missing:true,reason:'unsafe'}; }
 }"""
 
 
 class InvalidCheck(ValueError):
     pass
+
+
+class ObstructedInput(InvalidCheck):
+    pass
+
+
+def inspect_module(frame, contract):
+    try:
+        result = frame.evaluate("""() => {
+          const d=Object.getOwnPropertyDescriptor(window,'GameForge');
+          if(!d||!('value' in d)) return {ready:false};
+          const method=Object.getOwnPropertyDescriptor(d.value,'inspect');
+          return method && typeof method.value==='function' ? method.value() : {ready:false};
+        }""")
+        if type(result.get('ready')) is not bool:
+            return {'unavailable': True}
+        result['blocked_controls'] = []
+        if result['ready']:
+            for ident in contract['controls']:
+                probe = frame.evaluate(INPUT_TARGET, {'selector': '[data-gf-action="' + ident + '"]',
+                                                       'action': 'tap', 'x': None, 'y': None})
+                if probe['status'] != 'reachable':
+                    result['blocked_controls'].append({'id': ident, **probe})
+        return result
+    except Exception:
+        return {'unavailable': True}
 
 
 def observe(frame, observation, operator):
@@ -145,6 +174,8 @@ def compare(before, after, expect):
         return isinstance(value, str) and bool(value.strip()) and isinstance(after, (str, list)) and value in after
     if op == "changed":
         return before != after
+    if op == 'unchanged':
+        return before == after
     if op in {"increased", "decreased"}:
 
         def numeric(x):
@@ -158,8 +189,20 @@ def compare(before, after, expect):
     raise InvalidCheck("Неизвестный оператор ожидания.")
 
 
+def _input_probe(frame, step):
+    target = frame.locator(step["selector"])
+    if target.count() != 1 or not target.is_visible():
+        return None
+    target.scroll_into_view_if_needed(timeout=1500)
+    probe = frame.evaluate(INPUT_TARGET, step)
+    if probe["status"] == "obstructed":
+        raise ObstructedInput("Заявленную точку ввода перекрывает другой элемент; проверьте подготовку и расположение управления.")
+    return probe
+
+
 def action(page, frame, step):
     kind = step.get("action")
+    probe = None
     if kind in {"click_fraction", "tap_fraction"}:
         selector, x, y = step.get("selector"), step.get("x"), step.get("y")
         if (
@@ -174,6 +217,7 @@ def action(page, frame, step):
             )
         ):
             raise InvalidCheck("Доли координат требуют selector и x/y от 0 до 1.")
+        probe = _input_probe(frame, step)
         element = frame.locator(selector)
         if element.count() != 1:
             raise InvalidCheck(f"Действие {selector!r} должно находить один элемент.")
@@ -189,6 +233,7 @@ def action(page, frame, step):
         selector = step.get("selector")
         x, y = step.get("x"), step.get("y")
         if selector:
+            probe = _input_probe(frame, step)
             element = frame.locator(selector)
             if element.count() != 1:
                 raise InvalidCheck(f"Действие {selector!r} должно находить один элемент.")
@@ -201,9 +246,10 @@ def action(page, frame, step):
         else:
             raise InvalidCheck("Указаны не все координаты действия.")
     elif kind in {"press", "key_down", "key_up"}:
-        # Focus the frame via a real pointer event if it has not been focused yet.
+        # Move browser focus without clicking arbitrary game coordinates: such a
+        # click could satisfy a keyboard check even when the game ignores keys.
         if page.evaluate("document.activeElement.tagName") != "IFRAME":
-            page.mouse.click(3, 3)
+            page.locator('iframe').focus()
         key = step.get("key")
         if not isinstance(key, str) or not key:
             raise InvalidCheck("Отсутствует клавиша.")
@@ -212,18 +258,65 @@ def action(page, frame, step):
         ms = step.get("ms", 0)
         if not isinstance(ms, (int, float)) or not 0 <= ms <= 10000:
             raise InvalidCheck("Ожидание smoke-проверки должно быть от 0 до 10000 мс.")
-        page.wait_for_timeout(ms)
+        wait(page, ms)
     elif kind == "blur":
         # Actual focus transfer to host control; no synthetic dispatchEvent('blur').
         page.locator("#outside").click(force=True)
+    elif kind == 'resize':
+        if step.get('viewport') not in VIEWPORTS:
+            raise InvalidCheck('Неизвестный размер контрольного viewport.')
+        page.set_viewport_size(VIEWPORTS[step['viewport']])
+        wait(page, 50)
     else:
         raise InvalidCheck(f"Неизвестное действие {kind!r}.")
+    return probe or ({"status": "delivered", "action": kind} if kind in INPUT else None)
+
+
+def wait(page, milliseconds):
+    if getattr(page, '_gf_clock', False):
+        page.clock.run_for(int(math.ceil(milliseconds)))
+    else:
+        page.wait_for_timeout(milliseconds)
+
+
+def without_last_input(check):
+    """A fresh-page control observation omits one meaningful input, including its release."""
+    steps = check.get('steps', [])
+    measured_from = max((i + 1 for i, step in enumerate(steps) if step.get('action') == 'checkpoint'), default=0)
+    meaningful: list[int] = []
+    pressed: set[str | None] = set()
+    for i in range(measured_from, len(steps)):
+        step = steps[i]
+        kind, key = step.get('action'), step.get('key')
+        if kind == 'key_up' and key in pressed:
+            pressed.remove(key)
+            continue
+        if kind == 'key_down':
+            pressed.add(key)
+        if kind in INPUT:
+            meaningful.append(i)
+    if check.get('category') not in {'control', 'outcome'} or not meaningful:
+        return None
+    index = meaningful[-1]
+    selected = steps[index]
+    omitted = {index}
+    if selected['action'] == 'key_down':
+        omitted.update(i for i, s in enumerate(steps[index+1:], index+1)
+                       if s.get('action')=='key_up' and s.get('key')==selected.get('key'))
+    return {**check, 'steps':[s for i,s in enumerate(steps) if i not in omitted],
+            '_without_input': True, '_omitted': sorted(omitted)}
 
 
 def run(payload):
     started = time.monotonic()
     environment = identity()
     html, checks = payload["html"], payload["checks"]
+    contract = payload.get("contract") or {}
+    test_profile = payload.get('test_profile') or {}
+    if test_profile:
+        if set(test_profile) - {'seed', 'clock'} or type(test_profile.get('seed')) is not int or not 0 <= test_profile['seed'] <= 0xffffffff or type(test_profile.get('clock', False)) is not bool:
+            raise ValueError('invalid test profile')
+        environment += ':test-' + hashlib.sha256(json.dumps(test_profile, sort_keys=True).encode()).hexdigest()[:16]
     artifact_hash = hashlib.sha256(html.encode()).hexdigest()
     if artifact_hash != payload.get("artifact_hash"):
         raise ValueError("artifact hash mismatch")
@@ -236,6 +329,8 @@ def run(payload):
         findings.append({"code": "incomplete_checks", "message": "Нужны проверки начала, управления и исхода."})
     measurements = []
     successful_routes: list[dict[str, Any]] = []
+    counterfactuals = [copy for check in checks if (copy := without_last_input(check)) is not None]
+    counterfactual_results = {}
     covered = {c.get("viewport", "mobile") for c in checks}
     probes = [{"id": "artifact-" + name, "viewport": name, "_artifact_probe": True} for name in VIEWPORTS
               if name not in covered]
@@ -254,7 +349,7 @@ def run(payload):
                 "stages": [{"stage": "syntax", "status": "failed", "scripts": script_count}],
                 "findings": [syntax_error, *findings],
                 "artifact_evidence": artifact_receipt(artifact_hash, environment,
-                    {"status": "failed", "scripts": script_count}, []),
+                    {"status": "failed", "scripts": script_count}, [], contract=contract),
                 "facts": [],
                 "artifact_hash": artifact_hash,
                 "environment": environment,
@@ -262,7 +357,11 @@ def run(payload):
                 "screenshot_base64": "",
                 "screenshot_mime": "image/jpeg",
             }
-        for check in [*checks, *probes]:
+        for check in [*checks, *probes, *counterfactuals]:
+            counterfactual = check.get('_without_input') is True
+            if counterfactual and not any(f.get('id') == check['id'] and f['status'] == 'passed' for f in facts):
+                continue
+            finding_start = len(findings)
             probe = check.get("_artifact_probe") is True
             # These exact inputs have already exposed a scene in a real scenario.
             # Replaying them proves only artifact gates in the other viewport.
@@ -278,6 +377,16 @@ def run(payload):
             errors, requests = [], []
             locations: list[dict[str, Any]] = []
             page = context.new_page()
+            virtual_clock = test_profile.get('clock', False)
+            setattr(page, '_gf_clock', virtual_clock)
+            if test_profile:
+                context.add_init_script("""(() => { let seed="""+str(test_profile['seed'])+""";
+                  Math.random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};
+                })();""")
+            if virtual_clock:
+                fixed = datetime(2026, 1, 1, tzinfo=timezone.utc)
+                page.clock.install(time=fixed)
+                page.clock.pause_at(fixed)
             page.set_default_timeout(1800)
 
             def page_error(error):
@@ -324,35 +433,47 @@ def run(payload):
                 "viewport": check.get("viewport"),
                 "status": "unverified",
                 "actions": [],
+                "input_probes": [],
             }
             frame = None
             loaded = False
             step_index = None
             before = after = None
+            module = None
             try:
                 page.goto("https://harness.invalid/", wait_until="load", timeout=5000)
                 frame = page.frames[1]
                 frame.wait_for_load_state("load", timeout=2000)
                 loaded = True
+                if contract:
+                    module = inspect_module(frame, contract)
                 if probe:
                     if route_check:
                         for step_index, step in enumerate(route_check["steps"]):
                             if step["action"] == "checkpoint":
                                 continue
                             if step["action"] == "wait_for":
-                                page.wait_for_timeout(step["ms"])
+                                wait(page, step["ms"])
                             else:
-                                action(page, frame, step)
+                                measured = action(page, frame, step)
+                                if measured:
+                                    fact["input_probes"].append(measured)
                             fact["actions"].append(step)
-                        page.wait_for_timeout(40)
+                        wait(page, 40)
                     raise InvalidCheck("artifact_probe")
-                issue = check_issue(check)
+                issue = None if counterfactual else check_issue(check)
                 if issue:
                     raise InvalidCheck(issue)
                 steps = check.get("steps", [])
                 if len(steps) > 30 or sum(s.get("ms", 0) for s in steps) > 10000:
                     raise InvalidCheck("Сценарий слишком длинный для короткой автоматической проверки.")
                 observation, expect = check["observation"], check["expect"]
+                declared_type = None
+                if contract and observation.get("source") == "state":
+                    declared_type = next((o["type"] for o in contract["observations"]
+                                          if o["path"] == observation.get("path")), None)
+                    if declared_type is None:
+                        raise InvalidCheck("Наблюдение не объявлено в интерфейсе модуля.")
                 before = None
                 if expect["operator"] in RELATIVE and not any(s["action"] == "checkpoint" for s in steps):
                     before = observe(frame, observation, expect["operator"])
@@ -363,12 +484,20 @@ def run(payload):
                     elif step["action"] == "wait_for":
                         wait_ms = step["ms"]
                     else:
-                        action(page, frame, step)
+                        measured = action(page, frame, step)
+                        if measured:
+                            fact["input_probes"].append(measured)
                     fact["actions"].append(step)
                 deadline = time.monotonic() + wait_ms / 1000
+                virtual_remaining = float(wait_ms)
                 while True:
                     try:
                         after = observe(frame, observation, expect["operator"])
+                        if declared_type and not {
+                            "number": numeric(after), "string": type(after) is str,
+                            "boolean": type(after) is bool,
+                        }[declared_type]:
+                            raise InvalidCheck("Тип фактического состояния не совпадает с объявленным наблюдением.")
                         if expect["operator"] in NUMERIC and not (numeric(before) and numeric(after)):
                             raise InvalidCheck("Числовое сравнение получило нечисловое состояние.")
                         if expect["operator"] in {"eq", "not_eq"}:
@@ -377,20 +506,25 @@ def run(payload):
                                 raise InvalidCheck("Тип наблюдаемого значения несовместим с ожиданием.")
                         matched = compare(before, after, expect)
                     except InvalidCheck:
-                        if time.monotonic() >= deadline:
+                        if virtual_remaining <= 0 if virtual_clock else time.monotonic() >= deadline:
                             raise
-                        page.wait_for_timeout(min(25, max(1, (deadline - time.monotonic()) * 1000)))
+                        interval = min(25, virtual_remaining) if virtual_clock else min(25, max(1, (deadline - time.monotonic()) * 1000))
+                        wait(page, interval)
+                        virtual_remaining -= interval
                         continue
-                    if matched or time.monotonic() >= deadline:
+                    if matched or (virtual_remaining <= 0 if virtual_clock else time.monotonic() >= deadline):
                         break
-                    page.wait_for_timeout(min(25, max(1, (deadline - time.monotonic()) * 1000)))
+                    interval = min(25, virtual_remaining) if virtual_clock else min(25, max(1, (deadline - time.monotonic()) * 1000))
+                    wait(page, interval)
+                    virtual_remaining -= interval
                 fact.update(before=before, after=after, expected=expect, comparison=matched)
                 fact["status"] = "passed" if matched else "failed"
             except (InvalidCheck, KeyError, ValueError) as exc:
                 if not probe:
                     fact["detail"] = str(exc)[:800]
                     findings.append(
-                        {"code": "invalid_check", "check_id": check.get("id"), "message": fact["detail"]}
+                        {"code": "input_obstructed" if isinstance(exc, ObstructedInput) else "invalid_check",
+                         "check_id": check.get("id"), "message": fact["detail"]}
                     )
             except BrowserTimeout as exc:
                 fact["detail"] = str(exc)[:800]
@@ -470,6 +604,22 @@ def run(payload):
                         "locations": locations,
                     }
                 )
+            if contract and frame is not None:
+                module = inspect_module(frame, contract)
+                if module.get("unavailable"):
+                    findings.append({"code": "surface_unverified", "check_id": check.get("id"),
+                                     "message": "Не удалось получить свидетельство инициализации модуля."})
+                elif module.get("ready") is False:
+                    fact["status"] = "failed"
+                    findings.append({"code": "module_not_registered", "check_id": check.get("id"),
+                                     "path": "game.js", "file_hash": contract["source_hash"],
+                                     "message": "Модуль механики не зарегистрировался через GameForge.register; загрузка runtime не является готовой игрой."})
+                elif module.get("blocked_controls"):
+                    fact["status"] = "failed"
+                    findings.append({"code": "control_obstructed", "check_id": check.get("id"),
+                                     "path": "game.js", "file_hash": contract["source_hash"],
+                                     "message": "Заявленное управление модуля недоступно для реального ввода.",
+                                     "blocked_controls": module["blocked_controls"]})
             if fact.get("comparison") is False and not errors and not requests:
                 findings.append(
                     {
@@ -488,7 +638,35 @@ def run(payload):
                     if finding.get("check_id") == check.get("id"):
                         finding["diagnostic"] = diagnostic
             measurement = {"viewport": check.get("viewport", "mobile"), "loaded": loaded,
-                           "errors": errors, "requests": requests, "surface": fact.get("surface")}
+                           "errors": errors, "requests": requests, "surface": fact.get("surface"),
+                           "inputs": fact["input_probes"],
+                           "module": module,
+                           "scenario_start": check.get("category") == "start" and fact["status"] == "passed"}
+            if counterfactual:
+                snapshot: dict[str, Any] = next((f.get('diagnostic', {}) for f in findings[finding_start:]
+                                 if f.get('code') == 'invalid_check'), {})
+                absent = snapshot.get('selector_matches') == 0 or snapshot.get('state', {}).get('reason') == 'absent'
+                absence_proven = absent and loaded and not errors and not requests and (
+                    not contract or module and module.get('ready') is True and not module.get('failed')
+                )
+                failure_codes = {str(f.get('code', 'unknown')) for f in findings[finding_start:]}
+                execution_valid = bool(loaded and not errors and not requests and
+                    not failure_codes - {'effect_mismatch', 'invalid_check', 'surface_not_observed'} and
+                    (not contract or module and module.get('ready') is True and
+                     module.get('failed') is False and module.get('blocked_controls') == []))
+                absence_proven = bool(absence_proven and execution_valid)
+                counterfactual_results[check['id']] = {
+                    'comparison': (False if absence_proven else fact.get('comparison')) if execution_valid else None,
+                    'status': fact['status'], 'execution_valid': execution_valid,
+                    'failure_codes': sorted(failure_codes),
+                    'before': fact.get('before'), 'after': fact.get('after'),
+                    'detail': fact.get('detail'),
+                    'observation_absent': bool(absence_proven),
+                    'omitted_steps': check['_omitted'],
+                }
+                del findings[finding_start:]
+                context.close()
+                continue
             if probe:
                 measurement["probe"] = {"source_check_id": route_check["id"] if route_check else None,
                                         "actions": fact["actions"]}
@@ -499,16 +677,27 @@ def run(payload):
                     successful_routes.append(check)
             context.close()
         browser.close()
+    for fact in facts:
+        baseline = counterfactual_results.get(fact['id'])
+        if fact['status'] != 'passed' or baseline is None:
+            continue
+        fact['counterfactual'] = baseline
+        if baseline['comparison'] is not False:
+            fact['status'] = 'unverified'
+            findings.append({'code': 'effect_not_causal', 'check_id': fact['id'],
+                             'message': 'Проверка не отличает реальный ввод от контрольного запуска без последнего действия.'
+                             if baseline['comparison'] is True else
+                             'Не удалось сравнить эффект с контрольным запуском без последнего действия.'})
     statuses = {f["status"] for f in facts}
     status = "failed" if "failed" in statuses else "unverified" if "unverified" in statuses or incomplete else "passed"
-    evidence = artifact_receipt(artifact_hash, environment, {"status": "passed", "scripts": script_count}, measurements)
+    evidence = artifact_receipt(artifact_hash, environment, {"status": "passed", "scripts": script_count}, measurements, contract=contract)
     gates = evidence_gates(evidence)
     if gates["surface"]:
         # A pre-start instruction can pass before Canvas exists; another real
         # scenario may already prove the surface in that viewport. Keep failed
         # input/assertion facts, but do not invent a missing artifact gate.
         findings = [f for f in findings if f["code"] != "surface_not_observed"]
-    if any(f["code"] in {"runtime_or_network", "mobile_overflow", "canvas_missing"} for f in findings):
+    if any(f["code"] in {"runtime_or_network", "mobile_overflow", "canvas_missing", "module_not_registered", "control_obstructed"} for f in findings):
         status = "failed"
     elif not all(gates.values()):
         status = "unverified"

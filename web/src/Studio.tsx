@@ -218,6 +218,9 @@ export default function Studio() {
     const payload = {
       prompt: prompt.trim(),
       audience,
+      source_revision_id: revision?.id ?? null,
+      source_artifact_hash: revision?.artifact_hash ?? null,
+      source_is_historical: !!selectedRevision,
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
     };
     const key = operationKey(payload);
@@ -597,7 +600,7 @@ export default function Studio() {
                 <Gamepad2 size={36} />
                 <span>✦</span>
               </div>
-              <h2>{current ? 'Как изменим игру?' : 'Во что сегодня играем?'}</h2>
+              <h2>{revision ? 'Как изменим игру?' : 'Во что сегодня играем?'}</h2>
               <p>
                 {current
                   ? 'Поменяйте оформление, темп или добавьте пару уровней. Начнём с небольшого изменения.'
@@ -672,11 +675,13 @@ export default function Studio() {
           </div>
           <div className="composer-input">
             <textarea
-              aria-label={current ? 'Что изменить в игре' : 'Описание вашей игры'}
+              aria-label={revision ? 'Что изменить в игре' : 'Описание вашей игры'}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               placeholder={
-                current ? 'Что изменим? Например, добавим пару уровней…' : 'Опишите вашу мини-игру…'
+                revision
+                  ? 'Что изменим? Например, добавим пару уровней…'
+                  : 'Опишите вашу мини-игру…'
               }
               rows={3}
               disabled={busy || !!activeRun}
@@ -694,7 +699,7 @@ export default function Studio() {
                 disabled={
                   !prompt.trim() || busy || !!activeRun || modelUnavailable || (!isNew && !chat)
                 }
-                aria-label={current ? 'Отправить доработку' : 'Создать игру'}
+                aria-label={revision ? 'Отправить доработку' : 'Создать игру'}
               >
                 <ArrowUp size={20} />
               </button>

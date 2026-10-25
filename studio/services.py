@@ -6,6 +6,7 @@ import os
 from decimal import ROUND_UP, Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
@@ -13,7 +14,7 @@ from django.utils.dateparse import parse_datetime
 
 from .continuations import delivery_state, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
-from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Run, RunEvent
+from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Revision, Run, RunEvent
 
 
 class DomainError(Exception):
@@ -271,12 +272,38 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         raise DomainError("invalid_model", "Некорректная модель.")
     if authorize:
         authorize(provider)
+    selected_source = None
+    if data.get("source_revision_id"):
+        try:
+            selected_source = Revision.objects.filter(pk=data["source_revision_id"], chat=chat).first()
+        except (ValueError, DjangoValidationError) as exc:
+            raise DomainError("source_changed", "Выбранная версия недоступна.", 409) from exc
+    default_generation = inherited.generation_profile if inherited else (
+        selected_source.generation_profile if selected_source else
+        "compact" if settings.GAMEFORGE_COMPACT_LITE_ENABLED and profile_id == "lite" else "full"
+    )
+    generation_profile = data.get("generation_profile", default_generation)
+    source_format = data.get("source_format", inherited.source_format if inherited else "string")
+    if generation_profile not in {"full", "compact"} or source_format not in {"string", "lines"} or (
+        generation_profile == "full" and source_format != "string"
+    ):
+        raise DomainError("invalid_generation_profile", "Неизвестный профиль генерации.")
+    if selected_source and selected_source.generation_profile != generation_profile:
+        raise DomainError("profile_mismatch", "Профиль должен соответствовать выбранной игре.", 409)
+    if continued_from and generation_profile != continued_from.generation_profile:
+        raise DomainError('profile_mismatch', 'Продолжение сохраняет формат исходной игры.', 409)
     payload = {
         "prompt": prompt.strip(),
         "audience": audience,
         "model": model,
         "continued_from": str(continued_from.id) if continued_from else None,
+        "generation_profile": generation_profile,
+        "source_format": source_format,
     }
+    if not continued_from:
+        payload.update({key: data.get(key) for key in (
+            "source_revision_id", "source_artifact_hash", "source_is_historical",
+        )})
     call_limit = data.get("model_call_limit")
     deadline_text = data.get("model_call_deadline")
     if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= 4):
@@ -306,6 +333,12 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         if previous.request_fingerprint != fingerprint(payload) and not legacy_match:
             raise DomainError("idempotency_conflict", "Этот ключ уже использован для другого запроса.", 409)
         return previous
+    from generation.schema import CONTRACT_VERSION
+
+    if continued_from and continued_from.pipeline_version != CONTRACT_VERSION or (
+        selected_source and selected_source.pipeline_version != CONTRACT_VERSION
+    ):
+        raise DomainError('unsupported_game', 'Старый игровой формат больше не поддерживается. Создайте новую игру.', 409)
     if chat.runs.filter(status__in=Run.ACTIVE).exists():
         raise DomainError("chat_busy", "В этом чате уже выполняется задание.", 409)
     if continued_from and continued_from.status not in (
@@ -335,11 +368,26 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
             )
     base = chat.current_revision
     candidate = continued_from.candidate_revision if continued_from else None
+    source = continued_from.source_revision if continued_from else None
+    if not continued_from:
+        source_id = data.get("source_revision_id")
+        if source_id:
+            try:
+                source = Revision.objects.select_related("run").get(pk=source_id, chat=chat)
+            except (Revision.DoesNotExist, ValueError, DjangoValidationError) as exc:
+                raise DomainError("source_changed", "Выбранная версия недоступна. Откройте игру заново.", 409) from exc
+            latest = chat.revisions.order_by("-number").values_list("id", flat=True).first()
+            if data.get("source_artifact_hash") != source.artifact_hash or (
+                source.id not in {latest, chat.current_revision_id} and data.get("source_is_historical") is not True
+            ):
+                raise DomainError("source_changed", "Выбранная версия изменилась. Откройте игру заново.", 409)
+        elif chat.revisions.exists():
+            raise DomainError("source_required", "Выберите версию игры для доработки.", 409)
     if check_only and (
         not candidate or not continued_from or chat.current_revision_id != continued_from.base_revision_id
     ):
         raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
-    operation = "repair" if candidate or continued_from else ("edit" if base else "create")
+    operation = "repair" if candidate or continued_from else ("edit" if source else "create")
     run = Run.objects.create(
         chat=chat,
         operation=operation,
@@ -351,6 +399,11 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         idempotency_key=key,
         request_fingerprint=fingerprint(payload),
         base_revision=base,
+        source_revision=source,
+        generation_profile=generation_profile,
+        source_format=source_format,
+        game_request=(continued_from.game_request if continued_from else
+                      (source.run.game_request or source.run.prompt) if source and source.run else prompt.strip()),
         candidate_revision=candidate,
         continued_from=continued_from,
         max_repair_attempts=settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS,

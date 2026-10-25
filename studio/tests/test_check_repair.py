@@ -298,23 +298,6 @@ def test_real_browser_check_repair_preserves_game_and_exposes_manual_evidence(ma
     assert final.assessment["gates_passed"] and final.assessment["action"] == "review"
 
 
-@pytest.mark.django_db
-def test_v5_uncertainty_keeps_its_previous_single_call_policy(maker):
-    chat, _ = maker
-    run = start(chat)
-    result = browser("", fixture_response()["checks"])
-    result.update(status="unverified", findings=[{"code": "invalid_check", "check_id": "outcome"}])
-    result["facts"][2]["status"] = "unverified"
-    with (
-        patch("generation.schema.CONTRACT_VERSION", 5),
-        patch("generation.providers.fake.generate", side_effect=fake_generate) as provider,
-        patch("validation.service.validate", return_value=result),
-    ):
-        process_run(str(run.id))
-    run.refresh_from_db()
-    assert run.status == "unverified" and run.attempts == provider.call_count == 1
-    assert run.invocations.get().request["generation_contract"]["pipeline_version"] == 5
-    assert not run.candidate_revision.checks_review_required
 
 
 @pytest.mark.django_db

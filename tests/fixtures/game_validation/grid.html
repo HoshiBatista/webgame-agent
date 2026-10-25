@@ -3,13 +3,13 @@
 <button id="reset">Reset</button><p id="status">ready</p><canvas width="300" height="300"></canvas>
 <script>
 const board=document.querySelector('canvas'),ctx=board.getContext('2d'),label=document.querySelector('#status');
-window.grid={cells:Array(9).fill(''),turn:'X',phase:'ready'};
+window.grid={cells:Array(9).fill(''),turn:'X',phase:'ready',winner:''};
 function draw(){ctx.fillStyle='#ddeeff';ctx.fillRect(0,0,300,300);ctx.fillStyle='#123';
 grid.cells.forEach((v,i)=>ctx.fillText(v||String(i),i%3*100+45,Math.floor(i/3)*100+50));}
 board.onpointerdown=e=>{if(['win','draw'].includes(grid.phase))return;
 const r=board.getBoundingClientRect(),i=Math.floor((e.clientX-r.left)/r.width*3)+Math.floor((e.clientY-r.top)/r.height*3)*3;
 if(grid.cells[i])return;grid.cells[i]=grid.turn;grid.phase='playing';
-if([[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(a=>a.every(j=>grid.cells[j]===grid.turn)))grid.phase='win';
+if([[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(a=>a.every(j=>grid.cells[j]===grid.turn))){grid.phase='win';grid.winner=grid.turn;}
 else if(grid.cells.every(Boolean))grid.phase='draw';grid.turn=grid.turn==='X'?'O':'X';label.textContent=grid.phase;draw();};
-document.querySelector('#reset').onclick=()=>{grid.cells.fill('');grid.turn='X';grid.phase='ready';label.textContent='ready';draw();};draw();
+document.querySelector('#reset').onclick=()=>{grid.cells.fill('');grid.turn='X';grid.phase='ready';grid.winner='';label.textContent='ready';draw();};draw();
 </script>

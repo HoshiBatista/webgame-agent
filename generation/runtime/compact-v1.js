@@ -1,0 +1,153 @@
+/* GameForge utilities v1. Rules and rendering belong to the generated module. */
+(() => {
+  'use strict';
+  const config = JSON.parse(document.getElementById('gf-config').textContent);
+  const canvas = document.getElementById('gf-canvas');
+  const context = canvas.getContext('2d');
+  const define = Object.defineProperty;
+  const freeze = Object.freeze;
+  const descriptor = Object.getOwnPropertyDescriptor;
+  const world = freeze({ width: config.world.width, height: config.world.height });
+  const held = new Set();
+  let game = null;
+  let inputs = 0;
+  let frames = 0;
+  let previous = null;
+  let failed = false;
+  let width = 0;
+  let height = 0;
+  const buttons = document.getElementById('gf-controls');
+  const keyControls = new Map();
+
+  function field(object, key) {
+    const d = descriptor(object, key);
+    if (!d || !('value' in d)) throw new Error('GF module requires own data property: ' + key);
+    return d.value;
+  }
+
+  function invoke(callback, ...args) {
+    try { return callback(...args); }
+    catch (error) {
+      failed = true;
+      throw error;
+    }
+  }
+
+  function paint() {
+    if (!game || failed) return;
+    context.setTransform(canvas.width / world.width, 0, 0, canvas.height / world.height, 0, 0);
+    context.clearRect(0, 0, world.width, world.height);
+    context.save();
+    try { invoke(game.render, context); frames += 1; }
+    finally { context.restore(); }
+  }
+
+  function resize() {
+    const box = document.getElementById('gf-stage').getBoundingClientRect();
+    const style = getComputedStyle(document.getElementById('gf-stage'));
+    const availableWidth = Math.max(1, box.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight));
+    const availableHeight = Math.max(1, box.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom));
+    const scale = Math.min(availableWidth / world.width, availableHeight / world.height);
+    width = Math.max(1, world.width * scale);
+    height = Math.max(1, world.height * scale);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    paint();
+  }
+
+  function input(event) {
+    if (!game || failed) return;
+    inputs += 1;
+    invoke(game.input, freeze(event));
+    paint();
+  }
+
+  function releaseAll() {
+    for (const key of held) input({ type: 'key', key, action: keyControls.get(key) || null, phase: 'up' });
+    held.clear();
+    input({ type: 'blur', phase: 'up' });
+  }
+
+  for (const control of config.controls) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.gfAction = control.id;
+    button.textContent = control.label;
+    button.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      input({ type: 'action', action: control.id, phase: 'down' });
+    });
+    for (const name of ['pointerup', 'pointercancel']) button.addEventListener(name, () => {
+      input({ type: 'action', action: control.id, phase: 'up' });
+    });
+    buttons.appendChild(button);
+    if (control.key) keyControls.set(control.key, control.id);
+  }
+
+  for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+    canvas.addEventListener(name, event => {
+      event.preventDefault();
+      if (name === 'pointerdown') canvas.setPointerCapture(event.pointerId);
+      const box = canvas.getBoundingClientRect();
+      input({ type: 'pointer', phase: name === 'pointerdown' ? 'down' :
+        name === 'pointermove' ? 'move' : 'up',
+        x: (event.clientX - box.left) * world.width / box.width,
+        y: (event.clientY - box.top) * world.height / box.height });
+    });
+  }
+  addEventListener('keydown', event => {
+    if (keyControls.has(event.key) || ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
+    if (event.repeat || held.has(event.key)) return;
+    held.add(event.key);
+    input({ type: 'key', key: event.key, action: keyControls.get(event.key) || null, phase: 'down' });
+  });
+  addEventListener('keyup', event => {
+    held.delete(event.key);
+    input({ type: 'key', key: event.key, action: keyControls.get(event.key) || null, phase: 'up' });
+  });
+  addEventListener('blur', releaseAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+  addEventListener('resize', resize);
+  new ResizeObserver(resize).observe(document.getElementById('gf-stage'));
+
+  const api = freeze({ width: world.width, height: world.height, random: () => Math.random() });
+  const platform = freeze({
+    register(factory) {
+      if (game || typeof factory !== 'function') throw new Error('GF register exactly one game factory');
+      const module = factory(api);
+      if (!module || typeof module !== 'object') throw new Error('GF factory must return a module');
+      const state = field(module, 'state');
+      const onInput = field(module, 'input');
+      const render = field(module, 'render');
+      const updateDescriptor = descriptor(module, 'update');
+      const update = updateDescriptor ? field(module, 'update') : null;
+      if (!state || Object.getPrototypeOf(state) !== Object.prototype && Object.getPrototypeOf(state) !== null ||
+          typeof onInput !== 'function' || typeof render !== 'function' || update !== null && typeof update !== 'function') {
+        throw new Error('GF invalid state/input/render/update contract');
+      }
+      game = freeze({ state, input: onInput, render, update });
+      define(window, 'gfState', { value: state, configurable: false, writable: false });
+      resize();
+    },
+    inspect() {
+      return { version: 1, ready: !!game, failed, inputs, frames,
+        world: { width: world.width, height: world.height },
+        display: { width, height } };
+    },
+  });
+  define(window, 'GameForge', { value: platform, configurable: false, writable: false });
+  function tick(now) {
+    if (game && !failed && game.update) {
+      const dt = previous === null ? 0 : Math.min(0.1, Math.max(0, (now - previous) / 1000));
+      invoke(game.update, dt);
+      paint();
+    }
+    previous = now;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();

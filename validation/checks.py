@@ -5,7 +5,7 @@ import re
 from copy import deepcopy
 
 VERSION = 2
-RELATIVE = {"changed", "increased", "decreased"}
+RELATIVE = {"changed", "unchanged", "increased", "decreased"}
 NUMERIC = {"increased", "decreased"}
 INPUT = {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
 NUMBER = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
@@ -63,6 +63,8 @@ def check_issue(check):
     if len(awaits) > 1 or awaits and awaits[0] != len(steps) - 1:
         return "wait_for допустим один раз, последним действием сценария."
     if check.get("category") in {"control", "outcome"}:
+        if op == 'unchanged':
+            return 'Отсутствие изменения относится к регрессии, а не доказывает основное управление или исход.'
         measured = steps[checkpoints[0] + 1:] if checkpoints else steps
         if not any(step.get("action") in INPUT for step in measured):
             return "После подготовки сценарий должен выполнять настоящий игровой ввод."
@@ -85,7 +87,7 @@ def gates_verified(result, checks):
     """Manual acceptance still needs actual syntax/runtime/surface receipts."""
     gates = result.get("gates", {})
     if any(f.get("code") in {"javascript_syntax", "runtime_or_network", "canvas_missing", "mobile_overflow",
-                             "browser_error", "surface_unverified"} for f in result.get("findings", [])):
+                             "browser_error", "surface_unverified", "module_not_registered", "control_obstructed"} for f in result.get("findings", [])):
         return False
     if not all(gates.get(key) is True for key in ("syntax", "runtime", "surface")):
         return False

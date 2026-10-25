@@ -51,7 +51,7 @@ CASES = [
 
 
 def provenance():
-    paths = [*Path("generation").rglob("*.py"), *Path("validation").rglob("*.py"),
+    paths = [*Path("generation").rglob("*.py"), *Path("generation/runtime").glob("*"), *Path("validation").rglob("*.py"),
              *[Path("studio") / name for name in ("tasks.py", "services.py", "models.py", "acceptance.py",
                                                    "continuations.py", "serialization.py", "recovery.py", "views.py",
                                                    "check_repair.py")],

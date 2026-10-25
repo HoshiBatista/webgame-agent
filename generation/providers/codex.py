@@ -24,7 +24,10 @@ from ..schema import response_schema
 MAX_CONTEXT_BYTES = 256000
 CONTEXT_WINDOW = 872000
 AUTO_COMPACT_TOKEN_LIMIT = 800000
-VERIFIED_CLI_VERSIONS = {"codex-cli 0.163.0-alpha.10.2", "codex-cli 0.163.0-alpha.11.2"}
+VERIFIED_CLI_VERSIONS = {
+    "codex-cli 0.163.0-alpha.10.2", "codex-cli 0.163.0-alpha.11.2",
+    "codex-cli 0.164.0-alpha.11.1",
+}
 
 DISABLED_FEATURES = (
     "shell_tool",

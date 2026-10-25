@@ -25,7 +25,7 @@ def test_v7_code_repair_preserves_incomplete_check_list(defect):
     else:
         base['checks'].append(deepcopy(base['checks'][0]))
     frozen = deepcopy(base['checks'])
-    result = repair(replacement(base), base, generation_contract={'pipeline_version': 7},
+    result = repair(replacement(base), base, generation_contract={'pipeline_version': 8},
                     code_repair_basis=basis_for(base), module_repair=module_policy(base['files'], [{'code': 'javascript_syntax', 'path': 'game.js'}]))
     assert result['checks'] == frozen
     assert result['files']['game.js'] != base['files']['game.js']
@@ -41,19 +41,20 @@ def test_v7_rejects_unbound_code_permission(field, value):
     base['checks'] = []
     basis = {**basis_for(base), field: value}
     with pytest.raises(ContractError, match='разрешения'):
-        repair(replacement(base), base, generation_contract={'pipeline_version': 7}, code_repair_basis=basis)
+        repair(replacement(base), base, generation_contract={'pipeline_version': 8}, code_repair_basis=basis)
 
 
 def test_legacy_and_unpermitted_incomplete_repairs_still_fail_closed():
     base = base_game()
     base['checks'] = []
-    for version in [5, 6, 7]:
+    for version in [8]:
         with pytest.raises(ContractError) as caught:
             repair(replacement(base), base, generation_contract={'pipeline_version': version})
         assert caught.value.code == 'invalid_baseline_checks'
 
 
 @pytest.mark.parametrize('version', [2, 3, 4, 5, 6, 7])
-def test_all_saved_versions_keep_operation_schemas(version):
-    schema = response_schema({'operation': 'repair', 'generation_contract': {'pipeline_version': version}})
-    assert schema['properties']['checks']['maxItems'] == (12 if version == 2 else 0)
+def test_retired_versions_are_rejected(version):
+    with pytest.raises(ContractError) as error:
+        response_schema({'operation':'repair','generation_contract':{'pipeline_version':version}})
+    assert error.value.code == 'unknown_contract'

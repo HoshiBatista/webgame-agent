@@ -44,7 +44,7 @@ def test_application_review_repairs_only_representation_without_weakening_the_su
     assert review_checks(effective) == (effective, [])
 
 
-def test_new_check_language_preserves_saved_codex_and_api_wire_contracts():
+def test_current_check_language_is_shared_by_codex_and_api_and_rejects_retired_contracts():
     response = fixture_response()
     response["checks"][1]["observation"]["source"] = "text_number"
     response["checks"][1]["observation"].pop("path")
@@ -52,7 +52,8 @@ def test_new_check_language_preserves_saved_codex_and_api_wire_contracts():
     response["checks"][1]["steps"].extend([{"action": "checkpoint"}, {"action": "wait_for", "ms": 500}])
     assert Draft202012Validator(response_schema({})).is_valid(response)
     for version in (2, 3):
-        assert not Draft202012Validator(response_schema({"generation_contract": {"pipeline_version": version}})).is_valid(response)
+        with pytest.raises(ContractError):
+            response_schema({"generation_contract": {"pipeline_version": version}})
 
 
 def test_checkpoint_cannot_count_only_setup_as_control_and_waits_stay_bounded():

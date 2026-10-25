@@ -131,9 +131,12 @@ def summarize(state, reviews):
         counts["false_acceptances"] += int(automatic and verdict == "broken")
         revisions = operation.get("revisions", [])
         created = timestamp(run["created_at"])
-        first = min((timestamp(r["created_at"]) for r in revisions), default=None)
+        first = min((timestamp(r["created_at"]) for r in revisions
+                     if timestamp(r["created_at"]) >= created), default=None)
         playable_at = min((timestamp(r["created_at"]) for r in revisions
                            if verdicts[r["id"]] == "playable"), default=None)
+        new_playable_at = min((timestamp(r["created_at"]) for r in revisions
+                               if verdicts[r["id"]] == "playable" and timestamp(r["created_at"]) >= created), default=None)
         invocations = operation.get("diagnostics", {}).get("invocations", [])
         for invocation in invocations:
             usage = invocation.get("usage")
@@ -145,9 +148,10 @@ def summarize(state, reviews):
         rows.append({"case": operation["case"], "kind": operation["kind"], "run_id": run["id"],
                      "status": run["status"], "verdict": verdict, "revision_verdicts": verdicts,
                      "calls": run["attempts"], "reserved_ceiling": call_count(operation),
-                     "first_candidate_seconds": first - created if first else None,
+                     "inherited_candidate": bool(result_revision and timestamp(result_revision["created_at"]) < created),
+                     "first_candidate_seconds": first - created if first is not None else None,
                      "decision_seconds": timestamp(run.get("finished_at")) - created if run.get("finished_at") else None,
-                     "first_playable_seconds": playable_at - created if playable_at else None,
+                     "first_playable_seconds": new_playable_at - created if new_playable_at is not None else None,
                      "calls_after_playable": sum(1 for i in invocations if playable_at and i.get("sent_at")
                                                  and timestamp(i["sent_at"]) > playable_at)})
     return {"counts": counts, "tokens": tokens, "remaining_calls": remaining_calls(state), "results": rows,
@@ -235,11 +239,20 @@ class Pilot:
             self.save()
         if not operation.get("run"):
             deadline = self.state["started_at"] + self.state["limits"]["max_seconds"]
+            source_fields = {}
+            if parent:
+                parent_run = parent['run']
+                source_id = parent_run.get('result_revision_id') or parent_run.get('candidate_revision_id')
+                source = next((r for r in parent.get('revisions', []) if r['id'] == source_id), None)
+                if source is None:
+                    raise ValueError('A limited edit requires the exact reviewed source revision')
+                source_fields = {'source_revision_id':source['id'], 'source_artifact_hash':source['artifact_hash']}
             operation["run"] = self.post(f'/api/chats/{operation["chat_id"]}/runs/', {
                 "prompt": operation["prompt"], "model_profile": self.state["identity"]["profile"],
                 "model": self.state["identity"]["model"], "idempotency_key": operation["key"],
                 "model_call_limit": operation["reserved_calls"],
                 "model_call_deadline": datetime.fromtimestamp(deadline, timezone.utc).isoformat(),
+                **source_fields,
             })
             self.save()
             if operation["run"]["max_model_calls"] > operation["reserved_calls"]:

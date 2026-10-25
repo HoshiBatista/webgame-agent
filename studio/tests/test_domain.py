@@ -72,7 +72,13 @@ class DomainTests(TestCase):
         self.client.force_login(self.user)
 
     def make_run(self, chat=None, key="request", prompt="Make a game"):
-        return create_run(chat or self.chat, {"prompt": prompt, "idempotency_key": key})
+        target = chat or self.chat
+        target.refresh_from_db()
+        data = {"prompt": prompt, "idempotency_key": key}
+        if target.current_revision:
+            data.update(source_revision_id=str(target.current_revision_id),
+                        source_artifact_hash=target.current_revision.artifact_hash)
+        return create_run(target, data)
 
     def test_username_database_case_insensitive(self):
         with self.assertRaises(IntegrityError), transaction.atomic():

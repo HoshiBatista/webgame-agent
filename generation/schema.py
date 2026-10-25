@@ -62,6 +62,7 @@ FRACTION_POINT = obj(
 KEY = obj({"action": {"enum": ["press", "key_down", "key_up"]}, "key": string(minLength=1, maxLength=40)})
 WAIT = obj({"action": {"enum": ["wait"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 10000}})
 BLUR = obj({"action": {"enum": ["blur"]}})
+RESIZE = obj({"action": {"enum": ["resize"]}, "viewport": {"enum": ["mobile", "desktop"]}})
 OBSERVATION = {
     "anyOf": [
         obj({"source": {"enum": ["text"]}, "selector": string(minLength=1, maxLength=200)}),
@@ -90,12 +91,12 @@ CHECK_SCHEMA = obj(
         "category": {"enum": ["start", "control", "outcome", "regression"]},
         "requirement": string(minLength=8, maxLength=500),
         "viewport": {"enum": ["mobile", "desktop"]},
-        "steps": array({"anyOf": [POINT, FRACTION_POINT, KEY, WAIT, BLUR]}, maxItems=30),
+        "steps": array({"anyOf": [POINT, FRACTION_POINT, KEY, WAIT, BLUR, RESIZE]}, maxItems=30),
         "observation": OBSERVATION,
         "expect": obj(
             {
                 "operator": {
-                    "enum": ["eq", "not_eq", "contains", "changed", "increased", "decreased", "visible"]
+                    "enum": ["eq", "not_eq", "contains", "changed", "unchanged", "increased", "decreased", "visible"]
                 },
                 "value": {"type": ["string", "number", "boolean", "null"]},
             }
@@ -140,9 +141,7 @@ RESPONSE_SCHEMA = obj(
 )
 
 
-# Keep persisted v2/v3 wire contracts byte-for-byte compatible.
-LEGACY_CHECK_SCHEMA = deepcopy(CHECK_SCHEMA)
-RESPONSE_SCHEMA = deepcopy(RESPONSE_SCHEMA)
+# The application supports the current contract only.
 CHECK_SCHEMA["properties"]["observation"]["anyOf"].extend([
     obj({"source": {"enum": ["text_number"]}, "selector": string(minLength=1, maxLength=200)}),
     obj({"source": {"enum": ["attribute_number"]}, "selector": string(minLength=1, maxLength=200),
@@ -162,7 +161,7 @@ MODULE_REPLACEMENT = obj({
     "content": string(maxLength=12288),
 })
 APPLICATION_SCHEMA["properties"]["patches"]["items"] = {"anyOf": [EXACT_PATCH, MODULE_REPLACEMENT]}
-CONTRACT_VERSION = 7
+CONTRACT_VERSION = 8
 
 CHECK_REPAIR_SCHEMA = obj({
     "status": {"enum": ["ok", "unchanged"]},
@@ -176,17 +175,18 @@ CHECK_REPAIR_SCHEMA = obj({
 
 
 def response_schema(request):
-    """App-owned operation contract. Persisted v2 invocations retain their wire schema."""
+    """One current operation contract; unsupported games are retired, not reinterpreted."""
     version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
-    if version not in {2, 3, 4, 5, 6, 7}:
+    if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
-    if request.get("operation") == "check_repair" and version >= 6 and request.get("check_repair"):
+    if request.get("generation_profile") == "compact":
+        from .compact import wire_schema
+
+        return wire_schema(request)
+    if request.get("operation") == "check_repair" and request.get("check_repair"):
         return deepcopy(CHECK_REPAIR_SCHEMA)
     schema = deepcopy(RESPONSE_SCHEMA)
-    if version >= 4:
-        schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
-    if version == 2:
-        return schema
+    schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
     operation = request.get("operation", "create")
     if operation not in {"create", "edit", "repair"}:
         raise ContractError("operation_mismatch", "Неизвестная операция генерации.")
@@ -201,7 +201,7 @@ def response_schema(request):
         props["files"]["maxItems"] = 0
         if operation == "repair":
             props["checks"]["maxItems"] = 0
-            allowed = request.get("module_repair", {}).get("files", {}) if version >= 5 else {}
+            allowed = request.get("module_repair", {}).get("files", {})
             if allowed:
                 replacement = deepcopy(MODULE_REPLACEMENT)
                 replacement["properties"]["path"] = {"enum": sorted(allowed)}

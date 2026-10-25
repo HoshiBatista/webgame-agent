@@ -70,7 +70,7 @@ def _failure(message, artifact_hash, started):
     }
 
 
-def _validated_report(report, checks, artifact_hash, started):
+def _validated_report(report, checks, artifact_hash, started, *, contract=None):
     if not isinstance(report, dict) or report.get("artifact_hash") != artifact_hash:
         raise ValueError("artifact hash mismatch")
     if report.get("status") not in {"passed", "failed", "unverified", "infrastructure_error"}:
@@ -86,17 +86,19 @@ def _validated_report(report, checks, artifact_hash, started):
             f"{ENVIRONMENT}:{implementation_hash()}:"
         ):
             raise ValueError("validator implementation is stale; rebuild the browser image")
+        if 'artifact_evidence' not in report:
+            raise ValueError('missing mandatory artifact gate receipt')
     if "artifact_evidence" in report:
         from .evidence import gates as evidence_gates
         from .evidence import valid
 
         if not valid(report["artifact_evidence"], artifact_hash, report.get("environment")):
             raise ValueError("invalid artifact gate receipt")
+        if report['artifact_evidence'].get('contract', {}) != (contract or {}):
+            raise ValueError('artifact receipt belongs to another module contract')
         if "gates" in report and report["gates"] != evidence_gates(report["artifact_evidence"]):
             raise ValueError("gate flags contradict artifact receipt")
-    if report["status"] == "unverified" and report.get("gates") == {
-        "syntax": True, "runtime": True, "surface": True,
-    }:
+    if report["status"] == "unverified" and report.get("gates") and all(report["gates"].values()):
         from .checks import gates_verified
 
         if not gates_verified(report, checks):
@@ -130,23 +132,27 @@ def _validated_report(report, checks, artifact_hash, started):
     return report
 
 
-def validate(html: str, checks: list[dict], *, artifact_hash: str) -> dict:
+def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None, test_profile=None) -> dict:
     started = time.monotonic()
     if hashlib.sha256(html.encode()).hexdigest() != artifact_hash:
         return _failure("Хеш переданного HTML не совпадает с кандидатом.", artifact_hash, started)
     container = os.environ.get("VALIDATOR_CONTAINER", "gf-mini-validator")
     payload = {"html": html, "checks": checks, "artifact_hash": artifact_hash}
+    if contract:
+        payload["contract"] = contract
+    if test_profile:
+        payload["test_profile"] = test_profile
     try:
         max_duration = browser_watchdog_seconds(checks) + 5
         if os.environ.get("VALIDATOR_BACKEND", "docker") == "native":
             from .native import execute
 
-            return _validated_report(execute(payload), checks, artifact_hash, started)
+            return _validated_report(execute(payload), checks, artifact_hash, started, contract=contract)
         if os.environ.get("VALIDATOR_BACKEND", "docker") != "docker":
             raise ValueError("unknown validator backend")
         if socket_path := os.environ.get("VALIDATOR_SOCKET"):
             report = _socket_validate(socket_path, payload, max_duration)
-            return _validated_report(report, checks, artifact_hash, started)
+            return _validated_report(report, checks, artifact_hash, started, contract=contract)
         inspected = subprocess.run(
             ["docker", "inspect", container],
             capture_output=True,
@@ -177,6 +183,6 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str) -> dict:
             check=True,
         )
         report = json.loads(result.stdout)
-        return _validated_report(report, checks, artifact_hash, started)
+        return _validated_report(report, checks, artifact_hash, started, contract=contract)
     except (OSError, ImportError, subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError) as exc:
         return _failure(f"Изолированный браузер недоступен ({type(exc).__name__}).", artifact_hash, started)

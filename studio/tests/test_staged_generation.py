@@ -202,15 +202,6 @@ def test_rejected_reply_preserves_root_defect_and_exact_base_across_restart(setu
     assert run.invocations.count() == 3
 
 
-@pytest.mark.django_db(transaction=True)
-def test_new_calls_in_an_existing_v2_run_keep_the_saved_wire_contract(setup):
-    from studio.tasks import request_for
-
-    run = new_run(setup)
-    first = request_for(run, None, [])
-    first["generation_contract"]["pipeline_version"] = 2
-    reserve_invocation(run, first)
-    assert request_for(run, None, [])["generation_contract"]["pipeline_version"] == 2
 
 
 @pytest.mark.django_db(transaction=True)
@@ -222,7 +213,9 @@ def test_test_only_correction_stops_for_review_and_preserves_last_working_game(s
     setup.refresh_from_db()
     working = setup.current_revision_id
     count = setup.revisions.count()
-    run = create_run(setup, {"prompt": "Исправь проверку, не меняя игру", "idempotency_key": "test-only"})
+    run = create_run(setup, {"prompt": "Исправь проверку, не меняя игру", "idempotency_key": "test-only",
+                             "source_revision_id": str(setup.current_revision_id),
+                             "source_artifact_hash": setup.current_revision.artifact_hash})
 
     def checks_only(request, **kwargs):
         result = fixture_generate(request, **kwargs)

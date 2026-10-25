@@ -267,16 +267,26 @@ def bundle(files, *, script_map=None):
 
 
 def materialize(response, *, operation, base_revision=None, files=None, previous_checks=None,
-                generation_contract=None, module_repair=None, check_repair=None, code_repair_basis=None):
+                generation_contract=None, module_repair=None, check_repair=None, code_repair_basis=None,
+                generation_profile="full", compact_manifest=None, source_format="string"):
     version = (generation_contract or {}).get("pipeline_version", CONTRACT_VERSION)
-    if version not in {2, 3, 4, 5, 6, 7}:
+    if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if generation_profile == "compact":
+        from .compact import materialize_compact
+
+        return materialize_compact(response, {"operation": operation, "base_revision": base_revision,
+                                             "generation_profile": generation_profile,
+                                             "compact_manifest": compact_manifest, "source_format": source_format,
+                                             "module_repair": module_repair or {}, "check_repair": check_repair,
+                                             "code_repair_basis": code_repair_basis},
+                                   files=files, previous_checks=previous_checks)
     from .schema import response_schema
 
     validate_response(response, operation=operation,
                       schema=response_schema({"operation": operation, "generation_contract": {"pipeline_version": version},
                                               "check_repair": check_repair}) if operation == "check_repair" else None,
-                      defer_check_errors=operation == "create" and version >= 6)
+                      defer_check_errors=operation == "create")
     if operation == "check_repair":
         from .check_repair import repaired_checks
 
@@ -300,7 +310,7 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
         return {"status": "unchanged", "message": response["message"]}
     inherited_incomplete = False
     if original:
-        if operation == "repair" and version >= 7 and code_repair_basis is not None:
+        if operation == "repair" and code_repair_basis is not None:
             from .code_repair import inherit_checks
 
             inherited_incomplete = inherit_checks(code_repair_basis, base_revision=base_revision,
@@ -327,7 +337,7 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             )
         if response["base_revision"] != str(base_revision):
             raise ContractError("stale_revision", "Патч относится к другой версии игры.")
-        policy = module_repair if operation == "repair" and version >= 5 else None
+        policy = module_repair if operation == "repair" else None
         result = apply_patches(original, response["patches"], module_repair=policy)
     else:
         if response["operation"] != "create" or response["patches"] or response["base_revision"] is not None:
@@ -349,8 +359,8 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
         else:
             check_map[old["id"]] = old
     checks = deepcopy(previous_checks or []) if inherited_incomplete else (
-        list(response["checks"]) if operation == "create" and version >= 6 else list(check_map.values()))
-    if (operation != "create" or version < 6) and not inherited_incomplete:
+        list(response["checks"]) if operation == "create" else list(check_map.values()))
+    if operation != "create" and not inherited_incomplete:
         validate_checks(checks)
     if original and result == original and check_map != {c["id"]: c for c in previous_checks or []}:
         raise ContractError(
@@ -365,10 +375,10 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
     try:
         document = bundle(result)
     except ContractError as exc:
-        if operation == "create" and version >= 5 and exc.code == "missing_resource":
+        if operation == "create" and exc.code == "missing_resource":
             raise ContractError("incomplete_sources", f"Неполный набор исходников. {exc.message} Верните полный files.") from exc
         raise
-    if operation == "create" and version >= 5:
+    if operation == "create":
         require_implementation(document)
     changes: list[str] = []
     for path in sorted(set(result) | set(original)):

@@ -15,6 +15,8 @@ CHECK_FINDINGS = {
     "incomplete_checks",
     "effect_mismatch",
     "surface_not_observed",
+    "input_obstructed",
+    "effect_not_causal",
 }
 
 

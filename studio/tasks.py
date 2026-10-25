@@ -11,7 +11,7 @@ from django.db import close_old_connections, connections, transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
-from .continuations import pending_invocations, returned_response
+from .continuations import returned_response
 from .models import Budget, Chat, CheckReport, Invocation, Outbox, Revision, Run
 from .services import (
     DomainError,
@@ -286,6 +286,10 @@ def store_candidate(run, materialized, base):
         checks=materialized.get("checks", []),
         diff=materialized.get("diff", []),
         checks_review_required=bool(materialized.get("checks_review_required") or base and base.checks_review_required),
+        generation_profile=materialized.get("generation_profile", run.generation_profile),
+        compact_manifest=materialized.get("compact_manifest", {}),
+        runtime_version=materialized.get("runtime_version", 0),
+        pipeline_version=run.pipeline_version,
     )
     current.candidate_revision = revision
     current.status = "checking"
@@ -306,14 +310,21 @@ def request_for(run, base, findings, last_attempt_error=None):
 
     from .check_repair import attempted, needs_repair
 
-    first = run.invocations.order_by("attempt").first()
-    version = first.request.get("generation_contract", {}).get("pipeline_version", 2) if first else CONTRACT_VERSION
+    version = run.pipeline_version
+    if version != CONTRACT_VERSION:
+        raise DomainError("unsupported_game", "Старый игровой формат больше не поддерживается. Создайте новую игру.", 409)
     focused_error = focus_findings([last_attempt_error]) if last_attempt_error else []
     request = {
         # A rejected response has not established new game requirements yet.
         # Only a materialized candidate becomes the fixed base of a repair.
-        "operation": "create" if base is None else "edit" if base.id == run.base_revision_id else "repair",
+        "operation": "create" if base is None else "edit" if (
+            base.id == run.source_revision_id and not run.candidate_revision_id
+        ) else "repair",
         "prompt": run.prompt,
+        "game_request": run.game_request,
+        "generation_profile": run.generation_profile,
+        "source_format": run.source_format,
+        "compact_manifest": base.compact_manifest if base else {},
         "audience": run.audience,
         "preferences": preference_for(run.chat.owner).notes,
         "base_revision": str(base.id) if base else None,
@@ -327,7 +338,7 @@ def request_for(run, base, findings, last_attempt_error=None):
         "model": run.model,
         "generation_contract": {"pipeline_version": version},
     }
-    if needs_repair(run, base, findings):
+    if request["operation"] == "repair" and needs_repair(run, base, findings):
         from generation.check_repair import permission
 
         if attempted(run, base):
@@ -353,11 +364,15 @@ def request_for(run, base, findings, last_attempt_error=None):
         if version >= 5 and not base.accepted:
             from generation.source_policy import module_policy
 
-            policy = module_policy(base.files, findings)
+            policy = module_policy(
+                base.files, findings,
+                allowed_paths={"game.js"} if run.generation_profile == "compact" else None,
+            )
             # A cosmetic edit must not authorize replacement of untouched working code.
-            if run.base_revision_id:
+            edit_source = run.source_revision or run.base_revision
+            if edit_source:
                 policy["files"] = {p: h for p, h in policy["files"].items()
-                                   if base.files[p] != run.base_revision.files.get(p)}
+                                   if base.files[p] != edit_source.files.get(p)}
             request["module_repair"] = policy
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
@@ -401,6 +416,7 @@ def check_identity(revision):
     return fingerprint(
         {"artifact": revision.artifact_hash, "checks": checks, "validator": environment,
          "source_map": VERSION, "check_policy": CHECK_VERSION,
+         "compact_manifest": revision.compact_manifest,
          "checks_review_required": revision.checks_review_required}
     )
 
@@ -424,41 +440,6 @@ def repair_state(run, base):
         if restart:
             last_error = restart.details["error"]
     return findings, last_error
-
-
-def restart_incomplete_candidate(run, base):
-    """An explicit new continuation may supersede a legacy stub, retaining its history."""
-    from generation.artifacts import bundle
-    from generation.errors import ContractError
-    from generation.schema import CONTRACT_VERSION
-    from generation.source_policy import require_implementation
-
-    first = run.invocations.order_by("attempt").first()
-    version = first.request.get("generation_contract", {}).get("pipeline_version", 2) if first else CONTRACT_VERSION
-    if (not base or base.accepted or run.base_revision_id or not run.allow_model_calls or version < 5):
-        return None
-    # Consume/reconcile an already paid exact-base response before starting a new create.
-    if pending_invocations(run, base).exists():
-        return None
-    try:
-        require_implementation(bundle(base.files))
-    except ContractError as exc:
-        if exc.code not in {"incomplete_sources", "missing_resource"}:
-            return None
-        error = {"code": "incomplete_sources", "message": "Сохранённый кандидат не содержит полной реализации. "
-                 "Верните полную игру в files без патчей к заглушке."}
-        with transaction.atomic():
-            Chat.objects.select_for_update().get(pk=run.chat_id)
-            current = Run.objects.select_for_update().get(pk=run.id)
-            if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
-                return None
-            current.candidate_revision = None
-            current.save(update_fields=["candidate_revision"])
-            run.candidate_revision = None
-            event(run, "source_restart", "Исходники неполны; продолжаем создание в прежнем лимите вызовов.",
-                  {"revision_id": str(base.id), "artifact_hash": base.artifact_hash, "error": error})
-        return error
-    return None
 
 
 def error_data(exc):
@@ -543,11 +524,8 @@ def _execute(run, lease, generate, materialize, validate):
 
     from .acceptance import assess, best_failed_candidate, complete_requirements, repeated_failure
 
-    base = run.candidate_revision or run.base_revision
+    base = run.candidate_revision or run.source_revision or run.base_revision
     findings, last_attempt_error = repair_state(run, base)
-    restarted = restart_incomplete_candidate(run, base)
-    if restarted:
-        base, findings, last_attempt_error = None, [], restarted
     # A continued infrastructure failure only needs validation, not another model call.
     pending = (
         run.candidate_revision
@@ -636,7 +614,12 @@ def _execute(run, lease, generate, materialize, validate):
                     module_repair=inv.request.get("module_repair") if response_base and not response_base.accepted else None,
                     check_repair=inv.request.get("check_repair"),
                     code_repair_basis=inv.request.get("code_repair_basis"),
+                    generation_profile=inv.request.get("generation_profile", "full"),
+                    compact_manifest=inv.request.get("compact_manifest"),
+                    source_format=inv.request.get("source_format", "string"),
                 )
+                if inv.request.get("generation_profile") == "compact" and response_base:
+                    artifact.update(title=response_base.title, design=response_base.design)
                 if (inv.request["operation"] == "check_repair" or inv.request.get("code_repair_basis")) and artifact.get("status") != "unchanged":
                     artifact.update(title=response_base.title, design=response_base.design)
                 run.metrics = {
@@ -729,7 +712,12 @@ def _execute(run, lease, generate, materialize, validate):
                         result["gates"] = evidence_gates(result["artifact_evidence"])
                 else:
                     try:
-                        result = validate(pending.html, checks, artifact_hash=pending.artifact_hash)
+                        validation_options = {}
+                        if pending.generation_profile == "compact":
+                            from generation.compact import validation_contract
+
+                            validation_options["contract"] = validation_contract(pending.compact_manifest, pending.files)
+                        result = validate(pending.html, checks, artifact_hash=pending.artifact_hash, **validation_options)
                     except Exception as exc:
                         record_exception(run, exc, "validation")
                         result = {
@@ -863,9 +851,6 @@ def _execute(run, lease, generate, materialize, validate):
                        "details": findings},
             )
             return
-        restarted = restart_incomplete_candidate(run, base)
-        if restarted:
-            base, findings, last_attempt_error = None, [], restarted
         resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
         if run.attempts >= run.max_model_calls and resumed is None:
             incomplete = base is None and (last_attempt_error or {}).get("code") == "incomplete_sources"

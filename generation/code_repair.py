@@ -6,7 +6,7 @@ from .check_repair import checks_hash
 from .errors import ContractError
 from .schema import CHECK_SCHEMA
 
-DEFECTS = {"javascript_syntax", "runtime_or_network", "mobile_overflow"}
+DEFECTS = {"javascript_syntax", "runtime_or_network", "mobile_overflow", "module_not_registered", "control_obstructed"}
 
 
 def inherit_checks(basis, *, base_revision, artifact_hash, checks):

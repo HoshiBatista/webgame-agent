@@ -48,3 +48,31 @@ def test_dom_text_truncation_is_marked_and_shortened_id_is_not_another_elements_
     assert len(controls) == 2
     assert controls[0]['selector'] is None and controls[1]['selector'] is None
     assert len(controls[0]['text']) == 200
+
+
+@pytest.mark.browser
+def test_missing_state_path_catalog_reports_actual_fields_without_inventing_them():
+    html, checks = startup_game('mobile_only')
+    checks[1]['observation'] = {'source': 'state', 'path': 'state.nonexistentDirection'}
+    report = validate(html, checks, artifact_hash=sha256(html))
+    finding = next(f for f in report['findings'] if f.get('check_id') == checks[1]['id'] and f['code'] == 'invalid_check')
+    catalog = finding['diagnostic']['observations']
+    assert any(row['observation'].get('path') == 'state.active' and row['type'] == 'bool' for row in catalog)
+    assert not any('nonexistentDirection' in str(row) for row in catalog)
+    focused = focus_findings([finding])[0]
+    assert focused['diagnostic']['observations']
+
+
+@pytest.mark.browser
+def test_overlapping_start_has_hit_target_evidence_and_is_not_misreported_as_runtime_fault():
+    html, checks = startup_game('mobile_only')
+    html += '<style>#begin{position:fixed;left:20px;top:20px;width:120px;height:60px}' \
+            '#blocker{position:fixed;left:20px;top:20px;width:120px;height:60px;z-index:9999}</style>' \
+            '<button id="blocker">Другой экран</button>'
+    report = validate(html, checks, artifact_hash=sha256(html))
+    finding = next(f for f in report['findings'] if f['code'] == 'input_obstructed')
+    hit = finding['diagnostic']['input_probe']
+    assert hit['target']['id'] == 'begin' and hit['hit']['id'] == 'blocker'
+    assert report['status'] == 'unverified'
+    assert not any(f['code'] == 'runtime_or_network' for f in report['findings'])
+    assert not any(v['lifecycle']['scenario_start_confirmed'] for v in report['artifact_evidence']['viewports'])

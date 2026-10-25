@@ -34,7 +34,8 @@ def grid_checks():
     def cell(i):
         return tap((i % 3 + .5) / 3, (i // 3 + .5) / 3)
     return [scenario('start', 'start', [], 'grid.phase', 'ready'),
-            scenario('occupied', 'control', [cell(0), cell(0)], 'grid.turn', 'O'),
+            scenario('move', 'control', [cell(0)], 'grid.turn', 'O'),
+            scenario('occupied', 'regression', [cell(0), cell(0)], 'grid.turn', 'O'),
             scenario('win', 'outcome', [cell(i) for i in [0, 3, 1, 4, 2]], 'grid.phase', 'win'),
             scenario('draw', 'outcome', [cell(i) for i in [0, 1, 2, 4, 3, 5, 7, 6, 8]], 'grid.phase', 'draw'),
             scenario('reset', 'regression', [cell(0), click('#reset')], 'grid.phase', 'ready', viewport='desktop')]
@@ -44,6 +45,23 @@ def grid_checks():
 def test_grid_real_win_draw_occupied_and_reset():
     report = run_game('grid', grid_checks())
     assert report['status'] == 'passed', report['findings']
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('wrong_winner', [False, True])
+def test_grid_actual_winner_is_checked_separately_from_a_win_flag(wrong_winner):
+    def cell(i):
+        return tap((i % 3 + .5) / 3, (i // 3 + .5) / 3)
+
+    checks = grid_checks()[:2] + [
+        scenario('x-wins', 'outcome', [cell(i) for i in [0, 3, 1, 4, 2]], 'grid.winner', 'X'),
+        scenario('o-wins', 'outcome', [cell(i) for i in [0, 3, 1, 4, 8, 5]], 'grid.winner', 'O'),
+    ]
+    mutation = [('grid.winner=grid.turn;', "grid.winner=grid.turn==='X'?'O':'X';")] if wrong_winner else []
+    report = run_game('grid', checks, mutation)
+    assert report['status'] == ('failed' if wrong_winner else 'passed'), report['findings']
+    assert all(f['status'] == ('failed' if wrong_winner else 'passed')
+               for f in report['facts'] if f['category'] == 'outcome')
 
 
 def memory_checks():
@@ -80,9 +98,10 @@ def snake_checks():
             scenario('turn', 'control', [start, click('#up'), {'action': 'wait', 'ms': 250},
                 {'action': 'checkpoint'}, click('#left'), {'action': 'wait', 'ms': 250}],
                 'snake.x', None, operator='decreased'),
-            scenario('loss', 'outcome', [start, {'action': 'wait', 'ms': 1300}], 'snake.active', False),
-            scenario('pause', 'regression', [start, click('#pause'), {'action': 'wait', 'ms': 500}],
-                'snake.x', 150, viewport='desktop'),
+            {**scenario('loss', 'outcome', [start, {'action': 'wait', 'ms': 1300}], 'snake.active', False),
+             'observation':{'source':'text','selector':'#status'},'expect':{'operator':'eq','value':'lost'}},
+            scenario('pause', 'regression', [start, click('#pause'), {'action':'checkpoint'}, {'action': 'wait', 'ms': 500}],
+                'snake.x', None, operator='unchanged', viewport='desktop'),
             scenario('weak-motion', 'regression', [start, {'action': 'wait', 'ms': 250}],
                 'snake.x', None, operator='increased')]
 

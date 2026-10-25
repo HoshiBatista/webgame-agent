@@ -12,6 +12,34 @@ from .errors import ContractError
 VERSION = 1
 
 
+def _excerpt(source, point, line):
+    """Keep the reported token even when a generated line is thousands of columns."""
+    start = source.rfind("\n", 0, point) + 1
+    end = source.find("\n", point)
+    end = len(source) if end < 0 else end
+    row, column = source[start:end], point - start
+    left = max(0, column - 210)
+    right = min(len(row), max(column + 210, left + 420))
+    text = f"{line}: " + ("…" if left else "") + row[left:right] + ("…" if right < len(row) else "")
+    return {"source_excerpt": text,
+            "excerpt_start_column": len(row[:left].encode("utf-16-le")) // 2 + 1,
+            "excerpt_end_column": len(row[:right].encode("utf-16-le")) // 2 + 1,
+            "excerpt_truncated": left > 0 or right < len(row)}
+
+
+def _anchor(source, point):
+    """A proven statement and its occurrence distinguish moved and separate defects."""
+    left = max(source.rfind(";", 0, point), source.rfind("\n", 0, point)) + 1
+    stops = [n for delimiter in [";", "\n"] if (n := source.find(delimiter, point)) >= 0]
+    right = min(stops) + 1 if stops else len(source)
+    statement = source[left:right]
+    normalized = re.sub(r"\s+", "", statement)
+    if not normalized or len(statement) > 1000:
+        return None
+    prefix = re.sub(r"\s+", "", source[:left])
+    return {"statement_sha256": sha256(normalized), "occurrence": prefix.count(normalized)}
+
+
 def _offset(text, line, column, *, utf16=True):
     if type(line) is not int or type(column) is not int or min(line, column) < 1:
         return None
@@ -74,11 +102,11 @@ def _location(location, files, html, scripts, records):
     prefix = source[:point]
     line = prefix.count("\n") + 1
     column = len(prefix.rsplit("\n", 1)[-1].encode("utf-16-le")) // 2 + 1
-    rows = source.split("\n")
     return {
         "location": "source", "file": path, "path": path, "line": line, "column": column,
         "column_unit": "utf16", "file_hash": sha256(source),
-        "source_excerpt": "\n".join(f"{n + 1}: {rows[n]}" for n in range(max(0, line - 2), min(len(rows), line + 1)))[:1000],
+        **_excerpt(source, point, line),
+        "source_anchor": _anchor(source, point),
         "bundled_location": {key: location[key] for key in
                              ("file", "line", "column", "script_index", "script_line", "script_column")
                              if key in location},
@@ -90,6 +118,12 @@ def locate_findings(findings, *, files, html):
     result = deepcopy(findings)
     if not result:
         return result
+    from .source_policy import source_diagnostics
+
+    structure = source_diagnostics(files)
+    if structure:
+        for finding in result:
+            finding['source_structure'] = structure
     # CDP/browser normalization of these separators is not represented by this
     # packager map. Keep export facts rather than assign a plausible source line.
     if re.search(r"\r(?!\n)|[\u2028\u2029]", html):

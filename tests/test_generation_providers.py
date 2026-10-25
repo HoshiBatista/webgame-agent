@@ -12,7 +12,7 @@ from generation.providers.fake import fixture_response
 from generation.service import generate as generate_operation
 
 
-@pytest.mark.parametrize("version", ["0.163.0-alpha.10.2", "0.163.0-alpha.11.2", "0.999.0"])
+@pytest.mark.parametrize("version", ["0.163.0-alpha.10.2", "0.163.0-alpha.11.2", "0.164.0-alpha.11.1", "0.999.0"])
 def test_codex_cli_contract_allows_only_reviewed_versions(monkeypatch, version):
     monkeypatch.setattr(codex, "binary", lambda: "codex")
     monkeypatch.setattr(codex.subprocess, "run", lambda *a, **kw: SimpleNamespace(stdout=f"codex-cli {version}"))
@@ -31,7 +31,7 @@ def generate(request, **kwargs):
 
 
 @pytest.mark.parametrize("operation", ["create", "edit", "repair", "check_repair"])
-def test_codex_receives_selected_operation_schema_through_actual_rpc_adapter(codex_rpc, operation):
+def test_codex_receives_selected_operation_schema_with_rpc_double(codex_rpc, operation):
     from generation.schema import response_schema
 
     request = {"provider": "codex", "operation": operation, "model": "gpt-6-luna"}
@@ -53,6 +53,37 @@ def test_codex_receives_selected_operation_schema_through_actual_rpc_adapter(cod
     assert params["outputSchema"] == response_schema(request)
     assert params["outputSchema"]["properties"]["operation"]["enum"] == [operation]
     assert result["response"]["operation"] == operation
+
+
+@pytest.mark.parametrize("source_format", ["string", "lines"])
+@pytest.mark.parametrize("operation", ["create", "edit", "repair", "check_repair"])
+def test_codex_compact_operations_keep_wire_contract_and_isolation(codex_rpc, operation, source_format):
+    from generation.schema import response_schema
+    from tests.test_compact_generation import compact_response
+
+    request = {"provider": "codex", "model": "gpt-6-luna", "operation": operation,
+               "generation_profile": "compact", "source_format": source_format}
+    example = compact_response()
+    if operation == "create":
+        reply = example
+    elif operation == "repair":
+        request['module_repair'] = {'files': {'game.js': 'a' * 64}}
+        reply = {'status': 'ok', 'message': 'Исправлен модуль.', 'source': example['source']}
+    else:
+        reply = {'status': 'ok', 'message': 'Исправление.',
+                 'observations': example['observations'], 'probes': example['probes']}
+        if operation == 'edit':
+            reply['edits'] = [{'old_text': 'hits:0', 'new_text': 'hits:1'}]
+    if source_format == 'lines' and 'source' in reply:
+        reply['source_lines'] = reply.pop('source').split('\n')
+    codex_rpc['events'][1]['params']['item']['text'] = json.dumps(reply)
+    result = generate_operation(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    turns = [params for method, params in codex_rpc['calls'] if method == 'turn/start']
+    assert len(turns) == 1
+    assert turns[0]['outputSchema'] == response_schema(request)
+    assert turns[0]['environments'] == [] and turns[0]['runtimeWorkspaceRoots'] == []
+    assert result['response'] == reply and result['provider'] == 'codex'
+    assert result['usage']['input_tokens'] == 100 and codex_rpc['closed']
 
 
 @pytest.fixture

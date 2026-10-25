@@ -120,7 +120,9 @@ def fixture_checks():
 
 
 def fixture_report(html, checks):
-    return {
+    from validation.evidence import gates, receipt
+
+    report = {
         "status": "passed",
         "artifact_hash": hashlib.sha256(html.encode()).hexdigest(),
         "environment": f"mini-browser-v1:{implementation_hash()}:test-browser",
@@ -134,6 +136,12 @@ def fixture_report(html, checks):
             for check in checks
         ],
     }
+    evidence = receipt(report['artifact_hash'], report['environment'], {'status': 'passed', 'scripts': 1}, [
+        {'viewport': viewport, 'loaded': True, 'errors': [], 'requests': [],
+         'surface': {'canvases': [{'visible': True, 'width': 280, 'height': 180, 'pixel_evidence': 'varied'}], 'overflow': False}}
+        for viewport in ['mobile', 'desktop']])
+    report.update(artifact_evidence=evidence, gates=gates(evidence), stages=[{'stage': 'syntax', 'status': 'passed'}])
+    return report
 
 
 @pytest.mark.parametrize("transport", ["socket", "docker", "native"])
@@ -310,7 +318,8 @@ def test_browser_watchdog_kills_hung_process_and_accepts_following_job(monkeypat
 
 
 def test_watchdog_bounds_browser_waits_but_accepts_supported_suite():
-    assert browser_watchdog_seconds(fixture_checks()) == 30
+    # Two extra clean contexts check control/outcome with the last useful input omitted.
+    assert browser_watchdog_seconds(fixture_checks()) == 40
     checks = fixture_checks()
     checks[0]["steps"] = [{"action": "wait", "ms": 6000}] * 2
     with pytest.raises(ValueError):

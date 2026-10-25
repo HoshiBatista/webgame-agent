@@ -1,0 +1,343 @@
+{
+  "date": "2026-10-25",
+  "baseline_head": "de097fb",
+  "new_model_calls": 0,
+  "historical_calls": 33,
+  "historical_states": {
+    "settled": 27,
+    "failed": 4,
+    "unknown": 2
+  },
+  "historical_known_usage_calls": 31,
+  "historical_tokens": {
+    "input_tokens": 82891,
+    "output_tokens": 70911
+  },
+  "historical_duration_seconds": 8702.578833818436,
+  "historical_budget_closed": true,
+  "verified_revision_count": 20,
+  "frozen_manifest_verified_files": 47,
+  "frozen_source_archive_sha256": "037de15f1b793200979d94539bf1d3a178dec38518d8b3a43b4b54870db0ac86",
+  "wire_audit": {
+    "field_differences": [
+      {
+        "path": [
+          "response_format",
+          "json_schema",
+          "schema",
+          "properties",
+          "source_lines",
+          "items",
+          "pattern"
+        ],
+        "before": "^[^\\r\\n\\u2028\\u2029]*$",
+        "after": "^[^\\r\\n]*$"
+      }
+    ],
+    "control_sha256": "a8f0656d3313ffee658fc13509b810364cb8110ed5eb4543aed53efe0a530dc0",
+    "probe_sha256": "c28de31ec87a1080de2421d1c4773f65703ed1bf204e08728e8e0f1cbf496507"
+  },
+  "evidence_binding": "Exact game.html SHA256; revision UUID alone is insufficient for reused receipts.",
+  "validator_implementation_sha256": "f1e9a1e841963a881b3177fdb55ff63369c319e86cd860748e98a975cfa379e0",
+  "review_start_manifest_sha256": "9839f6c8af951b176c7c6620f26ce3c042ebe0daa2def446d58e77c8995c7723",
+  "replayed_artifacts": [
+    {
+      "source_revision_id": "459454c3-8b29-4ef1-ba4b-fa49b41dd243",
+      "artifact_hash": "cdc1e49d11cce0776323004d970d425870b84a8d36b83b90e691b1179345aef9",
+      "source_unchanged": true,
+      "reports": [
+        {
+          "file": ".data/v8-independent-review-20261025/replay/459454c3-8b29-4ef1-ba4b-fa49b41dd243/review-grid.json",
+          "sha256": "dee5d93414ce9f8f124b24ab90b005e1144538be678b7e2aa22ea584f4b999dd",
+          "environment": "mini-browser-v1:f1e9a1e841963a881b3177fdb55ff63369c319e86cd860748e98a975cfa379e0:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+          "status": "passed",
+          "facts": [
+            {
+              "id": "initial",
+              "status": "passed"
+            },
+            {
+              "id": "first_move",
+              "status": "passed"
+            },
+            {
+              "id": "occupied",
+              "status": "passed"
+            },
+            {
+              "id": "x_win",
+              "status": "passed"
+            },
+            {
+              "id": "o_win",
+              "status": "passed"
+            },
+            {
+              "id": "draw",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "desktop_move",
+              "status": "passed"
+            },
+            {
+              "id": "resize_preserves",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_revision_id": "648dc1a3-9e24-4298-ba2c-39ac8800e1a5",
+      "artifact_hash": "671e61d090dc0b75ad2ad702e71eb9d726fb710913d069dae599c50d7d36151e",
+      "source_unchanged": true,
+      "reports": [
+        {
+          "file": ".data/v8-independent-review-20261025/replay/648dc1a3-9e24-4298-ba2c-39ac8800e1a5/independent-adaptive.json",
+          "sha256": "030a9ea9aca50394d2b16bf1094d84ea23a7a103889580c5223bd35357e9408c",
+          "environment": "mini-browser-v1:b8f3a347ffab124248c505161438eeffe3b8e7812b92c3f2241c9c76ae9b0246:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1:private-adaptive-read-only-oracle",
+          "results": [
+            {
+              "viewport": "mobile",
+              "start": true,
+              "outcome": true,
+              "mismatch": true,
+              "matching_stays": true,
+              "errors": []
+            },
+            {
+              "viewport": "desktop",
+              "start": true,
+              "outcome": true,
+              "mismatch": true,
+              "matching_stays": true,
+              "errors": []
+            }
+          ],
+          "mode": "natural time/randomness; adaptive read-only state oracle and real input"
+        }
+      ]
+    },
+    {
+      "source_revision_id": "d0ae537c-40c9-4405-aec1-fed81fcb5a44",
+      "artifact_hash": "b1a97df99c585db301a645d5e7c69a7e90c02644ac8aaafb52a06402e879beb1",
+      "source_unchanged": true,
+      "reports": [
+        {
+          "file": ".data/v8-independent-review-20261025/replay/d0ae537c-40c9-4405-aec1-fed81fcb5a44/review-grid.json",
+          "sha256": "aeb49e4e90fb87af621114f36109e3034342df6bb20f012d97f8d29647b0ff6a",
+          "environment": "mini-browser-v1:f1e9a1e841963a881b3177fdb55ff63369c319e86cd860748e98a975cfa379e0:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+          "status": "passed",
+          "facts": [
+            {
+              "id": "initial",
+              "status": "passed"
+            },
+            {
+              "id": "first_move",
+              "status": "passed"
+            },
+            {
+              "id": "occupied",
+              "status": "passed"
+            },
+            {
+              "id": "x_win",
+              "status": "passed"
+            },
+            {
+              "id": "o_win",
+              "status": "passed"
+            },
+            {
+              "id": "draw",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "desktop_move",
+              "status": "passed"
+            },
+            {
+              "id": "resize_preserves",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_revision_id": "e9b7826c-e8a9-424b-be07-7e0006307728",
+      "artifact_hash": "3e23ac98a8e82acfe305407289e9e462f0762c1043a04636783b47eb88774b9a",
+      "source_unchanged": true,
+      "reports": [
+        {
+          "file": ".data/v8-independent-review-20261025/replay/e9b7826c-e8a9-424b-be07-7e0006307728/independent-adaptive.json",
+          "sha256": "4c00dc2bdc362c8dee02d648eab67edceaae98d0b257ebf2a5c74cf4685c0c7c",
+          "environment": "mini-browser-v1:f1e8d31eadef7c60b3cd95b677405ad527683392f09c6d8a78d2cf730c04d2ca:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1:private-adaptive-read-only-oracle",
+          "results": [
+            {
+              "viewport": "mobile",
+              "start": true,
+              "control": true,
+              "outcome": true,
+              "errors": []
+            },
+            {
+              "viewport": "desktop",
+              "start": true,
+              "control": true,
+              "outcome": true,
+              "errors": []
+            }
+          ],
+          "mode": "natural time/randomness; adaptive read-only state oracle and real input"
+        },
+        {
+          "file": ".data/v8-independent-review-20261025/replay/e9b7826c-e8a9-424b-be07-7e0006307728/review-runner.json",
+          "sha256": "83fa35734fdaa33a6fe1fe4498a7c035dd203f5984cbbb807e2eccd061e5b508",
+          "environment": "mini-browser-v1:f1e9a1e841963a881b3177fdb55ff63369c319e86cd860748e98a975cfa379e0:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+          "status": "passed",
+          "facts": [
+            {
+              "id": "start",
+              "status": "passed"
+            },
+            {
+              "id": "touch_jump",
+              "status": "passed"
+            },
+            {
+              "id": "keyboard_jump",
+              "status": "passed"
+            },
+            {
+              "id": "collision_loss",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "local_update": {
+    "previous_invocations_unchanged": 194,
+    "additional_fake_receipts": 2,
+    "users_unchanged": true,
+    "unknown_liabilities_unchanged": 11,
+    "active_runs": 0,
+    "pending_invocations": 0,
+    "health": "ok"
+  },
+  "codex": {
+    "version": "codex-cli 0.164.0-alpha.11.1",
+    "model_calls": 0,
+    "credentials_present": false,
+    "methods": [
+      "initialize",
+      "initialized",
+      "config/read",
+      "thread/start"
+    ],
+    "offline_schemas": [
+      "thread/start",
+      "turn/start (offline only)"
+    ],
+    "thread": {
+      "model": "gpt-6-sol",
+      "modelProvider": "gameforge_codex",
+      "sandbox": {
+        "type": "readOnly",
+        "networkAccess": false
+      },
+      "environments": [],
+      "runtimeWorkspaceRoots": [],
+      "ephemeral": true,
+      "approvalPolicy": "never"
+    },
+    "schemas_sha256": {
+      "ThreadStartParams.json": "80a40a7fac15b4bf70efb7f893fb353acc0a0d30c68f54aee4f01923deca85de",
+      "TurnStartParams.json": "f671d01c24995e99fcc110862ff3251c26d334fba212c7dc12857fb939506e47"
+    }
+  },
+  "tests": {
+    "backend_non_browser": 565,
+    "native_browser_full_run": 80,
+    "native_additional_positive": 1,
+    "docker_browser_including_real_unix_transport": 36,
+    "docker_additional_positive": 1,
+    "frontend": 86,
+    "codex_rpc_doubles": 26,
+    "queue_smoke": [
+      {
+        "profile": "full",
+        "status": "succeeded",
+        "facts": 3,
+        "model_calls": 0
+      },
+      {
+        "profile": "compact",
+        "status": "succeeded",
+        "facts": 3,
+        "model_calls": 0
+      }
+    ]
+  },
+  "verification_logs_sha256": {
+    "docker-positive.txt": "cf095035f0caa12ee5c972caaf4405bfa4dd333ef2e048cd509b0ea86a508fec",
+    "native.txt": "9ba7251e9dc3aad4259133d10f2f48e585406775e05c437a8e0eb5b92b68e72b",
+    "mypy.txt": "2964f4e84ac77897e510c8d7fa5b664a688c51c01f2c3733e4c2fa20c1f6c174",
+    "ruff.txt": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "codex-tests.txt": "59f5cfcbac59acb8f1dd6e359197ae10f22bda8232dec0a5415d11e22e3986f7",
+    "local-smoke.txt": "7bf0279b5e6a1428800ec97dbaee3fe6b46c690dfbc99e66be20a4d33371d9f1",
+    "replay.txt": "a60e62efcf79a4a179467483cf5e1f5af3e61aa81848d23922b90b66a56123cc",
+    "reproductions-before.txt": "296f534d45863adaacd0f6aff7bf822ebf98e89ad6331daab8ddfef99bc0f937",
+    "browser-before.txt": "2eb3c67c02c3abd09161b52698232ee4c895116fb8044da6e48e1986428c6e59",
+    "frontend-lint.txt": "d098702125e5bbdefc00289e39da69f9f6c20eaa4bcec53484bc738e485ac06c",
+    "docker.txt": "a8f8f3d59e9da6a6d8fe03e99af9ceb70a4cda0bf4d8eaaad8bba43963d39f47",
+    "frontend-build.txt": "97e7b8d33b80097e740e8504c862ad95c0b202e7242c492c3472b980d4242e6e",
+    "targeted-after.txt": "325b7cf7b0d6ead544ebb7e833a08009fa10cf90ce29b8f9021e2ede461488f5",
+    "compact-before.txt": "b37caa3e059556b60f3316796c80319dcc1ab620700d062456183f6d998e0504",
+    "final-positive-codex.txt": "89f3a611ff2fa3672f1c4b178cf48872d7a4f64c563001d33e6a2a12a84f524e",
+    "backend.txt": "c7579c51334adb0406c2dcd1dbec32a92fc25218e326a6aa01919820ffac01e4",
+    "docker-build.txt": "cec7e9638d5d10a720104f5892175012f993b74d3f27cbacae0d7065ec61c9e9",
+    "frontend.txt": "2b5deb1f89b6ff6959aa5486be7f986c84235d69d5999d99069c631a7f3d5b4c",
+    "local-restart.txt": "6d882ef633079ddc35946cdcd8ec03cb4cb6f76b36120fac5c70ae20b51a06d5"
+  },
+  "changed_code_sha256": {
+    "generation/compact.py": "0e02b3dcb2174e340a1ce5144bc8c9bb18ec0a5de48185a6e3f8753fe772c782",
+    "generation/providers/codex.py": "c0ab8cc5888aee250416c53eb7c578a8ca77962134523731c3d1dd96b8bcf030",
+    "studio/tasks.py": "a524debc39d114089c143b3b0bd08d345bc0be17e98f70f0e646d875244eef06",
+    "validation/runner.py": "7bb8d7f8336632627e9ddbb7c6d2905dc60c30f26833483dcae8eaf86a2cce23",
+    "validation/service.py": "6e46c102b76439272d716da081c8e8c4c51aa1c2bc327fe973658c3f5349e0e7",
+    "validation/contracts.py": "cfaf614065c1004bebab6bd95d8d11fc6a06d312d224b4edbc6992679a293b77",
+    "tests/test_v8_review.py": "33d6cffeaf680b84c00746c339e81c6afd8e8dbcc69d80d30f261b1310fc0ccf",
+    "tests/test_compact_generation.py": "9235a53a35f760c4c26a700b050916aaa122a27487a392a9424ffce14524a7d3",
+    "tests/test_generation_providers.py": "e44143d75d85b406dd6affb74c73d5966d913bd246f27a478067c5e7d356dc6b",
+    "tests/test_validation.py": "492cb1c4011315bfdf10f67731a83d59560bdf3a799ddb8b2f538a19b2650646",
+    "studio/tests/test_draft_editing.py": "aec01274db83220d1e44ff9ce57fc82c1c077e6a6da98d571f1f5ce100706d17"
+  },
+  "adaptive_oracle_sha256": {
+    "memory": "b4a506d1d0535b8e7613a17e48a98eca0e29f5ec6caf91a85759d829b5d24503",
+    "runner_without_focus_click": "010be80f3234b7c3af232f652ecbcd30415fad859f71c1c2b90df2817dbaf7ca"
+  },
+  "limitations": [
+    "This is a replay and independent code review, not a new model pilot.",
+    "No live Codex turn/start was sent; successful authenticated generation is not measured.",
+    "The 27B quality comparison and both unknown expenses remain unchanged.",
+    "Browser checks verify finite observations, not arbitrary game intent or all random trajectories.",
+    "No cloud deployment or GPU access occurred."
+  ]
+}

@@ -363,6 +363,10 @@ def source_view(request, ident):
             "files": revision.files,
             "file_hashes": revision.file_hashes,
             "diff": revision.diff,
+            "generation_profile": revision.generation_profile,
+            "compact_manifest": revision.compact_manifest,
+            "runtime_version": revision.runtime_version,
+            "pipeline_version": revision.pipeline_version,
         }
     )
 
@@ -490,6 +494,10 @@ def remix_view(request, ident):
             html=source.html,
             artifact_hash=source.artifact_hash,
             file_hashes=source.file_hashes,
+            generation_profile=source.generation_profile,
+            compact_manifest=source.compact_manifest,
+            runtime_version=source.runtime_version,
+            pipeline_version=source.pipeline_version,
             design=source.design,
             checks=source.checks,
             diff=[],

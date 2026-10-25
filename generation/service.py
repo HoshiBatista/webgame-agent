@@ -19,6 +19,18 @@ def generate(request, *, on_event, is_cancelled):
         raise GenerationError("unknown_provider", "Неизвестный провайдер генерации.")
     started = time.monotonic()
     result = provider.generate(request, on_event=on_event, is_cancelled=is_cancelled)
+    result["provider_metadata"] = {
+        **(result.get("provider_metadata") or {}),
+        "request_profile": {
+            "requested_model": request.get("model"),
+            "generation_contract": request.get("generation_contract", {}),
+            "execution_limits": request.get("execution_limits", {}),
+            "explicit_sampling": {key: request["relay"]["payload"][key] for key in
+                                  ("temperature", "top_p", "seed", "top_k")
+                                  if key in (request.get("relay", {}).get("payload") or {})},
+            "server_defaults_known": False,
+        },
+    }
     original = result["response"]
     result.setdefault("raw_response", original)
     result["response"], changes = normalize_response(original)
@@ -28,7 +40,12 @@ def generate(request, *, on_event, is_cancelled):
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
     try:
-        validate_response(result["response"], operation=request.get("operation", "create"),
+        if request.get("generation_profile") == "compact":
+            from .compact import validate_wire
+
+            validate_wire(result["response"], request)
+        else:
+            validate_response(result["response"], operation=request.get("operation", "create"),
                           schema=response_schema(request),
                           defer_check_errors=request.get("operation", "create") == "create"
                           and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)

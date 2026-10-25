@@ -9,10 +9,7 @@ from .models import Invocation
 
 
 def contract_version(run):
-    first = run.invocations.order_by("attempt").first()
-    return (
-        first.request.get("generation_contract", {}).get("pipeline_version", 2) if first else CONTRACT_VERSION
-    )
+    return run.pipeline_version
 
 
 def needs_repair(run, base, findings):
@@ -20,14 +17,14 @@ def needs_repair(run, base, findings):
         base
         and not base.accepted
         and run.completion_policy >= 2
-        and contract_version(run) >= 6
+        and contract_version(run) == CONTRACT_VERSION
         and needs_check_repair(base.checks, findings)
     )
     if not eligible:
         return False
     report = base.reports.order_by("-id").first()
-    surface_gap = contract_version(run) >= 7 and repairable_surface_gap(base, report)
-    if contract_version(run) >= 7 and not (report and (
+    surface_gap = repairable_surface_gap(base, report)
+    if not (report and (
         report.assessment.get("gates_passed") is True or surface_gap
     )):
         return False
@@ -79,7 +76,7 @@ def code_repair_basis(run, base):
 
     from .tasks import check_identity
 
-    if base.accepted or contract_version(run) < 7:
+    if base.accepted or contract_version(run) != CONTRACT_VERSION:
         return None
     report = base.reports.order_by("-id").first()
     if not report or report.identity != check_identity(base) or (

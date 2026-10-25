@@ -257,6 +257,8 @@ def complete(payload, *, config, on_event, is_cancelled, trace_id=None):
                 on_event({"type": "first_output", "message": "Модель начала отвечать."})
                 first = False
             usage = normalize_usage(value.get("usage")) or usage
+            if isinstance(value.get("model"), str):
+                provider_metadata["actual_model"] = value["model"][:200]
             if safe_id(value.get("id")):
                 provider_metadata.setdefault("request_id", value["id"])
                 diagnostics.update(provider_response_id=value["id"])
@@ -269,6 +271,7 @@ def complete(payload, *, config, on_event, is_cancelled, trace_id=None):
                     text += content
                     diagnostics.update(output_bytes=len(text.encode()))
                 finish = choice.get("finish_reason") or finish
+                provider_metadata["finish_reason"] = finish
                 if len(text.encode()) > 2000000:
                     raise GenerationError(
                         "response_too_large",
@@ -314,7 +317,7 @@ def complete(payload, *, config, on_event, is_cancelled, trace_id=None):
         return {
             "response": response,
             "usage": usage,
-            "model": model,
+            "model": provider_metadata.get("actual_model") or model,
             "raw_response": text,
             "provider_metadata": provider_metadata,
         }

@@ -5,8 +5,8 @@ import re
 from validation.checks import VERSION, gates_verified, review_checks
 from validation.contracts import implementation_hash
 
-HARD_FAILURES = {"javascript_syntax", "runtime_or_network", "canvas_missing", "mobile_overflow"}
-CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed"}
+HARD_FAILURES = {"javascript_syntax", "runtime_or_network", "canvas_missing", "mobile_overflow", "module_not_registered", "control_obstructed"}
+CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal"}
 
 
 def complete_requirements(checks):
@@ -85,7 +85,10 @@ def repeated_failure(run, report):
             if finding.get("location") == "source":
                 # Compilation reports the first blocker. Fixing it can expose an identical
                 # error elsewhere; a proven source location distinguishes those defects.
-                symptom["source"] = {k: finding[k] for k in ("path", "line", "column") if k in finding}
+                if finding.get("source_anchor"):
+                    symptom["source"] = {"path": finding.get("path"), "anchor": finding["source_anchor"]}
+                else:
+                    symptom["source"] = {k: finding[k] for k in ("path", "line", "column") if k in finding}
             elif finding.get("code") == "javascript_syntax" and type(finding.get("script_index")) is int:
                 # The compiler's script identity is still known when source mapping is unavailable.
                 symptom["script"] = {k: finding[k] for k in ("script_index", "script_line", "script_column") if k in finding}
