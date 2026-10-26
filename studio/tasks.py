@@ -203,24 +203,17 @@ def claim_run(run_id):
     )
     if run.status != "queued" or run.cancel_requested or run.chat.deleted_at:
         return None
-    # Count in-flight model requests, including cancellation until transport has really stopped.
-    active = (
-        Invocation.objects.filter(state__in=["reserved", "sent"], run__provider=run.provider)
-        .exclude(run=run)
-        .count()
-    )
-    processing = (
-        Run.objects.filter(provider=run.provider, status__in=["generating", "checking"])
-        .exclude(pk=run.pk)
-        .count()
-    )
-    if max(active, processing) >= settings.GAMEFORGE_PROVIDER_CONCURRENCY:
-        return False
-    run.fence = uuid.uuid4()
-    run.lease_until = timezone.now() + timedelta(seconds=settings.GAMEFORGE_LEASE_SECONDS)
+    from .capacity import capacity_full
+
     resuming_relay = run.provider in DURABLE_PROVIDERS and run.invocations.filter(
         state__in=["reserved", "sent"]
     ).exists()
+    # Receiving an admitted job must not deadlock when capacity is reduced.
+    # Any subsequent NEW invocation passes admission again in reserve_invocation.
+    if not resuming_relay and capacity_full(run):
+        return False
+    run.fence = uuid.uuid4()
+    run.lease_until = timezone.now() + timedelta(seconds=settings.GAMEFORGE_LEASE_SECONDS)
     run.status = "generating"
     if not resuming_relay:
         run.stage = "generating"
@@ -946,6 +939,9 @@ def _execute(run, lease, generate, materialize, validate):
                     )
             req = inv.request
         except DomainError as exc:
+            if exc.code == "provider_busy":
+                defer_relay(run, exc.message)
+                return
             finish_run(run.id, run.fence, "needs_attention", exc.message, error=error_data(exc))
             return
         if lease.cancelled():

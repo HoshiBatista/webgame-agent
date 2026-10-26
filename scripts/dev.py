@@ -55,7 +55,7 @@ def start():
             "gameforge",
             "worker",
             "--pool=threads",
-            "--concurrency=2",
+            "--concurrency=4",
             "--loglevel=WARNING",
         ],
         "beat": [

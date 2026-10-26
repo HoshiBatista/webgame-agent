@@ -181,6 +181,10 @@ def reserve_invocation(run, request):
             "Доступного бюджета недостаточно для следующего запроса. Черновик сохранён.",
             409,
         )
+    from .capacity import capacity_full
+
+    if capacity_full(current):
+        raise DomainError("provider_busy", "Ожидаем свободное место для следующего шага генерации.", 409)
     return Invocation.objects.create(
         id=invocation_id, run=run, attempt=run.attempts + 1, request=request, reservation_usd=amount, price=price
     )

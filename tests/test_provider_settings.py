@@ -48,3 +48,11 @@ def test_https_proxy_requires_explicit_trust(monkeypatch, trusted):
         assert request.is_secure() is trusted
         assert response.status_code == (200 if trusted else 301)
     assert values["SESSION_COOKIE_SECURE"] and values["CSRF_COOKIE_SECURE"]
+
+
+@pytest.mark.parametrize('value', ['0', '-1', '5', 'invalid'])
+def test_remote_pro_concurrency_is_bounded(monkeypatch, value):
+    monkeypatch.setattr('dotenv.load_dotenv', lambda *_: None)
+    monkeypatch.setenv('GAMEFORGE_CODEX_API_CONCURRENCY', value)
+    with pytest.raises(ValueError):
+        runpy.run_path(str(Path(__file__).resolve().parents[1] / 'gameforge/settings.py'))

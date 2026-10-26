@@ -63,7 +63,7 @@ services:
       init: {condition: service_completed_successfully}
   worker:
     <<: *app
-    command: [celery, -A, gameforge, worker, --pool=threads, --concurrency=2, --loglevel=WARNING]
+    command: [celery, -A, gameforge, worker, --pool=threads, --concurrency=4, --loglevel=WARNING]
     environment:
       <<: *environment
       VALIDATOR_SOCKET: /run/validator/service.sock
