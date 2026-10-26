@@ -22,10 +22,7 @@ export default function AccountMenu({
       triggerContent={
         <>
           {avatar}
-          <span className="account-name">
-            {username}
-            <small>Ваша мастерская</small>
-          </span>
+          <span className="account-name">{username}</span>
         </>
       }
       className="account-menu"

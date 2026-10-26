@@ -35,16 +35,22 @@ a newline, and IME composition never sends prematurely.
 An unobtrusive community-feed link opens in another tab without fetching recommendations.
 
 The expanded desktop sidebar and mobile drawer are fixed at 300px. The collapsed desktop
-rail is 81px, with 48×48px controls for navigation, chats and the profile. Only the explicit
+rail is 81px, with 48×48px controls for the logo, navigation and the profile. Only the explicit
 collapse button changes desktop mode; intermediate viewport widths retain the chosen mode.
 The sidebar lists «Недавние» without a count. Expanded rows reserve space for a vertical-dot
 menu (visible on hover/focus, always visible on touch screens and the mobile drawer).
-Collapsed rows have no action trigger. Rename and delete
+Collapsed mode fades out the entire chat list and its heading; `inert` and `aria-hidden`
+remove the list from keyboard navigation and accessibility immediately. Keeping the list
+mounted preserves its scroll position and the footer's vertical position. Mobile always
+shows the chat list. Rename and delete
 operate without navigating through the row link. Renaming updates the open tab title;
 other pages use «beeGame». Automatic labels use 1–3 words, including a saved draft's model
 title, while manual names remain protected. The backend keeps ownership and row locks.
 Apply existing migrations including `0011_chat_titles` and `0013_merge_titles_and_compact`.
 
+The profile button has a fixed 48px height in both sidebar modes, with 12px spacing above
+and below (mobile bottom spacing respects the safe area). Its avatar and single-line username
+stay vertically centered during the sidebar transition without remounting the button.
 The entire profile button opens a menu with avatar/username, separator, Settings, separator,
 and Logout. Chat and profile menus share measured viewport positioning, keyboard navigation,
 outside-click dismissal and focus restoration. Model/game popovers share the same surface,

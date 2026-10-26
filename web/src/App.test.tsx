@@ -230,15 +230,20 @@ it('expands the collapsed logo control without navigating away or losing focus',
   expect(post).not.toHaveBeenCalled();
 });
 
-it('removes chat actions when collapsed and keeps the profile menu keyboard accessible', async () => {
+it('hides chats when collapsed and keeps the profile menu keyboard accessible', async () => {
   vi.mocked(request).mockResolvedValue({ results: [{ id: 'one', title: 'Моя игра' }] });
   setup();
   await screen.findByRole('button', { name: 'Действия с чатом «Моя игра»' });
+  const navigation = screen.getByRole('navigation', { name: 'Ваши игры' });
+  const profile = screen.getByRole('button', { name: 'Меню профиля operator' });
   fireEvent.click(screen.getByRole('button', { name: 'Свернуть список чатов' }));
+  expect(navigation).toHaveAttribute('inert');
+  expect(screen.queryByRole('navigation', { name: 'Ваши игры' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Моя игра' })).not.toBeInTheDocument();
   expect(
     screen.queryByRole('button', { name: 'Действия с чатом «Моя игра»' }),
   ).not.toBeInTheDocument();
-  const profile = screen.getByRole('button', { name: 'Меню профиля operator' });
+  expect(screen.getByRole('button', { name: 'Меню профиля operator' })).toBe(profile);
   fireEvent.keyDown(profile, { key: 'ArrowDown' });
   const settings = screen.getByRole('menuitem', { name: 'Настройки' });
   const logout = screen.getByRole('menuitem', { name: 'Выйти' });
@@ -258,6 +263,9 @@ it('removes chat actions when collapsed and keeps the profile menu keyboard acce
   fireEvent.scroll(screen.getByRole('complementary'));
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Развернуть список чатов' }));
+  expect(screen.getByRole('navigation', { name: 'Ваши игры' })).toBe(navigation);
+  expect(navigation).not.toHaveAttribute('inert');
+  expect(screen.getByRole('link', { name: 'Моя игра' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Действия с чатом «Моя игра»' })).toBeInTheDocument();
   expect(post).not.toHaveBeenCalled();
 });

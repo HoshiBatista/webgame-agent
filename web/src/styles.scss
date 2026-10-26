@@ -1149,7 +1149,7 @@ svg {
   height: 100svh;
   display: flex;
   flex-direction: column;
-  padding: 27px var(--sidebar-padding-inline) 20px;
+  padding: 27px var(--sidebar-padding-inline) 12px;
   border-right: 1px solid var(--border);
   background: var(--surface);
   z-index: 15;
@@ -1304,7 +1304,7 @@ svg {
 }
 .sidebar-bottom {
   position: relative;
-  padding-top: 16px;
+  padding-top: 12px;
   flex-shrink: 0;
 }
 .sidebar-bottom::before {
@@ -1348,17 +1348,11 @@ svg {
   padding: 0;
   white-space: nowrap;
 }
-.account-name small {
-  font-size: var(--text-small);
-  color: var(--muted);
-  font-weight: 400;
-  display: block;
-  margin-top: 2px;
-}
 .account-trigger {
   width: 100%;
-  min-height: 60px;
-  padding: 9px;
+  height: var(--sidebar-control-size);
+  min-height: var(--sidebar-control-size);
+  padding: 7px 9px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -1380,7 +1374,6 @@ svg {
   }
   .sidebar .new-game-button,
   .sidebar-feed-link,
-  .chat-nav-item > a,
   .account-trigger {
     transition:
       padding-inline var(--duration-sidebar) var(--ease-sidebar),
@@ -1389,7 +1382,6 @@ svg {
   }
   .sidebar .new-game-button > span,
   .sidebar-feed-link > span,
-  .chat-nav-label,
   .account-name {
     max-width: 240px;
     overflow: hidden;
@@ -1399,8 +1391,12 @@ svg {
       opacity 160ms var(--ease-sidebar);
   }
   .sidebar-section-label,
+  .chat-nav {
+    transition:
+      opacity 180ms var(--ease-sidebar) 100ms,
+      visibility 0s;
+  }
   .sidebar-empty {
-    transition: opacity 160ms var(--ease-sidebar);
     white-space: nowrap;
   }
   .sidebar-collapsed {
@@ -1435,20 +1431,22 @@ svg {
   }
   .sidebar-collapsed .new-game-button > span,
   .sidebar-collapsed .sidebar-feed-link > span,
-  .sidebar-collapsed .chat-nav-label,
   .sidebar-collapsed .account-name {
     max-width: 0;
     opacity: 0;
     flex: 0;
   }
   .sidebar-collapsed .sidebar-section-label,
-  .sidebar-collapsed .sidebar-empty {
+  .sidebar-collapsed .chat-nav {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 140ms var(--ease-sidebar),
+      visibility 0s 140ms;
   }
   .sidebar-collapsed .new-game-button,
   .sidebar-collapsed .sidebar-feed-link,
-  .sidebar-collapsed .chat-nav-item > a,
   .sidebar-collapsed .account-trigger {
     width: var(--sidebar-control-size);
     height: var(--sidebar-control-size);
@@ -1462,26 +1460,6 @@ svg {
   }
   .sidebar-collapsed .new-game-button {
     border-color: transparent;
-  }
-  .sidebar-collapsed .chat-nav {
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  .sidebar-collapsed .chat-nav-item {
-    position: relative;
-    width: var(--sidebar-control-size);
-    border-radius: 12px;
-  }
-  .sidebar-collapsed .chat-nav-item .chat-symbol {
-    border: 0;
-  }
-  .sidebar-collapsed .active-run-dot {
-    position: absolute;
-    top: 7px;
-    right: 7px;
-    margin: 0;
   }
 }
 .mobile-app-header,
@@ -3196,7 +3174,7 @@ svg {
     transition:
       transform var(--duration-sidebar) var(--ease-sidebar),
       visibility 0s var(--duration-sidebar);
-    padding: 27px var(--sidebar-padding-inline) max(20px, env(safe-area-inset-bottom));
+    padding: 27px var(--sidebar-padding-inline) max(12px, env(safe-area-inset-bottom));
   }
   .sidebar-mobile-open .sidebar {
     transform: translateX(0);
@@ -3259,9 +3237,6 @@ svg {
     font-size: var(--text-small);
   }
   .account-name {
-    font-size: var(--text-small);
-  }
-  .account-name small {
     font-size: var(--text-small);
   }
   .feed {

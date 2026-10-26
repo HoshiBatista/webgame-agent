@@ -249,8 +249,16 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
           <Gamepad2 size={19} />
           <span>Игры сообщества</span>
         </Link>
-        <div className="sidebar-section-label">Недавние</div>
-        <nav id="sidebar-navigation" className="chat-nav" aria-label="Ваши игры">
+        <div className="sidebar-section-label" aria-hidden={collapsed && !mobile}>
+          Недавние
+        </div>
+        <nav
+          id="sidebar-navigation"
+          className="chat-nav"
+          aria-label="Ваши игры"
+          aria-hidden={collapsed && !mobile}
+          inert={collapsed && !mobile}
+        >
           {chats.map((chat) => (
             <div
               className={`chat-nav-item ${location.pathname === `/chats/${chat.id}` ? 'active' : ''}`}
@@ -289,7 +297,7 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
         </nav>
         <div className="sidebar-bottom">
           <AccountMenu
-            key={`${collapsed}-${mobile}-${mobileOpen}-${location.pathname}`}
+            key={`${mobile}-${mobileOpen}-${location.pathname}`}
             username={session.user?.username || ''}
             onLogout={onLogout}
           />
