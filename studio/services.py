@@ -341,8 +341,8 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         )})
     call_limit = data.get("model_call_limit")
     deadline_text = data.get("model_call_deadline")
-    if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= 4):
-        raise DomainError("invalid_call_budget", "Лимит вызовов должен быть целым числом от 1 до 4.")
+    if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= 5):
+        raise DomainError("invalid_call_budget", "Лимит вызовов должен быть целым числом от 1 до 5.")
     try:
         deadline = parse_datetime(deadline_text) if isinstance(deadline_text, str) else None
     except ValueError:
@@ -409,6 +409,8 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     base = chat.current_revision
     candidate = continued_from.candidate_revision if continued_from else None
     source = continued_from.source_revision if continued_from else None
+    if check_only and not candidate and continued_from and (continued_from.error or {}).get("code") == "test_only_change":
+        candidate = source or continued_from.base_revision
     if not continued_from:
         source_id = data.get("source_revision_id")
         if source_id:
@@ -428,6 +430,17 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     ):
         raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
     operation = "repair" if candidate or continued_from else ("edit" if source else "create")
+    from generation.planning import should_plan, strategy
+
+    generation_strategy = strategy(provider, model)
+    game_plan = continued_from.game_plan if continued_from else (
+        source.run.game_plan if source and source.run else {}
+    )
+    planning_required = not check_only and not game_plan and (
+        continued_from.planning_required if continued_from else should_plan(
+            profile_id, operation, prompt, provider=provider, model=model,
+        )
+    )
     if not chat.title_is_custom and chat.current_revision_id is None and not chat.runs.exists():
         chat.title = title_from_prompt(prompt)
     run = Run.objects.create(
@@ -444,6 +457,9 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         source_revision=source,
         generation_profile=generation_profile,
         source_format=source_format,
+        generation_strategy=generation_strategy,
+        planning_required=planning_required,
+        game_plan=game_plan,
         game_request=(continued_from.game_request if continued_from else
                       (source.run.game_request or source.run.prompt) if source and source.run else prompt.strip()),
         candidate_revision=candidate,
@@ -525,14 +541,18 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
             chat.title = short_game_title(revision.title)
         chat.save(update_fields=["current_revision", "title", "updated_at"])
     run.save()
-    response = (
-        run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
-        .order_by("-attempt").values_list("response", flat=True).first()
-    )
+    responses = run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
+    if (error or {}).get("code") != "scope_refusal":
+        responses = responses.exclude(request__has_key="operation", request__operation="plan")
+    response = responses.order_by("-attempt").values_list("response", flat=True).first()
     model_message = response.get("message", "") if isinstance(response, dict) else ""
     reply = assistant_reply(
         status, message, model_message, has_candidate=bool(run.candidate_revision_id),
         response_status=response.get("status", "") if isinstance(response, dict) else "",
+        operation=run.operation, error_code=(error or {}).get("code", ""),
+        has_source=bool(run.source_revision_id or run.base_revision_id),
+        planning_failed=run.planning_required and not run.game_plan,
+        plan_without_game=bool(run.game_plan) and not (run.candidate_revision_id or run.source_revision_id or run.base_revision_id),
     )
     Message.objects.create(chat=run.chat, run=run, role="assistant", content=reply)
     event(run, status, message, {"error": error} if error else {})

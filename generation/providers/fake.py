@@ -1,6 +1,7 @@
 """A labelled fixture for infrastructure tests, never advertised as model generation."""
 
 from copy import deepcopy
+from typing import Any
 
 from ..artifacts import sha256
 from ..errors import GenerationError
@@ -68,6 +69,23 @@ def generate(request, *, on_event, is_cancelled):
             usage={"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0},
         )
     response = fixture_response()
+    if request.get("operation") == "plan":
+        result: dict[str, Any] = {"response": {"operation": "plan", "status": "ok", "message": "Тестовый замысел без модели.",
+                "plan": {"summary": "Три попадания по тестовому кругу.",
+                         "core_loop": "Касаться круга, наблюдая число попаданий.",
+                         "mechanics": ["Каждое попадание увеличивает счётчик."],
+                         "progression": "Счётчик растёт от нуля до трёх.",
+                         "outcome": "Третье попадание завершает тестовую сцену.",
+                         "visual": "Синий круг на светлом фоне.", "assumptions": []}},
+                "usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0}}
+        from ..presentation import enabled
+
+        if enabled(request):
+            result["response"]["plan"]["presentation"] = {
+                "art_direction": "Светлая сцена с синим кругом и хорошо читаемым счётчиком.",
+                "motion": "Короткая пульсация круга после попадания; спокойный отклик при уменьшенном движении.",
+            }
+        return result
     if request.get("operation") == "check_repair":
         return {"response": {"status": "unchanged", "operation": "check_repair",
                 "base_revision": str(request["base_revision"]),

@@ -310,6 +310,7 @@ def request_for(run, base, findings, last_attempt_error=None):
 
     from generation.errors import ContractError
     from generation.feedback import focus_findings
+    from generation.presentation import VERSION as PRESENTATION_VERSION
     from generation.prompts import repair_evidence, system_prompt
     from generation.schema import CONTRACT_VERSION, response_schema, validate_checks
 
@@ -333,6 +334,7 @@ def request_for(run, base, findings, last_attempt_error=None):
         "audience": run.audience,
         "preferences": preference_for(run.chat.owner).notes,
         "base_revision": str(base.id) if base else None,
+        "artifact_hash": base.artifact_hash if base else None,
         "files": base.files if base else {},
         "design": base.design if base else {},
         "checks": base.checks if base else [],
@@ -341,8 +343,13 @@ def request_for(run, base, findings, last_attempt_error=None):
         "last_attempt_error": focused_error[0] if focused_error else None,
         "provider": run.provider,
         "model": run.model,
+        "generation_strategy": run.generation_strategy,
+        "presentation_policy": PRESENTATION_VERSION if run.generation_strategy == "pro" else 0,
+        "game_plan": run.game_plan,
         "generation_contract": {"pipeline_version": version},
     }
+    if run.planning_required and not run.game_plan and base is None:
+        request["operation"] = "plan"
     if request["operation"] == "repair" and needs_repair(run, base, findings):
         from generation.check_repair import permission
 
@@ -383,6 +390,24 @@ def request_for(run, base, findings, last_attempt_error=None):
         report = base.reports.order_by("-id").first()
         if report and report.findings == findings and report.status in {"failed", "unverified"}:
             request["validation_evidence"] = repair_evidence({"status": report.status, "facts": report.facts})
+            if run.generation_strategy == "pro" and report.identity == check_identity(base):
+                request["validation_evidence"]["report_id"] = report.id
+                request["validation_evidence"]["artifact_hash"] = base.artifact_hash
+                request["validation_evidence"]["gates_passed"] = report.assessment.get("gates_passed")
+                # Only a screenshot of this exact candidate is sent; no page/host access.
+                if report.screenshot_mime in {"image/png", "image/jpeg"} and report.screenshot_base64:
+                    request["preview_image"] = {
+                        "mime": report.screenshot_mime, "data": report.screenshot_base64,
+                        "artifact_hash": base.artifact_hash, "report_id": report.id,
+                    }
+                    from generation.feedback_image import image_input
+
+                    if image_input(request) is None:
+                        del request["preview_image"]
+    request["reasoning_effort"] = (
+        "high" if run.generation_strategy == "pro" and request["operation"] in {"plan", "create", "repair"}
+        else "medium" if run.generation_strategy == "pro" else "low"
+    )
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         "response_schema_sha256": fingerprint(response_schema(request)),
@@ -605,6 +630,22 @@ def _execute(run, lease, generate, materialize, validate):
                     error={"code": "scope_refusal", "message": response.get("message", "Уточните запрос.")},
                 )
                 return
+            if inv.request["operation"] == "plan":
+                from generation.schema import response_schema, validate_response
+
+                validate_response(response, operation="plan", schema=response_schema(inv.request))
+                with transaction.atomic():
+                    current = Run.objects.select_for_update().get(pk=run.id)
+                    if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
+                        return
+                    current.game_plan = response["plan"]
+                    current.stage = "generating"
+                    current.save(update_fields=["game_plan", "stage", "updated_at"])
+                    inv.state = "settled"
+                    inv.save(update_fields=["state"])
+                    event(current, "planned", "Замысел игры сохранён. Переходим к реализации.")
+                last_attempt_error = None
+                continue
             try:
                 if inv.request.get("code_repair_basis"):
                     from .check_repair import code_repair_basis
@@ -863,14 +904,17 @@ def _execute(run, lease, generate, materialize, validate):
         resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
         if run.attempts >= run.max_model_calls and resumed is None:
             incomplete = base is None and (last_attempt_error or {}).get("code") == "incomplete_sources"
+            plan_only = base is None and bool(run.game_plan)
             finish_run(
                 run.id,
                 run.fence,
                 "needs_attention",
+                "Лимит вызовов исчерпан. Замысел сохранён, создание игры ещё не завершено."
+                if plan_only else
                 "Лимит вызовов исчерпан: модель не передала полную реализацию игры. Ответы сохранены; можно продолжить создание."
                 if incomplete else "Лимит исправлений исчерпан. Ответы и черновик сохранены; доступно продолжение.",
                 error={
-                    "code": "incomplete_sources" if incomplete else "repair_exhausted",
+                    "code": "incomplete_sources" if incomplete else "plan_without_game" if plan_only else "repair_exhausted",
                     "message": "Не получена полная реализация игры." if incomplete else "Остались проблемы применения или проверки.",
                     "details": findings or ([last_attempt_error] if last_attempt_error else []),
                     "max_repair_attempts": run.max_repair_attempts,
@@ -888,7 +932,8 @@ def _execute(run, lease, generate, materialize, validate):
                     run.attempts = inv.attempt
                     Run.objects.filter(pk=run.id, fence=run.fence).update(
                         attempts=inv.attempt, status="generating",
-                        stage="repairing_checks" if req["operation"] == "check_repair" else "repairing" if findings else "generating"
+                        stage="planning" if req["operation"] == "plan" else
+                        "repairing_checks" if req["operation"] == "check_repair" else "repairing" if findings else "generating"
                     )
             req = inv.request
         except DomainError as exc:
@@ -916,17 +961,19 @@ def _execute(run, lease, generate, materialize, validate):
             inv.save(update_fields=["provider_metadata"])
         if not resumed:
             message = (
+                "Придумываем игровой замысел: механику, развитие и цель."
+                if req["operation"] == "plan" else
                 "Уточняем сценарии проверки сохранённой игры. Исходники остаются прежними."
                 if req["operation"] == "check_repair" else
-                f"Исправление {inv.attempt - 1} из {run.max_repair_attempts}. Устраняем основную найденную проблему."
-                if inv.attempt > 1 else
+                "Исправляем сохранённую игру по результатам проверки."
+                if req["operation"] == "repair" else
                 "Дорабатываем сохранённую игру по результатам проверки."
                 if findings else "Создаём игровую механику и короткие сценарии проверки."
             )
             Run.objects.filter(pk=run.id, fence=run.fence).update(message=message)
             event(
                 run,
-                "repairing" if findings else "generating",
+                "planning" if req["operation"] == "plan" else "repairing" if findings else "generating",
                 message,
                 {"attempt": inv.attempt, "max_model_calls": run.max_model_calls},
             )

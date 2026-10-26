@@ -5,6 +5,7 @@ from typing import Any
 
 from validation.contracts import VIEWPORTS
 
+from . import presentation
 from .artifacts import sha256
 from .errors import ContractError
 from .schema import response_schema
@@ -72,19 +73,46 @@ diagnostic.observations lists actually observed values, types and their observat
 All checks are independently run in the isolated browser. A revised suite requires explicit user review even when it passes. Return a concise Russian message explaining what was wrong in the original scenario and what changed. Do not claim you ran tests.
 """ + CHECK_V4_PROMPT
 
+PLAN_GUIDANCE = """
+The saved game_plan is the implementation brief. Preserve it across repairs; a later explicit user edit takes priority over the earlier brief. Implement its mechanics and outcome, and cover their observable effects in checks. Its assumptions are generated design choices, not user-authored constraints. Do not claim the plan itself proves implementation.
+"""
+PRO_GUIDANCE = """
+Pro workflow: the application executes each candidate in an isolated browser and returns real findings and, when available, a screenshot. Use this feedback to diagnose the cause and choose a coherent fix. A screenshot is one observed frame, not proof that the game works. You do not control final acceptance. Never substitute a changed test for an implementation.
+"""
+PLAN_CHECK_CONTEXT = "\nThe saved game_plan is context only. Repair exactly the application-issued requirements; do not expand them from the plan or implement source changes.\n"
+
 
 def system_prompt(request):
+    if request.get("operation") == "plan":
+        from .planning import prompt
+
+        return prompt(request)
     if request.get("generation_profile") == "compact":
         from .compact import PROMPT
 
-        return PROMPT
+        plan_context = PLAN_CHECK_CONTEXT if request.get("operation") == "check_repair" else PLAN_GUIDANCE
+        return PROMPT + (plan_context if request.get("game_plan") else "") + (
+            PRO_GUIDANCE if request.get("generation_strategy") == "pro" else ""
+        ) + presentation.implementation_prompt(request)
     operation = request.get("operation", "create")
     if operation not in {"create", "edit", "repair", "check_repair"}:
         raise ContractError("invalid_operation", "Неизвестный вид операции генерации.")
     if operation == "check_repair":
-        return CHECK_REPAIR_PROMPT
+        return CHECK_REPAIR_PROMPT + (PLAN_CHECK_CONTEXT if request.get("game_plan") else "") + (
+            PRO_GUIDANCE if request.get("generation_strategy") == "pro" else ""
+        )
     guidance = {"create": CREATE_PROMPT, "edit": EDIT_PROMPT, "repair": REPAIR_PROMPT}
     text = COMMON_PROMPT + guidance[operation]
+    if request.get("generation_strategy") == "pro":
+        text = text.replace("Omit unrelated effects, frameworks and abstractions; no separate planning turn.",
+                            "Implement the saved game concept with coherent interacting mechanics, progression and polished feedback. Preserve explicit user scope.")
+        text = text.replace("CURRENT STEP: CREATE A COMPLETE PLAYABLE CORE", "CURRENT STEP: IMPLEMENT THE COMPLETE GAME CONCEPT")
+        text = text.replace("Avoid optional features.",
+                            "Realize the planned player decisions and progression, including the concept's supporting mechanics. Do not reduce it to a movement-only prototype.")
+        text += PRO_GUIDANCE
+    if request.get("game_plan"):
+        text = text.replace("no separate planning turn", "follow the saved game concept")
+        text += PLAN_GUIDANCE
     text += CHECK_V4_PROMPT
     if operation == "create":
         text += SOURCE_V5_PROMPT
@@ -107,7 +135,7 @@ def system_prompt(request):
         text += ("\nThe application verified the code defect in code_repair_basis. Repair only that defect. "
                  "The inherited scenario suite may be incomplete; return checks=[] and preserve it exactly. "
                  "Do not fix or invent scenarios while repairing source.\n")
-    return text
+    return text + presentation.implementation_prompt(request)
 
 
 def build_messages(request):
@@ -118,6 +146,8 @@ def build_messages(request):
         "operation": request.get("operation", "create"),
         "prompt": request.get("prompt", ""),
         "game_request": request.get("game_request", ""),
+        "game_plan": request.get("game_plan") or {},
+        "generation_strategy": request.get("generation_strategy", "lite"),
         "audience": request.get("audience", "everyone"),
         "audience_guidance": {
             "everyone": "Clear rules and accessible controls for a general audience.",
@@ -142,7 +172,7 @@ def build_messages(request):
         context["check_repair"] = request["check_repair"]
     if request.get("code_repair_basis") is not None:
         context["code_repair_basis"] = request["code_repair_basis"]
-    if request.get("generation_profile") == "compact":
+    if request.get("generation_profile") == "compact" and request.get("operation") != "plan":
         context["compact_manifest"] = request.get("compact_manifest") or {}
         context["source_format"] = request.get("source_format", "string")
         context["source"] = files.get("game.js", "")

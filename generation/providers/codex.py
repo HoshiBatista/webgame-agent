@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from ..errors import GenerationError
+from ..feedback_image import image_input
 from ..prompts import build_messages
 from ..schema import response_schema
 
@@ -340,6 +341,13 @@ def generate(request, *, on_event, is_cancelled):
     verify_cli_contract()
     messages = build_messages(request)
     schema = response_schema(request)
+    effort = request.get("reasoning_effort", "low")
+    if effort not in {"low", "medium", "high"}:
+        raise GenerationError("invalid_effort", "Недопустимый уровень рассуждения.")
+    inputs = [{"type": "text", "text": messages[1]["content"], "text_elements": []}]
+    frame = image_input(request)
+    if frame:
+        inputs.append(frame)
     context_bytes = sum(
         len(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
         for value in (messages, schema)
@@ -405,13 +413,13 @@ def generate(request, *, on_event, is_cancelled):
                     "environments": [],
                     "runtimeWorkspaceRoots": [],
                     "model": model,
-                    "effort": "low",
+                    "effort": effort,
                     "serviceTierForTurn": "default",
-                    "input": [{"type": "text", "text": messages[1]["content"], "text_elements": []}],
+                    "input": inputs,
                     "outputSchema": schema,
                 },
             )
-            on_event({"type": "provider_started", "message": "Codex создаёт игру одним запросом."})
+            on_event({"type": "provider_started", "message": "Codex выполняет текущий этап."})
             first = True
             while True:
                 event = connection.pending.pop(0) if connection.pending else connection.next(is_cancelled)
@@ -430,7 +438,7 @@ def generate(request, *, on_event, is_cancelled):
                 elif method == "item/agentMessage/delta":
                     text += params.get("delta", "")
                     if first:
-                        on_event({"type": "first_output", "message": "Модель начала отдавать код игры."})
+                        on_event({"type": "first_output", "message": "Модель начала отдавать ответ."})
                         first = False
                 elif method == "item/completed" and params.get("item", {}).get("type") == "agentMessage":
                     text = params["item"].get("text", text)

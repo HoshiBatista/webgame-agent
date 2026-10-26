@@ -912,3 +912,88 @@ describe('simple conversation', () => {
     expect(document.title).toBe('beeGame');
   });
 });
+
+it('keeps the source draft after a rejected edit and can recheck without submitting generation', async () => {
+  const draft = {
+    ...revision,
+    id: 'draft',
+    accepted: false,
+    preview_url: 'http://localhost:8001/p/draft',
+  };
+  vi.mocked(request).mockResolvedValue({
+    ...chat,
+    current_revision: null,
+    candidate_revision: draft,
+    revisions: [draft],
+    runs: [
+      {
+        id: 'failed-edit',
+        status: 'needs_attention',
+        operation: 'edit',
+        source_revision_id: 'draft',
+        candidate_revision_id: null,
+        can_recheck: true,
+        error: { code: 'test_only_change' },
+      },
+    ],
+  });
+  vi.mocked(post).mockResolvedValue({});
+  setup();
+  expect(await screen.findByTitle('Игра')).toHaveAttribute(
+    'src',
+    'http://localhost:8001/p/draft?audio_control=1',
+  );
+  fireEvent.click(screen.getByLabelText('Действия с игрой'));
+  fireEvent.click(screen.getAllByRole('button', { name: 'Проверить игру' })[0]);
+  await waitFor(() =>
+    expect(post).toHaveBeenCalledWith('/api/runs/failed-edit/recheck/', {
+      idempotency_key: expect.any(String),
+    }),
+  );
+  expect(vi.mocked(post).mock.calls).toHaveLength(1);
+});
+
+it('shows the saved concept and continues it idempotently before any game revision', async () => {
+  vi.mocked(request).mockResolvedValue({
+    ...chat,
+    current_revision: null,
+    revisions: [],
+    runs: [
+      {
+        id: 'planned',
+        status: 'needs_attention',
+        can_continue: true,
+        game_plan: {
+          summary: 'Исследование затопленной станции',
+          core_loop: 'Искать воздух и открывать проходы',
+          mechanics: ['Запас воздуха связывает маршрут и риск'],
+          progression: 'Новые комнаты глубже',
+          outcome: 'Достичь шлюза и начать заново',
+          visual: 'Свет фонаря и синий туман',
+          presentation: {
+            art_direction: 'Синий туман и тёплый свет фонаря выделяют маршрут.',
+            motion: 'Движение героя плавное, свет мягко вспыхивает при находке.',
+          },
+          assumptions: ['Тема станции выбрана генератором'],
+        },
+      },
+    ],
+  });
+  setup();
+  fireEvent.click(await screen.findByText('Замысел игры'));
+  expect(screen.getByText('Запас воздуха связывает маршрут и риск')).toBeVisible();
+  expect(screen.getByText('Выбранные дополнения: Тема станции выбрана генератором')).toBeVisible();
+  expect(screen.getByText('Синий туман и тёплый свет фонаря выделяют маршрут.')).toBeVisible();
+  expect(
+    screen.getByText('Движение героя плавное, свет мягко вспыхивает при находке.'),
+  ).toBeVisible();
+  expect(screen.queryByTitle('Игра')).not.toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+  vi.mocked(post).mockRejectedValueOnce(new Error('Connection lost')).mockResolvedValueOnce({});
+  fireEvent.click(screen.getByRole('button', { name: 'Продолжить создание по плану' }));
+  await screen.findByText('Connection lost');
+  const payload = vi.mocked(post).mock.calls[0][1];
+  fireEvent.click(screen.getByRole('button', { name: 'Продолжить создание по плану' }));
+  await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+  expect(vi.mocked(post).mock.calls[1]).toEqual(['/api/runs/planned/continue/', payload]);
+});

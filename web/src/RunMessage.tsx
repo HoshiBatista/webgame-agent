@@ -72,18 +72,29 @@ export default function RunMessage({
   startedAt,
   sending = false,
 }: {
-  run: Pick<Run, 'id' | 'status' | 'elapsed_seconds' | 'model_label' | 'model_profile'>;
+  run: Pick<Run, 'id' | 'status' | 'elapsed_seconds' | 'model_label' | 'model_profile'> &
+    Partial<Pick<Run, 'stage' | 'operation'>>;
   startedAt?: number;
   sending?: boolean;
 }) {
   const label = run.model_label === 'Pro' || run.model_profile === 'pro' ? 'Pro' : 'Lite';
   const progress = sending
     ? 'Отправляю запрос…'
-    : run.status === 'queued'
-      ? 'Ожидаю начала работы…'
-      : run.status === 'checking'
-        ? 'Проверяю игру…'
-        : 'Создаю игру…';
+    : run.stage === 'waiting_admin'
+      ? 'Ожидаю восстановления подключения к модели…'
+      : run.stage === 'waiting_model'
+        ? 'Ожидаю ответ модели…'
+        : run.stage === 'planning'
+          ? 'Продумываю механику и игровой замысел…'
+          : run.stage === 'repairing_checks'
+            ? 'Проверяю сценарии игры…'
+            : run.status === 'queued'
+              ? 'Ожидаю начала работы…'
+              : run.status === 'checking'
+                ? 'Проверяю игру…'
+                : run.operation === 'edit' || run.operation === 'repair'
+                  ? 'Дорабатываю игру…'
+                  : 'Создаю игру…';
   return (
     <article className="chat-message message-assistant active-message">
       <span className="message-author">

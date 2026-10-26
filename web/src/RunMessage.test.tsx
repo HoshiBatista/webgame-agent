@@ -62,3 +62,17 @@ it('offers one unobtrusive link without recommendations or technical run cards',
   expect(screen.queryByRole('button')).not.toBeInTheDocument();
   expect(screen.queryByText('Общий бюджет')).not.toBeInTheDocument();
 });
+
+it.each([
+  ['waiting_model', 'Ожидаю ответ модели…'],
+  ['waiting_admin', 'Ожидаю восстановления подключения к модели…'],
+  ['planning', 'Продумываю механику и игровой замысел…'],
+])('shows the actual %s stage even when delivery has queued status', (stage, text) => {
+  render(
+    <MemoryRouter>
+      <RunMessage run={{ ...run, status: 'queued', stage }} />
+    </MemoryRouter>,
+  );
+  expect(screen.getByRole('status')).toHaveTextContent(text);
+  expect(screen.queryByText('Ожидаю начала работы…')).not.toBeInTheDocument();
+});

@@ -65,6 +65,8 @@ def run_data(run, budget=None):
         "operation": run.operation,
         "generation_profile": run.generation_profile,
         "source_format": run.source_format,
+        "generation_strategy": run.generation_strategy,
+        "game_plan": run.game_plan,
         "model_profile": run.model_profile,
         "model": run.model,
         "provider": run.provider,
@@ -90,7 +92,9 @@ def run_data(run, budget=None):
         "confirmation": {"artifact_hash": run.candidate_revision.artifact_hash,
                          "report_id": confirmation.id,
                          "requirements": confirmation.assessment["outstanding"]} if confirmation else None,
-        "can_recheck": bool(run.candidate_revision_id) and run.status not in (*run.ACTIVE, "succeeded")
+        "can_recheck": bool(run.candidate_revision_id or (
+            (run.error or {}).get("code") == "test_only_change" and (run.source_revision_id or run.base_revision_id)
+        )) and run.status not in (*run.ACTIVE, "succeeded")
         and run.chat.current_revision_id == run.base_revision_id,
         "attempts": run.attempts,
         "max_repair_attempts": run.max_repair_attempts,
@@ -120,7 +124,9 @@ def chat_data(chat, detail=False):
         last = chat.runs.order_by("-created_at").first()
         data.update(
             {
-                "candidate_revision": revision_data(last.candidate_revision) if last else None,
+                "candidate_revision": revision_data(last.candidate_revision or (
+                    last.source_revision if last.status in {"failed", "needs_attention", "cancelled", "unknown"} else None
+                )) if last else None,
                 "messages": [
                     {
                         "id": str(m.id),

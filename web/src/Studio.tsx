@@ -264,8 +264,12 @@ export default function Studio() {
   }, []);
   const candidateNeedsReview = !!(
     latestRun &&
-    ['unverified', 'needs_attention', 'failed'].includes(latestRun.status) &&
-    chat?.candidate_revision?.id === latestRun.candidate_revision_id
+    chat?.candidate_revision &&
+    ['unverified', 'needs_attention', 'failed', 'cancelled', 'unknown'].includes(
+      latestRun.status,
+    ) &&
+    chat?.candidate_revision?.id ===
+      (latestRun.candidate_revision_id ?? latestRun.source_revision_id)
   );
   const defaultRevision = candidateNeedsReview
     ? chat?.candidate_revision
@@ -274,6 +278,28 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  const runActionKey = useRef({ run: '', action: '', key: '' });
+  async function performRunAction(action: 'recheck' | 'continue') {
+    if (!latestRun?.[action === 'recheck' ? 'can_recheck' : 'can_continue'] || busy || activeRun)
+      return;
+    const startedView = view.current;
+    if (runActionKey.current.run !== latestRun.id || runActionKey.current.action !== action)
+      runActionKey.current = { run: latestRun.id, action, key: newKey() };
+    setBusy(true);
+    setError('');
+    try {
+      await post<Run>(`/api/runs/${latestRun.id}/${action}/`, {
+        idempotency_key: runActionKey.current.key,
+      });
+      chatsChanged();
+      void refresh();
+      if (view.current === startedView) load();
+    } catch (cause) {
+      if (view.current === startedView) setError(errorText(cause));
+    } finally {
+      if (view.current === startedView) setBusy(false);
+    }
+  }
   async function chooseModel(value: string) {
     const startedView = view.current;
     setBusy(true);
@@ -507,6 +533,17 @@ export default function Studio() {
           </select>
         </div>
         <div className="preview-actions">
+          {latestRun?.can_recheck && revision?.id === defaultRevision?.id && (
+            <button
+              type="button"
+              className="button button-small button-outline"
+              disabled={busy || !!activeRun}
+              onClick={() => performRunAction('recheck')}
+              title="Проверить сохранённую игру без обращения к модели"
+            >
+              Проверить игру
+            </button>
+          )}
           {inMenu && revision && (
             <button
               type="button"
@@ -706,6 +743,49 @@ export default function Studio() {
                 </article>
               );
             })}
+            {latestRun?.game_plan?.summary && (
+              <details className="chat-message game-plan">
+                <summary>Замысел игры</summary>
+                <p>{latestRun.game_plan.summary}</p>
+                <p>{latestRun.game_plan.core_loop}</p>
+                <ul>
+                  {latestRun.game_plan.mechanics.map((mechanic, index) => (
+                    <li key={index}>{mechanic}</li>
+                  ))}
+                </ul>
+                <p>{latestRun.game_plan.progression}</p>
+                <p>{latestRun.game_plan.outcome}</p>
+                <p>{latestRun.game_plan.visual}</p>
+                {latestRun.game_plan.presentation && (
+                  <>
+                    <p>
+                      <strong>Визуальный стиль:</strong>{' '}
+                      {latestRun.game_plan.presentation.art_direction}
+                    </p>
+                    <p>
+                      <strong>Движение и отклик:</strong> {latestRun.game_plan.presentation.motion}
+                    </p>
+                  </>
+                )}
+                {!!latestRun.game_plan.assumptions.length && (
+                  <p>Выбранные дополнения: {latestRun.game_plan.assumptions.join(' ')}</p>
+                )}
+              </details>
+            )}
+            {latestRun?.game_plan?.summary &&
+              latestRun.can_continue &&
+              !revision &&
+              !activeRun &&
+              !pendingHere && (
+                <button
+                  type="button"
+                  className="button button-outline"
+                  disabled={busy}
+                  onClick={() => performRunAction('continue')}
+                >
+                  Продолжить создание по плану
+                </button>
+              )}
             {pendingHere && !savedSubmission && (
               <article className="chat-message message-user">
                 <span className="message-author">Вы</span>

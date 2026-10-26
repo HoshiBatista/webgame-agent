@@ -22,10 +22,14 @@ def request_for(run, base, findings):
     run.generation_profile = "full"
     run.source_format = "string"
     run.game_request = run.prompt
+    run.generation_strategy = "lite"
+    run.planning_required = False
+    run.game_plan = {}
     run.source_revision_id = run.base_revision_id
     run.candidate_revision_id = None
     if base is not None:
         base.accepted = True
+        base.artifact_hash = "candidate-hash"
         base.compact_manifest = {}
         base.checks = __import__(
             "generation.providers.fake", fromlist=["fixture_response"]

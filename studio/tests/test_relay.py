@@ -14,6 +14,7 @@ from studio.models import Chat, Outbox, Revision, User
 from studio.services import create_run
 from studio.tasks import process_run, reconcile_relay_cancellations, recover_expired
 from tests.relay_double import RelayDouble
+from tests.test_generation_planning import plan_response
 
 
 @pytest.fixture
@@ -50,6 +51,9 @@ def environment(tmp_path, settings, monkeypatch):
                 return False
             calls.append(1)
             store.worker_update(job["id"], "gpu", start=True)
+            response = plan_response() if (
+                job["payload"]["response_format"]["json_schema"]["schema"]["properties"].get("operation", {}).get("enum") == ["plan"]
+            ) else fixture_response()
             self.pending = (
                 job["id"],
                 {
@@ -59,7 +63,7 @@ def environment(tmp_path, settings, monkeypatch):
                             "model": "qwen38",
                             "choices": [
                                 {
-                                    "message": {"content": json.dumps(fixture_response())},
+                                    "message": {"content": json.dumps(response)},
                                     "finish_reason": "stop",
                                 }
                             ],
@@ -86,7 +90,8 @@ def environment(tmp_path, settings, monkeypatch):
     ):
         owner = User.objects.create_user(username="owner")
         chat = Chat.objects.create(owner=owner)
-        run = create_run(chat, {"prompt": "Create a mini game", "idempotency_key": "stable"})
+        # Existing receipt tests cover the one-call path of a detailed Lite request.
+        run = create_run(chat, {"prompt": "Create a mini game. " * 20, "idempotency_key": "stable"})
         yield run, store, executor, calls
 
 
@@ -266,3 +271,32 @@ def test_check_repair_pending_reentry_keeps_job_and_consumes_receipt_after_deadl
     assert inv.revision.checks_review_required
     assert inv.revision.files == inv.revision.parent.files
     assert calls == [1, 1]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_relay_planning_receipt_is_reused_and_code_is_a_separate_counted_job(environment):
+    run, store, executor, calls = environment
+    run.planning_required = True
+    run.save(update_fields=['planning_required'])
+    process_run(str(run.id))
+    first = run.invocations.get()
+    assert first.request['operation'] == 'plan' and first.state == 'sent'
+    process_run(str(run.id))
+    assert run.invocations.count() == 1
+    executor.step()
+    executor.step()
+    process_run(str(run.id))
+    run.refresh_from_db()
+    first.refresh_from_db()
+    assert run.game_plan and first.state == 'settled' and run.status == 'queued'
+    assert run.invocations.count() == 2 and run.attempts == 2
+    second = run.invocations.get(attempt=2)
+    assert second.request['operation'] == 'create' and second.request['game_plan'] == run.game_plan
+    process_run(str(run.id))
+    executor.step()
+    executor.step()
+    process_run(str(run.id))
+    run.refresh_from_db()
+    assert run.status == 'succeeded', run.error
+    assert len(calls) == 2 and run.invocations.count() == 2
+    assert run.chat.revisions.count() == 1

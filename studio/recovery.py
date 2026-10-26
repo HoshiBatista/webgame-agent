@@ -41,6 +41,8 @@ def recover_saved_response(invocation_id, *, apply=False):
         raise DomainError("invalid_saved_json", "Сохранённый ответ не является полным JSON.") from exc
     response, paths = normalize_response(decoded)
     saved_request = source.request
+    if saved_request.get("operation") == "plan":
+        raise DomainError("no_saved_candidate", "Это ответ планирования без исходников игры. Продолжите подготовку замысла в чате.")
     if parent.generation_profile == 'compact':
         from generation.compact import validate_wire
 
@@ -85,6 +87,7 @@ def recover_saved_response(invocation_id, *, apply=False):
         base_revision=parent.base_revision, continued_from=parent,
         source_revision=parent.source_revision, game_request=parent.game_request,
         generation_profile=parent.generation_profile, source_format=parent.source_format,
+        generation_strategy=parent.generation_strategy, game_plan=parent.game_plan,
         pipeline_version=parent.pipeline_version,
         idempotency_key=key, request_fingerprint=fingerprint(audit), allow_model_calls=False,
         fence=uuid.uuid4(), metrics={"saved_response_recovery": audit},

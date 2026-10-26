@@ -408,7 +408,7 @@ def codex_rpc(monkeypatch):
             if method == "config/read":
                 return {"config": {"mcp_servers": {"private": {"command": "secret"}}}}
             if method == "thread/start":
-                return {"thread": {"id": "thread-1"}, "model": "gpt-6-luna"}
+                return {"thread": {"id": "thread-1"}, "model": params["model"]}
             raise AssertionError(method)
 
         def send(self, method, params, **kwargs):
@@ -427,7 +427,7 @@ def codex_rpc(monkeypatch):
 
     monkeypatch.setattr(codex, "Connection", Connection)
     monkeypatch.setattr(codex, "verify_cli_contract", lambda: "verified")
-    monkeypatch.setattr(codex, "available_models", lambda: [{"id": "gpt-6-luna"}])
+    monkeypatch.setattr(codex, "available_models", lambda: [{"id": "gpt-6-luna"}, {"id": "gpt-6-sol"}])
     state["events"] = [
         {"id": 99, "result": {"turn": {"id": "turn-1"}}},
         {
@@ -722,3 +722,40 @@ def test_nonfinite_or_discounted_worst_case_multipliers_are_rejected(multiplier)
                 "max_input_multiplier": multiplier,
             },
         )
+
+
+def test_pro_planning_effort_and_schema_use_one_isolated_codex_turn(codex_rpc):
+    from generation.providers.fake import generate as fake_generate
+
+    request = {'provider': 'codex', 'model': 'gpt-6-sol', 'generation_strategy': 'pro',
+               'operation': 'plan', 'reasoning_effort': 'high', 'presentation_policy': 1}
+    reply = fake_generate(request, on_event=lambda _: None, is_cancelled=lambda: False)['response']
+    codex_rpc['events'][1]['params']['item']['text'] = json.dumps(reply)
+    result = generate_operation(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    turns = [p for m, p in codex_rpc['calls'] if m == 'turn/start']
+    assert len(turns) == 1
+    assert turns[0]['effort'] == 'high' and turns[0]['model'] == 'gpt-6-sol'
+    assert turns[0]['environments'] == turns[0]['runtimeWorkspaceRoots'] == []
+    assert turns[0]['outputSchema']['properties']['operation']['enum'] == ['plan']
+    assert result['provider_metadata']['request_profile']['reasoning_effort'] == 'high'
+    assert result['provider_metadata']['request_profile']['presentation_policy'] == 1
+    assert 'presentation' in turns[0]['outputSchema']['properties']['plan']['required']
+    assert result['response'] == reply
+
+
+def test_pro_receives_validator_frame_as_data_image_not_path_or_tool(codex_rpc):
+    from tests.test_generation_planning import screenshot_request
+
+    request = {**screenshot_request(), 'provider': 'codex', 'model': 'gpt-6-sol',
+               'operation': 'repair', 'reasoning_effort': 'high'}
+    reply = fixture_response()
+    reply.update(operation='repair', base_revision='revision', files=[], checks=[])
+    codex_rpc['events'][1]['params']['item']['text'] = json.dumps(reply)
+    generate_operation(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    turn = next(p for m, p in codex_rpc['calls'] if m == 'turn/start')
+    assert len(turn['input']) == 2 and turn['input'][1]['type'] == 'image'
+    assert turn['input'][1]['url'].startswith('data:image/png;base64,')
+    assert 'preview_image' not in json.loads(turn['input'][0]['text'])
+    thread = next(p for m, p in codex_rpc['calls'] if m == 'thread/start')
+    assert thread['dynamicTools'] == thread['selectedCapabilityRoots'] == []
+    assert thread['config']['mcp_servers'] == {'private': {'enabled': False}}

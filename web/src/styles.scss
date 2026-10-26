@@ -1925,6 +1925,19 @@ svg {
   margin-bottom: 7px;
   color: var(--muted);
 }
+.game-plan {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  summary {
+    cursor: pointer;
+    font-weight: 650;
+  }
+  p,
+  ul {
+    margin: 10px 0;
+  }
+}
 .message-user > div {
   background: var(--soft);
   padding: 13px 15px;

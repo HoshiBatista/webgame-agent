@@ -182,6 +182,10 @@ def response_schema(request):
     version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if request.get("operation") == "plan":
+        from .planning import schema as plan_schema
+
+        return plan_schema(request)
     if request.get("generation_profile") == "compact":
         from .compact import wire_schema
 
@@ -230,6 +234,8 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
             "operation_mismatch",
             "Ответ изменил вид операции. Используйте operation из текущего запроса приложения.",
         )
+    if response["operation"] == "plan":
+        return
     if response["operation"] == "check_repair":
         if response["status"] == "unchanged":
             if response["checks"]:

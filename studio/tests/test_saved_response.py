@@ -56,6 +56,27 @@ class SavedResponseTests(TestCase):
         self.assertEqual(Run.objects.count(), 1)
         self.assertFalse(Outbox.objects.exists())
 
+    def test_recovery_preserves_saved_plan_and_strategy_without_replanning(self):
+        from tests.test_generation_planning import plan_response
+
+        self.run.game_plan = plan_response()["plan"]
+        self.run.generation_strategy = "pro"
+        self.run.save(update_fields=["game_plan", "generation_strategy"])
+        recovered = recover_saved_response(self.source.id, apply=True)
+        run = self.check_run(recovered["run_id"], "passed")
+        self.assertEqual(run.game_plan, self.run.game_plan)
+        self.assertEqual(run.generation_strategy, "pro")
+        self.assertFalse(run.planning_required)
+        self.assertFalse(run.allow_model_calls)
+
+    def test_planner_receipt_cannot_be_materialized_as_game_sources(self):
+        self.source.request["operation"] = "plan"
+        self.source.save(update_fields=["request"])
+        with self.assertRaises(DomainError) as caught:
+            recover_saved_response(self.source.id, apply=True)
+        self.assertEqual(caught.exception.code, "no_saved_candidate")
+        self.assertFalse(self.chat.revisions.exists())
+
     def test_recovery_is_idempotent_preserves_receipt_and_checks_without_inference(self):
         result = recover_saved_response(self.source.id, apply=True)
         run = self.check_run(result["run_id"], "passed")

@@ -23,6 +23,9 @@ def generate(request, *, on_event, is_cancelled):
         **(result.get("provider_metadata") or {}),
         "request_profile": {
             "requested_model": request.get("model"),
+            "generation_strategy": request.get("generation_strategy", "lite"),
+            "presentation_policy": request.get("presentation_policy", 0),
+            "reasoning_effort": request.get("reasoning_effort", "low") if provider_name == "codex" else None,
             "generation_contract": request.get("generation_contract", {}),
             "execution_limits": request.get("execution_limits", {}),
             "explicit_sampling": {key: request["relay"]["payload"][key] for key in
@@ -40,7 +43,7 @@ def generate(request, *, on_event, is_cancelled):
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
     try:
-        if request.get("generation_profile") == "compact":
+        if request.get("generation_profile") == "compact" and request.get("operation") != "plan":
             from .compact import validate_wire
 
             validate_wire(result["response"], request)

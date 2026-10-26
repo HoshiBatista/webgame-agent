@@ -57,6 +57,9 @@ class Run(models.Model):
     game_request = models.TextField(blank=True)
     generation_profile = models.CharField(max_length=16, default="full")
     source_format = models.CharField(max_length=10, default="string")
+    generation_strategy = models.CharField(max_length=16, default="lite")
+    planning_required = models.BooleanField(default=False)
+    game_plan = models.JSONField(default=dict)
     pipeline_version = models.PositiveSmallIntegerField(default=8)
     candidate_revision = models.ForeignKey("Revision", null=True, on_delete=models.SET_NULL, related_name="+")
     result_revision = models.ForeignKey("Revision", null=True, on_delete=models.SET_NULL, related_name="+")
@@ -94,7 +97,7 @@ class Run(models.Model):
 
     @property
     def max_model_calls(self):
-        maximum = 1 + self.max_repair_attempts
+        maximum = 1 + self.max_repair_attempts + int(self.planning_required)
         return min(maximum, self.model_call_limit) if self.model_call_limit is not None else maximum
 
 

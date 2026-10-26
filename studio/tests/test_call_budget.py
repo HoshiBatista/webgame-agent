@@ -21,7 +21,7 @@ def chat(settings):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("budget", [{"model_call_limit": True}, {"model_call_limit": 5},
+@pytest.mark.parametrize("budget", [{"model_call_limit": True}, {"model_call_limit": 6},
                                     {"model_call_limit": 0}, {"model_call_deadline": "2026-10-24T10:00:00"}])
 def test_invalid_call_budget_is_rejected_before_scheduling(chat, budget):
     with pytest.raises(DomainError, match="Лимит|ISO"):

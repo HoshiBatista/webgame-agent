@@ -84,6 +84,17 @@ export interface Run {
   id: string;
   chat_id: string;
   operation: string;
+  generation_strategy?: 'lite' | 'pro';
+  game_plan?: {
+    summary: string;
+    core_loop: string;
+    mechanics: string[];
+    progression: string;
+    outcome: string;
+    visual: string;
+    presentation?: { art_direction: string; motion: string };
+    assumptions: string[];
+  };
   model_profile?: string;
   model_label?: string;
   model?: string;
@@ -96,6 +107,7 @@ export interface Run {
   updated_at: string;
   finished_at: string | null;
   base_revision_id: string | null;
+  source_revision_id?: string | null;
   candidate_revision_id: string | null;
   result_revision_id: string | null;
   error: ApiErrorData | null;
