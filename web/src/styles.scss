@@ -982,9 +982,6 @@ svg {
   line-height: 1.6;
   text-wrap: pretty;
 }
-.landing-footer > .brand-disclaimer {
-  margin-top: 18px;
-}
 .login-card > .brand-disclaimer {
   margin-top: 18px;
   padding-top: 16px;
@@ -3006,14 +3003,6 @@ svg {
   .how-section {
     grid-template-columns: 1fr;
     gap: 28px;
-  }
-  .how-section > div:first-child {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .how-section h2 {
-    margin-top: 0;
   }
   .how-steps {
     gap: 40px;

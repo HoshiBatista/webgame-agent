@@ -90,6 +90,8 @@ It lives at `public/assets/beeline-logo.svg`, which Vite copies into the `/asset
 directory served by Django. The landing footer and login card identify beeGame as
 a hackathon development, not an official Beeline product. This notice does not establish
 permission to use the trademark; that depends on the event's terms or the rights holder.
+The landing's steps eyebrow stays above its heading at every width. The footer notice
+sits to the right of the logo and wraps below it when the row no longer fits.
 
 Settings have two columns: immediate model/theme choices on the left, wishes with their own
 Save button on the right. They stack on narrow screens. Expenses and synthetic

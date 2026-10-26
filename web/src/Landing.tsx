@@ -148,8 +148,8 @@ export default function Landing() {
       <footer className="landing-footer">
         <div className="landing-footer-main">
           <Brand />
+          <BrandDisclaimer />
         </div>
-        <BrandDisclaimer />
       </footer>
     </div>
   );
