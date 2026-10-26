@@ -37,5 +37,10 @@ urlpatterns = [
     re_path(
         r"^assets/(?P<path>.*)$", serve, {"document_root": settings.BASE_DIR / "web" / "dist" / "assets"}
     ),
+    re_path(
+        r"^(?P<path>apple-touch-icon\.png|favicon\.ico)$",
+        serve,
+        {"document_root": settings.BASE_DIR / "web" / "dist"},
+    ),
     re_path(r"^(?P<path>(?!api/).*)$", v.index_view),
 ]

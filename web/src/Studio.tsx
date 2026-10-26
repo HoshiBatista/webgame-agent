@@ -890,7 +890,7 @@ export default function Studio() {
                 >
                   <ChevronDown size={19} />
                 </summary>
-                <div className="game-tools-popover" hidden={!toolsOpen}>
+                <div className="menu-surface game-tools-popover" hidden={!toolsOpen}>
                   {gameTools() || (
                     <p className="field-help">Здесь появятся версии и действия с вашей игрой.</p>
                   )}

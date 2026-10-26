@@ -34,12 +34,21 @@ stopping is available once the server assigns the run ID. Enter sends, Shift+Ent
 a newline, and IME composition never sends prematurely.
 An unobtrusive community-feed link opens in another tab without fetching recommendations.
 
-The sidebar lists «Недавние» without a count. Each row reserves space for a vertical-dot
-menu (visible on hover/focus, always visible on small/touch screens). Rename and delete
+The expanded desktop sidebar and mobile drawer are fixed at 300px. The collapsed desktop
+rail is 81px, with 48×48px controls for navigation, chats and the profile. Only the explicit
+collapse button changes desktop mode; intermediate viewport widths retain the chosen mode.
+The sidebar lists «Недавние» without a count. Expanded rows reserve space for a vertical-dot
+menu (visible on hover/focus, always visible on touch screens and the mobile drawer).
+Collapsed rows have no action trigger. Rename and delete
 operate without navigating through the row link. Renaming updates the open tab title;
 other pages use «beeGame». Automatic labels use 1–3 words, including a saved draft's model
 title, while manual names remain protected. The backend keeps ownership and row locks.
 Apply existing migrations including `0011_chat_titles` and `0013_merge_titles_and_compact`.
+
+The entire profile button opens a menu with avatar/username, separator, Settings, separator,
+and Logout. Chat and profile menus share measured viewport positioning, keyboard navigation,
+outside-click dismissal and focus restoration. Model/game popovers share the same surface,
+radius, shadow and 180ms entrance animation; reduced motion disables movement.
 
 The chat header contains the model selector and desktop preview toggle or mobile fullscreen.
 A menu beside the send button contains version selection, fullscreen, copy, audio, download,
@@ -90,6 +99,13 @@ It lives at `public/assets/beeline-logo.svg`, which Vite copies into the `/asset
 directory served by Django. The landing footer and login card identify beeGame as
 a hackathon development, not an official Beeline product. This notice does not establish
 permission to use the trademark; that depends on the event's terms or the rights holder.
+Safari additionally gets an opaque 180×180 PNG through `apple-touch-icon`, plus PNG/ICO
+favicon fallbacks. `/apple-touch-icon.png` and `/favicon.ico` have explicit Django routes,
+so they return images instead of the SPA HTML. Regenerate these assets from the same SVG
+with `.venv/bin/python scripts/web_icons.py` at the repository root after preparing the
+project's Playwright browser (`scripts/native.py prepare`). Build the frontend and restart
+the app process when deploying the new routes. Physical iOS icon caching is not covered by
+desktop browser checks; an existing Home Screen shortcut may need to be added again.
 The landing's steps eyebrow stays above its heading at every width. The footer notice
 sits to the right of the logo and wraps below it when the row no longer fits.
 

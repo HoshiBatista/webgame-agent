@@ -71,10 +71,12 @@ it('goes straight from a chat through logout to the landing, ignoring a late pri
       finishRefresh = resolve;
     }),
   );
-  fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Меню профиля operator' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Настройки' }));
   await screen.findByRole('heading', { name: 'Настройки', level: 1 });
   fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
-  fireEvent.click(await screen.findByRole('button', { name: 'Выйти' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Меню профиля operator' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Выйти' }));
   expect(screen.getByText('Выходим из аккаунта…')).toBeInTheDocument();
   expect(screen.getByTestId('location')).toHaveTextContent('/chats/one');
   expect(screen.queryByText('operator')).not.toBeInTheDocument();
@@ -92,7 +94,8 @@ it('reconciles a lost logout acknowledgement without returning private UI', asyn
   await screen.findByText('operator');
   vi.mocked(post).mockRejectedValue(new Error('Connection lost'));
   vi.mocked(getSession).mockResolvedValue({ ...session, user: null, budget: null });
-  fireEvent.click(screen.getByRole('button', { name: 'Выйти' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Меню профиля operator' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Выйти' }));
   await screen.findByRole('link', { name: 'Создать свою игру' });
   expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
   expect(screen.queryByRole('heading', { name: 'Игры сообщества' })).not.toBeInTheDocument();
@@ -120,23 +123,28 @@ it('ignores a preferences save from the old account after logout has completed',
       : { results: [] },
   );
   setup('/chats/one');
-  fireEvent.click(await screen.findByRole('link', { name: 'Настройки' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Меню профиля operator' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Настройки' }));
   fireEvent.click(await screen.findByRole('radio', { name: 'Pro' }));
   fireEvent.click(screen.getByRole('button', { name: 'Назад' }));
   vi.mocked(post).mockResolvedValue({ ...session, user: null, budget: null });
-  fireEvent.click(await screen.findByRole('button', { name: 'Выйти' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Меню профиля operator' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Выйти' }));
   await screen.findByRole('link', { name: 'Создать свою игру' });
   await act(async () => finishSave({ ...session.preferences, model_profile: 'pro' }));
   expect(screen.getByRole('link', { name: 'Создать свою игру' })).toBeInTheDocument();
   expect(screen.queryByText('operator')).not.toBeInTheDocument();
 });
 
-it('keeps the username static and opens settings at their own URL', async () => {
+it('opens settings from the profile menu at their own URL', async () => {
   setup();
   const username = await screen.findByText('operator');
-  expect(username.closest('button, a')).toBeNull();
+  expect(username.closest('button')).toHaveAttribute('aria-haspopup', 'menu');
+  expect(screen.queryByRole('menuitem')).not.toBeInTheDocument();
+  fireEvent.click(username);
+  expect(screen.getAllByRole('separator')).toHaveLength(2);
   expect(screen.queryByRole('button', { name: /Включить.*тему/ })).not.toBeInTheDocument();
-  const settings = screen.getByRole('link', { name: 'Настройки' });
+  const settings = screen.getByRole('menuitem', { name: 'Настройки' });
   expect(settings).toHaveAttribute('href', '/settings');
   fireEvent.click(settings);
   await screen.findByRole('heading', { name: 'Настройки', level: 1 });
@@ -173,7 +181,8 @@ it('releases the mobile menu scroll lock when opening the settings page', async 
   const previousOverflow = document.body.style.overflow;
   fireEvent.click(screen.getByRole('button', { name: 'Открыть список чатов' }));
   await waitFor(() => expect(document.body.style.overflow).toBe('hidden'));
-  fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Меню профиля operator' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Настройки' }));
   await screen.findByRole('heading', { name: 'Настройки', level: 1 });
   await waitFor(() => expect(document.body.style.overflow).toBe(previousOverflow));
 });
@@ -219,6 +228,56 @@ it('expands the collapsed logo control without navigating away or losing focus',
   expect(toggle).toHaveAttribute('aria-expanded', 'true');
   expect(screen.getByTestId('location')).toHaveTextContent('/chats/one?revision=2#preview');
   expect(post).not.toHaveBeenCalled();
+});
+
+it('removes chat actions when collapsed and keeps the profile menu keyboard accessible', async () => {
+  vi.mocked(request).mockResolvedValue({ results: [{ id: 'one', title: 'Моя игра' }] });
+  setup();
+  await screen.findByRole('button', { name: 'Действия с чатом «Моя игра»' });
+  fireEvent.click(screen.getByRole('button', { name: 'Свернуть список чатов' }));
+  expect(
+    screen.queryByRole('button', { name: 'Действия с чатом «Моя игра»' }),
+  ).not.toBeInTheDocument();
+  const profile = screen.getByRole('button', { name: 'Меню профиля operator' });
+  fireEvent.keyDown(profile, { key: 'ArrowDown' });
+  const settings = screen.getByRole('menuitem', { name: 'Настройки' });
+  const logout = screen.getByRole('menuitem', { name: 'Выйти' });
+  expect(settings).toHaveFocus();
+  fireEvent.keyDown(settings, { key: 'ArrowDown' });
+  expect(logout).toHaveFocus();
+  fireEvent.keyDown(logout, { key: 'Escape' });
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  expect(profile).toHaveFocus();
+  fireEvent.click(profile);
+  fireEvent.pointerDown(document.body);
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Развернуть список чатов' }));
+  expect(screen.getByRole('button', { name: 'Действия с чатом «Моя игра»' })).toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('Escape dismisses the mobile profile menu before the sidebar', async () => {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: query === '(max-width: 760px)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+  setup();
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  const open = screen.getByRole('button', { name: 'Открыть список чатов' });
+  fireEvent.click(open);
+  const profile = screen.getByRole('button', { name: 'Меню профиля operator' });
+  fireEvent.click(profile);
+  fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Настройки' }), { key: 'Escape' });
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  expect(profile).toHaveFocus();
+  expect(open).toHaveAttribute('aria-expanded', 'true');
+  fireEvent.keyDown(profile, { key: 'Escape' });
+  expect(open).toHaveAttribute('aria-expanded', 'false');
+  expect(open).toHaveFocus();
 });
 
 it('closes the mobile menu without removing its backdrop and restores keyboard access', async () => {

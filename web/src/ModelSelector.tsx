@@ -65,7 +65,7 @@ export default function ModelSelector(props: Props) {
         beeGame <strong>{selected?.name || '—'}</strong>
         <ChevronDown size={16} />
       </summary>
-      <div className="model-selector-menu">
+      <div className="menu-surface model-selector-menu">
         <ModelChoices
           {...props}
           onChange={(value) => {

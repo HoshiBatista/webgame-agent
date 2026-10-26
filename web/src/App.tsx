@@ -7,16 +7,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Gamepad2,
-  LogOut,
-  Menu,
-  Plus,
-  Settings2,
-  X,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Gamepad2, Menu, Plus, X } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request, setCsrfToken } from './api';
 import { Brand, ErrorNotice, Modal, Spinner } from './components';
@@ -31,6 +22,7 @@ import RevisionPlayer from './RevisionPlayer';
 import type { ChatSummary, Session } from './types';
 import { ThemeProvider } from './theme';
 import ChatMenu from './ChatMenu';
+import AccountMenu from './AccountMenu';
 
 function Shell({ session, onLogout }: { session: Session; onLogout: () => void }) {
   const { studioDrafts } = useSession();
@@ -276,45 +268,31 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
                 <span className="chat-nav-label">{chat.title || 'Новая игра'}</span>
                 {chat.active_run && <i className="active-run-dot" title="Генерация выполняется" />}
               </Link>
-              <ChatMenu
-                chat={chat}
-                onRename={() => {
-                  setEditingChat(chat);
-                  setTitleDraft(chat.title);
-                  setActionError('');
-                }}
-                onDelete={() => {
-                  setDeletingChat(chat);
-                  setActionError('');
-                }}
-              />
+              {(!collapsed || mobile) && (
+                <ChatMenu
+                  key={`${mobile}-${mobileOpen}`}
+                  chat={chat}
+                  onRename={() => {
+                    setEditingChat(chat);
+                    setTitleDraft(chat.title);
+                    setActionError('');
+                  }}
+                  onDelete={() => {
+                    setDeletingChat(chat);
+                    setActionError('');
+                  }}
+                />
+              )}
             </div>
           ))}
           {!chats.length && <p className="sidebar-empty">Здесь будут ваши игры.</p>}
         </nav>
         <div className="sidebar-bottom">
-          <div className="account-line">
-            <span className="avatar">{session.user?.username.slice(0, 1).toUpperCase()}</span>
-            <div className="account-name">
-              {session.user?.username}
-              <small>Ваша мастерская</small>
-            </div>
-          </div>
-          <div className="account-actions">
-            <Link
-              className="text-button"
-              to="/settings"
-              state={{ from: location.pathname + location.search + location.hash }}
-              title="Настройки"
-            >
-              <Settings2 size={15} />
-              <span>Настройки</span>
-            </Link>
-            <button className="text-button" onClick={onLogout} title="Выйти">
-              <LogOut size={15} />
-              <span>Выйти</span>
-            </button>
-          </div>
+          <AccountMenu
+            key={`${collapsed}-${mobile}-${mobileOpen}-${location.pathname}`}
+            username={session.user?.username || ''}
+            onLogout={onLogout}
+          />
         </div>
       </aside>
       {editingChat && (
