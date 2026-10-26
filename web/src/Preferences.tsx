@@ -113,10 +113,7 @@ export default function Preferences() {
                     Сохраняем выбор модели…
                   </p>
                 )}
-                <p className="field-help">
-                  Выбор сохраняется сразу. Можно менять и в шапке чата. Текущая генерация
-                  продолжится с прежней моделью.
-                </p>
+                <p className="field-help">Выбор сохраняется сразу.</p>
               </div>
             )}
             <fieldset className="settings-theme">
@@ -134,7 +131,7 @@ export default function Preferences() {
                   </button>
                 ))}
               </div>
-              <p className="field-help">Применяется сразу и сохраняется в этом браузере.</p>
+              <p className="field-help">Сохраняется в этом браузере.</p>
             </fieldset>
           </section>
           <section className="form-stack settings-card" aria-label="Пожелания к играм">
@@ -155,7 +152,7 @@ export default function Preferences() {
               </label>
               <p className="field-help">
                 Ваши оценки добавляют сюда пожелания. Можно оставить до десяти коротких пожеланий,
-                отредактировать или удалить их. Изменение настроек не запускает модель.
+                отредактировать или удалить их.
               </p>
               <button
                 type="button"
