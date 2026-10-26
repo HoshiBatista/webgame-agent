@@ -61,6 +61,7 @@ export default function ActionMenu({
   }, [open, placement]);
   useEffect(() => {
     if (!open) return;
+    const anchorAtOpen = trigger.current!.getBoundingClientRect();
     const outside = (event: PointerEvent) => {
       if (
         !menu.current?.contains(event.target as Node) &&
@@ -70,7 +71,12 @@ export default function ActionMenu({
     };
     const dismiss = () => setOpen(false);
     const scroll = (event: Event) => {
-      if (!(event.target instanceof Node) || !menu.current?.contains(event.target)) dismiss();
+      if (event.target instanceof Node && menu.current?.contains(event.target)) return;
+      const anchor = trigger.current?.getBoundingClientRect();
+      // Focusing/clicking a trigger can queue a scroll event before the menu opens.
+      // Only dismiss if the anchor actually moved after positioning the menu.
+      if (!anchor || anchor.top !== anchorAtOpen.top || anchor.left !== anchorAtOpen.left)
+        dismiss();
     };
     document.addEventListener('pointerdown', outside);
     window.addEventListener('resize', dismiss);

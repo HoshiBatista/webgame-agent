@@ -251,6 +251,12 @@ it('removes chat actions when collapsed and keeps the profile menu keyboard acce
   fireEvent.click(profile);
   fireEvent.pointerDown(document.body);
   expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  fireEvent.click(profile);
+  fireEvent.scroll(screen.getByRole('complementary'));
+  expect(screen.getByRole('menu')).toBeInTheDocument();
+  vi.spyOn(profile, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 10, 48, 48));
+  fireEvent.scroll(screen.getByRole('complementary'));
+  expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Развернуть список чатов' }));
   expect(screen.getByRole('button', { name: 'Действия с чатом «Моя игра»' })).toBeInTheDocument();
   expect(post).not.toHaveBeenCalled();
