@@ -10,16 +10,18 @@ Let’s Encrypt возвращает общий лимит для `fvds.ru`. Д�
 На этом порту разрешён только `/preview/*`, cookies и Authorization удаляются ingress.
 Сам preview также задаёт CSP sandbox, запрещает сеть и не включает middleware сессий.
 
-Конфигурация Compose: основной `compose.yaml` плюс `deploy/cloud.compose.yaml`.
+Конфигурация Compose: основной `compose.yaml`, `deploy/cloud.compose.yaml` и
+`deploy/codex-api.cloud.compose.yaml`. Третий файл обязателен для текущего Pro API.
 Проверенная конфигурация Caddy: `deploy/Caddyfile.cloud`; её копия установлена
 в `/etc/caddy/Caddyfile`. Домен временно перенаправляет приложение на рабочий IP,
 когда сертификат домена станет доступен.
-Работающий выпуск использует relay. Для Pro подготовлен отдельный необязательный
-профиль ниже; авторизация Codex с Mac на облачный сервер не переносится.
+Lite использует прежний relay; Pro — отдельный Codex Worker на `https://72.56.101.64`.
+Вход ChatGPT находится только на сервере Codex. На облачном приложении ключ API
+получает только worker; доступ Pro разрешён аккаунтам 1 и 2.
 
 ## Размещение и запуск
 
-Текущий выпуск приложения: `27bb429`, каталог `/opt/gameforge/releases/20261026-27bb429`.
+Текущий выпуск приложения: `e30b774`, каталог `/opt/gameforge/releases/20261026-e30b774`.
 Ссылка `/opt/gameforge/current` указывает на этот каталог; для команд обслуживания
 использовать её, а не путь прежнего выпуска.
 Секреты находятся в его закрытом `.env`; не выводить `docker compose config` без
@@ -28,8 +30,10 @@ Let’s Encrypt возвращает общий лимит для `fvds.ru`. Д�
 ```sh
 ssh -i ~/.ssh/id_ed25519_vps_proxy root@212.57.126.215
 cd /opt/gameforge/current
-docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml config --quiet
-docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml ps
+docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml \
+  -f deploy/codex-api.cloud.compose.yaml config --quiet
+docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml \
+  -f deploy/codex-api.cloud.compose.yaml ps
 ```
 
 При обновлении сохранять действующий закрытый `.env`, меняя APP_IMAGE/VALIDATOR_IMAGE
@@ -43,7 +47,8 @@ docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml ps
 Перед запуском загрузить или собрать оба образа. Затем:
 
 ```sh
-docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml up -d --no-build
+docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml \
+  -f deploy/codex-api.cloud.compose.yaml up -d --no-build
 ```
 
 Приложение и preview опубликованы только на loopback через Nginx 8080/8081.
@@ -95,6 +100,29 @@ Redis, PostgreSQL, Gunicorn и служебный Unix-сокет валидат
 Служебная проверка выпуска не должна создавать Chat/Run/Invocation в пользовательских
 аккаунтах. Для проверки валидатора передавайте доверенную сцену из памяти; для проверки
 HTTP-preview используйте существующую доступную версию. Не удаляйте её после проверки.
+
+## Обновление 26 октября 2026 — `e30b774`: Pro API
+
+Облачный выпуск и локальное приложение подключены к одному серверу Codex через
+раздельных владельцев очереди и ключи. Полные настройки и возврат к локальному CLI:
+[Pro API](codex-api.ru.md). Старый cloud overlay для CLI не смешивать с новым API overlay.
+
+Перед переключением активных Run/Invocation не было. Проверенная резервная копия:
+`/opt/gameforge/backups/before-e30b774-20261026T204807Z.dump`, SHA256
+`27a65671eefc3a45389f8f8ebcb1ee3601f4ba236f1aeefe0286839b008cf025`.
+Применена миграция `0014_generation_strategy`; прежние поля всех записей совпали
+по hash, включая 73 Invocation и 4 unknown. Сохранены 16 чатов (3 видимых), 35 Run,
+11 версий и 2 пользователя. Новых служебных чатов нет.
+
+Django check, миграции, Celery ping, authenticated relay health, публичный HTTPS
+и реальный Docker-validator с доверенной сценой (3/3 факта) прошли. Pro доступен
+ID 1/2 и запрещён постороннему ID. Ключ API есть только у worker. Контейнеры реле,
+PostgreSQL и Redis не перезапускались. GPU не посещался и не менялся.
+
+Два согласованных реальных вызова выполнены: один с Mac, один из облачного worker.
+Оба вернули валидный план GPT-6-Sol; новый код игр в этом пилоте не генерировался.
+[Отчёт и ограничения проверки](codex-api.ru.md#приёмка-26-октября-2026).
+[Машинные результаты](evidence/codex-api-2026-10-26.json).
 
 ## Обновление 26 октября 2026 — `27bb429`
 
@@ -417,75 +445,10 @@ SHA256 обоих: `0621b4cbabc5d60f4d8ea3abc6a19eb92c713925e4ea69037c8eb759c790
 
 [Образы и проверки](evidence/cloud-deployment-bb07e1f-2026-10-25.json).
 
-## Codex Pro на закрытом стенде
+## История прямого Codex-login на облачном приложении
 
-**Статус 24.10.2026: подключение не завершено.** На VPS отдельно установлен проверенный
-по SHA-512 `codex-cli 0.163.0-alpha.11.2`; его запуск внутри непривилегированного
-контейнера проверен. `codex login --device-auth` завершился с `403 Forbidden` до выдачи
-кода входа. С того же адреса `auth.openai.com` и endpoint каталога Codex отвечают
-страницей «Unable to load site». Точную причину отказа эта страница не раскрывает.
-При попытке входа работающий выпуск GameForge не менялся. Позднее приложение обновлено
-до `1d798e8`, затем до `6f3b9ee`, но Pro на VPS по-прежнему не включён; Lite и реле продолжают работать.
-GPU не затрагивался, модельные запросы не отправлялись.
-
-Подготовленный режим предназначен для существующих допущенных пользователей:
-`admin` (ID 1) и `tester` (ID 2), по прямому разрешению владельца. Новые аккаунты
-автоматически Pro не получают. Все разрешённые вызовы используют лимит аккаунта,
-в который оператор войдёт на VPS. Общий бюджет и учёт неизвестного расхода сохраняются.
-
-После устранения внешнего отказа авторизации:
-
-1. Создать новый выпуск из актуального Git (миграция `0007_model_profiles` уже применена) и собрать
-   APP_IMAGE. Дождаться завершения активных заданий, сделать `pg_dump` в закрытый
-   каталог `/opt/gameforge/backups`; сохранить прежний image/release для отката.
-2. Выполнить **новый** вход Codex на VPS через `codex login --device-auth` с
-   `CODEX_HOME=/opt/gameforge/codex-home`, от UID 10001. Подтвердить одноразовый код
-   в браузере владельца. Предпочтительно запускать закреплённый binary в отдельном
-   контейнере с тем же UID, единственным bind mount для Codex-home и исходящей сетью.
-   Не передавать ему БД, Redis, токен реле, Docker socket или код приложения.
-   Официальная процедура: [headless login](https://learn.chatgpt.com/docs/auth#login-on-headless-devices).
-3. Получить свежий каталог этого входа через Codex App Server `model/list`, без
-   `turn/start`. Проверить `login status` и наличие строго `gpt-6-sol` в локальном
-   `models_cache.json`. Наличие в каталоге само по себе не доказывает успешную генерацию.
-4. Добавить в приватный `.env` нового выпуска:
-
-```dotenv
-GAMEFORGE_PRO_ENABLED=0
-GAMEFORGE_PRO_USER_IDS=1,2
-GAMEFORGE_CODEX_BINARY_HOST=/opt/gameforge/codex-cli/0.163.0-alpha.11.2/codex
-GAMEFORGE_CODEX_HOME_HOST=/opt/gameforge/codex-home
-GAMEFORGE_CODEX_CATALOG_HOST=/opt/gameforge/codex-catalog
-```
-
-Закрытые каталоги должны принадлежать UID/GID `10001:10001`, режим `0700`; binary —
-root-owned `0755`. Это runtime mounts, содержимое не включается в образ или Git.
-Overlay не создаёт отсутствующие пути автоматически. Не выводить полный Compose config.
-
-5. Во всех командах нового выпуска добавить третий файл:
-
-```sh
-docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml \
-  -f deploy/codex.cloud.compose.yaml config --quiet
-
-docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml \
-  -f deploy/codex.cloud.compose.yaml run --rm --no-deps worker \
-  python manage.py export_codex_catalog --output /run/codex-catalog/models_cache.json
-```
-
-Экспорт содержит только сведения для выбора модели; web-процесс не видит каталог
-авторизации. Только worker получает Codex-home и выход к провайдеру, его лимит RAM
-повышен до 768 МиБ. Секреты приложения не попадают в дочернее окружение Codex;
-shell, инструменты, приложения, плагины и доступ к проекту модели отключены адаптером.
-Новый список ID не заменяет Django login/CSRF и не выдаёт права staff.
-
-6. После проверки входа и профиля адаптера включить `GAMEFORGE_PRO_ENABLED=1` и
-   выполнить `up -d --no-build` с теми же тремя Compose-файлами. Init применяет миграции.
-   Проверить HTTPS-вход обоих аккаунтов, доступность Pro/Lite, запрет постороннему ID
-   и отсутствие credential mount у app/preview/validator. Проверка настоящей генерации
-   проводится отдельно с согласованным бюджетом; тесты с заглушкой её не заменяют.
-
-Если авторизация снова возвращает 403, оставить Pro выключенным и обратиться в
-поддержку OpenAI/хостинга с адресом VPS, временем и идентификатором отказа.
-Не копировать действующий auth.json с Mac ради обхода ошибки и не включать Pro по одному
-успешному `--version`. Для отключения Pro достаточно вернуть флаг в 0 и пересоздать
-app/worker с теми же Compose-файлами, предварительно учитывая активные задания.
+24.10.2026 попытка отдельного входа CLI на `212.57.126.215` завершилась HTTP 403
+до выдачи device-кода. Этот вариант не был активирован. Авторизация с Mac не копировалась.
+С 26.10 используется Pro API на отдельном сервере `72.56.101.64`, где пользователь
+успешно подтвердил новый вход. Прямой локальный CLI остаётся доступен в коде и настройках;
+его прежний cloud overlay сохранён как отдельный вариант, но текущий выпуск его не использует.
