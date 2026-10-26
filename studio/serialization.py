@@ -138,7 +138,7 @@ def chat_data(chat, detail=False):
                             "id": str(m.run_id),
                             "status": m.run.status,
                             "model_profile": m.run.model_profile or (
-                                "pro" if m.run.provider == "codex" else "lite"
+                                "pro" if m.run.provider in {"codex", "codex_api"} else "lite"
                             ),
                             "elapsed_seconds": (
                                 (m.run.finished_at or timezone.now()) - m.run.created_at

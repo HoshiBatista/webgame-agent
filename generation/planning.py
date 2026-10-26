@@ -51,7 +51,7 @@ def prompt(request):
 
 
 def strategy(provider, model):
-    return "pro" if provider == "codex" and model in {"gpt-6-sol", "gpt-6.1-sol"} else "lite"
+    return "pro" if provider in {"codex", "codex_api"} and model in {"gpt-6-sol", "gpt-6.1-sol"} else "lite"
 
 
 def should_plan(profile, operation, prompt_text, *, provider="", model=""):

@@ -6,10 +6,11 @@ import uuid
 from .errors import GenerationError
 from .normalization import VERSION as NORMALIZATION_VERSION
 from .normalization import normalize_response
-from .providers import codex, fake, relay, vllm
+from .providers import codex, codex_api, fake, relay, vllm
 from .schema import response_schema, validate_response
 
-PROVIDERS = {"codex": codex, "vllm": vllm, "relay": relay, "fake": fake}
+PROVIDERS = {"codex": codex, "codex_api": codex_api, "vllm": vllm, "relay": relay, "fake": fake}
+DURABLE_PROVIDERS = frozenset({"relay", "codex_api"})
 
 
 def generate(request, *, on_event, is_cancelled):
@@ -25,7 +26,7 @@ def generate(request, *, on_event, is_cancelled):
             "requested_model": request.get("model"),
             "generation_strategy": request.get("generation_strategy", "lite"),
             "presentation_policy": request.get("presentation_policy", 0),
-            "reasoning_effort": request.get("reasoning_effort", "low") if provider_name == "codex" else None,
+            "reasoning_effort": request.get("reasoning_effort", "low") if provider_name in {"codex", "codex_api"} else None,
             "generation_contract": request.get("generation_contract", {}),
             "execution_limits": request.get("execution_limits", {}),
             "explicit_sampling": {key: request["relay"]["payload"][key] for key in
@@ -86,7 +87,7 @@ def estimate_reservation(request, price):
     if not any(rates):
         return Decimal(0)
     model = request.get("model") or "gpt-6-luna"
-    if request.get("provider", "codex") == "codex" and model in {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"}:
+    if request.get("provider", "codex") in {"codex", "codex_api"} and model in {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"}:
         context, output, input_factor, output_factor = 872000, 128000, Decimal(2), Decimal("1.5")
     else:
         context, output = price.get("context_window"), price.get("max_output_tokens")

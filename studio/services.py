@@ -94,7 +94,7 @@ def tariff(provider, model):
         "gpt-6-sol": {"input": 2, "cached": 0.20, "cache_write": 2.5, "output": 10},
         "gpt-6.1-sol": {"input": 2, "cached": 0.10, "cache_write": 2.5, "output": 10},
     }
-    if provider != "codex":
+    if provider not in {"codex", "codex_api"}:
         prices = {}
     for price in prices.values():
         price.update(long_context_threshold=272000, long_input_multiplier=2, long_output_multiplier=1.5)
@@ -141,12 +141,13 @@ def reserve_invocation(run, request):
     import uuid
 
     invocation_id = uuid.uuid4()
-    if run.provider == "relay":
+    from generation.service import DURABLE_PROVIDERS, PROVIDERS
+
+    if run.provider in DURABLE_PROVIDERS:
         from generation.errors import GenerationError
-        from generation.providers.relay import prepare
 
         try:
-            request["relay"] = prepare(request, str(invocation_id))
+            request[run.provider] = PROVIDERS[run.provider].prepare(request, str(invocation_id))
         except GenerationError as exc:
             raise DomainError(exc.code, exc.message, 409) from exc
     Budget.objects.get_or_create(pk=1, defaults={"limit_usd": Decimal(settings.GAMEFORGE_BUDGET_USD)})

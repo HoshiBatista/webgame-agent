@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.parametrize("provider,model", [("codex", "gpt-6-luna"), ("vllm", "qwen38"), ("relay", "qwen38")])
+@pytest.mark.parametrize("provider,model", [("codex", "gpt-6-luna"), ("codex_api", "gpt-6-sol"),
+                                           ("vllm", "qwen38"), ("relay", "qwen38")])
 def test_llm_aliases_do_not_replace_codex_selection(monkeypatch, provider, model):
     monkeypatch.setattr("dotenv.load_dotenv", lambda *_: None)
     monkeypatch.setenv("DJANGO_SECRET_KEY", "isolated-configuration-test")

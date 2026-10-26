@@ -12,7 +12,7 @@ def configured_profiles():
     default_api = settings.GAMEFORGE_PROVIDER in {"vllm", "relay"}
     return {
         "pro": {"id": "pro", "name": "Pro", "description": "Codex · GPT-6 Sol",
-                "provider": "codex", "model": PRO_MODEL},
+                "provider": settings.GAMEFORGE_PRO_PROVIDER, "model": PRO_MODEL},
         "lite": {"id": "lite", "name": "Lite", "description": "Модель через API",
                  "provider": settings.GAMEFORGE_LITE_PROVIDER or (
                      settings.GAMEFORGE_PROVIDER if default_api else "vllm"),
@@ -59,6 +59,12 @@ def unavailable_reason(profile, request=None):
             return "Pro доступен только локальному администратору."
         if request is not None and not can_use_pro(request):
             return "Для вашего аккаунта Pro не разрешён на этом сервере."
+        if profile["provider"] == "codex_api":
+            from generation.providers.codex_api import available_models
+
+            return "" if PRO_MODEL in {item["id"] for item in available_models()} else (
+                "Pro API пока недоступен. Ожидаем обновления подключения."
+            )
         from generation.errors import GenerationError
         from generation.providers.codex import available_models, verify_cli_contract
 
@@ -85,6 +91,6 @@ def profile_options(request):
 
 
 def default_profile(options):
-    preferred = "pro" if settings.GAMEFORGE_PROVIDER == "codex" else "lite"
+    preferred = "pro" if settings.GAMEFORGE_PROVIDER in {"codex", "codex_api"} else "lite"
     return next((p["id"] for p in options if p["id"] == preferred and p["available"]),
                 next((p["id"] for p in options if p["available"]), ""))

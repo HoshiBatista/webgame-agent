@@ -15,7 +15,7 @@ class Command(BaseCommand):
         parser.add_argument("invocation_id", nargs="?")
 
     def handle(self, *args, **options):
-        rows = Invocation.objects.filter(run__provider__in=["vllm", "relay"])
+        rows = Invocation.objects.filter(run__provider__in=["vllm", "relay", "codex_api"])
         if options["invocation_id"]:
             try:
                 ident = uuid.UUID(options["invocation_id"])
@@ -33,6 +33,7 @@ class Command(BaseCommand):
             "elapsed_seconds": inv.elapsed_seconds, "error_code": (inv.error or {}).get("code"),
             "metadata": {key: metadata[key] for key in ("trace_id", "request_id", "transport_error", "transport",
                                                       "relay_job_id", "relay_wait", "relay_cancel_wait", "inference_seconds",
+                                                      "codex_api_job_id", "codex_api_wait", "codex_api_cancel_wait", "receipt_hash",
                                                       "first_output_seconds")
                          if key in metadata},
         }

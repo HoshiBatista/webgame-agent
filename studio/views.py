@@ -90,11 +90,11 @@ def owned_revision(request, ident):
 
 def capabilities(request):
     models = []
-    if settings.GAMEFORGE_PROVIDER == "codex":
+    if settings.GAMEFORGE_PROVIDER in {"codex", "codex_api"}:
         try:
-            from generation.providers.codex import available_models
+            from generation.service import PROVIDERS
 
-            models = available_models()
+            models = PROVIDERS[settings.GAMEFORGE_PROVIDER].available_models()
         except (ImportError, OSError, ValueError):
             pass
     if not models and settings.GAMEFORGE_MODEL:
@@ -196,7 +196,7 @@ def chat_view(request, ident):
 
 
 def enforce_provider_boundary(request, provider):
-    if provider == "codex":
+    if provider in {"codex", "codex_api"}:
         if not settings.GAMEFORGE_PRO_ENABLED or not can_use_pro(request):
             raise DomainError(
                 "codex_access_denied", "Для вашего аккаунта Pro не разрешён на этом сервере.", 403

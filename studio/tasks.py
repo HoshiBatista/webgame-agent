@@ -11,6 +11,8 @@ from django.db import close_old_connections, connections, transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
+from generation.service import DURABLE_PROVIDERS, PROVIDERS
+
 from .continuations import returned_response
 from .models import Budget, Chat, CheckReport, Invocation, Outbox, Revision, Run
 from .services import (
@@ -66,7 +68,7 @@ def recover_expired():
     # Requests abandoned during cancellation still retain a liability, never an active reservation forever.
     abandoned = Invocation.objects.filter(
         state__in=["reserved", "sent"], run__status="cancelled"
-    ).filter(Q(run__lease_until__lt=timezone.now()) | Q(run__lease_until__isnull=True)).exclude(run__provider="relay")
+    ).filter(Q(run__lease_until__lt=timezone.now()) | Q(run__lease_until__isnull=True)).exclude(run__provider__in=DURABLE_PROVIDERS)
     for inv in abandoned:
         settle_invocation(
             inv.id,
@@ -85,7 +87,7 @@ def recover_expired():
             ):
                 continue
             unresolved = run.invocations.filter(state="sent")
-            if unresolved.exists() and run.provider != "relay":
+            if unresolved.exists() and run.provider not in DURABLE_PROVIDERS:
                 unresolved.update(
                     state="unknown",
                     finished_at=timezone.now(),
@@ -115,22 +117,28 @@ def recover_expired():
 def reconcile_relay_cancellations():
     """Durable cancellation intent survives lost connections and stopped application workers."""
     from generation.errors import GenerationError, GenerationPending
-    from generation.providers.relay import fetch, unpack
 
     rows = Invocation.objects.filter(
-        run__provider="relay", run__status="cancelled", state__in=["reserved", "sent"]
+        run__provider__in=DURABLE_PROVIDERS, run__status="cancelled", state__in=["reserved", "sent"]
     ).filter(
-        Q(provider_metadata__relay_cancel_wait__retry_at__isnull=True)
-        | Q(provider_metadata__relay_cancel_wait__retry_at__lte=time.time())
-        | Q(provider_metadata__relay_cancel_wait__operator_required=False)
-    ).order_by("created_at")[:20]
+        (Q(run__provider="relay") & (
+            Q(provider_metadata__relay_cancel_wait__retry_at__isnull=True)
+            | Q(provider_metadata__relay_cancel_wait__retry_at__lte=time.time())
+            | Q(provider_metadata__relay_cancel_wait__operator_required=False)))
+        | (Q(run__provider="codex_api") & (
+            Q(provider_metadata__codex_api_cancel_wait__retry_at__isnull=True)
+            | Q(provider_metadata__codex_api_cancel_wait__retry_at__lte=time.time())
+            | Q(provider_metadata__codex_api_cancel_wait__operator_required=False)))
+    ).select_related("run").order_by("created_at")[:20]
     for inv in rows:
-        wait = (inv.provider_metadata or {}).get("relay_cancel_wait", {})
+        wait = (inv.provider_metadata or {}).get(inv.run.provider + "_cancel_wait", {})
         if wait.get("operator_required") and wait.get("retry_at", 0) > time.time():
             continue
         try:
-            result = unpack(fetch(inv.request, cancel=True), str(inv.id))
-            settle_invocation(inv.id, response=result["response"], usage=result.get("usage"),
+            provider = PROVIDERS[inv.run.provider]
+            result = provider.unpack(provider.fetch(inv.request, cancel=True), str(inv.id))
+            settle_invocation(inv.id, response=result["response"], raw_response=result.get("raw_response"),
+                              usage=result.get("usage"),
                               provider_metadata=result.get("provider_metadata"))
         except GenerationPending as exc:
             record_relay_pending(inv, exc, cancel=True)
@@ -148,13 +156,14 @@ def record_relay_pending(inv, pending, *, cancel=False):
     inv = Invocation.objects.select_for_update().get(pk=inv.pk)
     if inv.state not in {"reserved", "sent"}:
         return
-    key = "relay_cancel_wait" if cancel else "relay_wait"
+    prefix = inv.run.provider
+    key = prefix + ("_cancel_wait" if cancel else "_wait")
     previous = (inv.provider_metadata or {}).get(key, {})
     details = {"code": pending.code, "operator_required": pending.operator_required,
                "retry_after": pending.retry_after, **pending.metadata,
                "checked_at": timezone.now().isoformat(), "retry_at": time.time() + pending.retry_after,
                "checks": previous.get("checks", 0) + 1}
-    inv.provider_metadata = {**(inv.provider_metadata or {}), "relay_job_id": str(inv.id),
+    inv.provider_metadata = {**(inv.provider_metadata or {}), prefix + "_job_id": str(inv.id),
                              key: details}
     inv.save(update_fields=["provider_metadata"])
     if pending.operator_required and previous.get("code") != pending.code:
@@ -209,7 +218,7 @@ def claim_run(run_id):
         return False
     run.fence = uuid.uuid4()
     run.lease_until = timezone.now() + timedelta(seconds=settings.GAMEFORGE_LEASE_SECONDS)
-    resuming_relay = run.provider == "relay" and run.invocations.filter(
+    resuming_relay = run.provider in DURABLE_PROVIDERS and run.invocations.filter(
         state__in=["reserved", "sent"]
     ).exists()
     run.status = "generating"
@@ -503,7 +512,7 @@ def process_run(self, run_id):
             _execute(run, lease, generate, materialize, validate)
         except Exception as exc:
             record_exception(run, exc, "pipeline")
-            if run.provider == "relay" and run.invocations.filter(state__in=["reserved", "sent"]).exists():
+            if run.provider in DURABLE_PROVIDERS and run.invocations.filter(state__in=["reserved", "sent"]).exists():
                 defer_relay(run, "Восстанавливаем получение сохранённого ответа после ошибки обработчика.")
                 return
             # If storage failed after sending, the request may still be billable.
@@ -540,9 +549,9 @@ def mark_invocation_sent(run, inv):
             or current.status not in Run.ACTIVE):
         return False
     stored = Invocation.objects.select_for_update().get(pk=inv.id, run=current)
-    if stored.state not in ({"reserved", "sent"} if run.provider == "relay" else {"reserved"}):
+    if stored.state not in ({"reserved", "sent"} if run.provider in DURABLE_PROVIDERS else {"reserved"}):
         return False
-    if stored.sent_at and run.provider != "relay":
+    if stored.sent_at and run.provider not in DURABLE_PROVIDERS:
         return False
     if not stored.sent_at and current.model_call_deadline and timezone.now() >= current.model_call_deadline:
         return False
@@ -598,7 +607,7 @@ def _execute(run, lease, generate, materialize, validate):
         # Retrieval has priority over decisions based on the old candidate/report.
         # A re-entered worker must not treat an admitted check repair as exhausted.
         resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
-        if resumed and resumed.sent_at and run.provider != "relay":
+        if resumed and resumed.sent_at and run.provider not in DURABLE_PROVIDERS:
             # Direct transports cannot reconcile a submitted inference by UUID.
             settle_invocation(resumed.id, unknown=True, error={
                 "code": "receipt_storage_failed", "message": "Результат отправленного вызова неизвестен.",
@@ -1002,7 +1011,7 @@ def _execute(run, lease, generate, materialize, validate):
                 response=result["response"],
                 raw_response=result.get("raw_response"),
                 usage=result.get("usage"),
-                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider == "relay"
+                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider in DURABLE_PROVIDERS
                 else result.get("elapsed_seconds", 0),
                 provider_id=provider_metadata.get("turn_id") or provider_metadata.get("request_id") or "",
                 provider_metadata=provider_metadata,
@@ -1022,7 +1031,7 @@ def _execute(run, lease, generate, materialize, validate):
                 usage=getattr(exc, "usage", None),
                 error=data,
                 unknown=getattr(exc, "outcome_unknown", True),
-                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider == "relay"
+                elapsed=(timezone.now() - inv.sent_at).total_seconds() if run.provider in DURABLE_PROVIDERS
                 else time.monotonic() - model_started,
                 provider_id=provider_metadata.get("turn_id") or provider_metadata.get("request_id") or "",
                 provider_metadata=provider_metadata,
@@ -1048,3 +1057,16 @@ def _execute(run, lease, generate, materialize, validate):
             finish_run(run.id, run.fence, "failed", data["message"], error=error_data(exc))
             return
         # Next loop consumes the durable response before doing any further work.
+
+
+@shared_task(acks_late=False)
+def refresh_codex_api_catalog():
+    if settings.GAMEFORGE_PRO_PROVIDER != "codex_api":
+        return
+    from generation.providers.codex_api import refresh_catalog
+
+    try:
+        refresh_catalog()
+    except Exception as exc:
+        # No raw HTTP/provider errors: stale snapshots stop admitting new Pro runs.
+        logging.getLogger(__name__).warning("codex_api_catalog_failed type=%s", type(exc).__name__)

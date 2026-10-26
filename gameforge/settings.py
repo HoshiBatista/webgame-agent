@@ -104,6 +104,8 @@ CELERY_BEAT_SCHEDULE = {
     "recover": {"task": "studio.tasks.recover_expired", "schedule": 15.0, "options": {"expires": 15}},
     "relay-cancel": {"task": "studio.tasks.reconcile_relay_cancellations", "schedule": 15.0,
                      "options": {"expires": 15}},
+    "codex-api-catalog": {"task": "studio.tasks.refresh_codex_api_catalog", "schedule": 60.0,
+                          "options": {"expires": 60}},
 }
 GAMEFORGE_PROVIDER = os.environ.get("GAMEFORGE_PROVIDER", "fake")
 GAMEFORGE_MODEL = os.environ.get("GAMEFORGE_MODEL") or (
@@ -111,7 +113,7 @@ GAMEFORGE_MODEL = os.environ.get("GAMEFORGE_MODEL") or (
     if GAMEFORGE_PROVIDER == "fake"
     else (os.environ.get("GAMEFORGE_VLLM_MODEL") or os.environ.get("LLM_MODEL", ""))
     if GAMEFORGE_PROVIDER in {"vllm", "relay"}
-    else "gpt-6-luna"
+    else "gpt-6-sol" if GAMEFORGE_PROVIDER == "codex_api" else "gpt-6-luna"
 )
 GAMEFORGE_PREVIEW_ORIGIN = os.environ.get("GAMEFORGE_PREVIEW_ORIGIN", "http://localhost:8001").rstrip("/")
 GAMEFORGE_APP_ORIGIN = os.environ.get("GAMEFORGE_APP_ORIGIN", "http://127.0.0.1:8000").rstrip("/")
@@ -126,6 +128,11 @@ GAMEFORGE_LOCAL_ONLY = os.environ.get("GAMEFORGE_LOCAL_ONLY", "1") == "1"
 # Pro is opt-in. The default remains local-only; a trusted cloud installation
 # must separately allow exact existing account IDs, never every logged-in visitor.
 GAMEFORGE_PRO_ENABLED = os.environ.get("GAMEFORGE_PRO_ENABLED", "0") == "1"
+GAMEFORGE_PRO_PROVIDER = os.environ.get(
+    "GAMEFORGE_PRO_PROVIDER", "codex_api" if GAMEFORGE_PROVIDER == "codex_api" else "codex"
+)
+if GAMEFORGE_PRO_PROVIDER not in {"codex", "codex_api"}:
+    raise ValueError("GAMEFORGE_PRO_PROVIDER must be codex or codex_api")
 GAMEFORGE_PRO_ACCESS = os.environ.get("GAMEFORGE_PRO_ACCESS", "local")
 if GAMEFORGE_PRO_ACCESS not in {"local", "restricted"}:
     raise ValueError("GAMEFORGE_PRO_ACCESS must be local or restricted")
