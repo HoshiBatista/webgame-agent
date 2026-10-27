@@ -69,7 +69,6 @@ def wire_schema(request):
     operation = request.get("operation", "create")
     props = {
         "status": {"enum": ["ok", "scope_refusal"] if operation == "create" else ["ok", "unchanged", "scope_refusal"]},
-        "message": string(maxLength=1000),
     }
     if operation in {"create", "check_repair", "checks_create", "edit"}:
         props["observations"] = array(observation, maxItems=16)
@@ -109,6 +108,7 @@ def wire_schema(request):
         )
     elif operation not in {"check_repair", "checks_create"}:
         raise ContractError("operation_mismatch", "Неизвестная операция компактного профиля.")
+    props["message"] = string(maxLength=1000)
     return obj(props)
 
 

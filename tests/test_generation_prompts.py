@@ -5,7 +5,14 @@ import json
 import pytest
 
 from generation.artifacts import sha256
-from generation.prompts import SYSTEM_PROMPT, build_messages, codex_prompt, system_prompt
+from generation.prompts import (
+    PUBLIC_REPLY_GUIDANCE,
+    QUICK_REVIEW_GUIDANCE,
+    SYSTEM_PROMPT,
+    build_messages,
+    codex_prompt,
+    system_prompt,
+)
 from generation.providers.vllm import build_payload
 from generation.schema import response_schema
 
@@ -14,8 +21,8 @@ def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol()
     text = system_prompt({"operation": "create"})
     from generation.helpers import GUIDANCE
 
-    assert text == SYSTEM_PROMPT + GUIDANCE
-    assert len(text) < 7200
+    assert text == SYSTEM_PROMPT + GUIDANCE + QUICK_REVIEW_GUIDANCE + PUBLIC_REPLY_GUIDANCE
+    assert len(text) < 7600
     assert "4-6 meaningful checks" in text
     assert "complete sources in files" in text
     assert "PATCH CONTRACT" not in text
@@ -32,8 +39,8 @@ def test_edit_and_repair_keep_distinct_requirement_policies():
     assert "exact requirement text and category" in repair
     assert "syntax or startup failure must be fixed before" in repair
     for text in (edit, repair):
-        # The pinned motion API adds a bounded instruction block to repair/edit.
-        assert len(text) < 8000
+        # Motion and the short player-facing review remain bounded.
+        assert len(text) < 8800
         assert "old_text must occur exactly once in the ORIGINAL file" in text
         assert "omitted checks are inherited unchanged" in text
         assert "status=unchanged" in text

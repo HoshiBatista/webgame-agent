@@ -121,7 +121,6 @@ RESPONSE_SCHEMA = obj(
         "status": {"enum": ["ok", "scope_refusal", "unchanged"]},
         "operation": {"enum": ["create", "edit", "repair"]},
         "title": string(maxLength=120),
-        "message": string(maxLength=2000),
         "design": DESIGN,
         "base_revision": {"type": ["string", "null"]},
         "files": array(
@@ -139,6 +138,8 @@ RESPONSE_SCHEMA = obj(
             maxItems=80,
         ),
         "checks": array(CHECK_SCHEMA, maxItems=12),
+        # Keep the player-facing review after the implementation in the wire order.
+        "message": string(maxLength=2000),
     }
 )
 

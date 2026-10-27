@@ -49,7 +49,7 @@ Implement only the requested change, preserving unrelated mechanics, source, lay
 REPAIR_PROMPT = """
 CURRENT STEP: REPAIR THE REPORTED BLOCKER
 Read the supplied findings first. Fix their primary cause and any directly related defect in the current candidate, preserving requested mechanics, layout and already working behavior. Do not redesign or add features. A syntax or startup failure must be fixed before interpreting failures of later gameplay checks; those may be consequences of that first error.
-Preserve every existing check ID, exact requirement text and category. Change steps or observations only to measure the same required effect honestly. Do not remove, weaken or bypass a failing requirement, add test-only success paths, or change the rules to make checks pass. Use message to briefly name the fixed cause; do not claim unperformed checks passed.
+Preserve every existing check ID, exact requirement text and category. Change steps or observations only to measure the same required effect honestly. Do not remove, weaken or bypass a failing requirement, add test-only success paths, or change the rules to make checks pass. Use message to briefly describe the improvement for the player, without implementation details; do not claim unperformed checks passed.
 """ + PATCH_PROMPT
 
 # Kept as the complete default-create prompt for callers recording its fingerprint.
@@ -70,7 +70,7 @@ Do not return or modify game source, patches, design, rules, title or implementa
 Return every application-issued check_repair.requirements entry with its exact id, category, requirement and viewport. Do not drop or weaken an effect. Add no unrelated checks. Change steps/observation/expect only to honestly measure that same effect on the existing game. If a requirement cannot be verified without changing the game, return status=unchanged, checks=[] and explain why; never invent a passing assertion.
 Each scenario runs on a fresh page. Use real player input, correct start/setup, reachable CSS coordinates or fractions of the displayed Canvas, and bounded waits. Trace the actual moves before claiming a win or draw. Match the observed value's type. Observe rendered DOM text/attributes or own plain window data; closed local variables are not window paths. Do not add getters, test-only hooks or self-reported pass values.
 diagnostic.observations lists actually observed values, types and their observation specifications. Prefer those exact existing observations; do not invent a field such as direction merely because a requirement mentions direction. Values are snapshots at the stated phase, not guarantees before setup. diagnostic.input_probe shows the actual hit target; an obstruction may require valid setup rather than a different selector. If the existing artifact cannot expose the required effect honestly, return unchanged.
-All checks are independently run in the isolated browser. A revised suite requires explicit user review even when it passes. Return a concise Russian message explaining what was wrong in the original scenario and what changed. Do not claim you ran tests.
+All checks are independently run in the isolated browser. A revised suite requires explicit user review even when it passes. Return a concise Russian message explaining which player action or game result still needs checking, without implementation details. Do not claim you ran tests.
 """ + CHECK_V4_PROMPT
 
 PLAN_GUIDANCE = """
@@ -80,6 +80,16 @@ PRO_GUIDANCE = """
 Pro workflow: the application executes each candidate in an isolated browser and returns real findings and, when available, a screenshot. Use this feedback to diagnose the cause and choose a coherent fix. A screenshot is one observed frame, not proof that the game works. You do not control final acceptance. Never substitute a changed test for an implementation.
 """
 PLAN_CHECK_CONTEXT = "\nThe saved game_plan is context only. Repair exactly the application-issued requirements; do not expand them from the plan or implement source changes.\n"
+
+PUBLIC_REPLY_GUIDANCE = """
+PLAYER-FACING REPLY
+message is for someone with no programming knowledge: plain Russian, 1-2 short sentences, <=500 characters. Describe the actual result and one supported player-quality detail (readability, controls, progression) or limitation. Plans/refusals are not finished games. No code, files, identifiers, libraries, APIs, implementation details or review reasoning, even if requested; technical data belongs in other JSON fields. Never claim execution, passed checks, perfection, beauty or smoothness on every device. The app adds verification AFTER checking this exact version; old findings/screenshots prove no new success. No technical approval requests.
+"""
+
+QUICK_REVIEW_GUIDANCE = """
+QUICK FINAL REVIEW
+After preparing code/patches, briefly inspect the resulting game: syntax/references, requested rules, start/control/outcome/replay and readable, reachable phone/desktop controls. Fix obvious issues within scope; preserve frozen requirements/checks. Review within this response, with no extra call/tools/stage. Inspection is not execution. Return message last, after code and checks, with only the player-facing conclusion.
+"""
 
 
 def _system_prompt(request):
@@ -132,7 +142,7 @@ def _system_prompt(request):
             "Return only new or changed checks; omitted checks are inherited unchanged, so checks=[] is valid when existing scenarios suffice.",
             "Return checks=[]; omitted checks are inherited unchanged. Only the application can revise acceptance scenarios.",
         )
-        text += ("\nThe application owns the acceptance suite. Explain defective checks in message. Original game findings remain "
+        text += ("\nThe application owns the acceptance suite. Describe any still-unverified player action in message using plain language. Original game findings remain "
                  "unresolved after a rejected patch. last_attempt_error describes that rejected reply, "
                  "not a replacement for the game's defect.\n")
     if request.get("code_repair_basis"):
@@ -277,5 +287,10 @@ def schema_prompt(request=None):
 def system_prompt(request):
     from .helpers import GUIDANCE
 
+    operation = request.get('operation', 'create')
     text = _system_prompt(request)
-    return text + (GUIDANCE if request.get('operation', 'create') in {'create', 'edit', 'repair', 'visual_patch'} else '')
+    if operation in {'create', 'edit', 'repair', 'visual_patch'}:
+        text += GUIDANCE + QUICK_REVIEW_GUIDANCE
+    if operation != 'visual_review':
+        text += PUBLIC_REPLY_GUIDANCE
+    return text

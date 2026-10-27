@@ -896,6 +896,22 @@ describe('simple conversation', () => {
     expect(screen.queryByText('Игра сохранена — нужна ваша проверка')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Я проверил игру' })).not.toBeInTheDocument();
   });
+  it('uses the plain completion message when the saved assistant reply is missing', async () => {
+    vi.mocked(request).mockResolvedValue({
+      ...chat,
+      runs: [
+        {
+          ...run,
+          status: 'failed',
+          message: 'Игра сохранена. Проверка временно недоступна.',
+          error: { code: 'validator_unavailable', message: 'TypeError: updateScore in game.js' },
+        },
+      ],
+    });
+    setup();
+    await screen.findByText('Игра сохранена. Проверка временно недоступна.');
+    expect(screen.queryByText(/TypeError/)).not.toBeInTheDocument();
+  });
   it('centres the new conversation invitation without a suggested prompt', () => {
     setup('/chats/new');
     expect(

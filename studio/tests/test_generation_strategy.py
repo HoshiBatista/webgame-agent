@@ -119,7 +119,7 @@ def test_budget_one_saves_only_plan_then_explicit_continuation_reuses_it(chat):
     assert run.game_plan and not run.candidate_revision_id
     assert model.call_count == 1
     browser.assert_not_called()
-    assert "создание кода ещё не завершено" in run.chat_messages.get(role="assistant").content
+    assert "сама игра ещё не готова" in run.chat_messages.get(role="assistant").content
     continued = create_run(chat, {"idempotency_key": "continue", "model_call_limit": 1}, continued_from=run)
     assert continued.game_plan == run.game_plan and not continued.planning_required
     with (patch("generation.service.generate", side_effect=fake_generate) as model,
@@ -187,7 +187,7 @@ def test_check_only_edit_keeps_draft_visible_and_recheck_uses_no_model(chat):
     serialized = chat_data(chat, detail=True)
     assert serialized["candidate_revision"]["id"] == str(source.id)
     assert run_data(run)["can_recheck"] and not run_data(run)["can_confirm"]
-    assert "только проверки" in run.chat_messages.get(role="assistant").content
+    assert "не изменила саму игру" in run.chat_messages.get(role="assistant").content
     recheck = create_run(chat, {"idempotency_key": "recheck"}, continued_from=run, check_only=True)
     with (patch("generation.service.generate") as model,
           patch("validation.service.validate", return_value=PASS)):

@@ -15,7 +15,7 @@ from django.utils.dateparse import parse_datetime
 from .continuations import delivery_state, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
 from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Revision, Run, RunEvent
-from .replies import assistant_reply
+from .replies import assistant_reply, run_reply
 from .titles import DEFAULT_CHAT_TITLE, short_game_title, title_from_prompt
 
 
@@ -575,17 +575,15 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     responses = run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
     if (error or {}).get("code") != "scope_refusal":
         responses = responses.exclude(request__has_key="operation", request__operation__in=["plan", "visual_review"])
-    if revision and run.visual_review_enabled:
-        responses = responses.filter(revision=revision)
+    if revision:
+        responses = responses.filter(revision=revision).exclude(
+            request__has_key="operation", request__operation__in=["check_repair", "checks_create"]
+        )
     response = responses.order_by("-attempt").values_list("response", flat=True).first()
     model_message = response.get("message", "") if isinstance(response, dict) else ""
-    reply = assistant_reply(
-        status, message, model_message, has_candidate=bool(run.candidate_revision_id),
+    reply = run_reply(
+        run, model_message,
         response_status=response.get("status", "") if isinstance(response, dict) else "",
-        operation=run.operation, error_code=(error or {}).get("code", ""),
-        has_source=bool(run.source_revision_id or run.base_revision_id),
-        planning_failed=run.planning_required and not run.game_plan,
-        plan_without_game=bool(run.game_plan) and not (run.candidate_revision_id or run.source_revision_id or run.base_revision_id),
     )
     Message.objects.create(chat=run.chat, run=run, role="assistant", content=reply)
     event(run, status, message, {"error": error} if error else {})

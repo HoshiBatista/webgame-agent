@@ -129,13 +129,18 @@ class ChatTitleTests(TestCase):
     def test_verified_result_keeps_the_model_reply_in_the_conversation(self):
         run, revision = self.run_and_revision()
         Invocation.objects.create(
-            run=run, attempt=1, state="settled", request={},
+            run=run, revision=revision, attempt=1, state="settled", request={},
             response={"message": "Соберите пять звёзд касанием. Что хотите изменить?"},
+        )
+        CheckReport.objects.create(
+            revision=revision, validation_run=run, status="passed", identity=check_identity(revision),
+            assessment={"action": "accept", "gates_passed": True,
+                        "artifact_evidence": {"artifact_hash": revision.artifact_hash}},
         )
         finish_run(run.id, run.fence, "succeeded", "Внутреннее сообщение проверки", revision=revision)
         self.assertEqual(
             run.chat_messages.get(role="assistant").content,
-            "Соберите пять звёзд касанием. Что хотите изменить?",
+            "Соберите пять звёзд касанием. Что хотите изменить? Выполненные проверки пройдены — можно пробовать играть.",
         )
 
     def test_invalid_title_and_foreign_or_deleted_chat_cannot_be_changed(self):

@@ -154,7 +154,6 @@ PATCH_SCHEMA = obj(
     {
         "operation": {"enum": ["visual_patch"]},
         "status": {"enum": ["ok", "unchanged", "scope_refusal"]},
-        "message": string(minLength=1, maxLength=1000),
         **BINDINGS,
         "patches": array(
             obj(
@@ -167,6 +166,7 @@ PATCH_SCHEMA = obj(
             ),
             maxItems=6,
         ),
+        "message": string(minLength=1, maxLength=1000),
     }
 )
 

@@ -917,7 +917,7 @@ export default function Studio() {
                     beeGame {latestRun.model_profile === 'pro' ? 'Pro' : 'Lite'}
                     <RunTime run={latestRun} />
                   </span>
-                  <div>{latestRun.error?.message || latestRun.message}</div>
+                  <div>{latestRun.message}</div>
                 </article>
               )}
           </div>
