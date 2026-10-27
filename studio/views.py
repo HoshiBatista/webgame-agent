@@ -25,7 +25,8 @@ from .model_profiles import (
     profile_options,
     unavailable_reason,
 )
-from .models import Chat, Feedback, Like, Message, Publication, Revision, Run
+from .models import Chat, Feedback, Like, Message, Preference, Publication, Revision, Run
+from .preferences import add_feedback_notes, validate_notes
 from .serialization import chat_data, preview_url, publication_data, revision_data, run_data
 from .services import (
     DomainError,
@@ -113,7 +114,8 @@ def capabilities(request):
 
 
 def preference_data(pref):
-    return {"theme": pref.theme, "notes": pref.notes, "model_profile": pref.model_profile}
+    return {"theme": pref.theme, "notes": pref.notes, "model_profile": pref.model_profile,
+            "suggest_templates": pref.suggest_templates}
 
 
 def session_data(request):
@@ -566,9 +568,11 @@ def remix_view(request, ident):
 
 
 @api_view(["GET", "PATCH"])
+@transaction.atomic
 def preferences_view(request):
     pref = preference_for(request.user)
     if request.method == "PATCH":
+        pref = Preference.objects.select_for_update().get(pk=pref.pk)
         if "model_profile" in request.data:
             profile_id = request.data["model_profile"]
             if not isinstance(profile_id, str) or profile_id not in configured_profiles():
@@ -582,15 +586,13 @@ def preferences_view(request):
                 raise DomainError("invalid_theme", "Выберите светлую или тёмную тему.")
             pref.theme = request.data["theme"]
         if "notes" in request.data:
-            notes = request.data["notes"]
-            if (
-                not isinstance(notes, list)
-                or len(notes) > 10
-                or not all(isinstance(s, str) and len(s) <= 300 for s in notes)
-            ):
-                raise DomainError("invalid_preferences", "Можно сохранить до 10 коротких пожеланий.")
-            pref.notes = list(dict.fromkeys(s.strip() for s in notes if s.strip()))
-        pref.save(update_fields=[key for key in ("theme", "notes", "model_profile") if key in request.data])
+            pref.notes = validate_notes(request.data["notes"])
+        if "suggest_templates" in request.data:
+            if type(request.data["suggest_templates"]) is not bool:
+                raise DomainError("invalid_preferences", "Выберите, предлагать ли шаблоны в новом чате.")
+            pref.suggest_templates = request.data["suggest_templates"]
+        pref.save(update_fields=[key for key in ("theme", "notes", "model_profile", "suggest_templates")
+                                 if key in request.data])
     return Response(preference_data(pref))
 
 
@@ -612,7 +614,8 @@ def feedback_view(request, ident):
             chat=chat, user=request.user, revision=chat.current_revision, rating=rating, reasons=reasons
         )
         pref = preference_for(request.user)
-        pref.notes = list(dict.fromkeys(pref.notes + [s.strip() for s in reasons if s.strip()]))[-10:]
+        pref = Preference.objects.select_for_update().get(pk=pref.pk)
+        pref.notes, preferences_full = add_feedback_notes(pref.notes, reasons)
         pref.save(update_fields=["notes"])
     return Response(
         {
@@ -620,6 +623,7 @@ def feedback_view(request, ident):
             "rating": rating,
             "reasons": reasons,
             "preferences": preference_data(pref),
+            "preferences_full": preferences_full,
         },
         status=201,
     )

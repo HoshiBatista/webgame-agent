@@ -7,7 +7,8 @@ import { useSession } from './context';
 import type { Session } from './types';
 
 export function loginDestination(from: unknown): string {
-  return typeof from === 'string' && /^\/(?:chats\/|play\/|games\/|settings(?:[?#]|$))/.test(from)
+  return typeof from === 'string' &&
+    /^\/(?:chats\/|play\/|games\/|(?:settings|templates)(?:[?#]|$))/.test(from)
     ? from
     : '/';
 }

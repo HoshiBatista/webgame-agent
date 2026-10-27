@@ -6,6 +6,7 @@ import {
   Square,
   Expand,
   Gamepad2,
+  FileText,
   History,
   PanelRightClose,
   PanelRightOpen,
@@ -13,7 +14,7 @@ import {
   Sparkles,
   Star,
 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorText, newKey, post, request } from './api';
 import {
   ErrorNotice,
@@ -24,10 +25,12 @@ import {
   Spinner,
 } from './components';
 import { chatsChanged, useSession } from './context';
-import type { Chat, Preferences, Publication, Revision, Run } from './types';
+import type { Chat, Preferences, PromptTemplate, Publication, Revision, Run } from './types';
 import { useSavedChat } from './useSavedChat';
 import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { selectedProfile } from './ModelSelector';
+import TemplatePicker from './TemplatePicker';
+import { appendTemplate } from './textLimits';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех' },
@@ -48,8 +51,15 @@ export default function Studio() {
   const { id = 'new' } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
+  const location = useLocation();
   const { session, refresh, updateSession, studioDrafts } = useSession();
   const initialDraft = useRef(studioDrafts?.get(id)).current;
+  const templatesOffered = useRef(initialDraft?.templatesOffered ?? false);
+  const [templatePicker, setTemplatePicker] = useState<{
+    automatic: boolean;
+    initial?: PromptTemplate[];
+  } | null>(null);
+  const promptInput = useRef<HTMLTextAreaElement>(null);
   const {
     chat,
     loading,
@@ -107,6 +117,7 @@ export default function Studio() {
   const [reasons, setReasons] = useState<string[]>([]);
   const [customReason, setCustomReason] = useState('');
   const [feedbackDone, setFeedbackDone] = useState(false);
+  const [feedbackNotice, setFeedbackNotice] = useState('');
   const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
@@ -121,6 +132,7 @@ export default function Studio() {
       }
       studioDrafts?.set(id, {
         ...draft.current,
+        templatesOffered: templatesOffered.current,
         audience: audienceReady.current ? draft.current.audience : null,
         idempotencyKey: idempotency.current,
         lastPayload: lastPayload.current,
@@ -155,6 +167,9 @@ export default function Studio() {
   }, []);
   useEffect(() => {
     const remembered = studioDrafts?.get(id);
+    templatesOffered.current = remembered?.templatesOffered ?? false;
+    setTemplatePicker(null);
+    setFeedbackNotice('');
     setNewTitle(remembered?.chatTitle ?? null);
     audienceReady.current = isNew || remembered?.audience != null;
     setSelectedRevision(remembered?.selectedRevision ?? null);
@@ -279,6 +294,43 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  useEffect(() => {
+    const text = location.state?.templateText;
+    if (!isNew || typeof text !== 'string') return;
+    templatesOffered.current = true;
+    setPrompt(appendTemplate(studioDrafts?.get(id)?.prompt ?? '', text));
+    navigate(location.pathname, { replace: true, state: null });
+    requestAnimationFrame(() => promptInput.current?.focus());
+  }, [location.key, isNew, navigate]);
+  useEffect(() => {
+    if (
+      !isNew ||
+      prompt.trim() ||
+      busy ||
+      pendingHere ||
+      templatesOffered.current ||
+      session.preferences.suggest_templates !== true
+    )
+      return;
+    let alive = true;
+    request<{ results: PromptTemplate[] }>('/api/templates/')
+      .then((data) => {
+        if (!alive || templatesOffered.current) return;
+        templatesOffered.current = true;
+        if (data.results.length) setTemplatePicker({ automatic: true, initial: data.results });
+      })
+      .catch(() => {
+        // An optional suggestion must never interrupt writing a new request.
+      });
+    return () => {
+      alive = false;
+    };
+  }, [isNew, id, prompt, busy, pendingHere, session.preferences.suggest_templates]);
+  function chooseTemplate(template: PromptTemplate) {
+    setPrompt((value) => appendTemplate(value, template.description));
+    setTemplatePicker(null);
+    requestAnimationFrame(() => promptInput.current?.focus());
+  }
   const confirmation =
     !activeRun &&
     latestRun?.can_confirm &&
@@ -528,7 +580,7 @@ export default function Studio() {
     const startedView = view.current;
     setBusy(true);
     try {
-      await post(`/api/chats/${chat.id}/feedback/`, {
+      const result = await post<{ preferences_full?: boolean }>(`/api/chats/${chat.id}/feedback/`, {
         rating,
         reasons:
           rating < 5 ? [...reasons, ...(customReason.trim() ? [customReason.trim()] : [])] : [],
@@ -537,6 +589,11 @@ export default function Studio() {
       if (view.current !== startedView) return;
       setShowFeedback(false);
       setFeedbackDone(true);
+      setFeedbackNotice(
+        result?.preferences_full
+          ? 'Оценка сохранена. Часть пожеланий не добавлена в настройки: достигнут лимит 3000 символов. Освободите место, чтобы добавить их.'
+          : '',
+      );
     } catch (cause) {
       if (view.current === startedView) setError(errorText(cause));
     } finally {
@@ -743,6 +800,11 @@ export default function Studio() {
               </div>
             )}
             {error && <ErrorNotice message={error} onClose={() => setError('')} />}{' '}
+            {feedbackNotice && (
+              <p className="notice" role="status">
+                {feedbackNotice}
+              </p>
+            )}
             {modelUnavailable && (
               <ErrorNotice
                 message={selectedModel?.unavailable_reason || 'Выберите доступную модель.'}
@@ -913,6 +975,7 @@ export default function Studio() {
           </div>
           <div className="composer-input">
             <textarea
+              ref={promptInput}
               aria-label={revision ? 'Что изменить в игре' : 'Описание вашей игры'}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
@@ -965,6 +1028,20 @@ export default function Studio() {
                   )}
                 </div>
               </details>
+              <button
+                type="button"
+                className="composer-template-button"
+                aria-label="Использовать шаблон"
+                title="Использовать шаблон"
+                disabled={busy || !!activeRun || !!pendingHere}
+                onClick={() => {
+                  templatesOffered.current = true;
+                  setTemplatePicker({ automatic: false });
+                }}
+              >
+                <FileText size={17} />
+                <span>Шаблоны</span>
+              </button>
               {activeRun ? (
                 <button
                   type="button"
@@ -994,6 +1071,14 @@ export default function Studio() {
             </div>
           </div>
         </form>
+        {templatePicker && (
+          <TemplatePicker
+            automatic={templatePicker.automatic}
+            initial={templatePicker.initial}
+            onClose={() => setTemplatePicker(null)}
+            onChoose={chooseTemplate}
+          />
+        )}
       </section>
       <aside
         className="preview-pane"

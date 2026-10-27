@@ -13,6 +13,16 @@ npm run build
 
 Development uses Vite on localhost and proxies `/api` to `127.0.0.1:8000`. Production
 builds to `dist/`; Django/nginx serves the same root routes `/`, `/chats/:id`, `/games/:id`.
+`/templates` is the private prompt library, linked below the community feed in the sidebar.
+Templates have editable titles (50 characters) and descriptions (3000), search and confirmed
+deletion. The composer template button opens an optional picker; applying it appends to
+the draft without sending. Empty new chats offer saved templates when the account's
+`suggest_templates` preference is enabled (default true). An empty library, an existing draft
+or a late response after typing does not interrupt the user. Skipping is remembered for that
+new-chat draft. Wishes use a 3000-character total with a Unicode-aware counter, an over-limit
+warning and a disabled Save button; the API independently enforces the same limit.
+Template dialogs share themes, keyboard dismissal and reduced-motion behavior; their
+bottom actions remain visible while long content scrolls. Apply migration `0018_personal_templates`.
 Guest sign-in lives at `/login`; both landing-page actions open it. Successful sign-in
 returns to the requested private page, or to the feed for a direct visit. The sign-in
 page stays light, keeps its dotted background at every width, and has no footer.

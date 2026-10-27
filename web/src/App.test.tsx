@@ -395,6 +395,7 @@ it('supports a direct login URL and a return to the landing without signing in',
 it.each([
   ['/login', '/', 'Игры сообщества'],
   ['/chats/one?revision=2#preview', '/chats/one?revision=2#preview', 'Текущий чат'],
+  ['/templates', '/templates', 'Мои шаблоны'],
 ])('signs in from %s and restores the destination', async (entry, destination, heading) => {
   vi.mocked(getSession).mockResolvedValue(guestSession);
   let finishLogin!: (value: Session) => void;

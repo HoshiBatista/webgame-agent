@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   ArrowUpRight,
   Check,
@@ -96,6 +104,7 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const dialog = ref.current;
     if (dialog && !dialog.open) dialog.showModal();
@@ -106,6 +115,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       className={`modal ${wide ? 'modal-wide' : ''}`}
       onCancel={(event) => {
         event.preventDefault();
@@ -117,7 +127,7 @@ export function Modal({
     >
       <div className="modal-inner">
         <div className="modal-heading">
-          <h2>{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <button className="icon-button" onClick={onClose} aria-label="Закрыть">
             <X size={22} />
           </button>

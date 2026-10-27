@@ -21,6 +21,19 @@ class Preference(models.Model):
     theme = models.CharField(max_length=10, default="light")
     notes = models.JSONField(default=list)
     model_profile = models.CharField(max_length=10, blank=True, default="")
+    suggest_templates = models.BooleanField(default=True)
+
+
+class PromptTemplate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="prompt_templates")
+    title = models.CharField(max_length=50)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "id"]
 
 
 class Chat(models.Model):

@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from django.views.static import serve
 
 from studio import views as v
+from studio.template_views import template_view, templates_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -33,6 +34,8 @@ urlpatterns = [
     path("api/publications/<uuid:ident>/like/", v.like_view),
     path("api/publications/<uuid:ident>/remix/", v.remix_view),
     path("api/preferences/", v.preferences_view),
+    path("api/templates/", templates_view),
+    path("api/templates/<uuid:ident>/", template_view),
     path("preview/<str:token>/", v.preview_view),
     re_path(
         r"^assets/(?P<path>.*)$", serve, {"document_root": settings.BASE_DIR / "web" / "dist" / "assets"}

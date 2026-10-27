@@ -134,3 +134,39 @@ it('shows the canonical saved notes returned by the server', async () => {
   await screen.findByText('Пожелания сохранены');
   expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue('Крупный текст');
 });
+
+it('counts Unicode and line breaks, blocks oversized saves and accepts a long paragraph', async () => {
+  vi.mocked(request).mockResolvedValue({ ...session.preferences, notes: ['🌙'.repeat(3000)] });
+  setup();
+  const field = screen.getByLabelText('Что учитывать в новых играх');
+  fireEvent.change(field, { target: { value: '🌙'.repeat(3000) + '\n' } });
+  expect(screen.getByText('3001 / 3000')).toBeInTheDocument();
+  expect(field).toHaveAttribute('aria-invalid', 'true');
+  expect(document.querySelector('#notes-count')).toHaveClass('over-limit');
+  expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
+  fireEvent.submit(screen.getByRole('form', { name: 'Настройки аккаунта' }));
+  expect(request).not.toHaveBeenCalled();
+  fireEvent.change(field, { target: { value: '🌙'.repeat(3000) } });
+  expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
+  await screen.findByText('Пожелания сохранены');
+  expect(request).toHaveBeenCalledWith('/api/preferences/', {
+    method: 'PATCH',
+    body: JSON.stringify({ notes: ['🌙'.repeat(3000)] }),
+  });
+});
+
+it('saves the template suggestion separately and preserves unsaved wishes', async () => {
+  vi.mocked(request).mockResolvedValue({ ...session.preferences, suggest_templates: false });
+  const update = setup();
+  fireEvent.change(screen.getByLabelText('Что учитывать в новых играх'), {
+    target: { value: 'Несохранённый текст' },
+  });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Предлагать шаблоны в новом чате' }));
+  await vi.waitFor(() => expect(update).toHaveBeenCalled());
+  expect(request).toHaveBeenCalledWith('/api/preferences/', {
+    method: 'PATCH',
+    body: JSON.stringify({ suggest_templates: false }),
+  });
+  expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue('Несохранённый текст');
+});

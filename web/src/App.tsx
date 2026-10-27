@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
-import { ChevronLeft, ChevronRight, Gamepad2, Menu, Plus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Gamepad2, Menu, Plus, X } from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request, setCsrfToken } from './api';
 import { Brand, ErrorNotice, Modal, Spinner } from './components';
@@ -15,6 +15,7 @@ import { SessionContext, useSession, type StudioDraft, type ChatTitleChange } fr
 import Landing from './Landing';
 import Login, { loginDestination } from './Login';
 import Feed from './Feed';
+import Templates from './Templates';
 import Preferences from './Preferences';
 import PublicGame from './PublicGame';
 import Studio from './Studio';
@@ -249,6 +250,15 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
           <Gamepad2 size={19} />
           <span>Игры сообщества</span>
         </Link>
+        <Link
+          className={`sidebar-feed-link sidebar-templates-link ${location.pathname === '/templates' ? 'active' : ''}`}
+          to="/templates"
+          title="Мои шаблоны"
+          aria-label="Мои шаблоны"
+        >
+          <FileText size={19} />
+          <span>Мои шаблоны</span>
+        </Link>
         <div className="sidebar-section-label" aria-hidden={collapsed && !mobile}>
           Недавние
         </div>
@@ -356,6 +366,7 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
         )}
         <Routes>
           <Route path="/" element={<Feed />} />
+          <Route path="/templates" element={<Templates />} />
           <Route path="/chats/:id" element={<Studio />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

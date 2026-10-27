@@ -7,6 +7,14 @@ export interface Preferences {
   theme: 'light' | 'dark';
   notes: string[];
   model_profile?: string;
+  suggest_templates?: boolean;
+}
+export interface PromptTemplate {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
 }
 export interface ModelProfile {
   id: string;

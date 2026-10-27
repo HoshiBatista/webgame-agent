@@ -7,6 +7,8 @@ import { useSession } from './context';
 import type { Preferences as PreferencesType } from './types';
 import { ModelChoices, selectedProfile } from './ModelSelector';
 import { useTheme } from './theme';
+import CharacterCount from './CharacterCount';
+import { characterCount, NOTES_LIMIT } from './textLimits';
 
 const themes = [
   { value: 'system', label: 'Системная', Icon: Monitor },
@@ -38,6 +40,24 @@ export default function Preferences() {
   const [modelError, setModelError] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [templateBusy, setTemplateBusy] = useState(false);
+  const [templateError, setTemplateError] = useState('');
+  const overLimit = characterCount(notes) > NOTES_LIMIT;
+  async function suggestTemplates(value: boolean) {
+    setTemplateBusy(true);
+    setTemplateError('');
+    try {
+      const preferences = await request<PreferencesType>('/api/preferences/', {
+        method: 'PATCH',
+        body: JSON.stringify({ suggest_templates: value }),
+      });
+      updateSession({ ...session, preferences });
+    } catch (cause) {
+      setTemplateError(errorText(cause));
+    } finally {
+      setTemplateBusy(false);
+    }
+  }
   useEffect(() => {
     if (!notesDirty.current) setNotes(session.preferences.notes.join('\n'));
   }, [session.preferences.notes]);
@@ -58,6 +78,7 @@ export default function Preferences() {
   }
   async function save(event: FormEvent) {
     event.preventDefault();
+    if (overLimit || busy || modelBusy || templateBusy) return;
     setBusy(true);
     setError('');
     setSaved(false);
@@ -65,10 +86,7 @@ export default function Preferences() {
       const preferences = await request<PreferencesType>('/api/preferences/', {
         method: 'PATCH',
         body: JSON.stringify({
-          notes: notes
-            .split('\n')
-            .map((note) => note.trim())
-            .filter(Boolean),
+          notes: notes.split('\n'),
         }),
       });
       updateSession({ ...session, preferences });
@@ -105,7 +123,7 @@ export default function Preferences() {
                   options={session.capabilities.model_profiles}
                   value={modelProfile}
                   onChange={chooseModel}
-                  disabled={busy || modelBusy}
+                  disabled={busy || modelBusy || templateBusy}
                 />
                 {modelError && <ErrorNotice message={modelError} />}
                 {modelBusy && (
@@ -133,26 +151,47 @@ export default function Preferences() {
               </div>
               <p className="field-help">Сохраняется в этом браузере.</p>
             </fieldset>
+            <div className="settings-templates">
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={session.preferences.suggest_templates !== false}
+                  disabled={busy || modelBusy || templateBusy}
+                  onChange={(event) => void suggestTemplates(event.target.checked)}
+                />
+                <span>Предлагать шаблоны в новом чате</span>
+              </label>
+              <p className="field-help">
+                Если у вас есть шаблоны, предложим выбрать один перед началом. Их всегда можно
+                открыть кнопкой у поля ввода.
+              </p>
+              {templateBusy && <p className="field-help">Сохраняем настройку…</p>}
+              {templateError && <ErrorNotice message={templateError} />}
+            </div>
           </section>
           <section className="form-stack settings-card" aria-label="Пожелания к играм">
             <form onSubmit={save} className="form-stack" aria-label="Настройки аккаунта">
               <label>
                 Что учитывать в новых играх
                 <textarea
+                  aria-label="Что учитывать в новых играх"
                   rows={5}
                   value={notes}
+                  aria-describedby="notes-count notes-help"
+                  aria-invalid={overLimit}
                   disabled={busy}
                   onChange={(event) => {
                     notesDirty.current = true;
                     setNotes(event.target.value);
                     setSaved(false);
                   }}
-                  placeholder="Каждое пожелание — с новой строки. Например: крупное управление и спокойные цвета."
+                  placeholder="Например: крупное управление, спокойные цвета и короткие партии."
                 />
               </label>
-              <p className="field-help">
-                Ваши оценки добавляют сюда пожелания. Можно оставить до десяти коротких пожеланий,
-                отредактировать или удалить их.
+              <CharacterCount value={notes} limit={NOTES_LIMIT} id="notes-count" />
+              <p className="field-help" id="notes-help">
+                Ваши оценки добавляют сюда пожелания. Вы можете добавлять, редактировать и удалять
+                их.
               </p>
               <button
                 type="button"
@@ -172,7 +211,10 @@ export default function Preferences() {
                   <Check size={17} /> Пожелания сохранены
                 </p>
               )}
-              <button className="button button-primary" disabled={busy || modelBusy}>
+              <button
+                className="button button-primary"
+                disabled={busy || modelBusy || templateBusy || overLimit}
+              >
                 <Check size={17} />
                 {busy ? 'Сохраняем…' : 'Сохранить'}
               </button>
