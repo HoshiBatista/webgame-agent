@@ -55,6 +55,25 @@ def test_codex_receives_selected_operation_schema_with_rpc_double(codex_rpc, ope
     assert result["response"]["operation"] == operation
 
 
+@pytest.mark.parametrize("profile", ["full", "compact"])
+def test_codex_fragment_correction_keeps_schema_and_host_isolation(codex_rpc, profile):
+    from generation.patch_repair import permission
+    from generation.schema import response_schema
+    from tests.test_edit_recovery import corrected, edit_case
+
+    base, response = edit_case(profile)
+    policy = permission(response, files=base["files"], base_revision="base", profile=profile)
+    request = {"provider": "codex", "model": "gpt-6-luna", "operation": "edit", "files": base["files"],
+               "generation_profile": profile, "patch_repair": policy}
+    reply = corrected(policy, base)
+    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(reply)
+    result = generate_operation(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    turns = [p for m, p in codex_rpc["calls"] if m == "turn/start"]
+    assert len(turns) == 1 and turns[0]["outputSchema"] == response_schema(request)
+    assert turns[0]["environments"] == [] and turns[0]["runtimeWorkspaceRoots"] == []
+    assert result["response"] == reply and result["usage"]["input_tokens"] == 100
+
+
 @pytest.mark.parametrize("source_format", ["string", "lines"])
 @pytest.mark.parametrize("operation", ["create", "edit", "repair", "check_repair"])
 def test_codex_compact_operations_keep_wire_contract_and_isolation(codex_rpc, operation, source_format):

@@ -283,14 +283,14 @@ def materialize_compact(response, request, *, files=None, previous_checks=None):
         if len(original["game.js"].encode()) > MAX_SOURCE_BYTES:
             raise ContractError("module_too_large", "Модуль механики превышает 12 КиБ.")
         if operation == "edit":
+            from .check_repair import merge_checks
+
             for part, limit in [('probes', 12), ('observations', 16)]:
                 if not response[part]:
                     continue
-                inherited = {item['id']: item for item in manifest[part]}
-                inherited.update(_unique(response[part], part))
-                if len(inherited) > limit:
+                manifest[part] = merge_checks(manifest[part], response[part])
+                if len(manifest[part]) > limit:
                     raise ContractError('manifest_too_large', 'Превышен общий лимит сценариев или наблюдений компактной игры.')
-                manifest[part] = list(inherited.values())
     elif operation in {"check_repair", "checks_create"}:
         from .check_repair import repaired_checks
 

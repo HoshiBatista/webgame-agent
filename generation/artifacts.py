@@ -273,12 +273,18 @@ def bundle(files, *, script_map=None):
 
 
 def materialize(response, *, operation, base_revision=None, files=None, previous_checks=None,
-                generation_contract=None, module_repair=None, check_repair=None, code_repair_basis=None,
+                generation_contract=None, module_repair=None, check_repair=None, code_repair_basis=None, patch_repair=None,
                 checks_create=None, generation_strategy="lite", requirement_manifest=None, helper_catalog=None, visual_patch=None,
                 generation_profile="full", compact_manifest=None, source_format="string"):
     version = (generation_contract or {}).get("pipeline_version", CONTRACT_VERSION)
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if patch_repair:
+        from .patch_repair import restore
+
+        if operation != "edit":
+            raise ContractError("operation_mismatch", "Исправление фрагментов доступно только для доработки.")
+        response = restore(response, patch_repair, files=files, base_revision=base_revision, profile=generation_profile)
     if operation == "visual_patch":
         from .visual import PATCH_SCHEMA, validate_binding
 
@@ -328,7 +334,7 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
     validate_response(response, operation=operation,
                       schema=response_schema({"operation": operation, "generation_contract": {"pipeline_version": version},
                                               "check_repair": check_repair}) if operation == "check_repair" else None,
-                      defer_check_errors=operation == "create")
+                      defer_check_errors=operation in {"create", "edit"})
     if operation == "check_repair":
         from .check_repair import repaired_checks
 
@@ -404,11 +410,18 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
                 )
         else:
             check_map[old["id"]] = old
+    # Preserve all occurrences for diagnosis/check_repair; a dict silently drops
+    # inherited promises and conceals invalid duplicate IDs in the new response.
+    from .check_repair import merge_checks
+
     checks = deepcopy(previous_checks or []) if inherited_incomplete else (
-        list(response["checks"]) if operation == "create" else list(check_map.values()))
-    if operation != "create" and not inherited_incomplete:
+        deepcopy(response["checks"]) if operation == "create" else merge_checks(previous_checks or [], response["checks"]))
+    if operation not in {"create", "edit"} and not inherited_incomplete:
         validate_checks(checks)
-    if original and result == original and check_map != {c["id"]: c for c in previous_checks or []}:
+    if original and result == original and (
+        sorted(json.dumps(c, sort_keys=True) for c in checks)
+        != sorted(json.dumps(c, sort_keys=True) for c in previous_checks or [])
+    ):
         raise ContractError(
             "test_only_change",
             "Изменены только проверки. Нужна отдельная проверка приложения; игра не объявляется исправленной.",

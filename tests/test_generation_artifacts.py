@@ -6,7 +6,7 @@ from generation.artifacts import apply_patches, bundle, materialize, sha256
 from generation.errors import ContractError
 from generation.prompts import build_messages
 from generation.providers.fake import fixture_response
-from generation.schema import validate_response
+from generation.schema import validate_checks, validate_response
 
 
 def candidate():
@@ -166,20 +166,25 @@ def test_partial_check_correction_keeps_all_omitted_mechanics():
             assert actual[original["id"]] == original
 
 
-def test_inherited_suite_is_validated_after_merge_not_just_new_checks():
+def test_invalid_merged_suite_keeps_edit_code_but_cannot_establish_playability():
     base = candidate()
     response = edited(base)
     response["checks"] = []
+    result = materialize(response, operation="edit", base_revision="version-1", files=base["files"], previous_checks=[])
+    assert result["files"] != base["files"] and result["checks"] == []
     with pytest.raises(ContractError) as error:
-        materialize(response, operation="edit", base_revision="version-1", files=base["files"], previous_checks=[])
+        validate_checks(result["checks"])
     assert error.value.code == "missing_effects"
     old = base["checks"] + [
         {**deepcopy(base["checks"][1]), "id": f"regression-{index}", "category": "regression"}
         for index in range(9)
     ]
     response["checks"] = [{**deepcopy(base["checks"][1]), "id": "new-effect", "category": "regression"}]
+    result = materialize(response, operation="edit", base_revision="version-1", files=base["files"], previous_checks=old)
+    assert len(result["checks"]) == 13 and result["files"] != base["files"]
+    assert result["checks"][1:] == old
     with pytest.raises(ContractError) as error:
-        materialize(response, operation="edit", base_revision="version-1", files=base["files"], previous_checks=old)
+        validate_checks(result["checks"])
     assert error.value.code == "too_many_checks"
 
 
@@ -362,21 +367,23 @@ def test_full_suite_requires_mobile_start_and_touch_gameplay(mutation, code):
     assert error.value.code == code
 
 
-def test_edit_cannot_remove_inherited_mobile_coverage():
+def test_edit_missing_mobile_coverage_keeps_code_but_requires_scenario_repair():
     base = candidate()
     response = edited(base)
     response["checks"] = [deepcopy(base["checks"][1])]
     response["checks"][0]["viewport"] = "desktop"
     # Partial model output is valid, but its merged suite is not playable on mobile.
     validate_response(response)
+    result = materialize(
+        response,
+        operation="edit",
+        base_revision="version-1",
+        files=base["files"],
+        previous_checks=base["checks"],
+    )
+    assert result["files"] != base["files"]
     with pytest.raises(ContractError) as error:
-        materialize(
-            response,
-            operation="edit",
-            base_revision="version-1",
-            files=base["files"],
-            previous_checks=base["checks"],
-        )
+        validate_checks(result["checks"])
     assert error.value.code == "missing_mobile_control"
 
 

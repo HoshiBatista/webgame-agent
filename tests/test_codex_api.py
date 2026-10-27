@@ -58,6 +58,25 @@ def test_api_freezes_exact_schema_effort_and_bounded_candidate_image(api, operat
     assert not api.jobs
 
 
+@pytest.mark.parametrize("profile", ["full", "compact"])
+def test_api_fragment_correction_receipt_keeps_bound_scope_and_usage(api, profile):
+    from generation.patch_repair import permission
+    from generation.service import generate
+    from tests.test_edit_recovery import corrected, edit_case
+
+    base, response = edit_case(profile)
+    policy = permission(response, files=base["files"], base_revision="base", profile=profile)
+    request = request_for_api(operation="edit", generation_profile=profile, files=base["files"], patch_repair=policy)
+    assert request["codex_api"]["payload"]["output_schema"] == response_schema(request)
+    assert "rejected_patches" in request["codex_api"]["payload"]["input"]
+    codex_api.fetch(request)
+    reply = corrected(policy, base)
+    api.finish(request["codex_api"]["id"], reply)
+    result = generate(request, on_event=lambda _: None, is_cancelled=lambda: False)
+    assert result["response"] == reply and result["usage"]
+    assert api.inferences == 1
+
+
 def test_lost_submission_reply_retrieves_same_uuid_without_second_put(api, monkeypatch):
     request = request_for_api()
     original = api.__class__.__call__

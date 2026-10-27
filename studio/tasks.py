@@ -361,6 +361,12 @@ def request_for(run, base, findings, last_attempt_error=None):
     }
     if run.planning_required and not run.game_plan and base is None:
         request["operation"] = "plan"
+    if request["operation"] == "edit":
+        from .patch_repair import pending_permission
+
+        policy = pending_permission(run, base)
+        if policy:
+            request["patch_repair"] = policy
     from .checks_create import eligible as create_eligible
     from .checks_create import permission as create_permission
 
@@ -738,6 +744,7 @@ def _execute(run, lease, generate, materialize, validate):
                                          "pipeline_version": inv.request.get("generation_contract", {}).get("pipeline_version", 2)},
                     module_repair=inv.request.get("module_repair") if response_base and not response_base.accepted else None,
                     check_repair=inv.request.get("check_repair"),
+                    patch_repair=inv.request.get("patch_repair"),
                     checks_create=inv.request.get("checks_create"),
                     generation_strategy=inv.request.get("generation_strategy", "lite"),
                     requirement_manifest=inv.request.get("requirement_manifest"),
@@ -875,7 +882,16 @@ def _execute(run, lease, generate, materialize, validate):
                             from generation.compact import validation_contract
 
                             validation_options["contract"] = validation_contract(pending.compact_manifest, pending.files)
-                        result = validate(pending.html, checks, artifact_hash=pending.artifact_hash, **validation_options)
+                        # An edit can inherit duplicate promises and add scenarios.
+                        # Retain the complete suite, but bound browser work to its
+                        # normal envelope. A partial run can only prove artifact gates.
+                        result = validate(pending.html, checks[:12], artifact_hash=pending.artifact_hash, **validation_options)
+                        if len(checks) > 12:
+                            if result["status"] == "passed":
+                                result["status"] = "unverified"
+                            result["findings"] = [*result.get("findings", []), {
+                                "code": "incomplete_checks", "message": "Набор проверок превышает лимит; исходники сохранены, нужны отдельные сценарии.",
+                            }]
                     except Exception as exc:
                         record_exception(run, exc, "validation")
                         result = {

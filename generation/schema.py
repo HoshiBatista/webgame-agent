@@ -183,6 +183,12 @@ def response_schema(request):
     version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if request.get("patch_repair"):
+        from .patch_repair import reply_schema
+
+        if request.get("operation") != "edit":
+            raise ContractError("operation_mismatch", "Исправление фрагментов доступно только для доработки.")
+        return reply_schema(request["patch_repair"])
     if request.get("operation") in {"visual_review", "visual_patch"}:
         from .visual import PATCH_SCHEMA, REVIEW_SCHEMA
 

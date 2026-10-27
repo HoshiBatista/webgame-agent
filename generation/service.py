@@ -49,14 +49,18 @@ def generate(request, *, on_event, is_cancelled):
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
     try:
-        if request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:
+        if request.get("patch_repair"):
+            from .patch_repair import validate_reply
+
+            validate_reply(result["response"], request["patch_repair"])
+        elif request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:
             from .compact import validate_wire
 
             validate_wire(result["response"], request)
         else:
             validate_response(result["response"], operation=request.get("operation", "create"),
                           schema=response_schema(request),
-                          defer_check_errors=request.get("operation", "create") == "create"
+                          defer_check_errors=request.get("operation", "create") in {"create", "edit"}
                           and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
         if request.get('operation') == 'plan':
             from .planning import validate_plan

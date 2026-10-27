@@ -28,6 +28,12 @@ def checks_hash(checks):
     return hashlib.sha256(json.dumps(checks, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
 
 
+def merge_checks(previous, incoming):
+    """An explicit edit replaces an ID, but never silently deduplicates a suite."""
+    changed = {check["id"] for check in incoming}
+    return deepcopy(incoming + [check for check in previous if check["id"] not in changed])
+
+
 def needs_check_repair(checks, findings):
     codes = {item.get("code") for item in findings}
     # Infrastructure and proven game faults retain their own paths. A mismatch alone
@@ -42,13 +48,28 @@ def needs_check_repair(checks, findings):
 
 
 def permission(artifact_hash, checks, design, manifest=None):
-    requirements = [{key: check[key] for key in IDENTITY} for check in checks]
-    ids = {r["id"] for r in requirements}
-    if len(ids) != len(requirements):
-        raise ContractError(
-            "check_review_required", "Повторяющиеся ID проверок требуют ручного разбора; исходники сохранены."
-        )
+    requirements: list[dict[str, str]] = []
+    identities: dict[tuple, str] = {}
+    repairs = []
     frozen = (manifest or {}).get("requirements", [])
+    ids = {check["id"] for check in checks} | {r["id"] for r in frozen}
+    for index, check in enumerate(checks):
+        identity = tuple(check[key] for key in IDENTITY)
+        if identity in identities:
+            # Multiple scenarios for the exact same promise are supplied in full
+            # as context, but request one replacement scenario for that promise.
+            ident = identities[identity]
+        else:
+            ident = check["id"]
+            if any(r["id"] == ident for r in requirements):
+                suffix = 2
+                while f"{ident[:30]}_check{suffix}" in ids:
+                    suffix += 1
+                ident = f"{ident[:30]}_check{suffix}"
+                ids.add(ident)
+            identities[identity] = ident
+            requirements.append({**{key: check[key] for key in IDENTITY}, "id": ident})
+        repairs.append({"source_index": index, "source_id": check["id"], "requirement_id": ident})
     if frozen:
         # The pre-code promises take precedence over a model's altered check identity.
         required = {r["id"]: {key: r[key] for key in IDENTITY} for r in frozen}
@@ -90,7 +111,8 @@ def permission(artifact_hash, checks, design, manifest=None):
         raise ContractError(
             "check_review_required", "Для обязательных условий недостаточно места в наборе проверок."
         )
-    return {"artifact_hash": artifact_hash, "checks_hash": checks_hash(checks), "requirements": requirements}
+    return {"artifact_hash": artifact_hash, "checks_hash": checks_hash(checks), "requirements": requirements,
+            "identity_repairs": repairs}
 
 
 def repaired_checks(response, *, base_revision, artifact_hash, previous_checks, policy):

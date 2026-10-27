@@ -2,7 +2,7 @@ import hashlib
 import json
 from copy import deepcopy
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -41,7 +41,10 @@ def request_for(run, base, findings):
         base.checks = __import__(
             "generation.providers.fake", fromlist=["fixture_response"]
         ).fixture_response()["checks"]
-    return build_request(run, base, findings)
+    # This unit fixture has no persisted receipts; database-backed fragment
+    # recovery is exercised by studio/tests/test_edit_recovery.py.
+    with patch("studio.patch_repair.pending_permission", return_value=None):
+        return build_request(run, base, findings)
 
 
 @pytest.mark.parametrize("operation", ["create", "edit", "repair"])
