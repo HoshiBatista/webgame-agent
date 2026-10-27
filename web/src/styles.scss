@@ -1981,11 +1981,17 @@ svg {
   flex-shrink: 0;
 }
 .audience-picker {
-  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  column-gap: 6px;
   min-width: 0;
   margin-bottom: 8px;
 }
 .audience-row {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
   display: flex;
   flex-wrap: nowrap;
   gap: 5px;
@@ -1993,25 +1999,10 @@ svg {
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   padding: 3px 4px;
-  scroll-padding-inline: 38px;
+  scroll-padding-inline: 4px;
   &::-webkit-scrollbar {
     display: none;
   }
-}
-.audience-picker.can-scroll-left .audience-row {
-  mask-image: linear-gradient(to right, transparent, #000 38px);
-}
-.audience-picker.can-scroll-right .audience-row {
-  mask-image: linear-gradient(to left, transparent, #000 38px);
-}
-.audience-picker.can-scroll-left.can-scroll-right .audience-row {
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 38px,
-    #000 calc(100% - 38px),
-    transparent
-  );
 }
 .audience-row > button {
   display: flex;
@@ -2036,12 +2027,10 @@ svg {
   font-size: var(--text-small);
 }
 .audience-scroll {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-row: 1;
   display: grid;
   place-items: center;
-  width: 30px;
+  width: 32px;
   height: 36px;
   padding: 0;
   border: 1px solid var(--border);
@@ -2057,15 +2046,15 @@ svg {
     background: var(--soft);
   }
   &:disabled {
-    opacity: 0;
+    opacity: 0.25;
     pointer-events: none;
   }
 }
 .audience-scroll-left {
-  left: 0;
+  grid-column: 1;
 }
 .audience-scroll-right {
-  right: 0;
+  grid-column: 3;
 }
 .composer-input {
   position: relative;
@@ -2710,6 +2699,8 @@ svg {
   margin-bottom: 14px;
 }
 .feedback-reasons > legend > span {
+  display: block;
+  margin-top: 3px;
   font-size: var(--text-small);
   color: var(--muted);
 }

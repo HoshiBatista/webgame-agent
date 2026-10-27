@@ -1,4 +1,6 @@
+import base64
 import hashlib
+import io
 import json
 import os
 import subprocess
@@ -10,6 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from PIL import Image
 
 from validation.contracts import browser_watchdog_seconds, implementation_hash
 from validation.runner import InvalidCheck, compare
@@ -456,6 +459,42 @@ def test_real_input_and_offline_surface(broken, network, expected):
     assert report["stage"] == "browser"
     assert report["stages"][0] == {"stage": "syntax", "status": "passed", "scripts": 1}
     assert report["stages"][1] == {"stage": "browser", "status": expected}
+    image = base64.b64decode(report["screenshot_base64"], validate=True)
+    assert report["screenshot_mime"] == "image/png"
+    assert len(image) <= 512 * 1024
+    with Image.open(io.BytesIO(image)) as frame:
+        assert frame.format == "PNG"
+        assert frame.size == (390, 844)
+
+
+@pytest.mark.browser
+def test_detailed_cover_stays_within_frame_budget_without_changing_game_result():
+    html = fixture_html() + """<script>
+    const backdrop=document.createElement('canvas');
+    backdrop.width=390;backdrop.height=844;
+    backdrop.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:-1';
+    document.body.append(backdrop);
+    const brush=backdrop.getContext('2d'),pixels=brush.createImageData(390,844);
+    let seed=12345;
+    for(let i=0;i<pixels.data.length;i+=4){
+      for(let j=0;j<3;j++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;pixels.data[i+j]=seed>>>24;}
+      pixels.data[i+3]=255;
+    }
+    brush.putImageData(pixels,0,0);
+    </script>"""
+    checks = fixture_checks()
+    for check in checks:
+        for step in check["steps"]:
+            if step.get("selector") == "canvas":
+                step["selector"] = "canvas:first-of-type"
+    report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
+    assert report["status"] == "passed", report["findings"]
+    image = base64.b64decode(report["screenshot_base64"], validate=True)
+    assert report["screenshot_mime"] == "image/jpeg"
+    assert 0 < len(image) <= 512 * 1024
+    with Image.open(io.BytesIO(image)) as frame:
+        assert frame.format == "JPEG"
+        assert frame.size == (390, 844)
 
 
 @pytest.mark.browser

@@ -530,29 +530,37 @@ describe('saved work and mutation submission', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(post).not.toHaveBeenCalled();
   });
-  it('records specific font-size and free-form feedback without starting another model run', async () => {
-    setup();
-    await screen.findByTitle('Игра');
-    fireEvent.click(screen.getByLabelText('Действия с игрой'));
-    vi.mocked(post).mockResolvedValue({ rating: 4 });
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
-        name: 'Оценить результат',
-      }),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Оценка 4 из 5' }));
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Крупнее текст и элементы управления' }));
-    fireEvent.change(screen.getByLabelText('Своё пожелание'), {
-      target: { value: 'Шрифт без тонких линий' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Сохранить оценку' }));
-    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
-    expect(post).toHaveBeenCalledWith('/api/chats/one/feedback/', {
-      revision_id: 'r1',
-      rating: 4,
-      reasons: ['Крупнее текст и элементы управления', 'Шрифт без тонких линий'],
-    });
-  });
+  it.each([1, 2, 3, 4, 5])(
+    'keeps wishes entered before choosing %i stars without starting a model run',
+    async (rating) => {
+      setup();
+      await screen.findByTitle('Игра');
+      fireEvent.click(screen.getByLabelText('Действия с игрой'));
+      vi.mocked(post).mockResolvedValue({ rating });
+      fireEvent.click(
+        within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+          name: 'Оценить результат',
+        }),
+      );
+      expect(screen.getByRole('button', { name: 'Сохранить оценку' })).toBeDisabled();
+      fireEvent.click(
+        screen.getByRole('checkbox', { name: 'Крупнее текст и элементы управления' }),
+      );
+      fireEvent.change(screen.getByLabelText('Своё пожелание'), {
+        target: { value: 'Шрифт без тонких линий' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Оценка 5 из 5' }));
+      fireEvent.click(screen.getByRole('button', { name: `Оценка ${rating} из 5` }));
+      expect(screen.getByLabelText('Своё пожелание')).toHaveValue('Шрифт без тонких линий');
+      fireEvent.click(screen.getByRole('button', { name: 'Сохранить оценку' }));
+      await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+      expect(post).toHaveBeenCalledWith('/api/chats/one/feedback/', {
+        revision_id: 'r1',
+        rating,
+        reasons: ['Крупнее текст и элементы управления', 'Шрифт без тонких линий'],
+      });
+    },
+  );
   it('reuses the operation key after a lost response without repeating planning', async () => {
     setup();
     await screen.findByRole('textbox', { name: 'Что изменить в игре' });

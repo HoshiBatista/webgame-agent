@@ -35,6 +35,22 @@ class PersonalContentTests(TestCase):
         self.assertEqual(run.preferences_snapshot, notes)
         self.assertFalse(Invocation.objects.exists())
 
+    def test_five_star_wishes_are_saved_and_reach_next_generation(self):
+        chat = Chat.objects.create(owner=self.owner)
+        revision = Revision.objects.create(chat=chat, number=1, files={}, html='<canvas></canvas>')
+        reasons = ['Сохранить спокойный темп', 'Крупнее текст и элементы управления']
+        response = self.client.post(f'/api/chats/{chat.id}/feedback/',
+            {'revision_id': str(revision.pk), 'rating': 5, 'reasons': reasons},
+            content_type='application/json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Feedback.objects.get().rating, 5)
+        self.assertEqual(Feedback.objects.get().revision_id, revision.pk)
+        self.assertEqual(self.client.get('/api/preferences/').json()['notes'], reasons)
+        next_chat = Chat.objects.create(owner=self.owner)
+        run = create_run(next_chat, {'prompt': 'Игра про планеты', 'idempotency_key': 'five-star-wishes'})
+        self.assertEqual(run.preferences_snapshot, reasons)
+        self.assertFalse(Invocation.objects.exists())
+
     def test_feedback_capacity_keeps_existing_text_and_reports_unadded_wishes(self):
         text = "а" * 2480
         self.patch_preferences({'notes': [text]})

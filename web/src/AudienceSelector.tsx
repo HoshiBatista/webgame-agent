@@ -39,10 +39,8 @@ export default function AudienceSelector({
     if (!element?.clientWidth) return;
     const bounds = element.getBoundingClientRect();
     const item = button.getBoundingClientRect();
-    const left = bounds.left + (element.scrollLeft > 1 ? 38 : 4);
-    const right =
-      bounds.right +
-      (element.scrollLeft + element.clientWidth < element.scrollWidth - 1 ? -38 : -4);
+    const left = bounds.left + 4;
+    const right = bounds.right - 4;
     const distance =
       item.left < left ? item.left - left : item.right > right ? item.right - right : 0;
     if (distance) element.scrollTo({ left: element.scrollLeft + distance, behavior: 'instant' });
@@ -84,9 +82,7 @@ export default function AudienceSelector({
   }
 
   return (
-    <div
-      className={`audience-picker ${edges.left ? 'can-scroll-left' : ''} ${edges.right ? 'can-scroll-right' : ''}`}
-    >
+    <div className="audience-picker">
       <div
         ref={row}
         className="audience-row"

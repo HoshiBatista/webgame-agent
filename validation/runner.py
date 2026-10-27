@@ -13,8 +13,8 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlsplit
 
+from playwright.sync_api import Page, ViewportSize, sync_playwright
 from playwright.sync_api import TimeoutError as BrowserTimeout
-from playwright.sync_api import ViewportSize, sync_playwright
 
 from .check_program import compile_suite
 from .checks import INPUT, NUMERIC, RELATIVE, comparable, numeric, parse_number
@@ -27,6 +27,21 @@ from .evidence import receipt as artifact_receipt
 from .syntax import check_javascript
 
 ENVIRONMENT = "mini-browser-v1"
+MAX_SCREENSHOT_BYTES = 512 * 1024
+
+
+def capture_screenshot(page: Page) -> tuple[str, str]:
+    """Keep text and flat artwork lossless within the model-frame size budget."""
+    raw = page.screenshot(type="png", timeout=2000)
+    if len(raw) <= MAX_SCREENSHOT_BYTES:
+        return base64.b64encode(raw).decode(), "image/png"
+    # Detailed scenes can be much larger as PNG. Keep the same viewport and
+    # bounded transport without changing the game's rendering or checks.
+    for quality in (90, 75, 60):
+        raw = page.screenshot(type="jpeg", quality=quality, timeout=2000)
+        if len(raw) <= MAX_SCREENSHOT_BYTES:
+            return base64.b64encode(raw).decode(), "image/jpeg"
+    return "", "image/png"
 
 
 def identity():
@@ -308,6 +323,7 @@ def run(payload):
     facts: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
     screenshot = None
+    screenshot_mime = "image/png"
     required = {"start", "control", "outcome"}
     findings.extend(suite_findings(checks))
     incomplete = bool(findings) or not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12 or len({c.get("id") for c in checks}) != len(checks)
@@ -621,7 +637,7 @@ def run(payload):
                             }
                         )
                     if screenshot is None:
-                        screenshot = base64.b64encode(page.screenshot(type="jpeg", quality=60)).decode()
+                        screenshot, screenshot_mime = capture_screenshot(page)
                 except Exception as exc:
                     if fact["status"] != "failed":
                         fact["status"] = "unverified"
@@ -805,7 +821,7 @@ def run(payload):
         "environment": environment,
         "elapsed_seconds": round(time.monotonic() - started, 3),
         "screenshot_base64": screenshot or "",
-        "screenshot_mime": "image/jpeg",
+        "screenshot_mime": screenshot_mime,
     }
 
 

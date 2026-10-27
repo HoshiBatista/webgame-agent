@@ -558,8 +558,7 @@ export default function Studio() {
       const result = await post<{ preferences_full?: boolean }>(`/api/chats/${chat.id}/feedback/`, {
         revision_id: feedbackRevision.id,
         rating,
-        reasons:
-          rating < 5 ? [...reasons, ...(customReason.trim() ? [customReason.trim()] : [])] : [],
+        reasons: [...reasons, ...(customReason.trim() ? [customReason.trim()] : [])],
       });
       void refresh();
       if (view.current !== startedView) return;
@@ -1129,8 +1128,8 @@ export default function Studio() {
           {error && <ErrorNotice message={error} />}
           <form className="form-stack" onSubmit={rate}>
             <p className="modal-intro">
-              Оценивается версия {feedbackRevision.number}. Ваша оценка поможет лучше понимать ваши
-              идеи.
+              Оценивается версия {feedbackRevision.number}. Пожелания помогут учесть ваши
+              предпочтения в следующих играх.
             </p>
             <div className="rating-stars" role="group" aria-label="Оценка результата">
               {[1, 2, 3, 4, 5].map((value) => (
@@ -1145,56 +1144,49 @@ export default function Studio() {
                 </button>
               ))}
             </div>
-            {rating > 0 && rating < 5 && (
-              <>
-                <fieldset className="feedback-reasons">
-                  <legend>
-                    На что обратить внимание? <span>До пяти пожеланий, необязательно</span>
-                  </legend>
-                  {feedbackReasons.map((reason) => (
-                    <label key={reason}>
-                      <input
-                        type="checkbox"
-                        checked={reasons.includes(reason)}
-                        onChange={(event) =>
-                          setReasons((previous) =>
-                            event.target.checked
-                              ? [...previous, reason]
-                              : previous.filter((item) => item !== reason),
-                          )
-                        }
-                      />
-                      {reason}
-                    </label>
-                  ))}
-                </fieldset>
-                <label>
-                  Своё пожелание
-                  <textarea
-                    value={customReason}
-                    onChange={(event) => setCustomReason(event.target.value)}
-                    maxLength={300}
-                    rows={2}
-                    placeholder="Например: крупный шрифт без тонких линий"
+            <label htmlFor="feedback-wish">Своё пожелание — необязательно</label>
+            <textarea
+              id="feedback-wish"
+              aria-label="Своё пожелание"
+              value={customReason}
+              onChange={(event) => setCustomReason(event.target.value)}
+              maxLength={300}
+              rows={3}
+              placeholder="Например: сохранить спокойный темп, сделать текст крупнее."
+            />
+            <fieldset className="feedback-reasons">
+              <legend>
+                Можно выбрать из списка <span>До пяти пожеланий вместе с вашим текстом</span>
+              </legend>
+              {feedbackReasons.map((reason) => (
+                <label key={reason}>
+                  <input
+                    type="checkbox"
+                    checked={reasons.includes(reason)}
+                    onChange={(event) =>
+                      setReasons((previous) =>
+                        event.target.checked
+                          ? [...previous, reason]
+                          : previous.filter((item) => item !== reason),
+                      )
+                    }
                   />
+                  {reason}
                 </label>
-                {reasons.length + (customReason.trim() ? 1 : 0) > 5 && (
-                  <p className="field-help" role="alert">
-                    Оставьте не больше пяти пожеланий, включая своё.
-                  </p>
-                )}
-              </>
+              ))}
+            </fieldset>
+            {reasons.length + (customReason.trim() ? 1 : 0) > 5 && (
+              <p className="field-help" role="alert">
+                Оставьте не больше пяти пожеланий, включая своё.
+              </p>
             )}
             <p className="field-help">
-              Пожелания будут учтены в следующих запросах. Сейчас новая генерация не запускается.
+              Выберите звёзды, чтобы сохранить оценку. Пожелания появятся в настройках; их можно
+              изменить или удалить. Уже созданная игра не изменится.
             </p>
             <button
               className="button button-primary"
-              disabled={
-                !rating ||
-                busy ||
-                (rating < 5 && reasons.length + (customReason.trim() ? 1 : 0) > 5)
-              }
+              disabled={!rating || busy || reasons.length + (customReason.trim() ? 1 : 0) > 5}
             >
               Сохранить оценку
             </button>
