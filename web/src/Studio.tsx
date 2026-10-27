@@ -516,20 +516,25 @@ export default function Studio() {
           <History size={15} />
           <select
             aria-label="Версия игры"
-            value={selectedRevision ?? 'latest'}
+            value={
+              selectedRevision && selectedRevision !== defaultRevision?.id
+                ? selectedRevision
+                : 'latest'
+            }
             onChange={(event) =>
               setSelectedRevision(event.target.value === 'latest' ? null : event.target.value)
             }
           >
             <option value="latest">
-              {defaultRevision ? `Последняя версия · ${defaultRevision.number}` : 'Пока нет версии'}
+              {defaultRevision ? `Версия ${defaultRevision.number}` : 'Пока нет версии'}
             </option>
-            {chat.revisions.map((item) => (
-              <option key={item.id} value={item.id}>
-                Версия {item.number}
-                {item.id === current?.id ? ' · текущая' : ''}
-              </option>
-            ))}
+            {chat.revisions
+              .filter((item) => item.id !== defaultRevision?.id)
+              .map((item) => (
+                <option key={item.id} value={item.id}>
+                  Версия {item.number}
+                </option>
+              ))}
           </select>
         </div>
         <div className="preview-actions">
@@ -559,9 +564,6 @@ export default function Studio() {
               <Expand size={18} /> <span>На весь экран</span>
             </button>
           )}
-          {inMenu && revision && (
-            <CopyHtmlButton exportUrl={revision.export_url} onError={setError} label />
-          )}
           {inMenu && (
             <SoundButton
               muted={soundMuted}
@@ -569,6 +571,9 @@ export default function Studio() {
               onToggle={() => setSoundMuted((value) => !value)}
               label
             />
+          )}
+          {inMenu && revision && (
+            <CopyHtmlButton exportUrl={revision.export_url} onError={setError} label />
           )}
           {revision?.accepted && selectedRevision && revision.id !== current?.id && (
             <button
