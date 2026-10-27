@@ -1,0 +1,241 @@
+{
+  "date": "2026-10-27",
+  "source_revision": "63e66b85a847865470b68519b934f27ed07118f5",
+  "frontend_revision": "c7cd8115ca24b6ab139275878fdd7bc2a8572362",
+  "fix": "requirements.lock now pins pillow==12.3.0; all direct runtime dependencies must have a compatible production pin",
+  "server": {
+    "revision": "63e66b85a847865470b68519b934f27ed07118f5",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 25,
+      "Feedback": 0,
+      "Invocation": 107,
+      "Like": 0,
+      "Message": 106,
+      "Outbox": 55,
+      "Preference": 1,
+      "Publication": 0,
+      "Run": 55,
+      "RunEvent": 564,
+      "User": 2
+    },
+    "all_accounting_record_hashes_preserved_except_retired_revision_links": true,
+    "unknown_preserved": 5,
+    "archived_and_removed": {
+      "revisions": 32,
+      "publications": 0,
+      "chats": 12
+    },
+    "visible_chats_after": 0,
+    "new_chats": 0,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_identity_preserved": true,
+    "new_migrations": [
+      "0015",
+      "0016",
+      "0017",
+      "0018"
+    ],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:d9b44b0a3559d6d7b434b52c66e74a378f09ffc6aa086f2bc3788d9b2619c690",
+        "image_tag": "gameforge-mini:cloud-63e66b8-20261027"
+      },
+      "preview": {
+        "image_id": "sha256:d9b44b0a3559d6d7b434b52c66e74a378f09ffc6aa086f2bc3788d9b2619c690",
+        "image_tag": "gameforge-mini:cloud-63e66b8-20261027"
+      },
+      "worker": {
+        "image_id": "sha256:d9b44b0a3559d6d7b434b52c66e74a378f09ffc6aa086f2bc3788d9b2619c690",
+        "image_tag": "gameforge-mini:cloud-63e66b8-20261027"
+      },
+      "validator": {
+        "image_id": "sha256:c861c1898b4e22e18fbcf931bbeb39cbf526612e12357b5f9fdda04088ef0cf1",
+        "image_tag": "gameforge-mini-validator:cloud-63e66b8-20261027"
+      },
+      "beat": {
+        "image_id": "sha256:d9b44b0a3559d6d7b434b52c66e74a378f09ffc6aa086f2bc3788d9b2619c690",
+        "image_tag": "gameforge-mini:cloud-63e66b8-20261027"
+      }
+    },
+    "database_backup": {
+      "path": "/opt/gameforge/backups/before-63e66b8-20261027T165829Z/database.dump",
+      "sha256": "f4bb588d9d20d92d4f2e319fe1eeca7654954d4cba7ab9a4ad74914454dc9225",
+      "restore_verified": true
+    },
+    "game_artifact_backup": {
+      "path": "/opt/gameforge/backups/before-63e66b8-20261027T165829Z/retired-games/games.json",
+      "sha256": "e1d6e9c3637c5170f19fa0b4148ce5366a7382638f7f328e17a8bb7dd7ba20a6"
+    },
+    "fixture": {
+      "status": "passed",
+      "passed_facts": 3,
+      "validator_hash": "7d468d09e7cfcae0de9e237a3743636076c46870c28dbe45401020e8107c074d",
+      "environment": "mini-browser-v1:7d468d09e7cfcae0de9e237a3743636076c46870c28dbe45401020e8107c074d:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+      "pillow": "12.3.0",
+      "visual_frames": 6,
+      "contact_sheet": "passed",
+      "model_calls": 0,
+      "chats_created": 0
+    }
+  },
+  "pro_queue": {
+    "host": "72.56.101.64",
+    "backup": "/opt/codex-worker/backups/queue-resume-20261027T164530Z/queue.sqlite3",
+    "backup_sha256": "1461377ca22ca68069cc3ae993afdeba368263be354192abadfb28c0301fc37e",
+    "integrity_check": "ok",
+    "before": {
+      "draining": true,
+      "attention_required": true,
+      "jobs": {
+        "cancelled": 2,
+        "completed": 34
+      },
+      "usage": {
+        "input_tokens": 320117,
+        "output_tokens": 155423,
+        "submitted_without_known_usage": 1
+      }
+    },
+    "after": {
+      "draining": false,
+      "attention_required": false,
+      "concurrency": 2,
+      "jobs": {
+        "cancelled": 2,
+        "completed": 34
+      },
+      "usage": {
+        "input_tokens": 320117,
+        "output_tokens": 155423,
+        "submitted_without_known_usage": 1
+      }
+    },
+    "terminal_jobs_retried": false
+  },
+  "verification": {
+    "backend": {
+      "passed": 70,
+      "scope": [
+        "packaging",
+        "visual_review",
+        "retire_games",
+        "personal_templates",
+        "codex_api"
+      ]
+    },
+    "frontend": {
+      "passed": 123,
+      "production_build": "passed",
+      "first_parallel_run": {
+        "passed": 122,
+        "failed": 1,
+        "test": "Studio: keeps the newly created chat when its first run response is lost",
+        "observation": "Timed out waiting for third mocked request; separate Studio suite passed 37/37, complete serial rerun passed 123/123. Parallel test stability is not established."
+      }
+    },
+    "ruff": "passed",
+    "diff_check": "passed",
+    "linux_image_pillow_import_and_image_decode": "passed",
+    "browser": {
+      "revision": "63e66b85a847865470b68519b934f27ed07118f5",
+      "https_verified": true,
+      "html_and_assets_exact": true,
+      "asset_count": 6,
+      "health": "ok",
+      "guest_chats_and_templates_denied": true,
+      "browser": [
+        {
+          "width": 1440,
+          "templates_dialog": "passed",
+          "description_limit_3000": "passed",
+          "preferences": "passed",
+          "pro_selectable": true,
+          "composer_enabled": "passed",
+          "horizontal_overflow": false
+        },
+        {
+          "width": 390,
+          "templates_dialog": "passed",
+          "description_limit_3000": "passed",
+          "preferences": "passed",
+          "pro_selectable": true,
+          "composer_enabled": "passed",
+          "horizontal_overflow": false
+        }
+      ],
+      "login_logout": "passed",
+      "page_errors": [],
+      "mutations": [
+        "/api/login/",
+        "/api/logout/"
+      ],
+      "model_calls": 0,
+      "chats_created": 0
+    },
+    "cloud_configuration": {
+      "contract_version": 9,
+      "pillow": "12.3.0",
+      "profiles": {
+        "1": [
+          {
+            "id": "pro",
+            "provider": "codex_api",
+            "model": "gpt-6-sol",
+            "available": true
+          },
+          {
+            "id": "lite",
+            "provider": "relay",
+            "model": "qwen38",
+            "available": true
+          }
+        ],
+        "2": [
+          {
+            "id": "pro",
+            "provider": "codex_api",
+            "model": "gpt-6-sol",
+            "available": true
+          },
+          {
+            "id": "lite",
+            "provider": "relay",
+            "model": "qwen38",
+            "available": true
+          }
+        ]
+      },
+      "api_concurrency": 2,
+      "disabled_experiments": {
+        "GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED": false,
+        "GAMEFORGE_LITE_CODE_THEN_CHECKS_ENABLED": false,
+        "GAMEFORGE_COMPACT_LITE_ENABLED": false
+      },
+      "last_migration": "0018_personal_templates",
+      "visible_chats": 0,
+      "unknown_invocations": 5,
+      "health": {
+        "status": "ok",
+        "worker_online": true,
+        "draining": false,
+        "attention_required": false
+      },
+      "model_calls": 0
+    }
+  },
+  "review": {
+    "scope": "Pin alignment, production Docker import, retirement data preservation, Pro restoration, frontend integration",
+    "blocking_findings": [],
+    "limitations": [
+      "No live model calls; actual model generation quality and account inference access were not retested.",
+      "Existing intermittent frontend test failed under parallel test execution once; repeat serial suite passed."
+    ]
+  },
+  "model_calls": 0,
+  "gpu_connections": 0,
+  "new_chats": 0
+}
