@@ -54,11 +54,7 @@ export default function Studio() {
   const location = useLocation();
   const { session, refresh, updateSession, studioDrafts } = useSession();
   const initialDraft = useRef(studioDrafts?.get(id)).current;
-  const templatesOffered = useRef(initialDraft?.templatesOffered ?? false);
-  const [templatePicker, setTemplatePicker] = useState<{
-    automatic: boolean;
-    initial?: PromptTemplate[];
-  } | null>(null);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const promptInput = useRef<HTMLTextAreaElement>(null);
   const {
     chat,
@@ -132,7 +128,6 @@ export default function Studio() {
       }
       studioDrafts?.set(id, {
         ...draft.current,
-        templatesOffered: templatesOffered.current,
         audience: audienceReady.current ? draft.current.audience : null,
         idempotencyKey: idempotency.current,
         lastPayload: lastPayload.current,
@@ -167,8 +162,7 @@ export default function Studio() {
   }, []);
   useEffect(() => {
     const remembered = studioDrafts?.get(id);
-    templatesOffered.current = remembered?.templatesOffered ?? false;
-    setTemplatePicker(null);
+    setTemplatePickerOpen(false);
     setFeedbackNotice('');
     setNewTitle(remembered?.chatTitle ?? null);
     audienceReady.current = isNew || remembered?.audience != null;
@@ -297,38 +291,13 @@ export default function Studio() {
   useEffect(() => {
     const text = location.state?.templateText;
     if (!isNew || typeof text !== 'string') return;
-    templatesOffered.current = true;
     setPrompt(appendTemplate(studioDrafts?.get(id)?.prompt ?? '', text));
     navigate(location.pathname, { replace: true, state: null });
     requestAnimationFrame(() => promptInput.current?.focus());
   }, [location.key, isNew, navigate]);
-  useEffect(() => {
-    if (
-      !isNew ||
-      prompt.trim() ||
-      busy ||
-      pendingHere ||
-      templatesOffered.current ||
-      session.preferences.suggest_templates !== true
-    )
-      return;
-    let alive = true;
-    request<{ results: PromptTemplate[] }>('/api/templates/')
-      .then((data) => {
-        if (!alive || templatesOffered.current) return;
-        templatesOffered.current = true;
-        if (data.results.length) setTemplatePicker({ automatic: true, initial: data.results });
-      })
-      .catch(() => {
-        // An optional suggestion must never interrupt writing a new request.
-      });
-    return () => {
-      alive = false;
-    };
-  }, [isNew, id, prompt, busy, pendingHere, session.preferences.suggest_templates]);
   function chooseTemplate(template: PromptTemplate) {
     setPrompt((value) => appendTemplate(value, template.description));
-    setTemplatePicker(null);
+    setTemplatePickerOpen(false);
     requestAnimationFrame(() => promptInput.current?.focus());
   }
   const confirmation =
@@ -1034,10 +1003,7 @@ export default function Studio() {
                 aria-label="Использовать шаблон"
                 title="Использовать шаблон"
                 disabled={busy || !!activeRun || !!pendingHere}
-                onClick={() => {
-                  templatesOffered.current = true;
-                  setTemplatePicker({ automatic: false });
-                }}
+                onClick={() => setTemplatePickerOpen(true)}
               >
                 <FileText size={17} />
                 <span>Шаблоны</span>
@@ -1071,13 +1037,8 @@ export default function Studio() {
             </div>
           </div>
         </form>
-        {templatePicker && (
-          <TemplatePicker
-            automatic={templatePicker.automatic}
-            initial={templatePicker.initial}
-            onClose={() => setTemplatePicker(null)}
-            onChoose={chooseTemplate}
-          />
+        {templatePickerOpen && (
+          <TemplatePicker onClose={() => setTemplatePickerOpen(false)} onChoose={chooseTemplate} />
         )}
       </section>
       <aside

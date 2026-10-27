@@ -23,11 +23,11 @@ const template: PromptTemplate = {
 const session: Session = {
   user: { id: 'u', username: 'demo', is_staff: false },
   csrfToken: '',
-  preferences: { theme: 'light', notes: [], suggest_templates: true },
+  preferences: { theme: 'light', notes: [] },
   capabilities: { provider: 'fake', model: 'fixture', models: [], local_only: true },
   budget: null,
 };
-function setup(path = '/templates', suggest = true, prompt = '') {
+function setup(path = '/templates', prompt = '') {
   const studioDrafts = new Map<string, StudioDraft>();
   if (prompt)
     studioDrafts.set('new', {
@@ -41,10 +41,7 @@ function setup(path = '/templates', suggest = true, prompt = '') {
     <StrictMode>
       <SessionContext.Provider
         value={{
-          session: {
-            ...session,
-            preferences: { ...session.preferences, suggest_templates: suggest },
-          },
+          session,
           updateSession: vi.fn(),
           refresh: vi.fn(),
           studioDrafts,
@@ -114,7 +111,7 @@ it('creates and edits private templates, enforcing limits without submitting a g
 });
 
 it('uses a library template exactly once alongside the existing draft in StrictMode', async () => {
-  setup('/templates', true, 'Мой текст');
+  setup('/templates', 'Мой текст');
   fireEvent.click(await screen.findByRole('button', { name: 'Использовать' }));
   const input = await screen.findByRole('textbox', { name: 'Описание вашей игры' });
   await waitFor(() => expect(input).toHaveValue(`Мой текст\n\n${template.description}`));
@@ -128,17 +125,14 @@ it('uses a library template exactly once alongside the existing draft in StrictM
   expect(post).not.toHaveBeenCalled();
 });
 
-it('offers templates once in an empty new chat, allows skipping and remains manually available', async () => {
+it('loads templates only through the composer button and inserts without generating', async () => {
   setup('/chats/new');
-  const picker = await screen.findByRole('dialog', { name: 'Выберите шаблон' });
-  expect(within(picker).getByRole('button', { name: 'Продолжить' })).toBeDisabled();
-  fireEvent.click(within(picker).getByRole('button', { name: 'Продолжить без шаблона' }));
-  fireEvent.click(screen.getByRole('link', { name: 'Библиотека' }));
-  await screen.findByRole('heading', { name: 'Мои шаблоны' });
-  fireEvent.click(screen.getByRole('link', { name: 'Новый чат' }));
-  await screen.findByRole('textbox', { name: 'Описание вашей игры' });
+  await act(async () => {});
+  expect(request).not.toHaveBeenCalled();
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Использовать шаблон' }));
+  const picker = await screen.findByRole('dialog', { name: 'Выберите шаблон' });
+  expect(within(picker).getByRole('button', { name: 'Продолжить' })).toBeDisabled();
   fireEvent.change(await screen.findByRole('searchbox', { name: 'Поиск шаблонов по названию' }), {
     target: { value: 'лунный' },
   });
@@ -150,8 +144,8 @@ it('offers templates once in an empty new chat, allows skipping and remains manu
   expect(post).not.toHaveBeenCalled();
 });
 
-it('respects the disabled suggestion and preserves text during manual insertion', async () => {
-  setup('/chats/new', false, 'Моя идея');
+it('preserves existing text during manual insertion', async () => {
+  setup('/chats/new', 'Моя идея');
   expect(request).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Использовать шаблон' }));
   fireEvent.click(await screen.findByRole('radio', { name: template.title }));
@@ -162,24 +156,7 @@ it('respects the disabled suggestion and preserves text during manual insertion'
   expect(post).not.toHaveBeenCalled();
 });
 
-it('does not interrupt typing with a late automatic suggestion', async () => {
-  let finish!: (data: { results: PromptTemplate[] }) => void;
-  vi.mocked(request).mockImplementation(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-  );
-  setup('/chats/new');
-  fireEvent.change(screen.getByRole('textbox', { name: 'Описание вашей игры' }), {
-    target: { value: 'Уже пишу' },
-  });
-  await act(async () => finish({ results: [template] }));
-  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue('Уже пишу');
-});
-
-it('does not automatically show an empty library and recovers from manual load errors', async () => {
+it('recovers from manual template load errors', async () => {
   vi.mocked(request).mockResolvedValue({ results: [] });
   setup('/chats/new');
   await act(async () => {});

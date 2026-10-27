@@ -6,24 +6,19 @@ import { ErrorNotice, Modal, Spinner } from './components';
 import type { PromptTemplate } from './types';
 
 export default function TemplatePicker({
-  initial,
-  automatic = false,
   onClose,
   onChoose,
 }: {
-  initial?: PromptTemplate[];
-  automatic?: boolean;
   onClose: () => void;
   onChoose: (template: PromptTemplate) => void;
 }) {
-  const [templates, setTemplates] = useState(initial ?? []);
-  const [loading, setLoading] = useState(!initial);
+  const [templates, setTemplates] = useState<PromptTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (initial) return;
     let alive = true;
     setLoading(true);
     setError('');
@@ -40,7 +35,7 @@ export default function TemplatePicker({
     return () => {
       alive = false;
     };
-  }, [initial, retry]);
+  }, [retry]);
   const chosen = templates.find((item) => item.id === selected);
   const matching = templates.filter((item) =>
     item.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
@@ -117,11 +112,6 @@ export default function TemplatePicker({
           </>
         )}
         <div className="template-dialog-actions">
-          {automatic && (
-            <button className="button button-outline" onClick={onClose}>
-              Продолжить без шаблона
-            </button>
-          )}
           <button
             className="button button-primary"
             disabled={!chosen || loading || !!error}

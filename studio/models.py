@@ -21,7 +21,6 @@ class Preference(models.Model):
     theme = models.CharField(max_length=10, default="light")
     notes = models.JSONField(default=list)
     model_profile = models.CharField(max_length=10, blank=True, default="")
-    suggest_templates = models.BooleanField(default=True)
 
 
 class PromptTemplate(models.Model):

@@ -16,13 +16,11 @@ builds to `dist/`; Django/nginx serves the same root routes `/`, `/chats/:id`, `
 `/templates` is the private prompt library, linked below the community feed in the sidebar.
 Templates have editable titles (50 characters) and descriptions (3000), search and confirmed
 deletion. The composer template button opens an optional picker; applying it appends to
-the draft without sending. Empty new chats offer saved templates when the account's
-`suggest_templates` preference is enabled (default true). An empty library, an existing draft
-or a late response after typing does not interrupt the user. Skipping is remembered for that
-new-chat draft. Wishes use a 3000-character total with a Unicode-aware counter, an over-limit
+the draft without sending. New chats do not load or suggest templates automatically;
+there is no account setting for suggestions. Wishes use a 3000-character total with a Unicode-aware counter, an over-limit
 warning and a disabled Save button; the API independently enforces the same limit.
 Template dialogs share themes, keyboard dismissal and reduced-motion behavior; their
-bottom actions remain visible while long content scrolls. Apply migration `0018_personal_templates`.
+bottom actions remain visible while long content scrolls. Apply migrations through `0019_remove_preference_suggest_templates`.
 Guest sign-in lives at `/login`; both landing-page actions open it. Successful sign-in
 returns to the requested private page, or to the feed for a direct visit. The sign-in
 page stays light, keeps its dotted background at every width, and has no footer.

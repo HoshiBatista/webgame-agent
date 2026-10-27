@@ -156,17 +156,11 @@ it('counts Unicode and line breaks, blocks oversized saves and accepts a long pa
   });
 });
 
-it('saves the template suggestion separately and preserves unsaved wishes', async () => {
-  vi.mocked(request).mockResolvedValue({ ...session.preferences, suggest_templates: false });
-  const update = setup();
-  fireEvent.change(screen.getByLabelText('Что учитывать в новых играх'), {
-    target: { value: 'Несохранённый текст' },
-  });
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Предлагать шаблоны в новом чате' }));
-  await vi.waitFor(() => expect(update).toHaveBeenCalled());
-  expect(request).toHaveBeenCalledWith('/api/preferences/', {
-    method: 'PATCH',
-    body: JSON.stringify({ suggest_templates: false }),
-  });
-  expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue('Несохранённый текст');
+it('does not offer automatic template suggestions in settings', () => {
+  setup();
+  expect(
+    screen.queryByRole('checkbox', { name: 'Предлагать шаблоны в новом чате' }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Что учитывать в новых играх')).toBeVisible();
+  expect(request).not.toHaveBeenCalled();
 });

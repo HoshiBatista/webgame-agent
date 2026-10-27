@@ -40,24 +40,7 @@ export default function Preferences() {
   const [modelError, setModelError] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [templateBusy, setTemplateBusy] = useState(false);
-  const [templateError, setTemplateError] = useState('');
   const overLimit = characterCount(notes) > NOTES_LIMIT;
-  async function suggestTemplates(value: boolean) {
-    setTemplateBusy(true);
-    setTemplateError('');
-    try {
-      const preferences = await request<PreferencesType>('/api/preferences/', {
-        method: 'PATCH',
-        body: JSON.stringify({ suggest_templates: value }),
-      });
-      updateSession({ ...session, preferences });
-    } catch (cause) {
-      setTemplateError(errorText(cause));
-    } finally {
-      setTemplateBusy(false);
-    }
-  }
   useEffect(() => {
     if (!notesDirty.current) setNotes(session.preferences.notes.join('\n'));
   }, [session.preferences.notes]);
@@ -78,7 +61,7 @@ export default function Preferences() {
   }
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (overLimit || busy || modelBusy || templateBusy) return;
+    if (overLimit || busy || modelBusy) return;
     setBusy(true);
     setError('');
     setSaved(false);
@@ -123,7 +106,7 @@ export default function Preferences() {
                   options={session.capabilities.model_profiles}
                   value={modelProfile}
                   onChange={chooseModel}
-                  disabled={busy || modelBusy || templateBusy}
+                  disabled={busy || modelBusy}
                 />
                 {modelError && <ErrorNotice message={modelError} />}
                 {modelBusy && (
@@ -151,23 +134,6 @@ export default function Preferences() {
               </div>
               <p className="field-help">Сохраняется в этом браузере.</p>
             </fieldset>
-            <div className="settings-templates">
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={session.preferences.suggest_templates !== false}
-                  disabled={busy || modelBusy || templateBusy}
-                  onChange={(event) => void suggestTemplates(event.target.checked)}
-                />
-                <span>Предлагать шаблоны в новом чате</span>
-              </label>
-              <p className="field-help">
-                Если у вас есть шаблоны, предложим выбрать один перед началом. Их всегда можно
-                открыть кнопкой у поля ввода.
-              </p>
-              {templateBusy && <p className="field-help">Сохраняем настройку…</p>}
-              {templateError && <ErrorNotice message={templateError} />}
-            </div>
           </section>
           <section className="form-stack settings-card" aria-label="Пожелания к играм">
             <form onSubmit={save} className="form-stack" aria-label="Настройки аккаунта">
@@ -211,10 +177,7 @@ export default function Preferences() {
                   <Check size={17} /> Пожелания сохранены
                 </p>
               )}
-              <button
-                className="button button-primary"
-                disabled={busy || modelBusy || templateBusy || overLimit}
-              >
+              <button className="button button-primary" disabled={busy || modelBusy || overLimit}>
                 <Check size={17} />
                 {busy ? 'Сохраняем…' : 'Сохранить'}
               </button>

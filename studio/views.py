@@ -114,8 +114,7 @@ def capabilities(request):
 
 
 def preference_data(pref):
-    return {"theme": pref.theme, "notes": pref.notes, "model_profile": pref.model_profile,
-            "suggest_templates": pref.suggest_templates}
+    return {"theme": pref.theme, "notes": pref.notes, "model_profile": pref.model_profile}
 
 
 def session_data(request):
@@ -587,11 +586,7 @@ def preferences_view(request):
             pref.theme = request.data["theme"]
         if "notes" in request.data:
             pref.notes = validate_notes(request.data["notes"])
-        if "suggest_templates" in request.data:
-            if type(request.data["suggest_templates"]) is not bool:
-                raise DomainError("invalid_preferences", "Выберите, предлагать ли шаблоны в новом чате.")
-            pref.suggest_templates = request.data["suggest_templates"]
-        pref.save(update_fields=[key for key in ("theme", "notes", "model_profile", "suggest_templates")
+        pref.save(update_fields=[key for key in ("theme", "notes", "model_profile")
                                  if key in request.data])
     return Response(preference_data(pref))
 

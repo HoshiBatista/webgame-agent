@@ -53,14 +53,16 @@ class PersonalContentTests(TestCase):
         self.assertEqual(len(response.json()['preferences']['notes']), 21)
         self.assertFalse(response.json()['preferences_full'])
 
-    def test_template_suggestion_is_on_by_default_persisted_and_account_scoped(self):
-        self.assertTrue(self.client.get('/api/preferences/').json()['suggest_templates'])
-        self.assertFalse(self.patch_preferences({'suggest_templates': False}).json()['suggest_templates'])
-        self.assertFalse(self.client.get('/api/session/').json()['preferences']['suggest_templates'])
-        for value in ('false', 0, None):
-            self.assertEqual(self.patch_preferences({'suggest_templates': value}).status_code, 400)
-        self.client.force_login(self.other)
-        self.assertTrue(self.client.get('/api/preferences/').json()['suggest_templates'])
+    def test_preferences_return_only_current_account_settings(self):
+        expected = {"theme", "notes", "model_profile"}
+        self.assertEqual(set(self.client.get('/api/preferences/').json()), expected)
+        response = self.patch_preferences({'theme': 'dark', 'notes': ['Крупный текст']})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(set(response.json()), expected)
+        self.assertEqual(response.json()['notes'], ['Крупный текст'])
+        session_preferences = self.client.get('/api/session/').json()['preferences']
+        self.assertEqual(set(session_preferences), expected)
+        self.assertEqual(session_preferences['theme'], 'dark')
 
     def test_private_template_lifecycle_and_no_generation(self):
         payload = {'title': 'Карточки памяти', 'description': 'Сделай игру на память.\n\nКрупные карточки.'}

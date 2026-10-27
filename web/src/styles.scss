@@ -4408,17 +4408,6 @@ svg {
 [aria-invalid='true'] {
   border-color: var(--danger);
 }
-.settings-templates {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
-}
-.form-stack .checkbox-field {
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 12px;
-  cursor: pointer;
-}
-.checkbox-field input,
 .template-option input {
   width: 18px;
   height: 18px;
