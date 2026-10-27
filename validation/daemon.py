@@ -18,7 +18,7 @@ MAX_BYTES = 2_000_000
 
 def run_bounded(payload):
     """A hung renderer cannot block the persistent validation service forever."""
-    limit = browser_watchdog_seconds(payload.get("checks"))
+    limit = browser_watchdog_seconds(payload.get("checks"), payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False))
     process = subprocess.Popen(
         [sys.executable, "-m", "validation.runner"],
         stdin=subprocess.PIPE,

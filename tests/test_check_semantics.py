@@ -65,8 +65,7 @@ def test_checkpoint_cannot_count_only_setup_as_control_and_waits_stay_bounded():
     assert check_issue(check) is None
     assert browser_watchdog_seconds([check]) >= 6
     check["steps"].append({"action": "wait", "ms": 10000})
-    with pytest.raises(ValueError):
-        browser_watchdog_seconds([check])
+    assert browser_watchdog_seconds([check]) < 50
     with pytest.raises(ContractError, match="10 секунд"):
         validate_checks([check], require_complete=False)
 
@@ -140,3 +139,69 @@ def test_numeric_label_is_a_check_problem_and_does_not_become_a_gameplay_failure
     assert result["facts"][1]["status"] == "unverified"
     assert {f["code"] for f in result["findings"]} == {"invalid_check"}
     assert all(result["gates"].values())
+
+
+def test_absolute_checkpoint_preserves_setup_without_requiring_a_baseline():
+    check = game_checks()[1]
+    check['expect'] = {'operator': 'eq', 'value': 11}
+    assert check_issue(check) is None
+
+
+def test_generation_rejects_semantically_invalid_wait_before_browser():
+    check = game_checks()[1]
+    check['steps'].append({'action': 'press', 'key': 'Space'})
+    with pytest.raises(ContractError, match='wait_for'):
+        validate_checks([check], require_complete=False)
+
+
+@pytest.mark.browser
+def test_absolute_checkpoint_compiles_and_keeps_control_setup():
+    html, checks = game(), game_checks()
+    checks[1]['expect'] = {'operator': 'eq', 'value': 11}
+    result = validate(html, checks, artifact_hash=sha256(html))
+    assert result['status'] == 'passed', result
+    assert result['facts'][1]['before'] is None
+    assert result['facts'][1]['after'] == 11
+    assert result['facts'][1]['counterfactual']['comparison'] is False
+
+
+@pytest.mark.browser
+def test_excessive_scenario_wait_does_not_skip_artifact_gates():
+    html, checks = game(), game_checks()
+    checks[1]['steps'] = [{'action': 'wait', 'ms': 10000}] * 2
+    result = validate(html, checks, artifact_hash=sha256(html))
+    assert result['status'] == 'unverified', result
+    assert all(result['gates'].values())
+    fact = result['facts'][1]
+    assert fact['actions'] == [] and fact['compile_issue']['code'] == 'long_check'
+
+
+def test_oversized_check_is_a_contract_error_not_an_unhandled_controller_failure():
+    check = game_checks()[1]
+    check['steps'][0]['selector'] = '#' + 'a' * 200000
+    with pytest.raises(ContractError, match='размера'):
+        validate_checks([check], require_complete=False)
+
+
+@pytest.mark.browser
+def test_absolute_checkpoint_does_not_require_dom_created_only_after_input():
+    html = game().replace('s.count++;score.textContent', "s.count++;if(!document.querySelector('#notice')){const p=document.createElement('p');p.id='notice';p.textContent='Action completed';document.body.append(p)};score.textContent")
+    checks = game_checks()
+    checks[1]['observation'] = {'source': 'text', 'selector': '#notice'}
+    checks[1]['expect'] = {'operator': 'contains', 'value': 'completed'}
+    report = validate(html, checks, artifact_hash=sha256(html))
+    assert report['status'] == 'passed', report
+    assert report['facts'][1]['before'] is None
+    assert report['facts'][1]['counterfactual']['observation_absent'] is True
+    assert report['facts'][1]['causal_evidence']['matched_setup']
+
+
+@pytest.mark.parametrize('source', ['attribute', 'attribute_number'])
+def test_self_report_attribute_is_rejected_before_browser_and_scenario_repair(source):
+    check = game_checks()[1]
+    check['observation'] = {'source': source, 'selector': '#score', 'attribute': 'data-passed'}
+    check['expect'] = {'operator': 'eq', 'value': 1 if source.endswith('_number') else 'yes'}
+    with pytest.raises(ContractError) as caught:
+        validate_checks([check], require_complete=False)
+    assert caught.value.code == 'self_report_check'
+    assert 'самоотчёт' in check_issue(check)

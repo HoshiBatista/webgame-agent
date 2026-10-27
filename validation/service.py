@@ -70,7 +70,7 @@ def _failure(message, artifact_hash, started):
     }
 
 
-def _validated_report(report, checks, artifact_hash, started, *, contract=None):
+def _validated_report(report, checks, artifact_hash, started, *, contract=None, operator_criteria=None):
     if not isinstance(report, dict) or report.get("artifact_hash") != artifact_hash:
         raise ValueError("artifact hash mismatch")
     if report.get("status") not in {"passed", "failed", "unverified", "infrastructure_error"}:
@@ -80,6 +80,14 @@ def _validated_report(report, checks, artifact_hash, started, *, contract=None):
         for name in ("facts", "findings")
     ):
         raise ValueError("invalid validation facts")
+    if operator_criteria or 'coverage' in report:
+        from .criteria import coverage
+
+        expected_coverage = coverage(checks, operator_criteria or [], report['facts'])
+        if report.get('coverage') != expected_coverage:
+            raise ValueError('coverage does not match independent criteria')
+        if report['status'] == 'passed' and expected_coverage['uncovered']:
+            raise ValueError('passed report lacks independent requirements')
     if report["status"] != "infrastructure_error":
         environment = report.get("environment")
         if not isinstance(environment, str) or not environment.startswith(
@@ -132,27 +140,35 @@ def _validated_report(report, checks, artifact_hash, started, *, contract=None):
     return report
 
 
-def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None, test_profile=None) -> dict:
+def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None, test_profile=None, operator_criteria=(), capture_visual=False) -> dict:
     started = time.monotonic()
     if hashlib.sha256(html.encode()).hexdigest() != artifact_hash:
         return _failure("Хеш переданного HTML не совпадает с кандидатом.", artifact_hash, started)
     container = os.environ.get("VALIDATOR_CONTAINER", "gf-mini-validator")
-    payload = {"html": html, "checks": checks, "artifact_hash": artifact_hash}
+    payload: dict = {"html": html, "checks": checks, "artifact_hash": artifact_hash}
+    from .criteria import OperatorCriterion
+
+    if not isinstance(operator_criteria, tuple) or any(type(c) is not OperatorCriterion for c in operator_criteria):
+        raise ValueError("operator criteria must be application-owned objects")
+    if operator_criteria:
+        payload["operator_criteria"] = [c.payload() for c in operator_criteria]
+    if capture_visual:
+        payload["capture_visual"] = True
     if contract:
         payload["contract"] = contract
     if test_profile:
         payload["test_profile"] = test_profile
     try:
-        max_duration = browser_watchdog_seconds(checks) + 5
+        max_duration = browser_watchdog_seconds(checks, payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False)) + 5
         if os.environ.get("VALIDATOR_BACKEND", "docker") == "native":
             from .native import execute
 
-            return _validated_report(execute(payload), checks, artifact_hash, started, contract=contract)
+            return _validated_report(execute(payload), checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
         if os.environ.get("VALIDATOR_BACKEND", "docker") != "docker":
             raise ValueError("unknown validator backend")
         if socket_path := os.environ.get("VALIDATOR_SOCKET"):
             report = _socket_validate(socket_path, payload, max_duration)
-            return _validated_report(report, checks, artifact_hash, started, contract=contract)
+            return _validated_report(report, checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
         inspected = subprocess.run(
             ["docker", "inspect", container],
             capture_output=True,
@@ -183,6 +199,6 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None
             check=True,
         )
         report = json.loads(result.stdout)
-        return _validated_report(report, checks, artifact_hash, started, contract=contract)
+        return _validated_report(report, checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
     except (OSError, ImportError, subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError) as exc:
         return _failure(f"Изолированный браузер недоступен ({type(exc).__name__}).", artifact_hash, started)

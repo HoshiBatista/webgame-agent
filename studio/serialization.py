@@ -54,6 +54,11 @@ def run_data(run, budget=None):
 
     confirmation = confirmation_report(run)
     candidate_report = run.candidate_revision.reports.order_by("-id").first() if run.candidate_revision_id else None
+    from .check_repair import attempted
+    from .checks_create import eligible
+
+    awaiting_scenarios = bool(run.status not in run.ACTIVE and eligible(run, run.candidate_revision)
+                              and not attempted(run, run.candidate_revision))
     message, error = run.message, run.error
     if run.status == "unknown":
         message = "Полный результат запроса не подтверждён. Сохранённые данные не потеряны."
@@ -66,6 +71,7 @@ def run_data(run, budget=None):
         "generation_profile": run.generation_profile,
         "source_format": run.source_format,
         "generation_strategy": run.generation_strategy,
+        "visual_review": {k:run.visual_state[k] for k in ("phase","reason") if k in run.visual_state},
         "game_plan": run.game_plan,
         "model_profile": run.model_profile,
         "model": run.model,
@@ -85,7 +91,7 @@ def run_data(run, budget=None):
         "error": error,
         "can_cancel": run.status in run.ACTIVE,
         "can_continue": run.status in ("needs_attention", "failed", "cancelled") and not unknown
-        and (not candidate_report or candidate_report.assessment.get("action") != "review"),
+        and (not candidate_report or candidate_report.assessment.get("action") != "review" or awaiting_scenarios),
         "can_retry_unknown": run.status in ("unknown", "cancelled", "needs_attention", "failed", "unverified") and unknown
         and run.chat.current_revision_id == run.base_revision_id,
         "can_confirm": confirmation is not None,

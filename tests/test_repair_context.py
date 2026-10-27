@@ -2,7 +2,7 @@ import hashlib
 import json
 from copy import deepcopy
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -24,7 +24,14 @@ def request_for(run, base, findings):
     run.game_request = run.prompt
     run.generation_strategy = "lite"
     run.planning_required = False
+    from generation.requirements import policy_snapshot
+
     run.game_plan = {}
+    run.policy_snapshot = policy_snapshot()
+    run.preferences_snapshot = []
+    run.helper_catalog = {}
+    run.visual_state = {}
+    run.requirement_manifest = {}
     run.source_revision_id = run.base_revision_id
     run.candidate_revision_id = None
     if base is not None:
@@ -48,10 +55,9 @@ def test_recorded_prompt_hash_matches_the_instructions_actually_sent_for_each_op
         provider="fake",
         model="fixture",
     )
-    with patch("studio.tasks.preference_for", return_value=SimpleNamespace(notes=[])):
-        # A pre-candidate contract failure must retain create/edit, not become repair.
-        findings = [{"code": "invalid_schema"}] if base is None else []
-        request = request_for(run, base, findings)
+    # A pre-candidate contract failure must retain create/edit, not become repair.
+    findings = [{"code": "invalid_schema"}] if base is None else []
+    request = request_for(run, base, findings)
     prompt = build_messages(request)[0]["content"]
     assert request["operation"] == operation
     assert (
@@ -102,8 +108,7 @@ def test_repair_request_carries_actual_browser_context_for_the_exact_candidate()
         provider="fake",
         model="fixture",
     )
-    with patch("studio.tasks.preference_for", return_value=SimpleNamespace(notes=[])):
-        request = request_for(run, base, report["findings"])
+    request = request_for(run, base, report["findings"])
     assert request["operation"] == "repair"
     assert request["base_revision"] == "candidate"
     context = json.loads(build_messages(request)[1]["content"])
@@ -136,8 +141,7 @@ def test_unrelated_or_infrastructure_report_is_not_sent_as_repair_evidence(reaso
         provider="fake",
         model="fixture",
     )
-    with patch("studio.tasks.preference_for", return_value=SimpleNamespace(notes=[])):
-        request = request_for(run, base, findings)
+    request = request_for(run, base, findings)
     assert "validation_evidence" not in request
 
 

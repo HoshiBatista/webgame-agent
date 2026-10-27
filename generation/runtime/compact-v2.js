@@ -1,4 +1,4 @@
-/* GameForge utilities v1. Rules and rendering belong to the generated module. */
+/* GameForge utilities v2. Rules and rendering belong to the generated module. */
 (() => {
   'use strict';
   const config = JSON.parse(document.getElementById('gf-config').textContent);
@@ -9,6 +9,8 @@
   const descriptor = Object.getOwnPropertyDescriptor;
   const world = freeze({ width: config.world.width, height: config.world.height });
   const held = new Set();
+  const pointers = new Map();
+  let releasing = false;
   let game = null;
   let inputs = 0;
   let frames = 0;
@@ -66,37 +68,61 @@
   }
 
   function releaseAll() {
-    for (const key of held) input({ type: 'key', key, action: keyControls.get(key) || null, phase: 'up' });
-    held.clear();
-    input({ type: 'blur', phase: 'up' });
+    if (releasing) return;
+    releasing = true;
+    const keys = [...held], active = [...pointers.values()];
+    held.clear(); pointers.clear(); previous = null;
+    try {
+      for (const key of keys) input({ type: 'key', key, action: keyControls.get(key) || null, phase: 'up' });
+      for (const event of active) input({ ...event, phase: 'up' });
+      input({ type: 'blur', phase: 'up' });
+    } finally { releasing = false; }
   }
 
   for (const control of config.controls) {
     const button = document.createElement('button');
     button.type = 'button';
     button.dataset.gfAction = control.id;
-    button.textContent = control.label;
+    button.title = control.label;
+    button.setAttribute("aria-label", control.label);
+    const label = document.createElement("span");
+    label.textContent = control.label;
+    button.appendChild(label);
     button.addEventListener('pointerdown', event => {
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
-      input({ type: 'action', action: control.id, phase: 'down' });
+      const action = { type: 'action', action: control.id, phase: 'down' };
+      pointers.set(event.pointerId, action);
+      input(action);
     });
-    for (const name of ['pointerup', 'pointercancel']) button.addEventListener(name, () => {
-      input({ type: 'action', action: control.id, phase: 'up' });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, event => {
+      const action = pointers.get(event.pointerId);
+      pointers.delete(event.pointerId);
+      if (action) input({ ...action, phase: 'up' });
     });
     buttons.appendChild(button);
     if (control.key) keyControls.set(control.key, control.id);
   }
 
-  for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) {
+  for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
     canvas.addEventListener(name, event => {
       event.preventDefault();
-      if (name === 'pointerdown') canvas.setPointerCapture(event.pointerId);
       const box = canvas.getBoundingClientRect();
-      input({ type: 'pointer', phase: name === 'pointerdown' ? 'down' :
-        name === 'pointermove' ? 'move' : 'up',
-        x: (event.clientX - box.left) * world.width / box.width,
-        y: (event.clientY - box.top) * world.height / box.height });
+      if (box.width <= 0 || box.height <= 0) return;
+      const phase = name === 'pointerdown' ? 'down' : name === 'pointermove' ? 'move' : 'up';
+      const nx = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
+      const ny = Math.min(1, Math.max(0, (event.clientY - box.top) / box.height));
+      const action = { type: 'pointer', phase, x: nx * world.width, y: ny * world.height, nx, ny };
+      if (phase === 'down') {
+        canvas.setPointerCapture(event.pointerId);
+        pointers.set(event.pointerId, action);
+      } else if (phase === 'up') {
+        const last = pointers.get(event.pointerId);
+        if (!last) return;
+        pointers.delete(event.pointerId);
+        if (name !== 'pointerup') { input({ ...last, phase: 'up' }); return; }
+      } else if (pointers.has(event.pointerId)) pointers.set(event.pointerId, action);
+      input(action);
     });
   }
   addEventListener('keydown', event => {
@@ -106,7 +132,7 @@
     input({ type: 'key', key: event.key, action: keyControls.get(event.key) || null, phase: 'down' });
   });
   addEventListener('keyup', event => {
-    held.delete(event.key);
+    if (!held.delete(event.key)) return;
     input({ type: 'key', key: event.key, action: keyControls.get(event.key) || null, phase: 'up' });
   });
   addEventListener('blur', releaseAll);
@@ -114,7 +140,7 @@
   addEventListener('resize', resize);
   new ResizeObserver(resize).observe(document.getElementById('gf-stage'));
 
-  const api = freeze({ width: world.width, height: world.height, random: () => Math.random() });
+  const api = freeze({ width: world.width, height: world.height, random: () => Math.random(), resetInput: releaseAll, motion: window.GameForgeMotion });
   const platform = freeze({
     register(factory) {
       if (game || typeof factory !== 'function') throw new Error('GF register exactly one game factory');
@@ -134,16 +160,16 @@
       resize();
     },
     inspect() {
-      return { version: 1, ready: !!game, failed, inputs, frames,
+      return { version: 2, ready: !!game, failed, inputs, frames,
         world: { width: world.width, height: world.height },
         display: { width, height } };
     },
   });
   define(window, 'GameForge', { value: platform, configurable: false, writable: false });
   function tick(now) {
-    if (game && !failed && game.update) {
+    if (game && !failed) {
       const dt = previous === null ? 0 : Math.min(0.1, Math.max(0, (now - previous) / 1000));
-      invoke(game.update, dt);
+      if (game.update) invoke(game.update, dt);
       paint();
     }
     previous = now;

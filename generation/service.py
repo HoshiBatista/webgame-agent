@@ -14,6 +14,11 @@ DURABLE_PROVIDERS = frozenset({"relay", "codex_api"})
 
 
 def generate(request, *, on_event, is_cancelled):
+    if request.get("operation") in {"visual_review", "visual_patch"}:
+        from .feedback_image import image_input
+
+        if image_input(request) is None:
+            raise GenerationError("invalid_visual_image", "Нет допустимого пакета кадров.", outcome_unknown=False)
     provider_name = request.get("provider", "codex")
     provider = PROVIDERS.get(provider_name)
     if provider is None:
@@ -44,7 +49,7 @@ def generate(request, *, on_event, is_cancelled):
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
     try:
-        if request.get("generation_profile") == "compact" and request.get("operation") != "plan":
+        if request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:
             from .compact import validate_wire
 
             validate_wire(result["response"], request)
@@ -53,6 +58,10 @@ def generate(request, *, on_event, is_cancelled):
                           schema=response_schema(request),
                           defer_check_errors=request.get("operation", "create") == "create"
                           and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
+        if request.get('operation') == 'plan':
+            from .planning import validate_plan
+
+            validate_plan(result['response'], request)
     except GenerationError as exc:
         exc.usage = result.get("usage")
         exc.raw_response = result.get("raw_response") or result.get("response")

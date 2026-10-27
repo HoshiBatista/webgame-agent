@@ -15,9 +15,9 @@ from studio.tasks import process_run, recover_expired
 SYNTAX = {"status": "failed", "findings": [
     {"code": "javascript_syntax", "message": "Unexpected end of input", "line": 1},
 ], "facts": [], "stages": [{"stage": "syntax", "status": "failed"}]}
-GAMEPLAY = {"status": "failed", "findings": [
-    {"code": "effect_mismatch", "check_id": "tap", "message": "Input had no effect",
-     "before": 0, "after": 0, "expected": {"operator": "eq", "value": 1}},
+RUNTIME = {"status": "failed", "findings": [
+    {"code": "runtime_or_network", "check_id": "tap", "message": "Input handler threw",
+     "errors": ["TypeError: broken input handler"]},
 ], "facts": []}
 PASS = {"status": "passed", "findings": [], "facts": [], "environment": "test"}
 
@@ -43,7 +43,7 @@ def new_run(chat):
 def test_stages_repair_only_current_problem_and_stop_on_success(setup):
     run = new_run(setup)
     with (patch("generation.service.generate", side_effect=fixture_generate) as model,
-          patch("validation.service.validate", side_effect=[SYNTAX, GAMEPLAY, PASS]) as check):
+          patch("validation.service.validate", side_effect=[SYNTAX, RUNTIME, PASS]) as check):
         process_run(str(run.id))
     run.refresh_from_db()
     assert run.status == "succeeded", run.error
@@ -51,7 +51,7 @@ def test_stages_repair_only_current_problem_and_stop_on_success(setup):
     requests = [call.args[0] for call in model.call_args_list]
     assert [r["operation"] for r in requests] == ["create", "repair", "repair"]
     assert requests[1]["findings"][0]["code"] == "javascript_syntax"
-    assert requests[2]["findings"][0]["code"] == "effect_mismatch"
+    assert requests[2]["findings"][0]["code"] == "runtime_or_network"
     assert requests[1]["base_revision"] != requests[2]["base_revision"]
     assert run.check_reports.count() == 3
     first_report = run.check_reports.order_by("id").first()
@@ -73,7 +73,7 @@ def test_legacy_allowance_is_frozen_and_failed_games_cannot_loop(setup, settings
     run.save(update_fields=["completion_policy"])
     settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS = 3 if repairs == 2 else 2
     with (patch("generation.service.generate", side_effect=fixture_generate) as model,
-          patch("validation.service.validate", return_value=GAMEPLAY)):
+          patch("validation.service.validate", return_value=RUNTIME)):
         process_run(str(run.id))
         process_run(str(run.id))
     run.refresh_from_db()
@@ -104,7 +104,7 @@ def test_restart_between_checks_preserves_responses_and_remaining_allowance(setu
     recover_expired()
     settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS = 3
     with (patch("generation.service.generate", side_effect=fixture_generate) as model,
-          patch("validation.service.validate", side_effect=[GAMEPLAY, PASS])):
+          patch("validation.service.validate", side_effect=[RUNTIME, PASS])):
         process_run(str(run.id))
     run.refresh_from_db()
     assert run.status == "succeeded", run.error

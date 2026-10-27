@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-27",
+  "recorded_at": "2026-10-27T15:23:53.436930+00:00",
+  "git_base": "815f2b2af18059d8dcb8780ced405f7f0ea98f3c",
+  "scope": "P6-P8 plus review C; uncommitted P0-P5 preserved",
+  "versions": {
+    "pipeline": 9,
+    "check_policy": 3,
+    "runtime": 2,
+    "planning": 2,
+    "requirement_manifest": 1,
+    "presentation": 1,
+    "motion_helper": 1,
+    "visual": 1
+  },
+  "model_calls": 0,
+  "working_database_migrated": false,
+  "cloud_changed": false,
+  "gpu_accessed": false,
+  "codex_worker_changed": false,
+  "flags_default": {
+    "GAMEFORGE_LITE_CODE_THEN_CHECKS_ENABLED": false,
+    "GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED": false
+  },
+  "validation": {
+    "backend_full": {
+      "passed": 848,
+      "deselected": 120,
+      "seconds": 186.32
+    },
+    "frontend": {
+      "passed": 113
+    },
+    "frontend_build": "passed",
+    "native_browser": {
+      "passed": 16,
+      "seconds": 54.01
+    },
+    "docker_browser": {
+      "passed": 16,
+      "seconds": 150.85
+    },
+    "compact_integration": {
+      "passed": 4,
+      "real_browser_cases": 1,
+      "seconds": 24.13
+    },
+    "final_helper_selection_fix": {
+      "unit_regressions": 33,
+      "queue_regressions": 8,
+      "note": "After full backend run; helper excluded from single gameplay module selection"
+    },
+    "ruff": "passed",
+    "mypy": {
+      "passed_files": 45
+    },
+    "django_check": "passed",
+    "migration_drift": "none",
+    "git_diff_check": "passed"
+  },
+  "helpers": {
+    "gf-motion-v1.js": {
+      "version": 1,
+      "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+    }
+  },
+  "validator_implementation": "7d468d09e7cfcae0de9e237a3743636076c46870c28dbe45401020e8107c074d",
+  "source_hashes": {
+    "generation/helpers.py": "b836757146986878fd1bb62bd1033240356c4a25ad0bdb3b6550ba52305500d7",
+    "generation/runtime/motion-v1.js": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11",
+    "generation/visual.py": "557fdaae9d0f0a9c556b36e1229522e95f928d946a5051742471a267ab15c13c",
+    "generation/artifacts.py": "ebbde5bed2c519aba8bf0ee38131b6c13d9b9729096f880b7620d2c2ca8fdcd4",
+    "generation/source_policy.py": "08794c82eb426fe7f2bd68a847f61196d58903f04d344b2cb1b1622e94601539",
+    "studio/visual.py": "926adac95c8ee4a9c2fe2eb62f0b0527665b927ee51ddaefc47fe277af04643a",
+    "studio/tasks.py": "71d96349986d9bc3abb518878624254e509ae059c4f7e41f5dba56153f90fe5e",
+    "studio/services.py": "dff990497c710b806c137a9b154b5561e40e4b3dc6d09d65838a552609bc632c",
+    "studio/management/commands/retire_games.py": "9509f57c347ba7ea15b98ea14ffaf58e03750ea02564907d243da5547c8c8d8c",
+    "validation/visual.py": "ef11f4ee619a334c8f6a3baf1174bebfbbc0dc0c70b483c9021e873ff72af871"
+  },
+  "private_log_hashes": {
+    "backend-final.log": "bf2c14e5f6a3f12f455f7ca9a33b1e4aa4729291960f594dc9dab02295cc6a2e",
+    "frontend.log": "0a614d97042da12a194dbacfcb6710e6296d6347711fb1f71ee9b9e804ea2f38",
+    "frontend-build.log": "7d93a21e57f91cbd4f10726e504ca790bb0d3d4c732db4f8c1a659335efc5995",
+    "native-browser.log": "97aa28fc1e16ea6c0060377c6c4f4212ac909f4450b246b8e1ad4f1e9ecb285c",
+    "docker-browser.log": "1695cbb73e553a8d3c9fe3b8eaf5211ef4d5fc9ff647f4326d1cf755b1f07d6a",
+    "compact-integration.log": "bdc37c565ad3a9374188952382335cffd753c36796b6c5b745ea8f7dc7bf2d8b",
+    "repair-final.log": "eae46a29eb87eb1605421cdffcee5261279bfdf55d83c63aa5333437a6518f6e"
+  },
+  "limits": [
+    "No live quality or FPS claim",
+    "Synthetic defects are class reproductions, not private historical source replay",
+    "Physical WebView not exercised",
+    "Visual review remains disabled pending separately budgeted P9 pilot"
+  ]
+}

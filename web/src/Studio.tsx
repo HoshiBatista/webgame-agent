@@ -59,6 +59,7 @@ export default function Studio() {
   } = useSavedChat(isNew ? undefined : id);
   const [newTitle, setNewTitle] = useState<string | null>(initialDraft?.chatTitle ?? null);
   const [error, setError] = useState('');
+  const [confirmedReport, setConfirmedReport] = useState<string | null>(null);
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
   const modelProfile = selectedProfile(session);
@@ -278,6 +279,43 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  const confirmation =
+    !activeRun &&
+    latestRun?.can_confirm &&
+    revision?.id === latestRun.candidate_revision_id &&
+    revision?.artifact_hash === latestRun.confirmation?.artifact_hash
+      ? latestRun.confirmation
+      : null;
+  const confirmationKey = confirmation
+    ? `${id}:${revision?.id}:${confirmation.report_id}:${confirmation.artifact_hash}`
+    : null;
+  useEffect(() => {
+    setConfirmedReport(null);
+  }, [confirmationKey]);
+  async function confirmGame() {
+    if (!confirmation || !latestRun || busy || activeRun || confirmedReport !== confirmationKey)
+      return;
+    const startedView = view.current;
+    setBusy(true);
+    setError('');
+    try {
+      await post<Run>(`/api/runs/${latestRun.id}/confirm/`, {
+        confirmed: true,
+        artifact_hash: confirmation.artifact_hash,
+        report_id: confirmation.report_id,
+      });
+      chatsChanged();
+      void refresh();
+    } catch (cause) {
+      if (view.current === startedView) setError(errorText(cause));
+    } finally {
+      if (view.current === startedView) {
+        setConfirmedReport(null);
+        setBusy(false);
+        load();
+      }
+    }
+  }
   const runActionKey = useRef({ run: '', action: '', key: '' });
   async function performRunAction(action: 'recheck' | 'continue') {
     if (!latestRun?.[action === 'recheck' ? 'can_recheck' : 'can_continue'] || busy || activeRun)
@@ -739,15 +777,41 @@ export default function Studio() {
                     {message.role === 'user' ? 'Вы' : run ? `beeGame ${label}` : 'beeGame'}
                     {message.role !== 'user' && run && <RunTime run={run} />}
                   </span>
-                  <div>
-                    {message.role !== 'user' &&
-                    /подтвердите результат|нужна ваша проверка/.test(message.content)
-                      ? 'Игра сохранена. Откройте её и попробуйте сыграть. Если нужно что-то изменить, напишите об этом.'
-                      : message.content}
-                  </div>
+                  <div>{message.content}</div>
                 </article>
               );
             })}
+            {confirmation && (
+              <section className="chat-message" aria-label="Проверка результата">
+                <h3>Игра сохранена. Нужна ваша проверка</h3>
+                <p>Сыграйте в выбранную версию и проверьте эти условия:</p>
+                <ul>
+                  {confirmation.requirements.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+                <label className="confirmation-consent">
+                  <input
+                    type="checkbox"
+                    checked={confirmedReport === confirmationKey}
+                    disabled={busy}
+                    onChange={(event) =>
+                      setConfirmedReport(event.target.checked ? confirmationKey : null)
+                    }
+                  />
+                  Я сыграл и проверил перечисленные условия
+                </label>
+                <p>Результат будет отмечен как проверенный вами.</p>
+                <button
+                  type="button"
+                  className="button button-outline"
+                  disabled={busy || confirmedReport !== confirmationKey}
+                  onClick={confirmGame}
+                >
+                  Подтвердить результат
+                </button>
+              </section>
+            )}
             {latestRun?.game_plan?.summary && (
               <details className="chat-message game-plan">
                 <summary>Замысел игры</summary>

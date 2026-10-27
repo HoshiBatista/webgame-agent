@@ -997,3 +997,87 @@ it('shows the saved concept and continues it idempotently before any game revisi
   await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
   expect(vi.mocked(post).mock.calls[1]).toEqual(['/api/runs/planned/continue/', payload]);
 });
+
+describe('manual game confirmation', () => {
+  const candidate = {
+    ...revision,
+    id: 'candidate',
+    accepted: false,
+    verification: 'none',
+    number: 2,
+  } as Revision;
+  const run = {
+    id: 'review-run',
+    status: 'unverified',
+    candidate_revision_id: candidate.id,
+    can_confirm: true,
+    can_recheck: true,
+    confirmation: {
+      artifact_hash: 'hash',
+      report_id: 42,
+      requirements: ['Обе пары открываются и начинается новый раунд'],
+    },
+  } as Run;
+  function awaiting() {
+    return {
+      ...chat,
+      candidate_revision: candidate,
+      revisions: [candidate, revision],
+      runs: [run],
+    };
+  }
+  it('requires a personal check and sends the exact displayed report once', async () => {
+    vi.mocked(request).mockResolvedValue(awaiting());
+    setup();
+    const button = await screen.findByRole('button', { name: 'Подтвердить результат' });
+    expect(button).toBeDisabled();
+    expect(screen.getByText(run.confirmation!.requirements[0])).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Я сыграл и проверил перечисленные условия' }),
+    );
+    vi.mocked(post).mockReturnValue(new Promise(() => {}));
+    fireEvent.click(button);
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/runs/review-run/confirm/', {
+      confirmed: true,
+      artifact_hash: 'hash',
+      report_id: 42,
+    });
+    expect(button).toBeDisabled();
+  });
+  it('never confirms a historical version and resets agreement when returning', async () => {
+    vi.mocked(request).mockResolvedValue(awaiting());
+    setup();
+    await screen.findByRole('button', { name: 'Подтвердить результат' });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.change(screen.getAllByRole('combobox', { name: 'Версия игры' })[0], {
+      target: { value: revision.id },
+    });
+    expect(screen.queryByRole('button', { name: 'Подтвердить результат' })).not.toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.change(screen.getAllByRole('combobox', { name: 'Версия игры' })[0], {
+      target: { value: '' },
+    });
+    expect(await screen.findByRole('button', { name: 'Подтвердить результат' })).toBeDisabled();
+  });
+  it('refreshes a rejected confirmation without submitting it again', async () => {
+    vi.mocked(request).mockResolvedValue(awaiting());
+    vi.mocked(post).mockRejectedValue(
+      new ApiError({ code: 'confirmation_changed', message: 'Проверка изменилась' }, 409),
+    );
+    setup();
+    const button = await screen.findByRole('button', { name: 'Подтвердить результат' });
+    fireEvent.click(screen.getByRole('checkbox'));
+    vi.mocked(request).mockResolvedValue({
+      ...awaiting(),
+      runs: [{ ...run, can_confirm: false, confirmation: null }],
+    });
+    fireEvent.click(button);
+    await screen.findByText('Проверка изменилась');
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: 'Подтвердить результат' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(post).toHaveBeenCalledTimes(1);
+  });
+});

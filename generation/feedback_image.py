@@ -2,6 +2,7 @@
 
 import base64
 import binascii
+import hashlib
 
 MAX_IMAGE_BYTES = 512 * 1024
 
@@ -26,4 +27,15 @@ def image_input(request):
     signature = b"\x89PNG\r\n\x1a\n" if mime == "image/png" else b"\xff\xd8\xff"
     if len(raw) > MAX_IMAGE_BYTES or not raw.startswith(signature):
         return None
+    try:
+        from .visual import decode
+
+        decode(data, mime)
+    except Exception:
+        return None
+    if request.get("operation") in {"visual_review", "visual_patch"}:
+        policy = request.get(request["operation"], {})
+        if (any(frame.get(k) != policy.get(k) for k in ("base_revision", "artifact_hash", "report_id", "report_identity", "packet_hash"))
+            or hashlib.sha256(raw).hexdigest() != policy.get("sheet_hash")):
+            return None
     return {"type": "image", "url": f"data:{mime};base64,{data}"}

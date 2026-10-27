@@ -17,6 +17,7 @@ def profiles(settings):
     settings.GAMEFORGE_MODEL = 'qwen38'
     settings.GAMEFORGE_LITE_PROVIDER = ''
     settings.GAMEFORGE_LITE_MODEL = ''
+    settings.GAMEFORGE_PRO_PROVIDER = 'codex'
     settings.GAMEFORGE_PRO_ENABLED = True
     settings.GAMEFORGE_PRO_ACCESS = 'local'
     settings.GAMEFORGE_PRO_USER_IDS = frozenset()

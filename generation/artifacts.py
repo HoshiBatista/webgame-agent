@@ -66,6 +66,10 @@ def normalize_files(files):
 def apply_patches(files, patches, *, module_repair=None):
     original = normalize_files(files)
     result = dict(original)
+    if (module_repair or {}).get("scope") == "single_module" and any(
+        safe_path(patch["path"]) not in module_repair["files"] for patch in patches
+    ):
+        raise ContractError("module_scope", "Ремонт ограничен одним выбранным модулем; остальные файлы неизменны.")
     replacements = [p for p in patches if p.get("action") == "replace_module"]
     if replacements:
         policy = module_repair or {}
@@ -161,7 +165,9 @@ def _css(content, containing, files):
 
 
 def bundle(files, *, script_map=None):
-    files = normalize_files(files)
+    from .helpers import resolve
+
+    files = resolve(normalize_files(files))
     document = _get(files, "index.html")
     if re.search(r"<(?:iframe|object|embed|base)\b", document, re.I):
         raise ContractError("embedded_document", "Игра должна быть автономной, без вложенных документов.")
@@ -268,18 +274,54 @@ def bundle(files, *, script_map=None):
 
 def materialize(response, *, operation, base_revision=None, files=None, previous_checks=None,
                 generation_contract=None, module_repair=None, check_repair=None, code_repair_basis=None,
+                checks_create=None, generation_strategy="lite", requirement_manifest=None, helper_catalog=None, visual_patch=None,
                 generation_profile="full", compact_manifest=None, source_format="string"):
     version = (generation_contract or {}).get("pipeline_version", CONTRACT_VERSION)
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if operation == "visual_patch":
+        from .visual import PATCH_SCHEMA, validate_binding
+
+        validate_response(response, operation=operation, schema=PATCH_SCHEMA)
+        validate_binding(response, visual_patch)
+        original = normalize_files(files or {})
+        if str(base_revision) != visual_patch["base_revision"] or sha256(bundle(original)) != visual_patch["artifact_hash"]:
+            raise ContractError("stale_visual_evidence", "Исходники визуальной правки изменились.")
+        if response["status"] != "ok":
+            if response["patches"]:
+                raise ContractError("invalid_visual_patch", "Остановка требует пустого списка патчей.")
+            return {"status":"unchanged", "message":response["message"]}
+        if any(p["path"] not in visual_patch["paths"] for p in response["patches"]):
+            raise ContractError("visual_patch_scope", "Правка вышла за разрешённые файлы.")
+        if generation_profile == "compact" and any(p["path"] != "game.js" for p in response["patches"]):
+            raise ContractError("visual_patch_scope", "Оболочка compact принадлежит приложению.")
+        updated = apply_patches(original, response["patches"])
+        if generation_profile == "compact":
+            from .compact import source_from
+
+            source_from({"source": updated["game.js"]}, "string")
+        if updated == original:
+            raise ContractError("no_changes", "Исходники не изменились.")
+        document = bundle(updated)
+        return {"files":updated, "file_hashes":{p:sha256(c) for p,c in updated.items()},
+                "html":document, "artifact_hash":sha256(document), "checks":deepcopy(previous_checks or []),
+                "diff":[line for path in sorted(updated) if updated[path] != original[path]
+                        for line in difflib.unified_diff(original[path].splitlines(True), updated[path].splitlines(True),
+                                                         fromfile=path, tofile=path)], "generation_profile":generation_profile, "compact_manifest":compact_manifest or {},
+                "runtime_version":2 if generation_profile=="compact" else 0}
     if generation_profile == "compact":
         from .compact import materialize_compact
+        from .helpers import PATH, SOURCE, resolve
+
+        resolve({PATH: SOURCE.read_text()}, helper_catalog)
 
         return materialize_compact(response, {"operation": operation, "base_revision": base_revision,
                                              "generation_profile": generation_profile,
                                              "compact_manifest": compact_manifest, "source_format": source_format,
                                              "module_repair": module_repair or {}, "check_repair": check_repair,
-                                             "code_repair_basis": code_repair_basis},
+                                             "code_repair_basis": code_repair_basis, "checks_create": checks_create,
+                                             "generation_strategy": generation_strategy,
+                                             "requirement_manifest": requirement_manifest},
                                    files=files, previous_checks=previous_checks)
     from .schema import response_schema
 
@@ -344,7 +386,11 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             raise ContractError(
                 "invalid_create", "Новая игра должна содержать исходники без патчей к чужой версии."
             )
+        from .helpers import PATH
+
         result = normalize_files(response["files"])
+        if PATH in result:
+            raise ContractError("trusted_helper_locked", "Содержимое helper не принимает модель.")
     check_map = {c["id"]: c for c in response["checks"]}
     for old in previous_checks or []:
         if old["id"] in check_map:
@@ -372,6 +418,9 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             "no_changes",
             "Ответ заявляет об изменении, но исходники и проверки остались прежними. Верните нужный точный патч; если запрос уже реализован, используйте status=unchanged и объясните почему.",
         )
+    from .helpers import resolve
+
+    result = resolve(result, helper_catalog)
     try:
         document = bundle(result)
     except ContractError as exc:

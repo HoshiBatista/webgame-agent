@@ -38,7 +38,7 @@ def test_compact_profile_survives_real_relay_pending_and_receipt_reentry(environ
     run.refresh_from_db()
     assert run.status == "succeeded", run.error
     assert calls == [1] and run.result_revision.generation_profile == "compact"
-    assert run.result_revision.runtime_version == 1 and run.result_revision.compact_manifest["probes"]
+    assert run.result_revision.runtime_version == 2 and run.result_revision.compact_manifest["probes"]
     assert Revision.objects.filter(run=run).count() == 1
     process_run(str(run.id))
     assert calls == [1]
@@ -66,7 +66,7 @@ def test_compact_reply_receipt_creates_version_and_validation_receives_frozen_co
         process_run(str(run.id))
     run.refresh_from_db()
     assert run.status == "succeeded", run.error
-    assert browser.call_args.kwargs["contract"]["runtime_version"] == 1
+    assert browser.call_args.kwargs["contract"]["runtime_version"] == 2
     assert browser.call_args.kwargs["contract"]["source_hash"] == run.result_revision.file_hashes["game.js"]
 
 
@@ -141,3 +141,35 @@ def test_factory_interface_error_repairs_game_module_despite_runtime_stack_frame
     assert findings.index(runtime) < findings.index(missing)
     assert first.checks == repaired.checks and repaired.files['game.js'] == SOURCE
     assert all(repaired.files[p] == value for p, value in first.files.items() if p != 'game.js')
+
+
+@pytest.mark.django_db(transaction=True)
+def test_split_checks_stage_uses_durable_relay_uuid_and_never_regenerates_code(environment, monkeypatch):
+    from studio.tests.test_planning_v2_workflow import browser, response_for
+
+    run, _, executor, calls = environment
+    run.generation_profile='compact'
+    run.generation_strategy='lite_code_then_checks'
+    run.save(update_fields=['generation_profile','generation_strategy'])
+    def reply():
+        request=run.invocations.order_by('-attempt').first().request
+        return response_for(request)['response']
+    monkeypatch.setattr('studio.tests.test_relay.fixture_response', reply)
+    with patch('validation.service.validate', side_effect=browser):
+        process_run(str(run.id))
+        executor.step()
+        executor.step()
+        process_run(str(run.id))
+        create, checks=run.invocations.order_by('attempt')
+        assert create.state=='settled' and checks.state=='sent' and checks.request['operation']=='checks_create'
+        process_run(str(run.id))
+        assert run.revisions.count()==1 and run.invocations.count()==2
+        executor.step()
+        executor.step()
+        process_run(str(run.id))
+        process_run(str(run.id))
+    run.refresh_from_db()
+    assert run.status=='unverified',run.error
+    first, second=run.revisions.order_by('number')
+    assert first.files==second.files and first.artifact_hash==second.artifact_hash
+    assert calls==[1,1] and run.invocations.count()==2

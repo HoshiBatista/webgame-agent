@@ -37,7 +37,7 @@ def apply(response, policy, base):
         base_revision="base",
         files=base["files"],
         previous_checks=base["checks"],
-        generation_contract={"pipeline_version": 8},
+        generation_contract={"pipeline_version": 9},
         check_repair=policy,
     )
 
@@ -138,7 +138,7 @@ def test_schema_and_prompt_are_source_free_for_both_provider_paths():
         "check_repair": policy,
         "files": base["files"],
         "base_revision": "base",
-        "generation_contract": {"pipeline_version": 8},
+        "generation_contract": {"pipeline_version": 9},
     }
     validate_response(fixed, operation="check_repair", schema=response_schema(req))
     messages = build_messages(req)

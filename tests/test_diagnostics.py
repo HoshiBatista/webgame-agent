@@ -76,3 +76,17 @@ def test_overlapping_start_has_hit_target_evidence_and_is_not_misreported_as_run
     assert report['status'] == 'unverified'
     assert not any(f['code'] == 'runtime_or_network' for f in report['findings'])
     assert not any(v['lifecycle']['scenario_start_confirmed'] for v in report['artifact_evidence']['viewports'])
+
+
+@pytest.mark.browser
+def test_catalog_keeps_safe_siblings_and_never_evaluates_getters():
+    html, checks = startup_game('mobile_only')
+    html += '<script>Object.defineProperty(state,"danger",{get(){throw new Error("getter executed");},enumerable:true});</script>'
+    checks[1]['observation'] = {'source': 'state', 'path': 'state.missing'}
+    report = validate(html, checks, artifact_hash=sha256(html))
+    finding = next(f for f in report['findings'] if f['code'] == 'invalid_check' and f['check_id'] == checks[1]['id'])
+    diagnostic = finding['diagnostic']
+    assert any(r['observation'].get('path') == 'state.active' for r in diagnostic['observations'])
+    assert {'path': 'state.danger', 'reason': 'accessor'} in diagnostic['observation_skips']
+    assert not any('getter executed' in str(v['errors']) for v in report['artifact_evidence']['viewports'])
+    assert focus_findings([finding])[0]['diagnostic']['observation_skips']

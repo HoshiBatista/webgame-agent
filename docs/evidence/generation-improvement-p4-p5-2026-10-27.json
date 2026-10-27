@@ -1,0 +1,141 @@
+{
+  "created_at": "2026-10-27T14:18:49.503851+00:00",
+  "scope": "Local P4-P5 implementation and review B; no inference or deployment",
+  "git_head": "815f2b2af18059d8dcb8780ced405f7f0ea98f3c",
+  "baseline": "P0-P3 uncommitted working tree; private .data/generation-improvement-p4-p5/baseline.json",
+  "baseline_sha256": "7356203a0c770ab08b5228385c8feffd4638fcf3e562ee788dc425f6cbdcf115",
+  "versions": {
+    "pipeline": 9,
+    "planning": 2,
+    "runtime": 2,
+    "check_policy": 3,
+    "manifest": 1,
+    "presentation": 1
+  },
+  "policy_snapshot": {
+    "pipeline": 9,
+    "planning": 2,
+    "runtime": 2,
+    "source_hashes": {
+      "planning.py": "ed383bdcf415b9a3dbe1c1cdff4d045287d1ed0252a49465b16f6fe17d8fb8ab",
+      "requirements.py": "7a1a53cd6247a239fe16cedff5fc869024188538df46d5731dba1a4d6abc1a63",
+      "schema.py": "8c55989deaab25199fb9268b24a439185cb3f6e42a5f16df7161dbc1332f36b6",
+      "prompts.py": "8ac6b4d9e6cbfc5aebca63365bc0acac9d7329313cefe38fabae44ccf46520f2",
+      "presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+      "compact.py": "75288f524155a946fb0c7e79407d2683bf0544e9a0981708e954a6977d1b8130",
+      "runtime/compact-v2.js": "222e454714ceb04ebb38cca51a69a10fca6a10873c1cfcbdc3f90d8fc83c7b4e",
+      "runtime/compact-v2.css": "98f32934ca3474f0d66c82052cf436d0adedb7e3087733bbab7ab6d32a2655f4",
+      "artifacts.py": "f1cff1ad38a0e9043ec46a81dbe5fd8264197a22e63b68bf6924ddab0d1ee531",
+      "source_policy.py": "1479e28f052595db20d8dba759e2927e60ecd6eb7413aa66f7c2e05a08296264",
+      "check_repair.py": "e91c3cbfba2eef180519165f09ad22e8fcda5af41b0989506cf94853a47cc4a8",
+      "code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+      "feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+      "../studio/tasks.py": "ec0e81b3ad70e0f01aff5a9a6997e945b70d8f4b68961973781404fda5587bc3",
+      "../studio/check_repair.py": "d61d2532d58b3498f9c94068b0c082344b47700d12d66e178bfa93f4dc2172ef",
+      "../studio/checks_create.py": "2c4192284acf51d75b9810935cad833308b53b625eb915770e5b6261f0712e30",
+      "../studio/acceptance.py": "4373ff9795b80287e58121e21c87766a2d3563fcb5975b62eaa227a7ea7d16d8",
+      "../validation/checks.py": "68bda6a1db925fa9e046faa934dd06d99588b76f1e6e04ff35143f2560ab8c38",
+      "../validation/check_program.py": "234533fe2462158c6e681ff1bfd5c003090cdbae2cfec16d3b389262f8c7e4c6"
+    }
+  },
+  "validator_implementation_hash": "f75d11cf6cb8c585816d346f3e245df13a012ed14bf4ead5e986873dd78a15af",
+  "checks": [
+    {
+      "command": ".venv/bin/pytest -m 'not browser and not native_browser and not live' --disable-warnings",
+      "passed": 792,
+      "deselected": 107,
+      "seconds": 103.54
+    },
+    {
+      "command": "VALIDATOR_BACKEND=native .venv/bin/pytest tests/test_runtime_v2.py tests/test_compact_generation.py studio/tests/test_planning_v2_workflow.py -m browser --disable-warnings",
+      "passed": 17,
+      "deselected": 47,
+      "seconds": 50.49
+    },
+    {
+      "command": "VALIDATOR_BACKEND=docker VALIDATOR_CONTAINER=gf-mini-validator-tests .venv/bin/pytest tests/test_runtime_v2.py tests/test_compact_generation.py tests/test_generation_evidence.py tests/test_v8_review.py -m browser --disable-warnings",
+      "passed": 25,
+      "failed": 2,
+      "seconds": 168.24,
+      "note": "Two overly strict fixture assertions: exact fractional pixel equality and exact frame phase; corrected test tolerances, production results were preserved."
+    },
+    {
+      "command": "VALIDATOR_BACKEND=docker VALIDATOR_CONTAINER=gf-mini-validator-tests .venv/bin/pytest tests/test_runtime_v2.py -m browser --disable-warnings",
+      "passed": 4,
+      "seconds": 40.47,
+      "note": "All four runtime tests now pass; combined with the preceding run, all 27 distinct Docker browser cases have passed."
+    },
+    {
+      "command": "npm test -- --silent",
+      "passed": 113,
+      "test_files": 13
+    },
+    {
+      "command": "npm run lint && npm run build",
+      "status": "passed"
+    },
+    {
+      "command": ".venv/bin/ruff check generation validation studio tests",
+      "status": "passed"
+    },
+    {
+      "command": ".venv/bin/mypy generation validation",
+      "status": "passed",
+      "source_files": 42
+    },
+    {
+      "command": ".venv/bin/python manage.py makemigrations --check --dry-run",
+      "status": "passed",
+      "pending_model_changes": false
+    },
+    {
+      "command": ".venv/bin/python manage.py check",
+      "status": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "status": "passed"
+    }
+  ],
+  "remote_servers_accessed": false,
+  "gpu_accessed": false,
+  "model_calls": 0,
+  "working_database_migrated": false,
+  "application_restarted": false,
+  "deployment_performed": false,
+  "experimental_lite_default": false,
+  "limits": [
+    "Model planning promises are not independent semantic truth.",
+    "Structurally valid semantic refusals are not universally detected.",
+    "Detailed unplanned requests and explicit edits remain semantically unmapped.",
+    "New post-code model scenarios require manual review.",
+    "No live model or physical mobile WebView was tested."
+  ],
+  "source_hashes": {
+    "generation/requirements.py": "7a1a53cd6247a239fe16cedff5fc869024188538df46d5731dba1a4d6abc1a63",
+    "generation/planning.py": "ed383bdcf415b9a3dbe1c1cdff4d045287d1ed0252a49465b16f6fe17d8fb8ab",
+    "generation/compact.py": "75288f524155a946fb0c7e79407d2683bf0544e9a0981708e954a6977d1b8130",
+    "generation/runtime/compact-v2.js": "222e454714ceb04ebb38cca51a69a10fca6a10873c1cfcbdc3f90d8fc83c7b4e",
+    "generation/runtime/compact-v2.css": "98f32934ca3474f0d66c82052cf436d0adedb7e3087733bbab7ab6d32a2655f4",
+    "generation/schema.py": "8c55989deaab25199fb9268b24a439185cb3f6e42a5f16df7161dbc1332f36b6",
+    "generation/prompts.py": "8ac6b4d9e6cbfc5aebca63365bc0acac9d7329313cefe38fabae44ccf46520f2",
+    "generation/artifacts.py": "f1cff1ad38a0e9043ec46a81dbe5fd8264197a22e63b68bf6924ddab0d1ee531",
+    "generation/check_repair.py": "e91c3cbfba2eef180519165f09ad22e8fcda5af41b0989506cf94853a47cc4a8",
+    "generation/source_policy.py": "1479e28f052595db20d8dba759e2927e60ecd6eb7413aa66f7c2e05a08296264",
+    "generation/service.py": "dad27e566ebf7124bc860965cb99c880b18fe7a450d4781057511c3816a9984a",
+    "studio/models.py": "edaab816a91429f7754cb96f2284c6a91f09db939d2ccf0185f02d931334761f",
+    "studio/services.py": "af8101ae04863bf167edc22520314fa849a5aaf6b35276c72d3c79e7e5d64d7b",
+    "studio/tasks.py": "ec0e81b3ad70e0f01aff5a9a6997e945b70d8f4b68961973781404fda5587bc3",
+    "studio/acceptance.py": "4373ff9795b80287e58121e21c87766a2d3563fcb5975b62eaa227a7ea7d16d8",
+    "studio/checks_create.py": "2c4192284acf51d75b9810935cad833308b53b625eb915770e5b6261f0712e30",
+    "studio/check_repair.py": "d61d2532d58b3498f9c94068b0c082344b47700d12d66e178bfa93f4dc2172ef",
+    "studio/serialization.py": "195a17c69d1cbc56dbc767ec95021aa04f662725baf80ac961dd6028e65f96b6",
+    "studio/views.py": "39ca29d7bb6b23ca843b580952c0b9afba4deda30dd059a29ba26d0c4f8227a1",
+    "validation/evidence.py": "688cc83ae03ef8fe8ecb936753a6973562d64c3a3759d80b0de5121c116d9579",
+    "studio/migrations/0015_revision_requirement_manifest_run_policy_snapshot_and_more.py": "4675c14d8ea696595305d4f3f0af84f89f7cb8c20ec189531f9038db88a2bc21",
+    "tests/test_planning_v2.py": "a4c57074f47832d8ec7bf71cca48b64235a1b152721d1e604adff587a651cab4",
+    "tests/test_checks_create.py": "05618d36096dc7f42922510845cffa479c8484727b8be82917064f1db80a4f34",
+    "tests/test_runtime_v2.py": "a8e169caab3132a3afd838b96c9352b21465f860ec897fe4d3ff02ea6ce45ae5",
+    "studio/tests/test_planning_v2_workflow.py": "2e0090dec825c8ad99ced9f1dc56dfcf7c7bcce8e48bc7993adc17ec1165eebb"
+  }
+}

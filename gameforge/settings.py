@@ -165,3 +165,8 @@ if transport_log := os.environ.get("GAMEFORGE_TRANSPORT_LOG"):
 LOGGING["loggers"]["generation.relay_api"] = {
     "handlers": ["transport"], "level": "INFO", "propagate": False,
 }
+
+# Experimental: keeps the existing total invocation budget; rollout requires a separate pilot.
+GAMEFORGE_LITE_CODE_THEN_CHECKS_ENABLED = os.environ.get("GAMEFORGE_LITE_CODE_THEN_CHECKS_ENABLED", "0") == "1"
+
+GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED = os.environ.get("GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED", "0") == "1"

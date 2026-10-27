@@ -91,7 +91,7 @@ def module_policy(files, findings, *, allowed_paths=None):
     """Select a small file named by actual findings, or the only JS gameplay module."""
     eligible = {p: hashlib.sha256(content.encode()).hexdigest() for p, content in files.items()
                 if (allowed_paths is None or p in allowed_paths)
-                and p.endswith((".js", ".css", ".json")) and len(content.encode()) <= MAX_MODULE_BYTES}
+                and p != "gf-motion-v1.js" and p.endswith((".js", ".css", ".json")) and len(content.encode()) <= MAX_MODULE_BYTES}
     defects = [f for f in findings if f.get("code") in {"javascript_syntax", "runtime_or_network",
                "effect_mismatch", "canvas_missing", "mobile_overflow", "module_not_registered", "control_obstructed"}]
     located = [f for f in defects if f.get("path") or f.get("file")]
@@ -99,8 +99,10 @@ def module_policy(files, findings, *, allowed_paths=None):
                      and f.get("file_hash", eligible[p]) == eligible[p]), None)
     if not located and any(f.get("code") in {"effect_mismatch", "canvas_missing", "runtime_or_network"}
                            for f in findings):
-        scripts = [p for p in files if p.endswith(".js") and (allowed_paths is None or p in allowed_paths)]
+        scripts = [p for p in files if p.endswith(".js") and p != "gf-motion-v1.js"
+                   and (allowed_paths is None or p in allowed_paths)]
         if len(scripts) == 1 and scripts[0] in eligible:
             selected = scripts[0]
     return {"version": MODULE_POLICY_VERSION, "max_bytes": MAX_MODULE_BYTES,
-            "files": {selected: eligible[selected]} if selected else {}}
+            "files": {selected: eligible[selected]} if selected else {},
+            "scope": "single_module" if selected else "patch"}

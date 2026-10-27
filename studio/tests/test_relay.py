@@ -54,6 +54,9 @@ def environment(tmp_path, settings, monkeypatch):
             response = plan_response() if (
                 job["payload"]["response_format"]["json_schema"]["schema"]["properties"].get("operation", {}).get("enum") == ["plan"]
             ) else fixture_response()
+            if response.get("operation") == "plan":
+                context = json.loads(job["payload"]["messages"][-1]["content"])
+                response["plan"]["request_reference"] = context.get("game_request") or context["prompt"]
             self.pending = (
                 job["id"],
                 {
@@ -300,3 +303,21 @@ def test_relay_planning_receipt_is_reused_and_code_is_a_separate_counted_job(env
     assert run.status == 'succeeded', run.error
     assert len(calls) == 2 and run.invocations.count() == 2
     assert run.chat.revisions.count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_sent_receipt_is_collected_even_when_generation_policy_changed(environment):
+    run, _, executor, calls = environment
+    process_run(str(run.id))
+    original=run.invocations.get()
+    assert original.state=='sent'
+    run.policy_snapshot={'old':True}
+    run.save(update_fields=['policy_snapshot'])
+    executor.step()
+    executor.step()
+    process_run(str(run.id))
+    run.refresh_from_db()
+    original.refresh_from_db()
+    assert calls==[1] and run.invocations.count()==1
+    assert original.state=='settled' and original.cost_usd is not None
+    assert run.status=='succeeded',run.error

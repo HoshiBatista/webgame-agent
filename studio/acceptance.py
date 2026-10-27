@@ -6,7 +6,7 @@ from validation.checks import VERSION, gates_verified, review_checks
 from validation.contracts import implementation_hash
 
 HARD_FAILURES = {"javascript_syntax", "runtime_or_network", "canvas_missing", "mobile_overflow", "module_not_registered", "control_obstructed"}
-CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal", "missing_effects", "missing_mobile_start", "missing_mobile_control"}
+CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal", "effect_mismatch", "uncovered_requirements", "missing_effects", "missing_mobile_start", "missing_mobile_control"}
 
 
 def complete_requirements(checks):
@@ -24,7 +24,8 @@ def assess(result, checks, corrections):
     findings = result.get("findings", [])
     codes = {f.get("code") for f in findings}
     gates_passed = gates_verified(result, checks)
-    action = "repair"
+    # Unknown evidence is not permission to rewrite a saved game.
+    action = "review"
     if result["status"] == "infrastructure_error" or codes & {"browser_error"}:
         action = "recheck"
     elif codes & HARD_FAILURES:
@@ -34,7 +35,7 @@ def assess(result, checks, corrections):
     elif result["status"] == "passed":
         action = "accept"
     elif result["status"] == "unverified" or codes & CHECK_PROBLEMS:
-        # A mixed result with a real failed gameplay assertion is still blocked.
+        # A model-authored assertion does not independently establish a code defect.
         action = "review"
     unresolved = {f.get("check_id") for f in findings if f.get("check_id")}
     if codes & {"scene_visually_unverified", "check_suite_revised"}:
@@ -47,12 +48,19 @@ def assess(result, checks, corrections):
         or (["Проверьте игровой результат вручную."] if action == "review" else []),
         "corrections": corrections,
         "artifact_evidence": result.get("artifact_evidence"),
+        "requirement_coverage": result.get("requirement_coverage", {}),
+        "coverage": result.get("coverage") or {"scope": "model_proposals_only", "natural_language_request_verified": False},
     }
 
 
 def confirmation_report(run):
     """Fast evidence gate for serialization; the POST also checks the live identity."""
     if run.status in (*run.ACTIVE, "cancelled", "unknown", "succeeded") or not run.candidate_revision_id:
+        return None
+    from .models import Chat
+
+    if (not Chat.objects.filter(pk=run.chat_id, current_revision_id=run.base_revision_id).exists()
+            or run.chat.runs.filter(status__in=run.ACTIVE).exists()):
         return None
     report = run.candidate_revision.reports.order_by("-id").first()
     if report is None:
@@ -63,6 +71,7 @@ def confirmation_report(run):
         evidence.get("version") != VERSION or evidence.get("validator_hash") != implementation_hash()
         or evidence.get("action") != "review" or evidence.get("gates_passed") is not True
         or not complete_requirements(checks) or not evidence.get("requirements")
+        or evidence.get("requirement_coverage", {}).get("uncovered")
         or report.checks != checks or report.status != "unverified"
     ):
         return None

@@ -25,7 +25,7 @@ def test_planning_is_separate_from_artifact_and_compact_source_contract(profile,
     result = generate(request, on_event=lambda _: None, is_cancelled=lambda: False)
     assert result["response"] == plan_response()
     assert "files" not in result["response"] and "source_lines" not in result["response"]
-    assert response_schema(request)["properties"]["plan"]["properties"]["mechanics"]["maxItems"] == (
+    assert response_schema(request)["properties"]["plan"]["anyOf"][0]["properties"]["mechanics"]["maxItems"] == (
         4 if strategy_name == "pro" else 2
     )
     assert "game concept" in system_prompt(request)
@@ -72,10 +72,12 @@ def test_planning_policy_is_explicit_and_never_replans_edits():
 
 
 def screenshot_request():
+    from tests.test_visual_review import encoded_image
+
     return {"generation_strategy": "pro", "base_revision": "revision", "artifact_hash": "a" * 64,
             "validation_evidence": {"artifact_hash": "a" * 64, "report_id": 42},
             "preview_image": {"artifact_hash": "a" * 64, "report_id": 42, "mime": "image/png",
-                              "data": base64.b64encode(b"\x89PNG\r\n\x1a\nfixture").decode()}}
+                              "data": encoded_image((8, 8), fmt="PNG")}}
 
 
 def test_only_bounded_same_candidate_frames_are_model_input():

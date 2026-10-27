@@ -37,7 +37,7 @@ def valid(evidence, artifact_hash, environment):
     contract = evidence.get('contract', {})
     if not isinstance(contract, dict):
         return False
-    if contract and (contract.get('runtime_version') != 1 or
+    if contract and (contract.get('runtime_version') != 2 or
                      not isinstance(contract.get('controls'), list) or
                      not isinstance(contract.get('observations'), list) or
                      not isinstance(contract.get('source_hash'), str) or len(contract['source_hash']) != 64 or

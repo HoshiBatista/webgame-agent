@@ -13,8 +13,8 @@ from studio.services import create_run
 from studio.tasks import process_run, recover_expired, request_for
 
 PASS = {"status": "passed", "findings": [], "facts": []}
-FAIL = {"status": "failed", "findings": [{"code": "effect_mismatch", "check_id": "tap",
-         "before": 0, "after": 0}], "facts": []}
+FAIL = {"status": "failed", "findings": [{"code": "runtime_or_network", "check_id": "tap",
+         "errors": ["TypeError: broken input handler"]}], "facts": []}
 
 
 @pytest.fixture

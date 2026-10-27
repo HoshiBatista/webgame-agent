@@ -5,6 +5,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
 
+from generation.helpers import catalog as helper_catalog
+from generation.requirements import policy_snapshot
+
 from .titles import DEFAULT_CHAT_TITLE
 
 
@@ -57,10 +60,16 @@ class Run(models.Model):
     game_request = models.TextField(blank=True)
     generation_profile = models.CharField(max_length=16, default="full")
     source_format = models.CharField(max_length=10, default="string")
-    generation_strategy = models.CharField(max_length=16, default="lite")
+    generation_strategy = models.CharField(max_length=32, default="lite")
     planning_required = models.BooleanField(default=False)
     game_plan = models.JSONField(default=dict)
-    pipeline_version = models.PositiveSmallIntegerField(default=8)
+    preferences_snapshot = models.JSONField(default=dict)
+    policy_snapshot = models.JSONField(default=policy_snapshot)
+    helper_catalog = models.JSONField(default=helper_catalog)
+    visual_review_enabled = models.BooleanField(default=False)
+    visual_state = models.JSONField(default=dict)
+    requirement_manifest = models.JSONField(default=dict)
+    pipeline_version = models.PositiveSmallIntegerField(default=9)
     candidate_revision = models.ForeignKey("Revision", null=True, on_delete=models.SET_NULL, related_name="+")
     result_revision = models.ForeignKey("Revision", null=True, on_delete=models.SET_NULL, related_name="+")
     continued_from = models.ForeignKey(
@@ -131,7 +140,9 @@ class Revision(models.Model):
     generation_profile = models.CharField(max_length=16, default="full")
     compact_manifest = models.JSONField(default=dict)
     runtime_version = models.PositiveSmallIntegerField(default=0)
-    pipeline_version = models.PositiveSmallIntegerField(default=8)
+    helper_manifest = models.JSONField(default=dict)
+    requirement_manifest = models.JSONField(default=dict)
+    pipeline_version = models.PositiveSmallIntegerField(default=9)
     accepted = models.BooleanField(default=False)
     verification = models.CharField(max_length=16, default="none")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -152,6 +163,7 @@ class CheckReport(models.Model):
     stages = models.JSONField(default=list)
     elapsed_seconds = models.FloatField(default=0)
     environment = models.JSONField(default=dict)
+    visual_evidence = models.JSONField(default=dict)
     screenshot_base64 = models.TextField(blank=True)
     screenshot_mime = models.CharField(max_length=30, default="image/png")
     identity = models.CharField(max_length=64, db_index=True)
@@ -208,7 +220,8 @@ class Publication(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     source_chat = models.ForeignKey(Chat, on_delete=models.SET_NULL, null=True)
-    revision = models.ForeignKey(Revision, on_delete=models.PROTECT)
+    revision = models.ForeignKey(Revision, on_delete=models.PROTECT, null=True)
+    unavailable_at = models.DateTimeField(null=True)
     title = models.CharField(max_length=160)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

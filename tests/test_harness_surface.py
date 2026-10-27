@@ -84,4 +84,4 @@ def test_probe_waits_are_included_in_the_browser_watchdog():
     checks[0]['steps'].append({'action': 'wait', 'ms': 10000})
     # Ten seconds for the original route plus ten if replayed in desktop.
     assert browser_watchdog_seconds(checks) == before + 20
-    assert browser_watchdog_seconds([]) == 25
+    assert browser_watchdog_seconds([]) == 30

@@ -436,8 +436,15 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
     operation = "repair" if candidate or continued_from else ("edit" if source else "create")
     from generation.planning import should_plan, strategy
+    from generation.requirements import manifest, policy_snapshot
 
     generation_strategy = strategy(provider, model)
+    lite_experiment = generation_strategy == "lite" and profile_id != "pro" and provider not in {"codex", "codex_api"}
+    if continued_from and lite_experiment and continued_from.generation_strategy == "lite_code_then_checks":
+        generation_strategy = continued_from.generation_strategy
+    elif (lite_experiment and generation_profile == "compact"
+          and settings.GAMEFORGE_LITE_CODE_THEN_CHECKS_ENABLED):
+        generation_strategy = "lite_code_then_checks"
     game_plan = continued_from.game_plan if continued_from else (
         source.run.game_plan if source and source.run else {}
     )
@@ -448,7 +455,21 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     )
     if not chat.title_is_custom and chat.current_revision_id is None and not chat.runs.exists():
         chat.title = title_from_prompt(prompt)
+    if continued_from:
+        original_request = continued_from.game_request
+        frozen_manifest = continued_from.requirement_manifest
+    elif source:
+        original_request = source.requirement_manifest.get("request") or (
+            (source.run.game_request or source.run.prompt) if source.run else prompt.strip()
+        )
+        frozen_manifest = manifest(original_request, previous=source.requirement_manifest, amendment=prompt.strip())
+    else:
+        original_request = prompt.strip()
+        frozen_manifest = manifest(original_request)
+    from generation.helpers import catalog
+
     run = Run.objects.create(
+        helper_catalog=continued_from.helper_catalog if continued_from else catalog(),
         chat=chat,
         operation=operation,
         prompt=prompt.strip(),
@@ -464,9 +485,14 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         source_format=source_format,
         generation_strategy=generation_strategy,
         planning_required=planning_required,
+        visual_review_enabled=(continued_from.visual_review_enabled if continued_from else
+                               settings.GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED and generation_strategy=="pro" and operation=="create"),
+        visual_state=continued_from.visual_state if continued_from else {},
         game_plan=game_plan,
-        game_request=(continued_from.game_request if continued_from else
-                      (source.run.game_request or source.run.prompt) if source and source.run else prompt.strip()),
+        game_request=original_request,
+        requirement_manifest=frozen_manifest,
+        preferences_snapshot=continued_from.preferences_snapshot if continued_from else preference_for(chat.owner).notes,
+        policy_snapshot=continued_from.policy_snapshot if continued_from else policy_snapshot(),
         candidate_revision=candidate,
         continued_from=continued_from,
         max_repair_attempts=settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS,
@@ -548,7 +574,9 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     run.save()
     responses = run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
     if (error or {}).get("code") != "scope_refusal":
-        responses = responses.exclude(request__has_key="operation", request__operation="plan")
+        responses = responses.exclude(request__has_key="operation", request__operation__in=["plan", "visual_review"])
+    if revision and run.visual_review_enabled:
+        responses = responses.filter(revision=revision)
     response = responses.order_by("-attempt").values_list("response", flat=True).first()
     model_message = response.get("message", "") if isinstance(response, dict) else ""
     reply = assistant_reply(

@@ -54,7 +54,7 @@ PASS = {
 }
 FAIL = {
     "status": "failed",
-    "findings": [{"code": "input_effect", "message": "Expected actual input effect"}],
+    "findings": [{"code": "runtime_or_network", "errors": ["TypeError: input handler failed"]}],
     "facts": [],
 }
 
@@ -851,7 +851,7 @@ class DomainTests(TestCase):
         self.assertEqual(run.error["code"], "internal_error")
 
     def test_private_provider_receipt_and_generation_fingerprints_are_saved(self):
-        from generation.prompts import SYSTEM_PROMPT
+        from generation.prompts import system_prompt
         from generation.schema import CONTRACT_VERSION, response_schema
         from studio.services import fingerprint
 
@@ -874,7 +874,7 @@ class DomainTests(TestCase):
         self.assertEqual(
             inv.request["generation_contract"],
             {
-                "system_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
+                "system_prompt_sha256": hashlib.sha256(system_prompt(inv.request).encode()).hexdigest(),
                 "response_schema_sha256": fingerprint(response_schema(inv.request)),
                 "pipeline_version": CONTRACT_VERSION,
                 "max_repair_attempts": 3,

@@ -42,3 +42,17 @@ def test_unchanged_reply_explains_why_no_edit_was_needed():
     reply = assistant_reply("needs_attention", "Internal", "Игра уже использует стрелки.",
                             response_status="unchanged")
     assert reply == "Изменения не внесены. Игра уже использует стрелки."
+
+
+@pytest.mark.parametrize('model_status', ['', 'ok', 'unchanged', 'scope_refusal'])
+def test_server_evidence_has_priority_over_a_models_completion_message(model_status):
+    unavailable = assistant_reply('failed', 'Internal', 'Всё готово!', has_candidate=True,
+                                   response_status=model_status, error_code='validator_unavailable')
+    defect = assistant_reply('needs_attention', 'Internal', 'Всё готово!', has_candidate=True,
+                              response_status=model_status, error_code='no_progress')
+    uncertain = assistant_reply('unverified', 'Internal', 'Всё готово!', has_candidate=True,
+                                 response_status=model_status, error_code='manual_verification')
+    assert 'временно недоступна' in unavailable and 'без изменения' in unavailable
+    assert 'обнаруженные проблемы' in defect
+    assert 'полностью проверить' in uncertain
+    assert all('Всё готово' not in reply for reply in [unavailable, defect, uncertain])

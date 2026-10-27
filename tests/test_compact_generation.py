@@ -109,8 +109,8 @@ def test_string_and_lines_build_identical_offline_artifacts_and_runtime_is_versi
     lines["source_lines"] = lines.pop("source").split("\n")
     a, b = artifact(response), artifact(lines, "lines")
     assert a["files"] == b["files"] and a["artifact_hash"] == b["artifact_hash"]
-    assert set(a["files"]) == {"index.html", "runtime.js", "runtime.css", "game.js"}
-    assert a["runtime_version"] == 1 and a["generation_profile"] == "compact"
+    assert set(a["files"]) == {"index.html", "runtime.js", "runtime.css", "game.js", "gf-motion-v1.js"}
+    assert a["runtime_version"] == 2 and a["generation_profile"] == "compact"
     assert "<script src=" not in a["html"] and "fetch(" not in a["html"]
 
 

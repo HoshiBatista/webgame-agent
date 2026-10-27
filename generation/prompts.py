@@ -74,7 +74,7 @@ All checks are independently run in the isolated browser. A revised suite requir
 """ + CHECK_V4_PROMPT
 
 PLAN_GUIDANCE = """
-The saved game_plan is the implementation brief. Preserve it across repairs; a later explicit user edit takes priority over the earlier brief. Implement its mechanics and outcome, and cover their observable effects in checks. Its assumptions are generated design choices, not user-authored constraints. Do not claim the plan itself proves implementation.
+The saved requirement_manifest freezes promises and their stable IDs/category/text/viewport before code. Preserve them exactly in checks and repairs; origin=design is a model interpretation, not a user quote. The saved game_plan is the implementation brief. Preserve it across repairs; a later explicit user edit takes priority over the earlier brief. Implement its mechanics and outcome, and cover their observable effects in checks. Its assumptions are generated design choices, not user-authored constraints. Do not claim the plan itself proves implementation.
 """
 PRO_GUIDANCE = """
 Pro workflow: the application executes each candidate in an isolated browser and returns real findings and, when available, a screenshot. Use this feedback to diagnose the cause and choose a coherent fix. A screenshot is one observed frame, not proof that the game works. You do not control final acceptance. Never substitute a changed test for an implementation.
@@ -82,16 +82,20 @@ Pro workflow: the application executes each candidate in an isolated browser and
 PLAN_CHECK_CONTEXT = "\nThe saved game_plan is context only. Repair exactly the application-issued requirements; do not expand them from the plan or implement source changes.\n"
 
 
-def system_prompt(request):
+def _system_prompt(request):
+    if request.get('operation') in {'visual_review', 'visual_patch'}:
+        from .visual import PATCH_PROMPT, REVIEW_PROMPT
+
+        return REVIEW_PROMPT if request['operation']=='visual_review' else PATCH_PROMPT
     if request.get("operation") == "plan":
         from .planning import prompt
 
         return prompt(request)
     if request.get("generation_profile") == "compact":
-        from .compact import PROMPT
+        from .compact import prompt
 
-        plan_context = PLAN_CHECK_CONTEXT if request.get("operation") == "check_repair" else PLAN_GUIDANCE
-        return PROMPT + (plan_context if request.get("game_plan") else "") + (
+        plan_context = PLAN_CHECK_CONTEXT if request.get("operation") in {"check_repair", "checks_create"} else PLAN_GUIDANCE
+        return prompt(request) + (plan_context if request.get("game_plan") else "") + (
             PRO_GUIDANCE if request.get("generation_strategy") == "pro" else ""
         ) + presentation.implementation_prompt(request)
     operation = request.get("operation", "create")
@@ -147,6 +151,7 @@ def build_messages(request):
         "prompt": request.get("prompt", ""),
         "game_request": request.get("game_request", ""),
         "game_plan": request.get("game_plan") or {},
+        "requirement_manifest": request.get("requirement_manifest") or {},
         "generation_strategy": request.get("generation_strategy", "lite"),
         "audience": request.get("audience", "everyone"),
         "audience_guidance": {
@@ -159,6 +164,7 @@ def build_messages(request):
         "base_revision": str(request["base_revision"]) if request.get("base_revision") is not None else None,
         "design": request.get("design") or {},
         "files": files,
+        "helper_catalog": request.get("helper_catalog", {}),
         "file_hashes": {p: sha256(c) for p, c in files.items()},
         "checks": request.get("checks") or [],
         "findings": request.get("findings") or [],
@@ -166,13 +172,18 @@ def build_messages(request):
         "last_attempt_error": request.get("last_attempt_error"),
         "unresolved_count": len(request.get("unresolved_findings", request.get("findings") or [])),
     }
+    for operation in ('visual_review', 'visual_patch'):
+        if request.get(operation):
+            context[operation] = request[operation]
     if request.get("module_repair") is not None:
         context["module_repair"] = request["module_repair"]
+    if request.get("checks_create") is not None:
+        context["checks_create"] = request["checks_create"]
     if request.get("check_repair") is not None:
         context["check_repair"] = request["check_repair"]
     if request.get("code_repair_basis") is not None:
         context["code_repair_basis"] = request["code_repair_basis"]
-    if request.get("generation_profile") == "compact" and request.get("operation") != "plan":
+    if request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:
         context["compact_manifest"] = request.get("compact_manifest") or {}
         context["source_format"] = request.get("source_format", "string")
         context["source"] = files.get("game.js", "")
@@ -187,6 +198,26 @@ def build_messages(request):
                     available[row['id']] = {'id':row['id'],'path':path[len('gfState.'):],
                                              'type':kind,'value':row.get('value'),'phase':row.get('phase')}
         context['available_observations'] = list(available.values())[:16]
+    selected = (request.get("module_repair") or {}).get("files", {})
+    if request.get("operation") == "repair" and len(selected) == 1:
+        from bs4 import BeautifulSoup
+
+        path = next(iter(selected))
+        context["files"] = {} if request.get("generation_profile") == "compact" else {path: files[path]}
+        context["file_hashes"] = {path: sha256(files[path])}
+        context["module_interface"] = {
+            "path": path, "other_files": sorted(p for p in files if p != path),
+            "dom_ids": [str(tag["id"])[:120] for tag in
+                        BeautifulSoup(files.get("index.html", ""), "html.parser").find_all(id=True)][:80],
+            "check_observations": [c.get("observation", {}) for c in request.get("checks", [])][:12],
+            "controls": (request.get("compact_manifest") or {}).get("controls", []),
+            "world": (request.get("compact_manifest") or {}).get("world", {}),
+            "observations": (request.get("compact_manifest") or {}).get("observations", []),
+        }
+        context.pop("compact_manifest", None)
+        context["checks"] = []
+        context["game_plan"] = {}
+        context["validation_evidence"] = {}  # exact defects remain in findings + last_attempt_error
     return [
         {"role": "system", "content": system_prompt(request)},
         {"role": "user", "content": json.dumps(context, ensure_ascii=False, separators=(",", ":"))},
@@ -241,3 +272,10 @@ def codex_prompt(request):
 
 def schema_prompt(request=None):
     return json.dumps(response_schema(request or {}), ensure_ascii=False, separators=(",", ":"))
+
+
+def system_prompt(request):
+    from .helpers import GUIDANCE
+
+    text = _system_prompt(request)
+    return text + (GUIDANCE if request.get('operation', 'create') in {'create', 'edit', 'repair', 'visual_patch'} else '')

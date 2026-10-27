@@ -164,7 +164,7 @@ MODULE_REPLACEMENT = obj({
     "content": string(maxLength=12288),
 })
 APPLICATION_SCHEMA["properties"]["patches"]["items"] = {"anyOf": [EXACT_PATCH, MODULE_REPLACEMENT]}
-CONTRACT_VERSION = 8
+CONTRACT_VERSION = 9
 
 CHECK_REPAIR_SCHEMA = obj({
     "status": {"enum": ["ok", "unchanged"]},
@@ -182,6 +182,10 @@ def response_schema(request):
     version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if request.get("operation") in {"visual_review", "visual_patch"}:
+        from .visual import PATCH_SCHEMA, REVIEW_SCHEMA
+
+        return deepcopy(REVIEW_SCHEMA if request["operation"] == "visual_review" else PATCH_SCHEMA)
     if request.get("operation") == "plan":
         from .planning import schema as plan_schema
 
@@ -234,7 +238,12 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
             "operation_mismatch",
             "Ответ изменил вид операции. Используйте operation из текущего запроса приложения.",
         )
+    if response["operation"] in {"visual_review", "visual_patch"}:
+        return
     if response["operation"] == "plan":
+        from .planning import validate_plan
+
+        validate_plan(response)
         return
     if response["operation"] == "check_repair":
         if response["status"] == "unchanged":
@@ -267,10 +276,18 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
 
 
 def validate_checks(checks, *, require_complete=True):
+    if not isinstance(checks, list):
+        raise ContractError("invalid_check", "Набор сценариев должен быть списком.")
     if len(checks) > 12:
         raise ContractError(
             "too_many_checks", "Итоговый набор мини-игры должен содержать не более 12 проверок."
         )
+    from validation.check_program import envelope
+
+    try:
+        envelope(checks)
+    except (ValueError, TypeError) as exc:
+        raise ContractError("invalid_check", "Набор сценариев превышает ограничения размера или структуры.") from exc
     ids = set()
     for check in checks:
         error = next(Draft202012Validator(CHECK_SCHEMA).iter_errors(check), None)
@@ -279,35 +296,10 @@ def validate_checks(checks, *, require_complete=True):
         if check["id"] in ids:
             raise ContractError("duplicate_check", "Идентификаторы проверок должны быть уникальны.")
         ids.add(check["id"])
-        if check["expect"]["operator"] == "contains" and (
-            not isinstance(check["expect"]["value"], str) or not check["expect"]["value"].strip()
-        ):
-            raise ContractError("trivial_expectation", "Ожидание contains требует непустой содержательной строки.")
-        if sum(step.get("ms", 0) for step in check["steps"]) > 10000:
-            raise ContractError(
-                "long_check",
-                "Один smoke-сценарий может ожидать не более 10 секунд; долгий исход проверьте вручную.",
-            )
-        if check["category"] in {"control", "outcome", "restart"} and not any(
-            s["action"] in {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down"}
-            for s in check["steps"]
-        ):
-            raise ContractError(
-                "no_real_input", "Проверка управления/исхода/рестарта должна использовать реальный ввод."
-            )
-        observation = check["observation"]
-        if observation["source"] == "state":
-            parts = observation["path"].lower().split(".")
-            if any(
-                p in {"__proto__", "constructor", "prototype", "passed", "testpassed", "test_passed"}
-                for p in parts
-            ):
-                raise ContractError(
-                    "self_report_check", "Проверяйте игровой эффект, а не игровой самоотчёт passed."
-                )
-        for step in check["steps"]:
-            if step["action"] in {"click", "tap"}:
-                if (step["x"] is None) != (step["y"] is None) or (not step["selector"] and step["x"] is None):
-                    raise ContractError("invalid_pointer", "Укажите selector или обе координаты действия.")
+        from validation.check_program import compile_check
+
+        issue = compile_check(check).issue
+        if issue:
+            raise ContractError(issue.code, f"{check['id']} / {issue.field}: {issue.message}")
     if require_complete and (findings := suite_findings(checks)):
         raise ContractError(findings[0]["code"], findings[0]["message"])

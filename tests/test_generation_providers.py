@@ -68,6 +68,7 @@ def test_codex_compact_operations_keep_wire_contract_and_isolation(codex_rpc, op
         reply = example
     elif operation == "repair":
         request['module_repair'] = {'files': {'game.js': 'a' * 64}}
+        request['files'] = {'game.js': example['source']}
         reply = {'status': 'ok', 'message': 'Исправлен модуль.', 'source': example['source']}
     else:
         reply = {'status': 'ok', 'message': 'Исправление.',
@@ -739,7 +740,7 @@ def test_pro_planning_effort_and_schema_use_one_isolated_codex_turn(codex_rpc):
     assert turns[0]['outputSchema']['properties']['operation']['enum'] == ['plan']
     assert result['provider_metadata']['request_profile']['reasoning_effort'] == 'high'
     assert result['provider_metadata']['request_profile']['presentation_policy'] == 1
-    assert 'presentation' in turns[0]['outputSchema']['properties']['plan']['required']
+    assert 'presentation' in turns[0]['outputSchema']['properties']['plan']['anyOf'][0]['required']
     assert result['response'] == reply
 
 
@@ -759,3 +760,24 @@ def test_pro_receives_validator_frame_as_data_image_not_path_or_tool(codex_rpc):
     thread = next(p for m, p in codex_rpc['calls'] if m == 'thread/start')
     assert thread['dynamicTools'] == thread['selectedCapabilityRoots'] == []
     assert thread['config']['mcp_servers'] == {'private': {'enabled': False}}
+
+
+@pytest.mark.parametrize('operation', ['visual_review', 'visual_patch'])
+def test_codex_visual_operations_keep_image_schema_and_disabled_tools(codex_rpc, operation):
+    from tests.test_visual_review import review, visual_request
+
+    request = {**visual_request(operation), 'provider':'codex', 'model':'gpt-6-sol'}
+    reply = review(request[operation])
+    if operation == 'visual_patch':
+        reply.pop('issues')
+        reply.update(operation=operation, status='unchanged', patches=[])
+    codex_rpc['events'][1]['params']['item']['text'] = json.dumps(reply)
+    result = generate_operation(request, on_event=lambda _:None, is_cancelled=lambda:False)
+    turn = next(p for m,p in codex_rpc['calls'] if m == 'turn/start')
+    thread = next(p for m,p in codex_rpc['calls'] if m == 'thread/start')
+    assert turn['outputSchema']['properties']['operation']['enum'] == [operation]
+    assert len(turn['input']) == 2 and turn['input'][1]['url'].startswith('data:image/jpeg;base64,')
+    assert turn['effort'] == 'medium' and not turn['environments'] and not turn['runtimeWorkspaceRoots']
+    assert not thread['dynamicTools'] and not thread['selectedCapabilityRoots']
+    assert 'preview_image' not in json.loads(turn['input'][0]['text'])
+    assert result['response'] == reply

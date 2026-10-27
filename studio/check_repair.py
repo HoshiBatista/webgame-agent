@@ -1,5 +1,7 @@
 """Select one source-preserving scenario repair within the ordinary Run budget."""
 
+from django.db.models import Q
+
 from generation.check_repair import needs_check_repair
 from generation.errors import ContractError
 from generation.schema import CONTRACT_VERSION, validate_checks
@@ -59,8 +61,9 @@ def repairable_surface_gap(base, report):
 def attempted(run, base):
     return Invocation.objects.filter(
         run_id__in=list(lineage_ids(run)),
-        request__operation="check_repair",
-        request__check_repair__artifact_hash=base.artifact_hash,
+    ).filter(
+        Q(request__operation="check_repair", request__check_repair__artifact_hash=base.artifact_hash)
+        | Q(request__operation="checks_create", request__checks_create__artifact_hash=base.artifact_hash),
     ).exists()
 
 

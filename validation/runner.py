@@ -16,8 +16,10 @@ from urllib.parse import urlsplit
 from playwright.sync_api import TimeoutError as BrowserTimeout
 from playwright.sync_api import ViewportSize, sync_playwright
 
-from .checks import INPUT, NUMERIC, RELATIVE, check_issue, comparable, numeric, parse_number
+from .check_program import compile_suite
+from .checks import INPUT, NUMERIC, RELATIVE, comparable, numeric, parse_number
 from .contracts import VIEWPORTS, implementation_hash, suite_findings
+from .criteria import bindings, coverage
 from .diagnostics import INPUT_TARGET
 from .diagnostics import collect as collect_diagnostic
 from .evidence import gates as evidence_gates
@@ -280,37 +282,20 @@ def wait(page, milliseconds):
 
 
 def without_last_input(check):
-    """A fresh-page control observation omits one meaningful input, including its release."""
-    steps = check.get('steps', [])
-    measured_from = max((i + 1 for i, step in enumerate(steps) if step.get('action') == 'checkpoint'), default=0)
-    meaningful: list[int] = []
-    pressed: set[str | None] = set()
-    for i in range(measured_from, len(steps)):
-        step = steps[i]
-        kind, key = step.get('action'), step.get('key')
-        if kind == 'key_up' and key in pressed:
-            pressed.remove(key)
-            continue
-        if kind == 'key_down':
-            pressed.add(key)
-        if kind in INPUT:
-            meaningful.append(i)
-    if check.get('category') not in {'control', 'outcome'} or not meaningful:
-        return None
-    index = meaningful[-1]
-    selected = steps[index]
-    omitted = {index}
-    if selected['action'] == 'key_down':
-        omitted.update(i for i, s in enumerate(steps[index+1:], index+1)
-                       if s.get('action')=='key_up' and s.get('key')==selected.get('key'))
-    return {**check, 'steps':[s for i,s in enumerate(steps) if i not in omitted],
-            '_without_input': True, '_omitted': sorted(omitted)}
+    from .check_program import compile_check
+
+    return compile_check(check).without_last_input()
 
 
 def run(payload):
     started = time.monotonic()
     environment = identity()
     html, checks = payload["html"], payload["checks"]
+    criteria = payload.get("operator_criteria", [])
+    bound_criteria = bindings(checks, criteria)
+    timers = {key for key, c in bound_criteria.items() if c["mode"] == "timer"}
+    programs = compile_suite(checks, timer_ids=timers)
+    by_id = {p.check().get("id"): p for p in programs}
     contract = payload.get("contract") or {}
     test_profile = payload.get('test_profile') or {}
     if test_profile:
@@ -330,8 +315,12 @@ def run(payload):
         findings.append({"code": "incomplete_checks", "message": "Нужны проверки начала, управления и исхода."})
     measurements = []
     successful_routes: list[dict[str, Any]] = []
-    counterfactuals = [copy for check in checks if (copy := without_last_input(check)) is not None]
-    counterfactual_results = {}
+    counterfactuals = [copy for p in programs if p.issue is None
+                       if p.check()["id"] not in timers
+                       if (copy := p.without_last_input()) is not None]
+    counterfactual_results: dict[str, dict[str, Any]] = {}
+    paired_results: dict[str, dict[str, Any]] = {}
+    diagnostic_actions = [{**by_id[c["id"]].check(), "_paired_action": True} for c in counterfactuals]
     covered = {c.get("viewport", "mobile") for c in checks}
     probes = [{"id": "artifact-" + name, "viewport": name, "_artifact_probe": True} for name in VIEWPORTS
               if name not in covered]
@@ -352,15 +341,18 @@ def run(payload):
                 "artifact_evidence": artifact_receipt(artifact_hash, environment,
                     {"status": "failed", "scripts": script_count}, [], contract=contract),
                 "facts": [],
+                "coverage": coverage(checks, criteria, []),
                 "artifact_hash": artifact_hash,
                 "environment": environment,
                 "elapsed_seconds": round(time.monotonic() - started, 3),
                 "screenshot_base64": "",
                 "screenshot_mime": "image/jpeg",
             }
-        for check in [*checks, *probes, *counterfactuals]:
+        for check in [*(p.check() for p in programs), *probes, *diagnostic_actions, *counterfactuals]:
             counterfactual = check.get('_without_input') is True
-            if counterfactual and not any(f.get('id') == check['id'] and f['status'] == 'passed' for f in facts):
+            paired_action = check.get('_paired_action') is True
+            diagnostic_pair = counterfactual or paired_action
+            if diagnostic_pair and not any(f.get('id') == check['id'] and f['status'] == 'passed' for f in facts):
                 continue
             finding_start = len(findings)
             probe = check.get("_artifact_probe") is True
@@ -368,7 +360,7 @@ def run(payload):
             # Replaying them proves only artifact gates in the other viewport.
             route_check = min(successful_routes, key=lambda c: (c["category"] != "start", len(c["steps"]))) \
                 if probe and successful_routes else None
-            size = VIEWPORTS[check.get("viewport", "mobile")]
+            size = VIEWPORTS.get(check.get("viewport", "mobile"), VIEWPORTS["mobile"])
             viewport: ViewportSize = {"width": size["width"], "height": size["height"]}
             # Opaque sandbox origins cannot register service workers. Playwright's
             # additional service-worker shim itself throws on these origins.
@@ -378,11 +370,24 @@ def run(payload):
             errors, requests = [], []
             locations: list[dict[str, Any]] = []
             page = context.new_page()
-            virtual_clock = test_profile.get('clock', False)
+            pair_seed = int(hashlib.sha256((artifact_hash + str(check.get('id'))).encode()).hexdigest()[:8], 16)
+            profile = {'seed': pair_seed, 'clock': True} if diagnostic_pair else test_profile
+            virtual_clock = profile.get('clock', False)
             setattr(page, '_gf_clock', virtual_clock)
-            if test_profile:
-                context.add_init_script("""(() => { let seed="""+str(test_profile['seed'])+""";
-                  Math.random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};
+            if profile:
+                context.add_init_script("""(() => { let seed="""+str(profile['seed'])+""";
+                  const random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};
+                  Math.random=random;
+                  let entropyCalls=0, hooked=true;
+                  try { for(const key of ['getRandomValues','randomUUID']) {
+                    if(typeof crypto[key]!=='function')continue;
+                    const original=crypto[key].bind(crypto);
+                    const wrapped=(...args)=>{entropyCalls++;return original(...args);};
+                    crypto[key]=wrapped; hooked=hooked&&crypto[key]===wrapped;
+                  }} catch {hooked=false;}
+                  Object.defineProperty(window,'__gfDiagnosticProbe',{value:()=>({
+                    rng_intact:Math.random===random, entropy_calls:entropyCalls, entropy_hooked:hooked
+                  }),configurable:false,writable:false});
                 })();""")
             if virtual_clock:
                 fixed = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -462,12 +467,12 @@ def run(payload):
                             fact["actions"].append(step)
                         wait(page, 40)
                     raise InvalidCheck("artifact_probe")
-                issue = None if counterfactual else check_issue(check)
+                program = by_id[check['id']]
+                issue = None if diagnostic_pair else program.issue if program else None
                 if issue:
-                    raise InvalidCheck(issue)
+                    fact['compile_issue'] = {'code': issue.code, 'field': issue.field, 'message': issue.message}
+                    raise InvalidCheck(issue.message)
                 steps = check.get("steps", [])
-                if len(steps) > 30 or sum(s.get("ms", 0) for s in steps) > 10000:
-                    raise InvalidCheck("Сценарий слишком длинный для короткой автоматической проверки.")
                 observation, expect = check["observation"], check["expect"]
                 declared_type = None
                 if contract and observation.get("source") == "state":
@@ -478,17 +483,43 @@ def run(payload):
                 before = None
                 if expect["operator"] in RELATIVE and not any(s["action"] == "checkpoint" for s in steps):
                     before = observe(frame, observation, expect["operator"])
-                wait_ms = 40
+                def setup_snapshot():
+                    try:
+                        return {'value': observe(frame, observation, expect['operator'])}
+                    except InvalidCheck as exc:
+                        return {'missing': str(exc)[:200]}
+
+                if diagnostic_pair and program.measured_from == 0:
+                    fact['setup_observation'] = setup_snapshot()
+                def trace_snapshot():
+                    snapshot = setup_snapshot()
+                    value = snapshot.get('value')
+                    return {'value': value if type(value) in {int, float, bool, type(None)}
+                            else value[:200] if isinstance(value, str) else '[non-scalar]',
+                            'available': 'value' in snapshot}
+
+                wait_ms = program.wait_ms
+                fact['trace'] = []
                 for step_index, step in enumerate(steps):
+                    entry = {'step_index': step_index, 'action': step['action'],
+                             'phase': 'setup' if step_index < program.measured_from else 'measured',
+                             'target': {k: step[k] for k in ('selector', 'key', 'x', 'y') if k in step},
+                             'before': trace_snapshot(), 'status': 'attempted'}
+                    fact['trace'].append(entry)
                     if step["action"] == "checkpoint":
-                        before = observe(frame, observation, expect["operator"])
+                        if program.relative:
+                            before = observe(frame, observation, expect["operator"])
+                        if diagnostic_pair:
+                            fact['setup_observation'] = setup_snapshot()
                     elif step["action"] == "wait_for":
                         wait_ms = step["ms"]
                     else:
                         measured = action(page, frame, step)
                         if measured:
                             fact["input_probes"].append(measured)
+                            entry["input_probe"] = measured
                     fact["actions"].append(step)
+                    entry.update(after=trace_snapshot(), status='delivered')
                 deadline = time.monotonic() + wait_ms / 1000
                 virtual_remaining = float(wait_ms)
                 while True:
@@ -525,7 +556,8 @@ def run(payload):
                     fact["detail"] = str(exc)[:800]
                     findings.append(
                         {"code": "input_obstructed" if isinstance(exc, ObstructedInput) else "invalid_check",
-                         "check_id": check.get("id"), "message": fact["detail"]}
+                         "check_id": check.get("id"), "message": fact["detail"],
+                         **({"compile_issue": fact["compile_issue"]} if "compile_issue" in fact else {})}
                     )
             except BrowserTimeout as exc:
                 fact["detail"] = str(exc)[:800]
@@ -538,6 +570,8 @@ def run(payload):
                     {"code": "browser_error", "check_id": check.get("id"), "message": fact["detail"]}
                 )
                 fact["status"] = "failed"
+            if fact.get('trace') and fact['trace'][-1]['status'] == 'attempted':
+                fact['trace'][-1].update(status='stopped', reason=fact.get('detail', 'execution interrupted')[:200])
             # These gates run even if a selector/state/test is defective.
             if frame is not None:
                 try:
@@ -643,7 +677,7 @@ def run(payload):
                            "inputs": fact["input_probes"],
                            "module": module,
                            "scenario_start": check.get("category") == "start" and fact["status"] == "passed"}
-            if counterfactual:
+            if diagnostic_pair:
                 snapshot: dict[str, Any] = next((f.get('diagnostic', {}) for f in findings[finding_start:]
                                  if f.get('code') == 'invalid_check'), {})
                 absent = snapshot.get('selector_matches') == 0 or snapshot.get('state', {}).get('reason') == 'absent'
@@ -656,15 +690,31 @@ def run(payload):
                     (not contract or module and module.get('ready') is True and
                      module.get('failed') is False and module.get('blocked_controls') == []))
                 absence_proven = bool(absence_proven and execution_valid)
-                counterfactual_results[check['id']] = {
+                try:
+                    if frame is None:
+                        raise ValueError('missing frame')
+                    isolation = frame.evaluate('() => ({...window.__gfDiagnosticProbe(), time:Date.now()})')
+                    isolation['clock_matched'] = isolation.pop('time') == page.evaluate('Date.now()')
+                    isolated = (isolation['rng_intact'] and isolation['entropy_hooked']
+                                and isolation['entropy_calls'] == 0 and isolation['clock_matched'])
+                except Exception:
+                    isolation, isolated = {'unavailable': True}, False
+                execution_valid = execution_valid and isolated
+                pair_result = {
+                    'isolation': isolation,
                     'comparison': (False if absence_proven else fact.get('comparison')) if execution_valid else None,
                     'status': fact['status'], 'execution_valid': execution_valid,
                     'failure_codes': sorted(failure_codes),
                     'before': fact.get('before'), 'after': fact.get('after'),
                     'detail': fact.get('detail'),
                     'observation_absent': bool(absence_proven),
-                    'omitted_steps': check['_omitted'],
+                    'omitted_steps': check.get('_omitted', []),
+                    'setup_observation': fact.get('setup_observation'),
+                    'trace': fact.get('trace', []),
+                    'profile': profile,
+                    'measurement_semantics': 'same seed and virtual clock; other hidden nondeterminism is not proven absent',
                 }
+                (counterfactual_results if counterfactual else paired_results)[check['id']] = pair_result
                 del findings[finding_start:]
                 context.close()
                 continue
@@ -683,12 +733,23 @@ def run(payload):
         if fact['status'] != 'passed' or baseline is None:
             continue
         fact['counterfactual'] = baseline
-        if baseline['comparison'] is not False:
+        treatment = paired_results.get(fact['id'])
+        matched_setup = bool(treatment and treatment['execution_valid'] and baseline['execution_valid']
+                             and treatment['setup_observation'] == baseline['setup_observation'])
+        fact['causal_evidence'] = {'method': 'seeded-clock-pair', 'action': treatment,
+                                  'control': baseline, 'matched_setup': matched_setup,
+                                  'ordinary_environment': environment}
+        if not matched_setup or not treatment or treatment['comparison'] is not True or baseline['comparison'] is not False:
             fact['status'] = 'unverified'
             findings.append({'code': 'effect_not_causal', 'check_id': fact['id'],
                              'message': 'Проверка не отличает реальный ввод от контрольного запуска без последнего действия.'
                              if baseline['comparison'] is True else
                              'Не удалось сравнить эффект с контрольным запуском без последнего действия.'})
+    coverage_result = coverage(checks, criteria, facts)
+    if coverage_result['uncovered']:
+        incomplete = True
+        findings.append({'code': 'uncovered_requirements', 'message': 'Независимые требования не покрыты точными сценариями.',
+                         'requirements': coverage_result['uncovered']})
     statuses = {f["status"] for f in facts}
     status = "failed" if "failed" in statuses else "unverified" if "unverified" in statuses or incomplete else "passed"
     evidence = artifact_receipt(artifact_hash, environment, {"status": "passed", "scripts": script_count}, measurements, contract=contract)
@@ -719,9 +780,19 @@ def run(payload):
         )
         if status == "passed":
             status = "unverified"
+    visual_evidence = {}
+    if payload.get("capture_visual") and status == "passed":
+        from .visual import collect
+
+        try:
+            visual_evidence = collect(html, checks, facts, artifact_hash, environment)
+        except Exception:
+            visual_evidence = {"version":1, "status":"skipped", "reason":"capture_unavailable"}
     return {
         "status": status,
+        "visual_evidence": visual_evidence,
         "gates": gates,
+        "coverage": coverage_result,
         "artifact_evidence": evidence,
         "stage": "browser",
         "stages": [

@@ -92,6 +92,6 @@ def test_success_without_artifact_receipt_is_rejected(compact):
     html, checks = fixture_html(), fixture_checks()
     report = fixture_report(html, checks)
     report.pop('artifact_evidence', None)
-    contract = {'runtime_version': 1, 'source_hash': 'a' * 64, 'controls': [], 'observations': []} if compact else None
+    contract = {'runtime_version': 2, 'source_hash': 'a' * 64, 'controls': [], 'observations': []} if compact else None
     with pytest.raises(ValueError, match='artifact.*receipt'):
         _validated_report(report, checks, sha256(html), 0, contract=contract)

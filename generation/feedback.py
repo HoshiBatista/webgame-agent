@@ -68,7 +68,7 @@ def _finding(source):
                 "excerpt_truncated", "source_anchor", "source_structure"):
         if key in source:
             result[key] = _text(source[key]) if isinstance(source[key], str) else _bounded_context(source[key])
-    for key in ("before", "after", "expected"):
+    for key in ("before", "after", "expected", "compile_issue"):
         if key in source:
             result[key] = _bounded_context(source[key])
     if isinstance(source.get("diagnostic"), dict):
@@ -90,7 +90,7 @@ def _diagnostic(source):
         return value
     allowed = {"check_id", "step_index", "step", "observation", "before", "after", "expected",
                "actual_type", "viewport", "controls", "truncated", "state", "selector_matches", "unavailable",
-               "observations", "input_probe"}
+               "observations", "observation_skips", "input_probe"}
     return bounded(scrub({k: v for k, v in source.items() if k in allowed}), 4096)
 
 

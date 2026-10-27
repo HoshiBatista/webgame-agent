@@ -194,7 +194,7 @@ def execute(payload, *, probe=False):
             # is no desktop bus in this isolated process; never inherit the host's
             # address or start a session daemon. /dev/null cannot be a bus socket.
             env["DBUS_SESSION_BUS_ADDRESS"] = "unix:path=/dev/null"
-        timeout = 40 if probe else browser_watchdog_seconds(payload.get("checks")) + 5
+        timeout = 40 if probe else browser_watchdog_seconds(payload.get("checks"), payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False)) + 5
         with (scratch / "stdout").open("w+b") as output, (scratch / "stderr").open("w+b") as errors:
             process = subprocess.Popen(command, cwd=scratch, env=env, stdin=subprocess.PIPE,
                                        stdout=output, stderr=errors, start_new_session=True)

@@ -1,6 +1,5 @@
 """Pro presentation admission/routing, without drawing conclusions about model art quality."""
 
-import hashlib
 import json
 from copy import deepcopy
 
@@ -80,20 +79,14 @@ def test_scenario_repair_cannot_become_an_art_or_animation_rewrite(profile):
     assert "do not expand them from the plan or implement source changes" in system["content"]
 
 
-def test_existing_frozen_pro_planning_receipts_keep_their_original_schema_and_prompt():
+def test_old_planning_contract_is_rejected_and_current_pro_requires_presentation():
     request = {"operation": "plan", "generation_strategy": "pro"}
-    # Actual signatures of the completed 26.10 pilot, before this new opt-in policy.
-    assert hashlib.sha256(system_prompt(request).encode()).hexdigest() == (
-        "eca512154778db17cf53d3a10f511db6f7da2c2b6c15fc0e11a77bdb680e293c"
-    )
-    encoded = json.dumps(response_schema(request), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-    assert hashlib.sha256(encoded.encode()).hexdigest() == (
-        "80761011390f6b56c1da62cf456055f062c6f05a6f2f4e28bd9bb7937c657621"
-    )
-    old_response = fixture({"operation": "plan"}, on_event=lambda _: None, is_cancelled=lambda: False)["response"]
-    validate_response(old_response, operation="plan", schema=response_schema(request))
+    with pytest.raises(ContractError, match="Неизвестная версия"):
+        response_schema({**request, "generation_contract":{"pipeline_version":8}})
+    response = fixture({"operation": "plan"}, on_event=lambda _: None, is_cancelled=lambda: False)["response"]
+    validate_response(response, operation="plan", schema=response_schema(request))
     with pytest.raises(ContractError):
-        validate_response(old_response, operation="plan", schema=response_schema(request_for()))
+        validate_response(response, operation="plan", schema=response_schema(request_for()))
 
 
 @pytest.mark.parametrize("operation", ["plan", "create", "edit", "repair", "check_repair"])
@@ -101,7 +94,7 @@ def test_presentation_policy_does_not_expand_lite(operation):
     request = {**request_for(operation), "generation_strategy": "lite"}
     assert system_prompt(request) == system_prompt({**request, "presentation_policy": 0})
     if operation == "plan":
-        assert "presentation" not in response_schema(request)["properties"]["plan"]["properties"]
+        assert "presentation" not in response_schema(request)["properties"]["plan"]["anyOf"][0]["properties"]
 
 
 def test_unknown_presentation_version_cannot_silently_change_a_sent_contract():

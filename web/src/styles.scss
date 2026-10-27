@@ -1916,6 +1916,22 @@ svg {
   margin: 14px auto 0;
   max-width: 300px;
 }
+.confirmation-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0 8px;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    margin: 4px 0 0;
+    accent-color: var(--accent);
+  }
+}
+
 .chat-message {
   margin-bottom: 24px;
   font-size: var(--text-body);

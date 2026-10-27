@@ -47,7 +47,7 @@ def implementation_hash(root=None):
     """Changing executable checks OR their geometry invalidates prior acceptance."""
     directory = Path(root) if root is not None else Path(__file__).parent
     digest = hashlib.sha256()
-    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py"):
+    for name in ("runner.py", "check_program.py", "criteria.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py", "visual.py"):
         digest.update(name.encode())
         digest.update(b"\x00")
         digest.update((directory / name).read_bytes())
@@ -55,38 +55,18 @@ def implementation_hash(root=None):
     return digest.hexdigest()
 
 
-def browser_watchdog_seconds(checks):
+def browser_watchdog_seconds(checks, criteria=None, *, capture_visual=False):
     """Bound a broken browser, never the model's generation time."""
-    if not isinstance(checks, list) or not 0 <= len(checks) <= 12:
-        raise ValueError("invalid browser check count")
-    waiting = 0.0
-    longest_wait = 0.0
-    causal_waiting = 0.0
-    causal_count = 0
-    for check in checks:
-        if (
-            not isinstance(check, dict)
-            or not isinstance(check.get("steps"), list)
-            or len(check["steps"]) > 30
-        ):
-            raise ValueError("invalid browser steps")
-        step_wait = 0
-        for step in check["steps"]:
-            if not isinstance(step, dict):
-                raise ValueError("invalid browser action")
-            milliseconds = step.get("ms", 0)
-            if type(milliseconds) is not int or not 0 <= milliseconds <= 10000:
-                raise ValueError("invalid browser wait")
-            step_wait += milliseconds
-        if step_wait > 10000:
-            raise ValueError("smoke check wait exceeds 10 seconds")
-        waiting += step_wait / 1000
-        if check.get('category') in {'control', 'outcome'} and any(
-            step.get('action') in {'click','tap','click_fraction','tap_fraction','press','key_down','key_up'} for step in check['steps']
-        ):
-            causal_count += 1
-            causal_waiting += step_wait / 1000
-        longest_wait = max(longest_wait, step_wait / 1000)
-    # An uncovered viewport may replay one successful route for surface evidence.
-    probes = len(set(VIEWPORTS) - {c.get("viewport", "mobile") for c in checks})
-    return min(15 + (len(checks) + probes + causal_count) * 5 + waiting + causal_waiting + probes * longest_wait, 300)
+    from .check_program import compile_suite
+    from .criteria import timer_ids
+
+    timers = timer_ids(checks, criteria or [])
+    programs = compile_suite(checks, timer_ids=timers)
+    valid = [p for p in programs if p.issue is None]
+    # Ordinary run + a matched diagnostic action/control pair, not independent RNG draws.
+    causal = [p for p in valid if p.check()['id'] not in timers and p.without_last_input() is not None]
+    waiting = sum(p.wait_seconds for p in valid) + 2 * sum(p.wait_seconds for p in causal)
+    longest = max((p.wait_seconds for p in valid), default=0)
+    # Even an invalid scenario gets a bounded load/surface probe; uncovered viewports too.
+    probes = len(set(VIEWPORTS) - {p.check().get('viewport') for p in programs})
+    return (45 if capture_visual else 0) + min(20 + (len(programs) + probes + 2 * len(causal)) * 5 + waiting + probes * longest, 600)

@@ -71,7 +71,13 @@ def generate(request, *, on_event, is_cancelled):
     response = fixture_response()
     if request.get("operation") == "plan":
         result: dict[str, Any] = {"response": {"operation": "plan", "status": "ok", "message": "Тестовый замысел без модели.",
-                "plan": {"summary": "Три попадания по тестовому кругу.",
+                "plan": {"request_reference": (request.get('game_request') or request.get('prompt', ''))[:1000],
+                         "decision": "Выбрать точку касания внутри круга.",
+                         "consequence": "Точное касание увеличивает число попаданий.",
+                         "requirements": [{**{k:c[k] for k in ('id','category','requirement','viewport')},
+                            "origin":"design", "quote":"", "example":{"action":"Коснуться круга", "effect":c['requirement']}}
+                            for c in response['checks']],
+                         "summary": "Три попадания по тестовому кругу.",
                          "core_loop": "Касаться круга, наблюдая число попаданий.",
                          "mechanics": ["Каждое попадание увеличивает счётчик."],
                          "progression": "Счётчик растёт от нуля до трёх.",
@@ -110,5 +116,9 @@ def generate(request, *, on_event, is_cancelled):
                 "new_text": "#fff5e8" if old == "#eff4ff" else "#eff4ff",
             }
         ]
+    if request.get("operation") == "repair" and request.get("module_repair", {}).get("scope") == "single_module":
+        path = next(iter(request["module_repair"]["files"]))
+        response["patches"] = [{"action":"replace_module", "path":path, "file_hash":sha256(request["files"][path]),
+                                "content":request["files"][path] + "\n/* fixture repair */\n"}]
     on_event({"type": "provider", "message": "Тестовая заглушка; платного вызова нет."})
     return {"response": response, "usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0}}

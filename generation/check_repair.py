@@ -9,6 +9,7 @@ from .schema import validate_checks
 
 IDENTITY = ("id", "category", "requirement", "viewport")
 CHECK_FINDINGS = {
+    "requirement_manifest_mismatch",
     "invalid_check",
     "check_unverified",
     "check_timeout",
@@ -40,13 +41,19 @@ def needs_check_repair(checks, findings):
     return bool(codes)
 
 
-def permission(artifact_hash, checks, design):
+def permission(artifact_hash, checks, design, manifest=None):
     requirements = [{key: check[key] for key in IDENTITY} for check in checks]
     ids = {r["id"] for r in requirements}
     if len(ids) != len(requirements):
         raise ContractError(
             "check_review_required", "Повторяющиеся ID проверок требуют ручного разбора; исходники сохранены."
         )
+    frozen = (manifest or {}).get("requirements", [])
+    if frozen:
+        # The pre-code promises take precedence over a model's altered check identity.
+        required = {r["id"]: {key: r[key] for key in IDENTITY} for r in frozen}
+        requirements = list(required.values()) + [r for r in requirements if r["id"] not in required]
+        ids = {r["id"] for r in requirements}
     categories = {r["category"] for r in requirements}
     missing = {
         "start": "Понятное начало игры согласно исходному запросу.",

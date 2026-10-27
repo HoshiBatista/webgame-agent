@@ -20,7 +20,6 @@ from .services import (
     event,
     fingerprint,
     finish_run,
-    preference_for,
     reserve_invocation,
     settle_invocation,
 )
@@ -274,6 +273,8 @@ def store_candidate(run, materialized, base):
     if current.fence != run.fence or current.cancel_requested:
         return None
     number = (Revision.objects.filter(chat_id=run.chat_id).aggregate(n=Max("number"))["n"] or 0) + 1
+    from generation.helpers import used
+
     revision = Revision.objects.create(
         chat_id=run.chat_id,
         run=run,
@@ -291,7 +292,9 @@ def store_candidate(run, materialized, base):
         generation_profile=materialized.get("generation_profile", run.generation_profile),
         compact_manifest=materialized.get("compact_manifest", {}),
         runtime_version=materialized.get("runtime_version", 0),
+        helper_manifest=used(materialized["files"]),
         pipeline_version=run.pipeline_version,
+        requirement_manifest=run.requirement_manifest,
     )
     if not chat.title_is_custom and chat.current_revision_id is None:
         from .titles import short_game_title
@@ -321,6 +324,10 @@ def request_for(run, base, findings, last_attempt_error=None):
     version = run.pipeline_version
     if version != CONTRACT_VERSION:
         raise DomainError("unsupported_game", "Старый игровой формат больше не поддерживается. Создайте новую игру.", 409)
+    from generation.requirements import policy_snapshot
+
+    if run.policy_snapshot != policy_snapshot():
+        raise DomainError("generation_policy_changed", "Правила генерации обновились. Сохранённый ответ доступен; для новых вызовов нужен новый запрос.", 409)
     focused_error = focus_findings([last_attempt_error]) if last_attempt_error else []
     request = {
         # A rejected response has not established new game requirements yet.
@@ -334,7 +341,9 @@ def request_for(run, base, findings, last_attempt_error=None):
         "source_format": run.source_format,
         "compact_manifest": base.compact_manifest if base else {},
         "audience": run.audience,
-        "preferences": preference_for(run.chat.owner).notes,
+        "preferences": run.preferences_snapshot,
+        "helper_catalog": run.helper_catalog,
+        "requirement_manifest": run.requirement_manifest,
         "base_revision": str(base.id) if base else None,
         "artifact_hash": base.artifact_hash if base else None,
         "files": base.files if base else {},
@@ -352,13 +361,21 @@ def request_for(run, base, findings, last_attempt_error=None):
     }
     if run.planning_required and not run.game_plan and base is None:
         request["operation"] = "plan"
+    from .checks_create import eligible as create_eligible
+    from .checks_create import permission as create_permission
+
+    if request["operation"] == "repair" and create_eligible(run, base):
+        if attempted(run, base):
+            raise DomainError("check_review_required", "Сценарии для этих исходников уже запрашивались. Повтор автоматически не отправляем.")
+        request["operation"] = "checks_create"
+        request["checks_create"] = create_permission(run, base)
     if request["operation"] == "repair" and needs_repair(run, base, findings):
         from generation.check_repair import permission
 
         if attempted(run, base):
             raise DomainError("check_review_required", "Проверки уже пересматривались для этих исходников. Код сохранён; нужен разбор результата.")
         try:
-            request["check_repair"] = permission(base.artifact_hash, base.checks, base.design)
+            request["check_repair"] = permission(base.artifact_hash, base.checks, base.design, run.requirement_manifest)
         except ContractError as exc:
             raise DomainError(exc.code, exc.message) from exc
         request["operation"] = "check_repair"
@@ -406,6 +423,17 @@ def request_for(run, base, findings, last_attempt_error=None):
 
                     if image_input(request) is None:
                         del request["preview_image"]
+    if run.visual_state.get("phase") in {"review_due", "patch_due"}:
+        from .visual import request_details
+
+        try:
+            request.update(request_details(run, base))
+        except (ContractError, ValueError) as exc:
+            raise DomainError("stale_visual_evidence", "Кадры больше не соответствуют проверенной версии.") from exc
+        from generation.feedback_image import image_input
+
+        if image_input(request) is None:
+            raise DomainError("invalid_visual_image", "Нет допустимого изображения для оценки оформления.")
     request["reasoning_effort"] = (
         "high" if run.generation_strategy == "pro" and request["operation"] in {"plan", "create", "repair"}
         else "medium" if run.generation_strategy == "pro" else "low"
@@ -453,6 +481,8 @@ def check_identity(revision):
         {"artifact": revision.artifact_hash, "checks": checks, "validator": environment,
          "source_map": VERSION, "check_policy": CHECK_VERSION,
          "compact_manifest": revision.compact_manifest,
+         "requirement_manifest": revision.requirement_manifest,
+         "helpers": revision.helper_manifest,
          "checks_review_required": revision.checks_review_required}
     )
 
@@ -621,7 +651,32 @@ def _execute(run, lease, generate, materialize, validate):
             base_id = inv.request.get("base_revision")
             response_base = Revision.objects.filter(pk=base_id).first() if base_id else None
             response = inv.response
-            if response.get("status") == "scope_refusal":
+            if inv.request["operation"] == "plan":
+                from generation.planning import validate_plan
+                from generation.schema import response_schema, validate_response
+
+                try:
+                    validate_response(response, operation="plan", schema=response_schema(inv.request))
+                    validate_plan(response, inv.request)
+                except ContractError as exc:
+                    inv.state, inv.error = "settled", error_data(exc)
+                    inv.save(update_fields=["state", "error"])
+                    finish_run(run.id, run.fence, "needs_attention", exc.message, error=error_data(exc))
+                    return
+            if inv.request["operation"] == "visual_review":
+                from .visual import accept_review, skip
+
+                with transaction.atomic():
+                    try:
+                        accept_review(run, response_base, response, inv.request)
+                    except (ContractError, ValueError) as exc:
+                        skip(run, "invalid_visual_review")
+                        inv.error = error_data(exc)
+                    inv.state = "settled"
+                    inv.save(update_fields=["state", "error"])
+                base = pending = response_base
+                continue
+            if response.get("status") == "scope_refusal" and inv.request["operation"] != "visual_patch":
                 inv.state = "settled"
                 inv.save(update_fields=["state"])
                 finish_run(
@@ -633,16 +688,16 @@ def _execute(run, lease, generate, materialize, validate):
                 )
                 return
             if inv.request["operation"] == "plan":
-                from generation.schema import response_schema, validate_response
+                from generation.requirements import manifest
 
-                validate_response(response, operation="plan", schema=response_schema(inv.request))
                 with transaction.atomic():
                     current = Run.objects.select_for_update().get(pk=run.id)
                     if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
                         return
                     current.game_plan = response["plan"]
+                    current.requirement_manifest = manifest(current.game_request, response["plan"])
                     current.stage = "generating"
-                    current.save(update_fields=["game_plan", "stage", "updated_at"])
+                    current.save(update_fields=["game_plan", "requirement_manifest", "stage", "updated_at"])
                     inv.state = "settled"
                     inv.save(update_fields=["state"])
                     event(current, "planned", "Замысел игры сохранён. Переходим к реализации.")
@@ -654,6 +709,24 @@ def _execute(run, lease, generate, materialize, validate):
 
                     if response_base is None or code_repair_basis(run, response_base) != inv.request["code_repair_basis"]:
                         raise ContractError("stale_code_repair_basis", "Свидетельство для ремонта кода изменилось; нужна повторная проверка.")
+                if inv.request.get("checks_create"):
+                    from .checks_create import permission as create_permission
+
+                    try:
+                        current_permission = create_permission(run, response_base)
+                    except DomainError as exc:
+                        raise ContractError("stale_checks_create", exc.message) from exc
+                    if current_permission != inv.request["checks_create"]:
+                        raise ContractError("stale_checks_create", "Свидетельство для составления сценариев изменилось.")
+                if inv.request["operation"] == "visual_patch":
+                    from .visual import request_details
+
+                    try:
+                        current_visual = request_details(run, response_base)
+                    except (ContractError, ValueError) as exc:
+                        raise ContractError("stale_visual_evidence", "Пакет кадров устарел.") from exc
+                    if current_visual.get("visual_patch") != inv.request["visual_patch"]:
+                        raise ContractError("stale_visual_evidence", "Разрешение визуальной правки изменилось.")
                 packaging_started = time.monotonic()
                 artifact = materialize(
                     response,
@@ -665,6 +738,11 @@ def _execute(run, lease, generate, materialize, validate):
                                          "pipeline_version": inv.request.get("generation_contract", {}).get("pipeline_version", 2)},
                     module_repair=inv.request.get("module_repair") if response_base and not response_base.accepted else None,
                     check_repair=inv.request.get("check_repair"),
+                    checks_create=inv.request.get("checks_create"),
+                    generation_strategy=inv.request.get("generation_strategy", "lite"),
+                    requirement_manifest=inv.request.get("requirement_manifest"),
+                    helper_catalog=inv.request.get("helper_catalog"),
+                    visual_patch=inv.request.get("visual_patch"),
                     code_repair_basis=inv.request.get("code_repair_basis"),
                     generation_profile=inv.request.get("generation_profile", "full"),
                     compact_manifest=inv.request.get("compact_manifest"),
@@ -672,7 +750,9 @@ def _execute(run, lease, generate, materialize, validate):
                 )
                 if inv.request.get("generation_profile") == "compact" and response_base:
                     artifact.update(title=response_base.title, design=response_base.design)
-                if (inv.request["operation"] == "check_repair" or inv.request.get("code_repair_basis")) and artifact.get("status") != "unchanged":
+                if (inv.request["operation"] in {"check_repair", "checks_create", "visual_patch"} or inv.request.get("code_repair_basis")) and artifact.get("status") != "unchanged":
+                    if response_base is None:
+                        raise ContractError("missing_base", "Для ремонта нужна сохранённая версия игры.")
                     artifact.update(title=response_base.title, design=response_base.design)
                 run.metrics = {
                     **run.metrics,
@@ -681,14 +761,23 @@ def _execute(run, lease, generate, materialize, validate):
                     - packaging_started,
                 }
                 Run.objects.filter(pk=run.id, fence=run.fence).update(metrics=run.metrics)
+                if artifact.get("status") == "unchanged" and inv.request["operation"] == "visual_patch":
+                    from .visual import skip
+
+                    skip(run, "visual_patch_declined")
+                    inv.state = "settled"
+                    inv.save(update_fields=["state"])
+                    pending = base = response_base
+                    continue
                 if artifact.get("status") == "unchanged":
                     explanation = artifact["message"]
                     previous_report = response_base.reports.order_by("-id").first() if response_base else None
-                    manual = bool(inv.request["operation"] == "check_repair" and previous_report
+                    manual = bool(inv.request["operation"] in {"check_repair", "checks_create"} and response_base and previous_report
                                   and previous_report.status == "unverified"
                                   and previous_report.assessment.get("action") == "review"
                                   and complete_requirements(response_base.checks)
-                                  and previous_report.assessment.get("gates_passed") is True)
+                                  and previous_report.assessment.get("gates_passed") is True
+                                  and not previous_report.assessment.get("requirement_coverage", {}).get("uncovered"))
                     with transaction.atomic():
                         inv.state = "settled"
                         inv.save(update_fields=["state"])
@@ -706,6 +795,10 @@ def _execute(run, lease, generate, materialize, validate):
                 with transaction.atomic():
                     pending = store_candidate(run, artifact, response_base)
                     inv.revision = pending
+                    if pending and inv.request["operation"] == "visual_patch":
+                        from .visual import save_state
+
+                        save_state(run, phase="patched", patched_revision=str(pending.id))
                     inv.state = "settled"
                     inv.save(update_fields=["revision", "state"])
                 if pending is None:
@@ -716,6 +809,12 @@ def _execute(run, lease, generate, materialize, validate):
                 inv.state = "settled"
                 inv.error = error_data(exc)
                 inv.save(update_fields=["state", "error"])
+                if inv.request["operation"] == "visual_patch":
+                    from .visual import skip
+
+                    skip(run, "invalid_visual_patch")
+                    pending = base = response_base
+                    continue
                 last_attempt_error = error_data(exc)
                 pending = None
                 event(
@@ -726,11 +825,17 @@ def _execute(run, lease, generate, materialize, validate):
                     "Ответ сохранён; исправляем проблему формата, изменений или проверок.",
                     {"code": last_attempt_error["code"]},
                 )
-                if inv.request["operation"] == "check_repair" or exc.code in {"test_only_change", "invalid_baseline_checks", "stale_code_repair_basis"}:
+                if inv.request["operation"] in {"check_repair", "checks_create"} or exc.code in {"test_only_change", "invalid_baseline_checks", "stale_code_repair_basis"}:
                     finish_run(run.id, run.fence, "needs_attention", exc.message,
                                error={**last_attempt_error, "details": findings})
                     return
         if pending is not None and resumed is None:
+            from generation.schema import CONTRACT_VERSION
+
+            if pending.pipeline_version != CONTRACT_VERSION:
+                finish_run(run.id, run.fence, "needs_attention", "Старый игровой формат больше не поддерживается.",
+                           error={"code":"unsupported_game", "message":"Создайте новую игру."})
+                return
             checks, corrections = review_checks(pending.checks)
             identity = check_identity(pending)
             report = (
@@ -746,7 +851,7 @@ def _execute(run, lease, generate, materialize, validate):
                     stage="checking",
                     message="Проверяем синтаксис, затем управление и игровые условия.",
                 )
-                cached = None if pending.checks_review_required else CheckReport.objects.filter(identity=identity, status="passed").first()
+                cached = None if pending.checks_review_required or run.visual_review_enabled else CheckReport.objects.filter(identity=identity, status="passed").first()
                 if cached:
                     result = {
                         "status": cached.status,
@@ -755,6 +860,7 @@ def _execute(run, lease, generate, materialize, validate):
                         "stages": cached.stages,
                         "elapsed_seconds": 0,
                         "environment": cached.environment,
+                        "coverage": cached.assessment.get("coverage"),
                     }
                     if cached.assessment.get("artifact_evidence"):
                         from validation.evidence import gates as evidence_gates
@@ -764,7 +870,7 @@ def _execute(run, lease, generate, materialize, validate):
                         result["gates"] = evidence_gates(result["artifact_evidence"])
                 else:
                     try:
-                        validation_options = {}
+                        validation_options = {"capture_visual": True} if run.visual_review_enabled else {}
                         if pending.generation_profile == "compact":
                             from generation.compact import validation_contract
 
@@ -788,6 +894,17 @@ def _execute(run, lease, generate, materialize, validate):
                         *result.get("findings", []), {"code": "check_suite_revised",
                          "message": "Исходники сохранены; модель изменила сценарии. Подтвердите исходные игровые условия вручную."},
                     ]}
+                from generation.requirements import coverage
+
+                promises = coverage(checks, pending.requirement_manifest)
+                result["requirement_coverage"] = promises
+                if promises["uncovered"]:
+                    if result["status"] == "passed":
+                        result["status"] = "unverified"
+                    result["findings"] = [*result.get("findings", []), {
+                        "code": "requirement_manifest_mismatch", "requirements": promises["uncovered"],
+                        "message": "Сценарии не покрывают неизменяемые обещания замысла.",
+                    }]
                 assessment = assess(result, checks, corrections)
                 if assessment["action"] == "review" and result["status"] == "failed":
                     result["status"] = "unverified"
@@ -805,6 +922,7 @@ def _execute(run, lease, generate, materialize, validate):
                         stages=result.get("stages", []),
                         elapsed_seconds=result.get("elapsed_seconds", 0),
                         environment=result.get("environment", {}),
+                        visual_evidence=result.get("visual_evidence") or {},
                         screenshot_base64=result.get("screenshot_base64") or "",
                         screenshot_mime=result.get("screenshot_mime", "image/png"),
                         identity=identity,
@@ -813,7 +931,29 @@ def _execute(run, lease, generate, materialize, validate):
                     )
             if lease.cancelled():
                 return
+            visual_patch_valid = report.status == "passed"
+            if run.visual_state.get("phase") == "patched" and visual_patch_valid:
+                from generation.visual import contact_sheet
+
+                try:
+                    contact_sheet(report.visual_evidence, artifact_hash=pending.artifact_hash, environment=report.environment)
+                except Exception:
+                    visual_patch_valid = False
+            if run.visual_state.get("phase") == "patched" and not visual_patch_valid:
+                from .visual import fallback, save_state
+
+                original = fallback(run)
+                if original is not None:
+                    save_state(run, phase="reverted", reason="visual_patch_regression")
+                    Run.objects.filter(pk=run.id, fence=run.fence).update(candidate_revision=original)
+                    base = pending = original
+                    continue
             if report.status == "passed":
+                from .visual import next_step
+
+                if next_step(run, pending, report):
+                    findings, base, pending = [], pending, None
+                    continue
                 finish_run(
                     run.id,
                     run.fence,
@@ -824,8 +964,9 @@ def _execute(run, lease, generate, materialize, validate):
                 return
             decision = report.assessment.get("action")
             from .check_repair import can_repair
+            from .checks_create import can_create
 
-            if can_repair(run, pending, report.findings):
+            if can_create(run, pending) or can_repair(run, pending, report.findings):
                 findings, base, pending = report.findings, pending, None
                 continue
             if run.completion_policy >= 2 and decision == "recheck":
@@ -841,6 +982,7 @@ def _execute(run, lease, generate, materialize, validate):
             ):
                 manual = run.completion_policy < 2 or (
                     report.assessment.get("gates_passed") is True and complete_requirements(checks)
+                    and not report.assessment.get("requirement_coverage", {}).get("uncovered")
                 )
                 finish_run(
                     run.id,
@@ -935,13 +1077,19 @@ def _execute(run, lease, generate, materialize, validate):
                     Run.objects.filter(pk=run.id, fence=run.fence).update(
                         attempts=inv.attempt, status="generating",
                         stage="planning" if req["operation"] == "plan" else
-                        "repairing_checks" if req["operation"] == "check_repair" else "repairing" if findings else "generating"
+                        "repairing_checks" if req["operation"] in {"check_repair", "checks_create"} else "repairing" if findings else "generating"
                     )
             req = inv.request
         except DomainError as exc:
             if exc.code == "provider_busy":
                 defer_relay(run, exc.message)
                 return
+            if run.visual_state.get("phase") in {"review_due", "patch_due"}:
+                from .visual import fallback, skip
+
+                skip(run, exc.code)
+                pending = base = fallback(run) or base
+                continue
             finish_run(run.id, run.fence, "needs_attention", exc.message, error=error_data(exc))
             return
         if lease.cancelled():
@@ -949,10 +1097,26 @@ def _execute(run, lease, generate, materialize, validate):
                 settle_invocation(inv.id, unsent_fence=run.fence,
                                   error={"code": "cancelled", "message": "Отменено до отправки."})
             return
+        from generation.requirements import policy_snapshot
+
+        if not inv.sent_at and run.policy_snapshot != policy_snapshot():
+            stopped = settle_invocation(inv.id, unsent_fence=run.fence,
+                error={"code":"generation_policy_changed", "message":"Не отправлено: правила генерации обновились."})
+            if stopped.state != "failed" or stopped.sent_at is not None:
+                continue
+            finish_run(run.id, run.fence, "needs_attention", "Правила генерации обновились; нужен новый запрос.",
+                       error={"code":"generation_policy_changed", "message":"Новый вызов не отправлен."})
+            return
         if not inv.sent_at and run.model_call_deadline and timezone.now() >= run.model_call_deadline:
             stopped = settle_invocation(inv.id, unsent_fence=run.fence,
                                         error={"code": "model_deadline", "message": "Не отправлено: время вызовов истекло."})
             if stopped.state != "failed" or stopped.sent_at is not None:
+                continue
+            if req["operation"] in {"visual_review", "visual_patch"}:
+                from .visual import fallback, skip
+
+                skip(run, "model_deadline")
+                pending = base = fallback(run) or base
                 continue
             finish_run(run.id, run.fence, "needs_attention", "Время новых модельных вызовов истекло. Кандидат сохранён.",
                        error={"code": "model_deadline", "message": "Лимит времени вызовов исчерпан."})
@@ -969,7 +1133,7 @@ def _execute(run, lease, generate, materialize, validate):
                 "Придумываем игровой замысел: механику, развитие и цель."
                 if req["operation"] == "plan" else
                 "Уточняем сценарии проверки сохранённой игры. Исходники остаются прежними."
-                if req["operation"] == "check_repair" else
+                if req["operation"] in {"check_repair", "checks_create"} else
                 "Исправляем сохранённую игру по результатам проверки."
                 if req["operation"] == "repair" else
                 "Дорабатываем сохранённую игру по результатам проверки."
@@ -1043,8 +1207,14 @@ def _execute(run, lease, generate, materialize, validate):
                     error=error_data(exc),
                 )
                 return
+            if req["operation"] in {"visual_review", "visual_patch"}:
+                from .visual import fallback, skip
+
+                skip(run, "visual_call_failed")
+                pending = base = fallback(run) or base
+                continue
             if isinstance(exc, ContractError) or data["code"] == "invalid_json":
-                if req["operation"] == "check_repair":
+                if req["operation"] in {"check_repair", "checks_create"}:
                     finish_run(run.id, run.fence, "needs_attention", "Не удалось восстановить проверки. Код игры сохранён.",
                                error=error_data(exc))
                     return

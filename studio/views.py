@@ -390,7 +390,11 @@ def source_view(request, ident):
 
 @api_view(["GET"])
 def export_view(request, ident):
+    from generation.schema import CONTRACT_VERSION
+
     revision = owned_revision(request, ident)
+    if revision.pipeline_version != CONTRACT_VERSION:
+        raise DomainError("revision_unavailable", "Эта версия игры больше не поддерживается.", 410)
     response = HttpResponse(revision.html, content_type="text/html; charset=utf-8")
     response["Content-Disposition"] = 'attachment; filename="game.html"'
     response["Cache-Control"] = "private, no-store"
@@ -409,7 +413,11 @@ def preview_view(request, token):
         payload = signing.loads(token, salt="game-preview", max_age=86400)
     except signing.BadSignature:
         return HttpResponse("Ссылка устарела. Откройте игру заново.", status=403)
-    revision = get_object_or_404(Revision, pk=payload.get("revision"), artifact_hash=payload.get("hash"))
+    from generation.schema import CONTRACT_VERSION
+
+    revision = Revision.objects.filter(pk=payload.get("revision"), artifact_hash=payload.get("hash"), pipeline_version=CONTRACT_VERSION).first()
+    if revision is None:
+        return HttpResponse("Эта версия игры больше недоступна.", status=410)
     html = revision.html
     if request.GET.get("audio_control") == "1":
         from generation.preview import with_audio_control
@@ -431,8 +439,10 @@ def preview_view(request, token):
 
 @api_view(["GET", "POST"])
 def publications_view(request):
+    from generation.schema import CONTRACT_VERSION
+
     if request.method == "GET":
-        qs = Publication.objects.select_related("owner", "revision", "source_chat").annotate(
+        qs = Publication.objects.filter(unavailable_at__isnull=True, revision__pipeline_version=CONTRACT_VERSION).select_related("owner", "revision", "source_chat").annotate(
             like_count=Count("likes")
         )
         if request.query_params.get("mine") == "1":
@@ -445,7 +455,8 @@ def publications_view(request):
         return Response({"results": [publication_data(p, request.user) for p in qs[:100]]})
     chat = owned_chat(request, request.data.get("chat_id"))
     revision = get_object_or_404(
-        Revision, pk=request.data.get("revision_id") or chat.current_revision_id, chat=chat, accepted=True
+        Revision, pk=request.data.get("revision_id") or chat.current_revision_id, chat=chat, accepted=True,
+        pipeline_version=CONTRACT_VERSION
     )
     title = request.data.get("title") or revision.title
     if not isinstance(title, str) or not 1 <= len(title.strip()) <= 160:
@@ -456,10 +467,21 @@ def publications_view(request):
     return Response(publication_data(publication, request.user), status=201)
 
 
+def require_available_publication(publication):
+    from generation.schema import CONTRACT_VERSION
+
+    if publication.unavailable_at or not publication.revision_id or publication.revision.pipeline_version != CONTRACT_VERSION:
+        raise DomainError("publication_unavailable", "Эта версия игры больше недоступна после обновления формата.", 410)
+
+
 @api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([AllowAny])
 def publication_view(request, ident):
+    from generation.schema import CONTRACT_VERSION
+
     publication = get_object_or_404(Publication, pk=ident)
+    if request.method != "DELETE":
+        require_available_publication(publication)
     if request.method == "GET":
         return Response(publication_data(publication, request.user))
     if not request.user or not request.user.is_authenticated or publication.owner_id != request.user.id:
@@ -479,6 +501,7 @@ def publication_view(request, ident):
             chat__owner=request.user,
             chat__deleted_at__isnull=True,
             accepted=True,
+            pipeline_version=CONTRACT_VERSION,
         )
         if revision.chat_id != publication.source_chat_id:
             raise DomainError("wrong_chat", "Обновление должно относиться к исходной игре.")
@@ -490,6 +513,7 @@ def publication_view(request, ident):
 @api_view(["POST", "PUT"])
 def like_view(request, ident):
     publication = get_object_or_404(Publication, pk=ident)
+    require_available_publication(publication)
     liked = request.data.get("liked", True)
     if not isinstance(liked, bool):
         raise DomainError("invalid_like", "Укажите true или false.")
@@ -503,6 +527,7 @@ def like_view(request, ident):
 @api_view(["POST"])
 def remix_view(request, ident):
     publication = get_object_or_404(Publication, pk=ident)
+    require_available_publication(publication)
     with transaction.atomic():
         source = publication.revision
         chat = Chat.objects.create(
@@ -520,7 +545,9 @@ def remix_view(request, ident):
             generation_profile=source.generation_profile,
             compact_manifest=source.compact_manifest,
             runtime_version=source.runtime_version,
+            helper_manifest=source.helper_manifest,
             pipeline_version=source.pipeline_version,
+            requirement_manifest=source.requirement_manifest,
             design=source.design,
             checks=source.checks,
             diff=[],
@@ -617,6 +644,7 @@ def publication_thumbnail_view(request, ident):
     import base64
 
     publication = get_object_or_404(Publication, pk=ident)
+    require_available_publication(publication)
     report = publication.revision.reports.exclude(screenshot_base64="").order_by("-id").first()
     if not report:
         return HttpResponse(status=404)

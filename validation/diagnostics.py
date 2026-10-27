@@ -49,7 +49,40 @@ INPUT_TARGET = r"""step => {
 }"""
 
 
-def observation_catalog(frame, check, state_script):
+STATE_CATALOG = r"""root => {
+ const rows=[], skipped=[], seen=new WeakSet(); let nodes=128;
+ const skip=(path,reason)=>{if(skipped.length<12)skipped.push({path:path.slice(0,200),reason});};
+ const walk=(value,path,depth)=>{
+   if(--nodes<0||depth>3||rows.length>=12){skip(path,'limit');return;}
+   if(value===null||['boolean','number','string'].includes(typeof value)){
+     if(typeof value==='number'&&!Number.isFinite(value)){skip(path,'nonfinite');return;}
+     if(typeof value==='string'&&value.length>200){skip(path,'size');return;}
+     rows.push({path,value});return;
+   }
+   if(!value||typeof value!=='object'||seen.has(value)){skip(path,'type');return;}
+   const proto=Object.getPrototypeOf(value);
+   if(proto!==Object.prototype&&proto!==Array.prototype&&proto!==null){skip(path,'prototype');return;}
+   seen.add(value);
+   const keys=Reflect.ownKeys(value);
+   if(keys.length>16)skip(path,'keys_limit');
+   for(const key of keys.slice(0,16)){
+     if(typeof key!=='string'||!/^([a-zA-Z_$][\w$]*|[0-9]+)$/.test(key)||key==='length')continue;
+     const child=path+'.'+key, d=Object.getOwnPropertyDescriptor(value,key);
+     if(!d||!('value' in d)){skip(child,'accessor');continue;}
+     walk(d.value,child,depth+1);
+   }
+ };
+ try{
+   const d=Object.getOwnPropertyDescriptor(window,root);
+   if(!d)skip(root,'absent');
+   else if(!('value' in d))skip(root,'accessor');
+   else walk(d.value,root,0);
+ }catch{skip(root,'unsafe');}
+ return {rows,skipped};
+}"""
+
+
+def observation_catalog(frame, check, state_script, skipped=None):
     """Only inspect the requested plain-state root and bounded visible DOM facts."""
     rows = []
 
@@ -66,22 +99,11 @@ def observation_catalog(frame, check, state_script):
         parts = parts[1:]
     if parts and parts[0] and parts[0] not in {"__proto__", "constructor", "prototype"}:
         root = parts[0]
-        snapshot = frame.evaluate(state_script, root)
-
-        def walk(value, current, depth=0):
-            if len(rows) >= 12 or depth > 3:
-                return
-            if type(value) is dict:
-                for key, item in list(value.items())[:16]:
-                    if isinstance(key, str) and key.isidentifier():
-                        walk(item, current + "." + key, depth + 1)
-            elif type(value) is list:
-                for index,item in enumerate(value[:8]):
-                    walk(item, current + '.' + str(index), depth + 1)
-            elif type(value) is not list:
-                add({"source": "state", "path": current}, value)
-        if "value" in snapshot:
-            walk(snapshot["value"], root)
+        snapshot = frame.evaluate(STATE_CATALOG, root)
+        for item in snapshot['rows']:
+            add({"source": "state", "path": item['path']}, item['value'])
+        if skipped is not None:
+            skipped.extend(snapshot['skipped'])
     dom = frame.evaluate(r"""() => [...document.querySelectorAll('[id]')].slice(0,40).flatMap(e=>{
       const r=e.getBoundingClientRect();
       if(!r.width||!r.height||e.tagName==='SCRIPT'||e.tagName==='STYLE'||e.children.length) return [];
@@ -140,7 +162,8 @@ def collect(frame, check, step_index, before, after, state_script):
         return bounded({**result, "unavailable": True})
     try:
         result.update(frame.evaluate(DOM))
-        result["observations"] = observation_catalog(frame, check, state_script)
+        result["observation_skips"] = []
+        result["observations"] = observation_catalog(frame, check, state_script, result["observation_skips"])
         step = result.get("step") or {}
         if step.get("selector") and step.get("action") in {"click", "tap", "click_fraction", "tap_fraction"}:
             result["input_probe"] = frame.evaluate(INPUT_TARGET, step)

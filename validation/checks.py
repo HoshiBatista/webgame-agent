@@ -4,7 +4,7 @@ import math
 import re
 from copy import deepcopy
 
-VERSION = 2
+VERSION = 3
 RELATIVE = {"changed", "unchanged", "increased", "decreased"}
 NUMERIC = {"increased", "decreased"}
 INPUT = {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
@@ -53,34 +53,10 @@ def review_checks(checks):
 
 
 def check_issue(check):
-    observation, expect = check.get("observation", {}), check.get("expect", {})
-    source, op, value = observation.get("source"), expect.get("operator"), expect.get("value")
-    steps = check.get("steps", [])
-    checkpoints = [i for i, step in enumerate(steps) if step.get("action") == "checkpoint"]
-    awaits = [i for i, step in enumerate(steps) if step.get("action") == "wait_for"]
-    if len(checkpoints) > 1 or checkpoints and op not in RELATIVE:
-        return "Одна точка baseline допустима только для changed/increased/decreased."
-    if len(awaits) > 1 or awaits and awaits[0] != len(steps) - 1:
-        return "wait_for допустим один раз, последним действием сценария."
-    if check.get("category") in {"control", "outcome"}:
-        if op == 'unchanged':
-            return 'Отсутствие изменения относится к регрессии, а не доказывает основное управление или исход.'
-        measured = steps[checkpoints[0] + 1:] if checkpoints else steps
-        if not any(step.get("action") in INPUT for step in measured):
-            return "После подготовки сценарий должен выполнять настоящий игровой ввод."
-    if op in NUMERIC and source in {"text", "attribute"}:
-        return "Числовое сравнение требует text_number/attribute_number или числовое state."
-    if source in {"text_number", "attribute_number"} and op in {"contains", "visible"}:
-        return "Числовое наблюдение несовместимо с contains/visible."
-    if source in {"text_number", "attribute_number"} and op in {"eq", "not_eq"} and not numeric(value):
-        return "Ожидаемое значение числового наблюдения должно быть числом."
-    if source in {"text", "attribute"} and op in {"eq", "not_eq"} and not isinstance(value, str):
-        return "Текстовое наблюдение требует строковое ожидание или явное преобразование."
-    if op == "contains" and (not isinstance(value, str) or not value.strip()):
-        return "Ожидание contains требует непустую строку."
-    if op == "visible" and source == "state":
-        return "Видимость проверяется по элементу страницы; для state используйте eq."
-    return None
+    from .check_program import compile_check
+
+    issue = compile_check(check).issue
+    return issue.message if issue else None
 
 
 def gates_verified(result, checks):

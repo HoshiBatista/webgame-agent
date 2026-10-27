@@ -200,11 +200,11 @@ def test_application_numeric_review_preserves_sources_original_suite_and_model_r
 
 
 @pytest.mark.django_db
-def test_repeated_failed_effect_stops_without_spending_all_repair_slots(maker):
+def test_repeated_runtime_failure_stops_without_spending_all_repair_slots(maker):
     chat, _ = maker
     run = start(chat)
-    failed = {"status": "failed", "findings": [{"code": "effect_mismatch", "check_id": "tap",
-                                                  "before": 0, "after": 0}], "facts": []}
+    failed = {"status": "failed", "findings": [{"code": "runtime_or_network", "check_id": "tap",
+                                                  "errors": ["TypeError: game cannot start"]}], "facts": []}
     with patch("generation.service.generate", side_effect=fake_generate) as model, \
             patch("validation.service.validate", return_value=failed):
         process_run(str(run.id))
@@ -260,7 +260,8 @@ def unknown_candidate(chat):
     run = start(chat)
     run.max_repair_attempts = 0
     run.save(update_fields=["max_repair_attempts"])
-    failed = {"status": "failed", "findings": [{"code": "effect_mismatch", "check_id": "tap"}], "facts": []}
+    failed = {"status": "failed", "findings": [{"code": "runtime_or_network", "check_id": "tap",
+                                               "errors": ["TypeError: fixture runtime failure"]}], "facts": []}
     with patch("generation.service.generate", side_effect=fake_generate), \
             patch("validation.service.validate", return_value=failed):
         process_run(str(run.id))
@@ -480,7 +481,7 @@ def test_restart_after_saved_uncertain_report_does_not_repeat_inference_or_valid
 def test_regression_keeps_the_candidate_with_more_verified_behavior(maker):
     chat, _ = maker
     run = start(chat)
-    first = {"status": "failed", "findings": [{"code": "effect_mismatch", "check_id": "outcome"}],
+    first = {"status": "failed", "findings": [{"code": "runtime_or_network", "check_id": "outcome"}],
              "facts": [{"id": "start", "status": "passed"}, {"id": "tap", "status": "passed"}]}
     worse = {"status": "failed", "findings": [{"code": "javascript_syntax", "message": "New syntax failure"}],
              "facts": []}
@@ -536,3 +537,59 @@ def test_complete_candidate_flow_with_real_isolated_validation(maker, monkeypatc
             assert report.facts[1]["after"] == 1
             assert report.assessment["corrections"][0]["to"] == "attribute_number"
             assert run.result_revision.verification == "automatic"
+
+
+@pytest.mark.django_db
+def test_model_authored_mismatch_cannot_authorize_source_repair(maker):
+    chat, _ = maker
+    run = start(chat)
+    result = uncertain()
+    result.update(status='failed', findings=[{'code': 'effect_mismatch', 'check_id': 'tap', 'before': 0, 'after': 0}])
+    with patch('generation.service.generate', side_effect=fake_generate) as model, \
+            patch('validation.service.validate', return_value=result):
+        process_run(str(run.id))
+    run.refresh_from_db()
+    assert [c.args[0]['operation'] for c in model.call_args_list] == ['create', 'check_repair']
+    assert run.status == 'unverified' and run_data(run)['can_confirm']
+    assert all(r.files == run.candidate_revision.files for r in chat.revisions.all())
+    assert not chat.revisions.filter(accepted=True).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize('blocker', ['foreign', 'active', 'base', 'report', 'cancelled', 'unknown'])
+def test_confirmation_is_bound_to_owner_base_and_exact_report_without_inference(maker, blocker):
+    chat, client = maker
+    run = start(chat)
+    with patch('generation.service.generate', side_effect=fake_generate), \
+            patch('validation.service.validate', return_value=uncertain()):
+        process_run(str(run.id))
+    run.refresh_from_db()
+    payload = {'confirmed': True, **run_data(run)['confirmation']}
+    original = (run.candidate_revision.html, run.candidate_revision.files, run.candidate_revision.checks)
+    if blocker == 'foreign':
+        other = User.objects.create_user(username='other-maker')
+        client.force_login(other)
+    elif blocker == 'active':
+        create_run(chat, {'prompt': 'Исправь игру', 'idempotency_key': 'next-generation',
+                          'source_revision_id': str(run.candidate_revision_id),
+                          'source_artifact_hash': run.candidate_revision.artifact_hash})
+    elif blocker == 'base':
+        chat.current_revision = run.candidate_revision
+        chat.save(update_fields=['current_revision'])
+    elif blocker == 'report':
+        payload['report_id'] -= 1
+    else:
+        run.status = blocker
+        run.save(update_fields=['status'])
+    if blocker in {'active', 'base', 'cancelled', 'unknown'}:
+        assert not run_data(run)['can_confirm']
+    count, revisions = Invocation.objects.count(), chat.revisions.count()
+    with patch('generation.service.generate') as model:
+        response = client.post(f'/api/runs/{run.id}/confirm/', payload, content_type='application/json')
+    assert response.status_code == (404 if blocker == 'foreign' else 409)
+    model.assert_not_called()
+    run.refresh_from_db()
+    candidate = run.candidate_revision
+    assert not candidate.accepted
+    assert (candidate.html, candidate.files, candidate.checks) == original
+    assert Invocation.objects.count() == count and chat.revisions.count() == revisions

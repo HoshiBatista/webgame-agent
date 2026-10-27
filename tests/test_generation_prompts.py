@@ -12,8 +12,10 @@ from generation.schema import response_schema
 
 def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol():
     text = system_prompt({"operation": "create"})
-    assert text == SYSTEM_PROMPT
-    assert len(text) < 6000
+    from generation.helpers import GUIDANCE
+
+    assert text == SYSTEM_PROMPT + GUIDANCE
+    assert len(text) < 7200
     assert "4-6 meaningful checks" in text
     assert "complete sources in files" in text
     assert "PATCH CONTRACT" not in text
@@ -30,7 +32,8 @@ def test_edit_and_repair_keep_distinct_requirement_policies():
     assert "exact requirement text and category" in repair
     assert "syntax or startup failure must be fixed before" in repair
     for text in (edit, repair):
-        assert len(text) < 7000
+        # The pinned motion API adds a bounded instruction block to repair/edit.
+        assert len(text) < 8000
         assert "old_text must occur exactly once in the ORIGINAL file" in text
         assert "omitted checks are inherited unchanged" in text
         assert "status=unchanged" in text

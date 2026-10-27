@@ -273,3 +273,16 @@ def test_cancel_delivery_wait_survives_access_failure_and_expired_lease(run, api
     inv.refresh_from_db()
     assert inv.state == 'failed' and inv.cost_usd == 0
     assert not Revision.objects.exists() and api.inferences == 0
+
+
+@pytest.mark.parametrize('operation', ['visual_review', 'visual_patch'])
+@pytest.mark.parametrize('profile', ['full', 'compact'])
+def test_remote_visual_payload_uses_same_bounded_schema_and_image(api, operation, profile):
+    from tests.test_visual_review import visual_request
+
+    request = request_for_api(**visual_request(operation), generation_profile=profile)
+    payload = request['codex_api']['payload']
+    assert payload['output_schema'] == response_schema(request)
+    assert payload['effort'] == 'medium'
+    assert payload['images'] == [{k: request['preview_image'][k] for k in ('mime', 'data')}]
+    assert not api.jobs

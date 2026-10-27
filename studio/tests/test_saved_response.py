@@ -33,14 +33,14 @@ class SavedResponseTests(TestCase):
         self.raw = json.dumps(response)
         self.source = Invocation.objects.create(
             run=self.run, attempt=2, state="failed", request={"operation": "create", "base_revision": None,
-                "generation_contract": {"pipeline_version": 8}},
+                "generation_contract": {"pipeline_version": 9}},
             error={"code": "invalid_schema", "raw_response": self.raw},
             usage={"input_tokens": 12, "output_tokens": 34}, cost_usd=Decimal("0.1"),
             sent_at=timezone.now(), finished_at=timezone.now(), elapsed_seconds=42,
         )
 
     def check_run(self, ident, status):
-        report = {"status": status, "findings": [] if status == "passed" else [{"code": "game_bug"}],
+        report = {"status": status, "findings": [] if status == "passed" else [{"code": "runtime_or_network", "errors": ["TypeError: saved game failed"]}],
                   "facts": [], "environment": {}, "elapsed_seconds": 0.1}
         with (patch("generation.service.generate") as model,
               patch("validation.service.validate", return_value=report),
@@ -161,7 +161,7 @@ class SavedResponseTests(TestCase):
         self.source.request = {
             'operation': operation, 'base_revision': str(base.id), 'generation_profile': 'compact',
             'source_format': 'string', 'compact_manifest': base.compact_manifest,
-            'generation_contract': {'pipeline_version': 8},
+            'generation_contract': {'pipeline_version': 9},
         }
         return base
 

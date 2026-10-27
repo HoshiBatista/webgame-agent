@@ -84,7 +84,7 @@ export interface Run {
   id: string;
   chat_id: string;
   operation: string;
-  generation_strategy?: 'lite' | 'pro';
+  generation_strategy?: 'lite' | 'pro' | 'lite_code_then_checks';
   game_plan?: {
     summary: string;
     core_loop: string;

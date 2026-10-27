@@ -221,7 +221,7 @@ def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
     import validation.contracts as contracts
 
     directory = Path(contracts.__file__).parent
-    for name in ("runner.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py"):
+    for name in ("runner.py", "check_program.py", "criteria.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py", "visual.py"):
         (tmp_path / name).write_bytes((directory / name).read_bytes())
     assert implementation_hash(tmp_path) == implementation_hash()
     original = implementation_hash(tmp_path)
@@ -325,7 +325,7 @@ def test_browser_watchdog_kills_hung_process_and_accepts_following_job(monkeypat
 
     monkeypatch.setattr(daemon.subprocess, "Popen", worker)
     monkeypatch.setattr(daemon, "identity", lambda: expected["environment"])
-    monkeypatch.setattr(daemon, "browser_watchdog_seconds", lambda _: 0.3)
+    monkeypatch.setattr(daemon, "browser_watchdog_seconds", lambda _, criteria=None, capture_visual=False: 0.3)
     payload = {"html": html, "checks": checks, "artifact_hash": expected["artifact_hash"]}
     failure = daemon.run_bounded(payload)
     assert failure["status"] == "infrastructure_error"
@@ -336,12 +336,14 @@ def test_browser_watchdog_kills_hung_process_and_accepts_following_job(monkeypat
 
 
 def test_watchdog_bounds_browser_waits_but_accepts_supported_suite():
-    # Two extra clean contexts check control/outcome with the last useful input omitted.
-    assert browser_watchdog_seconds(fixture_checks()) == 40
+    # Each causal check adds a matched treatment/control pair to the ordinary run.
+    assert 55 <= browser_watchdog_seconds(fixture_checks()) < 56
     checks = fixture_checks()
     checks[0]["steps"] = [{"action": "wait", "ms": 6000}] * 2
+    # Invalid semantics still allow mandatory artifact gates.
+    assert browser_watchdog_seconds(checks) < 56
     with pytest.raises(ValueError):
-        browser_watchdog_seconds(checks)
+        browser_watchdog_seconds(checks * 13)
 
 
 @pytest.mark.browser
