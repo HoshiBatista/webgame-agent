@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-28",
+  "change": "Single-line audience selector with native horizontal scrolling, faded edges and paging arrows. Selected and focused buttons stay visible; resize observation does not reset manual focus.",
+  "checks": {
+    "studio_tests": 44,
+    "frontend_lint": "passed",
+    "production_build": "passed",
+    "diff_check": "passed",
+    "review": "No outstanding findings in scrolling, pointer clicks, focus, selection persistence or disabled mode handling."
+  },
+  "browser": {
+    "engines": [
+      "Chromium",
+      "WebKit 26.0"
+    ],
+    "viewports": [
+      {
+        "width": 320,
+        "height": 568,
+        "row_height": 43
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "row_height": 43
+      },
+      {
+        "width": 430,
+        "height": 932,
+        "row_height": 43
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "row_height": 42
+      },
+      {
+        "width": 1440,
+        "height": 1000,
+        "row_height": 42
+      }
+    ],
+    "combinations_passed": 10,
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "one_row": "passed",
+    "arrow_scrolling": "passed",
+    "saved_selection_and_resize": "passed",
+    "focus_reveal": "passed",
+    "reduced_motion": "passed",
+    "no_page_horizontal_overflow": "passed",
+    "native_touch_swipe": "Chromium touch dispatch, three phone viewports",
+    "keyboard_tab": "Chromium; WebKit focus tested directly because default Safari Tab navigation skips buttons",
+    "fit_case": "Both arrows hidden when the test removes the product chat width cap of 800px and all modes fit",
+    "page_errors": [],
+    "screenshots_reviewed": [
+      "chromium-320-start.png",
+      "chromium-390-end.png",
+      "webkit-320-start.png",
+      "webkit-390-end.png"
+    ]
+  },
+  "boundary": "Local production build with isolated API fixtures; no physical iPhone test.",
+  "model_calls": 0,
+  "cloud_changed": false,
+  "database_changed": false,
+  "unrelated_pending_generation_changes": "Preserved"
+}

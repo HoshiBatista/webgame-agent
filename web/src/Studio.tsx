@@ -31,17 +31,7 @@ import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { selectedProfile } from './ModelSelector';
 import TemplatePicker from './TemplatePicker';
 import { appendTemplate, NOTES_LIMIT } from './textLimits';
-
-const audiences = [
-  { id: 'everyone', label: 'Для всех' },
-  { id: 'gamers', label: 'Для геймеров' },
-  { id: 'children', label: 'Для детей' },
-  { id: 'seniors', label: 'Для старших' },
-  { id: 'beginners', label: 'Для новичков' },
-  { id: 'family', label: 'Для семьи' },
-  { id: 'learning', label: 'Для обучения' },
-  { id: 'relax', label: 'Для отдыха' },
-];
+import AudienceSelector from './AudienceSelector';
 const feedbackReasons = [
   'Более понятное управление',
   'Лучше визуальное оформление',
@@ -947,25 +937,11 @@ export default function Studio() {
           </div>
         </div>
         <form className="composer" onSubmit={send}>
-          <div className="audience-row" role="group" aria-label="Аудитория игры">
-            {audiences.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                disabled={!!activeRun || busy}
-                className={audience === item.id ? 'selected' : ''}
-                onClick={() => setAudience(item.id)}
-                aria-pressed={audience === item.id}
-              >
-                <span
-                  className="audience-icon"
-                  aria-hidden="true"
-                  style={{ maskImage: `url(/assets/audience-${item.id}.svg)` }}
-                />
-                {item.label}
-              </button>
-            ))}
-          </div>
+          <AudienceSelector
+            value={audience}
+            disabled={!!activeRun || busy}
+            onChange={setAudience}
+          />
           <div className="composer-input">
             <textarea
               ref={promptInput}
