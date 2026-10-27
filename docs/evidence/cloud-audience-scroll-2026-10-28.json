@@ -1,0 +1,185 @@
+{
+  "date": "2026-10-28",
+  "timezone": "Europe/Moscow",
+  "revision": "5d339a06fc9790db0f0b23621505f3e9cbd672e1",
+  "previous_revision": "f4edcde4128b54713893b2c898146b4a0b40f5e8",
+  "source_archive_sha256": "921b94372bdc8908617c6d71689b52b039d30913382ab5832a98cb75c1ff0fcc",
+  "change": "Audience modes stay on a single horizontally scrolling row, with faded edges and paging arrows; selection and focus remain visible.",
+  "server": {
+    "revision": "5d339a06fc9790db0f0b23621505f3e9cbd672e1",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 26,
+      "CheckReport": 1,
+      "Feedback": 0,
+      "Invocation": 113,
+      "Like": 0,
+      "Message": 110,
+      "Outbox": 57,
+      "Preference": 1,
+      "PromptTemplate": 2,
+      "Publication": 0,
+      "Revision": 1,
+      "Run": 57,
+      "RunEvent": 592,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "unknown_preserved": 5,
+    "visible_chats": 1,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:ff127b9d40f32b021f7cb501fb6fd884ed971b1e1dbb7799157aeee21e0aa036",
+        "image_tag": "gameforge-mini:cloud-5d339a0-20261028"
+      },
+      "preview": {
+        "image_id": "sha256:ff127b9d40f32b021f7cb501fb6fd884ed971b1e1dbb7799157aeee21e0aa036",
+        "image_tag": "gameforge-mini:cloud-5d339a0-20261028"
+      },
+      "worker": {
+        "image_id": "sha256:ff127b9d40f32b021f7cb501fb6fd884ed971b1e1dbb7799157aeee21e0aa036",
+        "image_tag": "gameforge-mini:cloud-5d339a0-20261028"
+      },
+      "beat": {
+        "image_id": "sha256:ff127b9d40f32b021f7cb501fb6fd884ed971b1e1dbb7799157aeee21e0aa036",
+        "image_tag": "gameforge-mini:cloud-5d339a0-20261028"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-5d339a0-20261027T214823Z.dump",
+    "backup_sha256": "15cb59d892c093b3fefff7fd231ff2aa9e28ad21af79fbbb31a4ea27539550d9"
+  },
+  "browser": {
+    "revision": "5d339a06fc9790db0f0b23621505f3e9cbd672e1",
+    "https_verified": true,
+    "html_and_assets_exact": true,
+    "asset_count": 14,
+    "health": "ok",
+    "guest_chats_denied": true,
+    "both_pro_and_lite_available": true,
+    "viewports": [
+      {
+        "browser": "chromium",
+        "theme": "light",
+        "width": 390,
+        "height": 844,
+        "row_height": 43,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "chromium",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "row_height": 43,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "chromium",
+        "theme": "light",
+        "width": 1440,
+        "height": 1000,
+        "row_height": 42,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 390,
+        "height": 844,
+        "row_height": 43,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 320,
+        "height": 568,
+        "row_height": 43,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 1440,
+        "height": 1000,
+        "row_height": 42,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      }
+    ],
+    "existing_chat_selected_mode_visible": true,
+    "page_errors": [],
+    "http_mutations": "login/logout only, one session per browser",
+    "model_calls": 0,
+    "chats_created": 0,
+    "physical_ios": false
+  },
+  "final_health": {
+    "run_count": 57,
+    "invocation_count": 113,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0020": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "5d339a06fc9790db0f0b23621505f3e9cbd672e1"
+  },
+  "checks": {
+    "studio_tests_before_release": 44,
+    "frontend_lint": "passed",
+    "production_build": "passed",
+    "cloud_django_check": "passed",
+    "cloud_migrate_check": "passed",
+    "celery_ping": "passed",
+    "pro_catalog_refresh": "passed",
+    "backup_archive_toc": "passed",
+    "review": "No outstanding findings in the deployed row, scrolling, selection or data preservation."
+  },
+  "scope": {
+    "source": "git archive of the exact UI commit; no uncommitted files",
+    "backend_matches_previous_cloud_release": true,
+    "separate_generation_commit_8e0019e_included": false,
+    "unrelated_working_file_contents_preserved": true
+  },
+  "boundaries": [
+    "Only login/logout HTTP writes on the existing test account; no chats, templates, publications, ratings or generation requests created.",
+    "Cloud browser check repeated after correcting the test driver to wait for disabled arrows and restrict theme setup to the top document, excluding sandboxed game frames.",
+    "No physical iPhone test. Chromium and WebKit use desktop automation with mobile viewport sizes.",
+    "The database was backed up and read for validation; no migrations or user content edits.",
+    "No GPU access, remote Codex Worker update or paid model calls."
+  ],
+  "model_calls": 0,
+  "new_chats": 0,
+  "gpu_connections": 0
+}
