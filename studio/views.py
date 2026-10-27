@@ -18,6 +18,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
+from generation.audiences import AUDIENCES
+
 from .model_profiles import (
     can_use_pro,
     configured_profiles,
@@ -25,7 +27,7 @@ from .model_profiles import (
     profile_options,
     unavailable_reason,
 )
-from .models import Chat, Feedback, Like, Message, Preference, Publication, Revision, Run
+from .models import Chat, Feedback, Like, Message, Preference, Publication, Revision, Run, User
 from .preferences import add_feedback_notes, validate_notes
 from .serialization import chat_data, preview_url, publication_data, revision_data, run_data
 from .services import (
@@ -171,7 +173,7 @@ def chats_view(request):
     title = request.data.get("title", "")
     audience = request.data.get("audience", "everyone")
     normalized_title = validate_chat_title(title, allow_empty=True)
-    if audience not in ("everyone", "gamers", "children", "seniors"):
+    if not isinstance(audience, str) or audience not in AUDIENCES:
         raise DomainError("invalid_chat", "Проверьте название и аудиторию.")
     chat = Chat.objects.create(
         owner=request.user, title=normalized_title, title_is_custom=bool(title.strip()), audience=audience
@@ -439,6 +441,7 @@ def preview_view(request, token):
 
 
 @api_view(["GET", "POST"])
+@transaction.atomic
 def publications_view(request):
     from generation.schema import CONTRACT_VERSION
 
@@ -448,6 +451,8 @@ def publications_view(request):
         )
         if request.query_params.get("mine") == "1":
             qs = qs.filter(owner=request.user)
+        if revision_id := request.query_params.get("revision_id"):
+            qs = qs.filter(revision_id=revision_id)
         qs = (
             qs.order_by("-like_count", "-created_at")
             if request.query_params.get("sort") == "popular"
@@ -455,10 +460,12 @@ def publications_view(request):
         )
         return Response({"results": [publication_data(p, request.user) for p in qs[:100]]})
     chat = owned_chat(request, request.data.get("chat_id"))
-    revision = get_object_or_404(
-        Revision, pk=request.data.get("revision_id") or chat.current_revision_id, chat=chat, accepted=True,
-        pipeline_version=CONTRACT_VERSION
-    )
+    # Serialize create/update per owner, including repeat requests from other tabs.
+    User.objects.select_for_update().get(pk=request.user.pk)
+    revision = selected_saved_revision(chat, request.data)
+    existing = Publication.objects.filter(owner=request.user, revision=revision, unavailable_at__isnull=True).order_by("created_at", "id").first()
+    if existing:
+        return Response(publication_data(existing, request.user))
     title = request.data.get("title") or revision.title
     if not isinstance(title, str) or not 1 <= len(title.strip()) <= 160:
         raise DomainError("invalid_title", "Укажите название до 160 символов.")
@@ -466,6 +473,19 @@ def publications_view(request):
         owner=request.user, source_chat=chat, revision=revision, title=title.strip()
     )
     return Response(publication_data(publication, request.user), status=201)
+
+
+def selected_saved_revision(chat, data):
+    """Publishing/rating a saved version does not grant it automatic acceptance."""
+    from generation.schema import CONTRACT_VERSION
+
+    ident = data.get("revision_id") or chat.current_revision_id
+    if not ident:
+        raise DomainError("revision_required", "Сначала выберите сохранённую версию игры.")
+    revision = get_object_or_404(Revision, pk=ident, chat=chat, pipeline_version=CONTRACT_VERSION)
+    if not revision.html:
+        raise DomainError("game_not_ready", "У этой версии ещё нет игры. Дождитесь её сохранения.")
+    return revision
 
 
 def require_available_publication(publication):
@@ -477,6 +497,7 @@ def require_available_publication(publication):
 
 @api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([AllowAny])
+@transaction.atomic
 def publication_view(request, ident):
     from generation.schema import CONTRACT_VERSION
 
@@ -487,6 +508,8 @@ def publication_view(request, ident):
         return Response(publication_data(publication, request.user))
     if not request.user or not request.user.is_authenticated or publication.owner_id != request.user.id:
         raise DomainError("permission_denied", "Публикация принадлежит другому пользователю.", 403)
+    User.objects.select_for_update().get(pk=request.user.pk)
+    publication.refresh_from_db()
     if request.method == "DELETE":
         publication.delete()
         return Response(status=204)
@@ -501,11 +524,14 @@ def publication_view(request, ident):
             pk=request.data["revision_id"],
             chat__owner=request.user,
             chat__deleted_at__isnull=True,
-            accepted=True,
             pipeline_version=CONTRACT_VERSION,
         )
         if revision.chat_id != publication.source_chat_id:
             raise DomainError("wrong_chat", "Обновление должно относиться к исходной игре.")
+        if not revision.html:
+            raise DomainError("game_not_ready", "У этой версии ещё нет игры. Дождитесь её сохранения.")
+        if Publication.objects.filter(owner=request.user, revision=revision, unavailable_at__isnull=True).exclude(pk=publication.pk).exists():
+            raise DomainError("already_published", "Эта версия уже опубликована. Откройте её публикацию.", 409)
         publication.revision = revision
     publication.save()
     return Response(publication_data(publication, request.user))
@@ -551,8 +577,9 @@ def remix_view(request, ident):
             requirement_manifest=source.requirement_manifest,
             design=source.design,
             checks=source.checks,
+            checks_review_required=source.checks_review_required,
             diff=[],
-            accepted=True,
+            accepted=source.accepted,
             verification=source.verification,
         )
         # Published evidence concerns exactly these bytes; copy it without a new model/browser call.
@@ -594,6 +621,7 @@ def preferences_view(request):
 @api_view(["POST"])
 def feedback_view(request, ident):
     chat = owned_chat(request, ident)
+    revision = selected_saved_revision(chat, request.data)
     rating = request.data.get("rating")
     reasons = request.data.get("reasons", [])
     if type(rating) is not int or not 1 <= rating <= 5:
@@ -606,7 +634,7 @@ def feedback_view(request, ident):
         raise DomainError("invalid_reasons", "Добавьте до пяти коротких пожеланий.")
     with transaction.atomic():
         feedback = Feedback.objects.create(
-            chat=chat, user=request.user, revision=chat.current_revision, rating=rating, reasons=reasons
+            chat=chat, user=request.user, revision=revision, rating=rating, reasons=reasons
         )
         pref = preference_for(request.user)
         pref = Preference.objects.select_for_update().get(pk=pref.pk)
@@ -615,6 +643,7 @@ def feedback_view(request, ident):
     return Response(
         {
             "id": feedback.id,
+            "revision_id": str(revision.id),
             "rating": rating,
             "reasons": reasons,
             "preferences": preference_data(pref),

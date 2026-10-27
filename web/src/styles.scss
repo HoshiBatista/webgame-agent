@@ -1982,10 +1982,9 @@ svg {
 }
 .audience-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
-  overflow-x: auto;
   padding-bottom: 10px;
-  scrollbar-width: none;
 }
 .audience-row > button {
   display: flex;
@@ -4483,7 +4482,10 @@ svg {
 }
 .template-card h2 {
   font-size: 20px;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .template-card-mark {
   display: flex;
@@ -4491,6 +4493,9 @@ svg {
   gap: 10px;
   color: var(--accent-text);
   font-size: var(--text-small);
+}
+.template-card-mark > svg {
+  flex-shrink: 0;
 }
 .template-card-description,
 .template-excerpt {
@@ -4551,7 +4556,9 @@ svg {
 }
 .template-option strong {
   display: block;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   margin-bottom: 6px;
 }
 .template-option:hover {
@@ -4581,6 +4588,21 @@ svg {
   white-space: pre-wrap;
   margin-top: 8px;
   line-height: 1.6;
+}
+.template-selection summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+@media (max-width: 760px) and (max-height: 650px) {
+  .chat-scroll-empty .welcome-mark {
+    display: none;
+  }
+  .chat-scroll-empty .chat-welcome {
+    padding-block: 0;
+  }
+  .chat-scroll-empty .chat-welcome h2 {
+    font-size: 20px;
+  }
 }
 .template-empty {
   text-align: center;

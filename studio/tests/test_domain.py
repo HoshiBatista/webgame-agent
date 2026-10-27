@@ -515,10 +515,10 @@ class DomainTests(TestCase):
         self.assertEqual(
             self.client.post(
                 "/api/publications/",
-                {"chat_id": str(self.chat.id), "title": "Game"},
+                {"chat_id": str(self.chat.id), "title": "Game", "revision_id": str(run.candidate_revision_id)},
                 content_type="application/json",
             ).status_code,
-            404,
+            201,
         )
         self.assertEqual(
             self.client.post(
@@ -571,9 +571,10 @@ class DomainTests(TestCase):
         self.assertEqual(self.client.get(f"/api/runs/{run.id}/diagnostics/").status_code, 404)
 
     def test_feedback_no_paid_call_and_next_preferences(self):
+        revision = Revision.objects.create(chat=self.chat, number=1, **artifact())
         response = self.client.post(
             f"/api/chats/{self.chat.id}/feedback/",
-            {"rating": 3, "reasons": ["Make controls larger"]},
+            {"rating": 3, "reasons": ["Make controls larger"], "revision_id": str(revision.id)},
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 201)

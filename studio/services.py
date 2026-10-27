@@ -12,6 +12,8 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from generation.audiences import AUDIENCES
+
 from .continuations import delivery_state, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
 from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Revision, Run, RunEvent
@@ -273,7 +275,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 12000:
         raise DomainError("invalid_prompt", "Опишите игру или небольшую правку (до 12 000 символов).")
     audience = data.get("audience", chat.audience)
-    if audience not in ("everyone", "gamers", "children", "seniors"):
+    if not isinstance(audience, str) or audience not in AUDIENCES:
         raise DomainError("invalid_audience", "Неизвестная аудитория.")
     previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
     acknowledged_run = None
@@ -468,6 +470,8 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         frozen_manifest = manifest(original_request)
     from generation.helpers import catalog
 
+    from .preferences import validate_notes
+
     run = Run.objects.create(
         helper_catalog=continued_from.helper_catalog if continued_from else catalog(),
         chat=chat,
@@ -491,7 +495,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         game_plan=game_plan,
         game_request=original_request,
         requirement_manifest=frozen_manifest,
-        preferences_snapshot=continued_from.preferences_snapshot if continued_from else preference_for(chat.owner).notes,
+        preferences_snapshot=continued_from.preferences_snapshot if continued_from else validate_notes(preference_for(chat.owner).notes),
         policy_snapshot=continued_from.policy_snapshot if continued_from else policy_snapshot(),
         candidate_revision=candidate,
         continued_from=continued_from,

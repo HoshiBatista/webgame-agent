@@ -7,6 +7,7 @@ from validation.contracts import VIEWPORTS
 
 from . import presentation
 from .artifacts import sha256
+from .audiences import APPLICATION_GUIDANCE, AUDIENCES
 from .errors import ContractError
 from .schema import response_schema
 
@@ -164,12 +165,7 @@ def build_messages(request):
         "requirement_manifest": request.get("requirement_manifest") or {},
         "generation_strategy": request.get("generation_strategy", "lite"),
         "audience": request.get("audience", "everyone"),
-        "audience_guidance": {
-            "everyone": "Clear rules and accessible controls for a general audience.",
-            "gamers": "Responsive controls, meaningful challenge and concise feedback for experienced players.",
-            "children": "Simple instructions, forgiving difficulty, generous touch targets and child-friendly imagery.",
-            "seniors": "Large readable text and controls, strong contrast, calm pace and simple navigation.",
-        }.get(request.get("audience", "everyone"), "Clear rules and accessible controls."),
+        "audience_guidance": AUDIENCES.get(request.get("audience", "everyone"), AUDIENCES["everyone"]) + " " + APPLICATION_GUIDANCE,
         "preferences": request.get("preferences") or {},
         "base_revision": str(request["base_revision"]) if request.get("base_revision") is not None else None,
         "design": request.get("design") or {},

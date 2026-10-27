@@ -1,7 +1,7 @@
 from django.test import Client, TestCase, override_settings
 
-from studio.models import Chat, Feedback, Invocation, Preference, PromptTemplate, Run, User
-from studio.services import create_run
+from studio.models import Chat, Feedback, Invocation, Preference, PromptTemplate, Revision, Run, User
+from studio.services import DomainError, create_run
 
 
 @override_settings(GAMEFORGE_RUN_INLINE=False, GAMEFORGE_PROVIDER="fake", GAMEFORGE_MODEL="fixture")
@@ -15,12 +15,12 @@ class PersonalContentTests(TestCase):
         return self.client.patch('/api/preferences/', data, content_type='application/json')
 
     def test_notes_allow_free_text_many_lines_and_exact_unicode_limit(self):
-        for notes in (["я" * 3000], ["🪴" * 3000], ["Пожелание"] * 100,
+        for notes in (["я" * 2500], ["🪴" * 2500], ["Пожелание"] * 100,
                       ["Первый абзац", "", ("Второй абзац длиннее прежнего лимита " * 20).strip()]):
             result = self.patch_preferences({'notes': notes})
             self.assertEqual(result.status_code, 200)
             self.assertEqual(result.json()['notes'], notes)
-        for notes in (["я" * 3001], ["🪴" * 3001], ["я" * 1500, "я" * 1500],
+        for notes in (["я" * 2501], ["🪴" * 2501], ["я" * 1500, "я" * 1500],
                       "обычный текст вместо массива", [123], None):
             before = Preference.objects.get(user=self.owner).notes
             self.assertEqual(self.patch_preferences({'notes': notes}).status_code, 400)
@@ -36,9 +36,11 @@ class PersonalContentTests(TestCase):
         self.assertFalse(Invocation.objects.exists())
 
     def test_feedback_capacity_keeps_existing_text_and_reports_unadded_wishes(self):
-        text = "а" * 2980
+        text = "а" * 2480
         self.patch_preferences({'notes': [text]})
         chat = Chat.objects.create(owner=self.owner)
+        chat.current_revision = Revision.objects.create(chat=chat, number=1, files={}, html='<canvas></canvas>')
+        chat.save(update_fields=['current_revision'])
         response = self.client.post(f'/api/chats/{chat.id}/feedback/',
             {'rating': 3, 'reasons': ['Крупный текст', 'Длинное пожелание, которое уже не помещается']},
             content_type='application/json')
@@ -93,14 +95,28 @@ class PersonalContentTests(TestCase):
 
     def test_template_boundaries_and_failed_patch_are_atomic(self):
         self.assertEqual(self.client.post('/api/templates/', [], content_type='application/json').status_code, 400)
-        payload = {'title': '🪴' * 50, 'description': '🌙' * 3000}
+        payload = {'title': '🪴' * 60, 'description': '🌙' * 2500}
         created = self.client.post('/api/templates/', payload, content_type='application/json')
         self.assertEqual(created.status_code, 201)
         url = f"/api/templates/{created.json()['id']}/"
         self.assertEqual(self.client.patch(url, [], content_type='application/json').status_code, 400)
-        for patch in ({'title': 'x' * 51}, {'description': 'x' * 3001}, {'title': '  '},
+        for patch in ({'title': 'x' * 61}, {'description': 'x' * 2501}, {'title': '  '},
                       {'description': ''}, {'title': None}, {'description': []},
-                      {'title': 'Valid title', 'description': 'x' * 3001}):
+                      {'title': 'Valid title', 'description': 'x' * 2501}):
             self.assertEqual(self.client.patch(url, patch, content_type='application/json').status_code, 400)
             saved = self.client.get(url).json()
             self.assertEqual({k: saved[k] for k in payload}, payload)
+
+    def test_preexisting_long_text_is_preserved_and_must_be_shortened_before_new_generation(self):
+        old_text = 'я' * 3000
+        preference = Preference.objects.create(user=self.owner, notes=[old_text])
+        template = PromptTemplate.objects.create(owner=self.owner, title='Старый шаблон', description=old_text)
+        self.assertEqual(self.client.get('/api/preferences/').json()['notes'], [old_text])
+        self.assertEqual(self.client.get(f'/api/templates/{template.id}/').json()['description'], old_text)
+        chat = Chat.objects.create(owner=self.owner)
+        with self.assertRaises(DomainError) as error:
+            create_run(chat, {'prompt': 'Игра', 'idempotency_key': 'long-notes'})
+        self.assertEqual(error.exception.code, 'invalid_preferences')
+        self.assertFalse(Run.objects.filter(chat=chat).exists())
+        preference.refresh_from_db()
+        self.assertEqual(preference.notes, [old_text])

@@ -70,15 +70,17 @@ beforeEach(() => {
 it('creates and edits private templates, enforcing limits without submitting a game', async () => {
   setup();
   await screen.findByRole('heading', { name: template.title });
+  expect(screen.getByRole('heading', { name: template.title }).tagName).toBe('H2');
+  expect(screen.queryByText('Личный шаблон')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Добавить шаблон' }));
   const dialog = screen.getByRole('dialog', { name: 'Новый шаблон' });
   const title = within(dialog).getByLabelText('Название шаблона');
   const description = within(dialog).getByLabelText('Описание игры');
-  fireEvent.change(title, { target: { value: 'а'.repeat(51) } });
+  fireEvent.change(title, { target: { value: 'а'.repeat(61) } });
   fireEvent.change(description, { target: { value: 'Описание' } });
   expect(within(dialog).getByRole('button', { name: 'Сохранить шаблон' })).toBeDisabled();
   fireEvent.change(title, { target: { value: 'Звёзды' } });
-  fireEvent.change(description, { target: { value: 'x'.repeat(3001) } });
+  fireEvent.change(description, { target: { value: 'x'.repeat(2501) } });
   expect(within(dialog).getByRole('button', { name: 'Сохранить шаблон' })).toBeDisabled();
   fireEvent.change(description, { target: { value: 'Собери звёзды' } });
   vi.mocked(request).mockResolvedValueOnce({
@@ -137,6 +139,9 @@ it('loads templates only through the composer button and inserts without generat
     target: { value: 'лунный' },
   });
   fireEvent.click(await screen.findByRole('radio', { name: template.title }));
+  expect(picker.querySelector('details')).not.toHaveAttribute('open');
+  fireEvent.click(within(picker).getByText(`Текст шаблона «${template.title}»`));
+  expect(picker.querySelector('details')).toHaveAttribute('open');
   fireEvent.click(screen.getByRole('button', { name: 'Продолжить' }));
   expect(screen.getByRole('textbox', { name: 'Описание вашей игры' })).toHaveValue(
     template.description,

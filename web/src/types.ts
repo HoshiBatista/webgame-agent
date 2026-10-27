@@ -67,6 +67,8 @@ export interface Revision {
   created_at: string;
   accepted: boolean;
   verification: 'automatic' | 'manual' | 'none';
+  publication?: { id: string; title: string; public_url: string } | null;
+  feedback_rating?: number | null;
   preview_url: string;
   export_url: string;
   parent_id: string | null;

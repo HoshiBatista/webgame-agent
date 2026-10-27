@@ -213,9 +213,8 @@ export default function Templates() {
               <article className="game-card template-card" key={item.id}>
                 <div className="template-card-mark">
                   <FileText size={23} />
-                  <span>Личный шаблон</span>
+                  <h2 title={item.title}>{item.title}</h2>
                 </div>
-                <h2>{item.title}</h2>
                 <p className="template-card-description">{item.description}</p>
                 <div className="template-card-actions">
                   <button

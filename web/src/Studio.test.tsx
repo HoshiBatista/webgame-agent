@@ -548,6 +548,7 @@ describe('saved work and mutation submission', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Сохранить оценку' }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     expect(post).toHaveBeenCalledWith('/api/chats/one/feedback/', {
+      revision_id: 'r1',
       rating: 4,
       reasons: ['Крупнее текст и элементы управления', 'Шрифт без тонких линий'],
     });
@@ -609,7 +610,7 @@ describe('saved work and mutation submission', () => {
       (vi.mocked(post).mock.calls[0][1] as { idempotency_key: string }).idempotency_key,
     ).not.toBe((vi.mocked(post).mock.calls[1][1] as { idempotency_key: string }).idempotency_key);
   });
-  it('cannot publish a saved candidate that has not been accepted', async () => {
+  it('can publish and rate a saved candidate without acceptance', async () => {
     vi.mocked(request).mockResolvedValue({
       ...chat,
       current_revision: null,
@@ -621,11 +622,134 @@ describe('saved work and mutation submission', () => {
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
     expect(
       within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
-        name: 'Поделиться',
+        name: 'Опубликовать',
       }),
-    ).toBeDisabled();
+    ).toBeEnabled();
+    expect(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Оценить результат',
+      }),
+    ).toBeEnabled();
     expect(document.querySelectorAll('iframe')).toHaveLength(1);
   });
+  it('publishes the selected version separately and edits only an existing publication title', async () => {
+    const published = {
+      id: 'p1',
+      title: 'Опубликованная игра',
+      revision_id: 'r1',
+      source_chat_id: 'one',
+      public_url: '/games/p1',
+    };
+    const first = { ...revision, publication: published };
+    const second = { ...revision, id: 'r2', number: 2, accepted: false, publication: null };
+    vi.mocked(request).mockImplementation(
+      async <T,>(path: string, options?: RequestInit): Promise<T> => {
+        if (path === '/api/publications/p1/' && options?.method === 'PATCH')
+          return { ...published, title: 'Новое название' } as T;
+        if (path.startsWith('/api/publications/?'))
+          return { results: path.endsWith('r1') ? [published] : [] } as T;
+        return { ...chat, current_revision: first, revisions: [first, second] } as T;
+      },
+    );
+    setup();
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    const tools = within(screen.getByRole('group', { name: 'Инструменты игры' }));
+    fireEvent.click(tools.getByRole('button', { name: 'Опубликовано' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Опубликованная версия 1' });
+    expect(within(dialog).getByRole('link', { name: 'Открыть публикацию' })).toHaveAttribute(
+      'href',
+      '/games/p1',
+    );
+    fireEvent.change(within(dialog).getByLabelText('Название в ленте'), {
+      target: { value: 'Новое название' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Сохранить название' }));
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith('/api/publications/p1/', {
+        method: 'PATCH',
+        body: JSON.stringify({ title: 'Новое название' }),
+      }),
+    );
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.change(tools.getByRole('combobox', { name: 'Версия игры' }), {
+      target: { value: 'r2' },
+    });
+    vi.mocked(post).mockResolvedValue({
+      ...published,
+      id: 'p2',
+      revision_id: 'r2',
+      public_url: '/games/p2',
+    });
+    fireEvent.click(tools.getByRole('button', { name: 'Опубликовать' }));
+    const fresh = await screen.findByRole('dialog', { name: 'Поделимся вашей игрой?' });
+    fireEvent.click(within(fresh).getByRole('button', { name: 'Опубликовать игру' }));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith('/api/publications/', {
+        chat_id: 'one',
+        title: 'Игра',
+        revision_id: 'r2',
+      }),
+    );
+  });
+  it('rates the version selected in preview and keeps other versions unrated', async () => {
+    const second = { ...revision, id: 'r2', number: 2, accepted: false };
+    vi.mocked(request).mockResolvedValue({ ...chat, revisions: [revision, second] });
+    setup();
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    const tools = within(screen.getByRole('group', { name: 'Инструменты игры' }));
+    fireEvent.change(tools.getByRole('combobox', { name: 'Версия игры' }), {
+      target: { value: 'r2' },
+    });
+    fireEvent.click(tools.getByRole('button', { name: 'Оценить результат' }));
+    await screen.findByText(/Оценивается версия 2/);
+    vi.mocked(post).mockResolvedValue({ rating: 5 });
+    fireEvent.click(screen.getByRole('button', { name: 'Оценка 5 из 5' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить оценку' }));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith('/api/chats/one/feedback/', {
+        revision_id: 'r2',
+        rating: 5,
+        reasons: [],
+      }),
+    );
+    await waitFor(() =>
+      expect(tools.getByRole('button', { name: 'Оценить результат' })).toHaveAttribute(
+        'title',
+        'Оценка сохранена',
+      ),
+    );
+    fireEvent.change(tools.getByRole('combobox', { name: 'Версия игры' }), {
+      target: { value: 'r1' },
+    });
+    expect(tools.getByRole('button', { name: 'Оценить результат' })).toHaveAttribute(
+      'title',
+      'Оценить результат',
+    );
+  });
+  it.each(['Для новичков', 'Для семьи', 'Для обучения', 'Для отдыха'])(
+    'sends the selected audience mode %s',
+    async (label) => {
+      const ids: Record<string, string> = {
+        'Для новичков': 'beginners',
+        'Для семьи': 'family',
+        'Для обучения': 'learning',
+        'Для отдыха': 'relax',
+      };
+      setup();
+      const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+      fireEvent.click(screen.getByRole('button', { name: label }));
+      expect(screen.getByRole('button', { name: label })).toHaveAttribute('aria-pressed', 'true');
+      fireEvent.change(input, { target: { value: 'Доработай игру' } });
+      vi.mocked(post).mockReturnValue(new Promise(() => {}));
+      fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+      expect(post).toHaveBeenCalledWith(
+        '/api/chats/one/runs/',
+        expect.objectContaining({ audience: ids[label] }),
+      );
+    },
+  );
   it('shows the actual candidate requiring manual review rather than the last accepted game', async () => {
     const candidate = {
       ...revision,
@@ -668,9 +792,9 @@ describe('saved work and mutation submission', () => {
     );
     expect(
       within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
-        name: 'Поделиться',
+        name: 'Опубликовать',
       }),
-    ).toBeDisabled();
+    ).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Я проверил игру' })).not.toBeInTheDocument();
     expect(screen.queryByText('Подробности запуска')).not.toBeInTheDocument();
     vi.mocked(post).mockResolvedValue({});
@@ -811,7 +935,7 @@ describe('simple conversation', () => {
     fireEvent.click(screen.getByLabelText('Действия с игрой'));
     fireEvent.click(
       within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
-        name: 'Поделиться',
+        name: 'Опубликовать',
       }),
     );
     fireEvent.click(screen.getByRole('link', { name: 'Чат два' }));

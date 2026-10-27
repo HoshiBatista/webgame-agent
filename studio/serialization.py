@@ -18,6 +18,12 @@ def revision_data(revision):
     if revision is None:
         return None
     report = revision.reports.order_by("-id").first()
+    from .models import Feedback, Publication
+
+    publication = Publication.objects.filter(
+        revision=revision, owner_id=revision.chat.owner_id, unavailable_at__isnull=True
+    ).order_by("created_at", "id").first()
+    rating = Feedback.objects.filter(revision=revision, user_id=revision.chat.owner_id).order_by("-created_at", "-id").values_list("rating", flat=True).first()
     return {
         "id": str(revision.id),
         "title": revision.title,
@@ -29,6 +35,9 @@ def revision_data(revision):
         "created_at": revision.created_at.isoformat(),
         "accepted": revision.accepted,
         "verification": revision.verification,
+        "publication": {"id": str(publication.id), "title": publication.title,
+                        "public_url": f"{settings.GAMEFORGE_APP_ORIGIN}/games/{publication.id}"} if publication else None,
+        "feedback_rating": rating,
         "preview_url": preview_url(revision),
         "export_url": f"/api/revisions/{revision.id}/export/",
         "parent_id": str(revision.parent_id) if revision.parent_id else None,

@@ -104,10 +104,10 @@ export default function TemplatePicker({
               )}
             </div>
             {chosen && (
-              <div className="template-selection">
-                <strong>Выбран: {chosen.title}</strong>
+              <details className="template-selection" key={chosen.id}>
+                <summary title={chosen.title}>Текст шаблона «{chosen.title}»</summary>
                 <p>{chosen.description}</p>
-              </div>
+              </details>
             )}
           </>
         )}

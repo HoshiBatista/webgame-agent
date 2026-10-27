@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from .models import PromptTemplate
 from .services import DomainError
 
-TITLE_LIMIT = 50
-DESCRIPTION_LIMIT = 3000
+TITLE_LIMIT = 60
+DESCRIPTION_LIMIT = 2500
 
 
 def template_data(template):

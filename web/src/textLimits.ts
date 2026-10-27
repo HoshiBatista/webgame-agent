@@ -1,6 +1,6 @@
-export const NOTES_LIMIT = 3000;
-export const TEMPLATE_TITLE_LIMIT = 50;
-export const TEMPLATE_DESCRIPTION_LIMIT = 3000;
+export const NOTES_LIMIT = 2500;
+export const TEMPLATE_TITLE_LIMIT = 60;
+export const TEMPLATE_DESCRIPTION_LIMIT = 2500;
 
 // Count Unicode code points like Python len(), including spaces and line breaks.
 export const characterCount = (text: string) => Array.from(text).length;

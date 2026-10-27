@@ -54,6 +54,7 @@ def policy_snapshot():
         "requirements.py",
         "schema.py",
         "prompts.py",
+        "audiences.py",
         "presentation.py",
         "compact.py",
         "helpers.py",

@@ -30,13 +30,17 @@ import { useSavedChat } from './useSavedChat';
 import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { selectedProfile } from './ModelSelector';
 import TemplatePicker from './TemplatePicker';
-import { appendTemplate } from './textLimits';
+import { appendTemplate, NOTES_LIMIT } from './textLimits';
 
 const audiences = [
   { id: 'everyone', label: 'Для всех' },
   { id: 'gamers', label: 'Для геймеров' },
   { id: 'children', label: 'Для детей' },
   { id: 'seniors', label: 'Для старших' },
+  { id: 'beginners', label: 'Для новичков' },
+  { id: 'family', label: 'Для семьи' },
+  { id: 'learning', label: 'Для обучения' },
+  { id: 'relax', label: 'Для отдыха' },
 ];
 const feedbackReasons = [
   'Более понятное управление',
@@ -109,10 +113,11 @@ export default function Studio() {
   const [publicationTitle, setPublicationTitle] = useState('');
   const [shareDone, setShareDone] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackRevision, setFeedbackRevision] = useState<Revision | null>(null);
   const [rating, setRating] = useState(0);
   const [reasons, setReasons] = useState<string[]>([]);
   const [customReason, setCustomReason] = useState('');
-  const [feedbackDone, setFeedbackDone] = useState(false);
+  const [ratedRevisions, setRatedRevisions] = useState<string[]>([]);
   const [feedbackNotice, setFeedbackNotice] = useState('');
   const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
@@ -171,8 +176,10 @@ export default function Studio() {
     setToolsOpen(false);
     setShowShare(false);
     setShareRevision(null);
+    setPublication(null);
     setShowFeedback(false);
-    setFeedbackDone(false);
+    setFeedbackRevision(null);
+    setRatedRevisions([]);
     setRating(0);
     setReasons([]);
     setCustomReason('');
@@ -241,7 +248,8 @@ export default function Studio() {
       pinnedToBottom.current = true;
     }
     const toBottom = () => {
-      if (pinnedToBottom.current) scroller.scrollTop = scroller.scrollHeight;
+      if (pinnedToBottom.current)
+        scroller.scrollTop = chat?.messages.length || pendingHere ? scroller.scrollHeight : 0;
     };
     toBottom();
     const frame = requestAnimationFrame(toBottom);
@@ -253,7 +261,8 @@ export default function Studio() {
     if (!scroller || !history) return;
     let alive = true;
     const toBottom = () => {
-      if (alive && pinnedToBottom.current) scroller.scrollTop = scroller.scrollHeight;
+      if (alive && pinnedToBottom.current)
+        scroller.scrollTop = chat?.messages.length || pendingHere ? scroller.scrollHeight : 0;
     };
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(toBottom) : null;
     observer?.observe(scroller);
@@ -263,7 +272,7 @@ export default function Studio() {
       alive = false;
       observer?.disconnect();
     };
-  }, [id, loading]);
+  }, [id, loading, chat?.messages.length, pendingHere?.key]);
   useEffect(() => {
     const close = (event: PointerEvent) => {
       if (toolsMenu.current && !toolsMenu.current.contains(event.target as Node))
@@ -288,6 +297,10 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  const feedbackDone =
+    !!revision && (!!revision.feedback_rating || ratedRevisions.includes(revision.id));
+  const published =
+    revision?.publication || (publication?.revision_id === revision?.id ? publication : null);
   useEffect(() => {
     const text = location.state?.templateText;
     if (!isNew || typeof text !== 'string') return;
@@ -500,13 +513,15 @@ export default function Studio() {
     }
   }
   async function openShare() {
-    if (!revision?.accepted || !chat) return;
+    if (!revision || !chat) return;
     const startedView = view.current;
     setBusy(true);
     try {
-      const data = await request<{ results: Publication[] }>('/api/publications/?mine=1');
+      const data = await request<{ results: Publication[] }>(
+        `/api/publications/?mine=1&revision_id=${revision.id}`,
+      );
       if (view.current !== startedView) return;
-      const existing = data.results.find((item) => item.source_chat_id === chat.id) ?? null;
+      const existing = data.results.find((item) => item.revision_id === revision.id) ?? null;
       setPublication(existing);
       setShareRevision(revision);
       setPublicationTitle(existing?.title ?? revision.title ?? chat.title);
@@ -527,7 +542,7 @@ export default function Studio() {
       const game = publication
         ? await request<Publication>(`/api/publications/${publication.id}/`, {
             method: 'PATCH',
-            body: JSON.stringify({ title: publicationTitle, revision_id: shareRevision.id }),
+            body: JSON.stringify({ title: publicationTitle }),
           })
         : await post<Publication>('/api/publications/', {
             chat_id: chat.id,
@@ -537,6 +552,7 @@ export default function Studio() {
       if (view.current !== startedView) return;
       setPublication(game);
       setShareDone(new URL(game.public_url, window.location.origin).href);
+      load();
     } catch (cause) {
       if (view.current === startedView) setError(errorText(cause));
     } finally {
@@ -545,11 +561,12 @@ export default function Studio() {
   }
   async function rate(event: FormEvent) {
     event.preventDefault();
-    if (!chat || !rating) return;
+    if (!chat || !rating || !feedbackRevision) return;
     const startedView = view.current;
     setBusy(true);
     try {
       const result = await post<{ preferences_full?: boolean }>(`/api/chats/${chat.id}/feedback/`, {
+        revision_id: feedbackRevision.id,
         rating,
         reasons:
           rating < 5 ? [...reasons, ...(customReason.trim() ? [customReason.trim()] : [])] : [],
@@ -557,12 +574,13 @@ export default function Studio() {
       void refresh();
       if (view.current !== startedView) return;
       setShowFeedback(false);
-      setFeedbackDone(true);
+      setRatedRevisions((items) => [...items, feedbackRevision.id]);
       setFeedbackNotice(
         result?.preferences_full
-          ? 'Оценка сохранена. Часть пожеланий не добавлена в настройки: достигнут лимит 3000 символов. Освободите место, чтобы добавить их.'
+          ? `Оценка сохранена. Часть пожеланий не добавлена в настройки: достигнут лимит ${NOTES_LIMIT} символов. Освободите место, чтобы добавить их.`
           : '',
       );
+      load();
     } catch (cause) {
       if (view.current === startedView) setError(errorText(cause));
     } finally {
@@ -662,8 +680,14 @@ export default function Studio() {
           <button
             type="button"
             className={`icon-button ${feedbackDone ? 'rated' : ''}`}
-            disabled={!current || busy}
-            onClick={() => setShowFeedback(true)}
+            disabled={!revision || busy}
+            onClick={() => {
+              setFeedbackRevision(revision);
+              setRating(revision?.feedback_rating ?? 0);
+              setReasons([]);
+              setCustomReason('');
+              setShowFeedback(true);
+            }}
             aria-label="Оценить результат"
             title={feedbackDone ? 'Оценка сохранена' : 'Оценить результат'}
           >
@@ -673,10 +697,10 @@ export default function Studio() {
           <button
             type="button"
             className="button button-small button-outline"
-            disabled={!revision?.accepted || busy}
+            disabled={!revision || busy}
             onClick={openShare}
           >
-            <Share2 size={15} /> Поделиться
+            <Share2 size={15} /> {published ? 'Опубликовано' : 'Опубликовать'}
           </button>
         </div>
       </div>
@@ -1069,7 +1093,7 @@ export default function Studio() {
             shareDone
               ? 'Можно звать играть!'
               : publication
-                ? 'Обновить игру в ленте'
+                ? `Опубликованная версия ${shareRevision.number}`
                 : 'Поделимся вашей игрой?'
           }
           onClose={() => setShowShare(false)}
@@ -1078,8 +1102,8 @@ export default function Studio() {
           {shareDone ? (
             <div className="form-stack">
               <p>
-                Опубликована версия {shareRevision.number}. Следующие правки в чате не изменят её
-                без вашего решения.
+                Опубликована версия {shareRevision.number}. Следующие правки в чате не изменят эту
+                публикацию.
               </p>
               <label>
                 Ссылка на игру
@@ -1095,6 +1119,11 @@ export default function Studio() {
             </div>
           ) : (
             <form className="form-stack" onSubmit={share}>
+              {publication && (
+                <a className="button button-outline" href={publication.public_url}>
+                  Открыть публикацию
+                </a>
+              )}
               <label>
                 Название в ленте
                 <input
@@ -1107,23 +1136,26 @@ export default function Studio() {
               </label>
               <p className="field-help">
                 {publication
-                  ? `Публичная игра будет заменена выбранной версией ${shareRevision.number}.`
+                  ? `Версия ${shareRevision.number} уже опубликована. Здесь можно изменить её название в ленте.`
                   : `В ленте сохранится отдельный снимок выбранной версии ${shareRevision.number}.`}{' '}
                 История ваших сообщений остаётся приватной.
               </p>
               <button className="button button-primary" disabled={busy}>
-                {publication ? 'Обновить публикацию' : 'Опубликовать игру'}
+                {publication ? 'Сохранить название' : 'Опубликовать игру'}
                 <Share2 size={17} />
               </button>
             </form>
           )}
         </Modal>
       )}
-      {showFeedback && (
+      {showFeedback && feedbackRevision && (
         <Modal title="Получилось то, что хотелось?" onClose={() => setShowFeedback(false)}>
           {error && <ErrorNotice message={error} />}
           <form className="form-stack" onSubmit={rate}>
-            <p className="modal-intro">Ваша оценка поможет лучше понимать ваши идеи.</p>
+            <p className="modal-intro">
+              Оценивается версия {feedbackRevision.number}. Ваша оценка поможет лучше понимать ваши
+              идеи.
+            </p>
             <div className="rating-stars" role="group" aria-label="Оценка результата">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button

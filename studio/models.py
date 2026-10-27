@@ -26,7 +26,7 @@ class Preference(models.Model):
 class PromptTemplate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="prompt_templates")
-    title = models.CharField(max_length=50)
+    title = models.CharField(max_length=60)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

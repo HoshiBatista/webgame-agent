@@ -2,7 +2,7 @@
 
 from .services import DomainError
 
-NOTES_LIMIT = 3000
+NOTES_LIMIT = 2500
 
 
 def validate_notes(notes):
