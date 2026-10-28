@@ -1,0 +1,197 @@
+{
+  "date": "2026-10-28",
+  "host": "212.57.126.215",
+  "revision": "e309cc59d6b55df589916468718fd40d0333be49",
+  "previous_revision": "e7b9485f76d9533356a9ba9770f6f7e76aeb503e",
+  "source_archive_sha256": "cadb6f97f27bb52b6c7c82f44639e2d64142c4dc1238c6cc243cd4338524d75a",
+  "server": {
+    "revision": "e309cc59d6b55df589916468718fd40d0333be49",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 29,
+      "CheckReport": 4,
+      "Feedback": 1,
+      "Invocation": 119,
+      "Like": 2,
+      "Message": 116,
+      "Outbox": 60,
+      "Preference": 3,
+      "PromptTemplate": 3,
+      "Publication": 2,
+      "Revision": 4,
+      "Run": 60,
+      "RunEvent": 622,
+      "User": 4
+    },
+    "all_existing_records_preserved": true,
+    "unknown_preserved": 5,
+    "visible_chats": 2,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_application_image": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:29ddbbf458a4c0a8bef1a98b9df8c5dfa46d047b037ace59e7de17ed37a23c11",
+        "image_tag": "gameforge-mini:cloud-e309cc5-20261028"
+      },
+      "preview": {
+        "image_id": "sha256:29ddbbf458a4c0a8bef1a98b9df8c5dfa46d047b037ace59e7de17ed37a23c11",
+        "image_tag": "gameforge-mini:cloud-e309cc5-20261028"
+      },
+      "worker": {
+        "image_id": "sha256:29ddbbf458a4c0a8bef1a98b9df8c5dfa46d047b037ace59e7de17ed37a23c11",
+        "image_tag": "gameforge-mini:cloud-e309cc5-20261028"
+      },
+      "beat": {
+        "image_id": "sha256:29ddbbf458a4c0a8bef1a98b9df8c5dfa46d047b037ace59e7de17ed37a23c11",
+        "image_tag": "gameforge-mini:cloud-e309cc5-20261028"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-e309cc5-20261028T094009Z.dump",
+    "backup_sha256": "f35a5b90ad4331d3c4c07ac55e710e70d5888dcbd4a32c2929ec4b92d8519661"
+  },
+  "browser": {
+    "revision": "e309cc59d6b55df589916468718fd40d0333be49",
+    "https_verified": true,
+    "assets_exact": 22,
+    "guest_pro_denied": true,
+    "viewports": [
+      {
+        "browser": "chromium",
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "avatar_24px": true,
+        "author_line_removed": true,
+        "footer_preserved": true,
+        "sound_controls": true,
+        "fullscreen_keeps_iframe": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "avatar_24px": true,
+        "author_line_removed": true,
+        "footer_preserved": true,
+        "sound_controls": true,
+        "fullscreen_keeps_iframe": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "avatar_24px": true,
+        "author_line_removed": true,
+        "footer_preserved": true,
+        "sound_controls": true,
+        "fullscreen_keeps_iframe": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 320,
+        "height": 568,
+        "theme": "dark",
+        "avatar_24px": true,
+        "author_line_removed": true,
+        "footer_preserved": true,
+        "sound_controls": true,
+        "fullscreen_keeps_iframe": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "avatar_24px": true,
+        "author_line_removed": true,
+        "footer_preserved": true,
+        "sound_controls": true,
+        "fullscreen_keeps_iframe": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "avatar_24px": true,
+        "author_line_removed": true,
+        "footer_preserved": true,
+        "sound_controls": true,
+        "fullscreen_keeps_iframe": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      }
+    ],
+    "http_mutations": "Existing tester login/logout only",
+    "model_calls": 0,
+    "physical_ios": false,
+    "audio_verification": "Production controls and iframe retention; actual Web Audio/HTML media tested locally before release."
+  },
+  "final_health": {
+    "run_count": 60,
+    "invocation_count": 119,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0021": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "e309cc59d6b55df589916468718fd40d0333be49",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "backup_archive_verified": true,
+  "django_check_passed": true,
+  "migration_check_passed": true,
+  "celery_ping_passed": true,
+  "pro_catalog_refreshed": true,
+  "gpu_accessed": false,
+  "codex_worker_changed": false,
+  "verification_notes": [
+    "Only /assets/*, index.html, favicon.ico and apple-touch-icon.png are publicly served; the license text file is not an application URL.",
+    "The community list requires login; verification used an existing non-staff tester, with login/logout as the only HTTP writes.",
+    "Iframe retention is checked after its initial HTTPS navigation has finished; the initial about:blank is not a loaded game.",
+    "No games, chats, feedback or model calls were created by deployment verification."
+  ]
+}
