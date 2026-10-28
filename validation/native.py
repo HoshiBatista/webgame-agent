@@ -13,6 +13,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from .contracts import browser_watchdog_seconds
@@ -120,11 +121,50 @@ def sandbox_command(read_paths, scratch, command):
     raise ValueError("Native validator supports macOS and Linux/WSL2 only")
 
 
-def execute(payload, *, probe=False):
+def execute(payload, *, probe=False, cancelled=None, progress=None):
+    if probe:
+        return _execute(payload, probe=True, cancelled=cancelled)
+    import fcntl
+
+    from .protocol import ValidationCancelled
+
+    # A per-user OS lock covers separate local Celery processes too. Health
+    # probes bypass the rendering queue. No game ever receives this file.
+    started = time.monotonic()
+    lock = Path(tempfile.gettempdir()) / f'gameforge-validator-{os.getuid()}.lock'
+    descriptor = os.open(lock, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        if progress:
+            progress({'event': 'queued'})
+        while True:
+            if cancelled and cancelled():
+                raise ValidationCancelled()
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() - started > 1200:
+                    raise TimeoutError('native validation queue deadline')
+                time.sleep(0.1)
+        queued = time.monotonic() - started
+        if progress:
+            progress({'event': 'started', 'queue_seconds': round(queued, 3)})
+        execution = time.monotonic()
+        result = _execute(payload, cancelled=cancelled, progress=progress)
+        result['timings'] = {'queue_seconds': round(queued, 3),
+                             'execution_seconds': round(time.monotonic() - execution, 3)}
+        return result
+    finally:
+        os.close(descriptor)
+
+
+def _execute(payload, *, probe=False, cancelled=None, progress=None):
     import greenlet
     import playwright
     import pyee
     import typing_extensions
+
+    from .protocol import communicate, result_from_output
 
     browser = browser_path()
     registry = json.loads((Path(playwright.__file__).parent / "driver/package/browsers.json").read_text())
@@ -199,7 +239,12 @@ def execute(payload, *, probe=False):
             process = subprocess.Popen(command, cwd=scratch, env=env, stdin=subprocess.PIPE,
                                        stdout=output, stderr=errors, start_new_session=True)
             try:
-                process.communicate(json.dumps(payload).encode(), timeout=timeout)
+                def read_progress():
+                    with (scratch / 'stdout').open('rb') as stream:
+                        return stream.read(MAX_RESULT + 1)
+
+                communicate(process, json.dumps(payload).encode(), timeout=timeout, cancelled=cancelled,
+                            progress=progress, read_progress=read_progress)
                 output.seek(0)
                 raw = output.read(MAX_RESULT + 1)
                 if process.returncode or len(raw) > MAX_RESULT:
@@ -207,7 +252,7 @@ def execute(payload, *, probe=False):
                     # Private local diagnostic only; no inherited credentials.
                     detail = errors.read(16000).decode(errors="replace")[-5000:]
                     raise ValueError(f"Native sandbox could not run ({process.returncode}): {detail}")
-                result = json.loads(raw)
+                result = result_from_output(raw)
                 if not isinstance(result, dict):
                     raise ValueError("Invalid native browser report")
                 return result

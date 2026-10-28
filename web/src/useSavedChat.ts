@@ -41,7 +41,13 @@ export function useSavedChat(id: string | undefined) {
         setNotFound(false);
         failures = 0;
         // Idle reads also discover a submission whose HTTP acknowledgement was lost.
-        delay = data.active_run ? 2500 : 10000;
+        delay =
+          data.active_run ||
+          data.revisions?.some(
+            (r) => r.validation && ['queued', 'checking'].includes(r.validation.status),
+          )
+            ? 2500
+            : 10000;
       } catch (cause) {
         if (!alive || sequence !== readVersion.current) return;
         if (cause instanceof ApiError && [403, 404].includes(cause.status)) {

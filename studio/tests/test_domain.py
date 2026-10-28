@@ -494,14 +494,15 @@ class DomainTests(TestCase):
         self.assertEqual(snapshot["reserved_usd"], 0)
         self.assertEqual(snapshot["unknown_usd"], 0)
 
-    def test_unverified_needs_confirmation(self):
+    @patch('validation.service.environment_identity', return_value='test-validator')
+    def test_unverified_needs_confirmation(self, _identity):
         run = self.make_run()
         with (
             patch("generation.service.generate", return_value=response()),
             patch("generation.artifacts.materialize", return_value=artifact()),
             patch(
                 "validation.service.validate",
-                return_value={"status": "unverified", "findings": [{"message": "Check end condition"}],
+                return_value={"status": "unverified", "environment": "test-validator", "findings": [{"message": "Check end condition"}],
                               "gates": {"syntax": True, "runtime": True, "surface": True},
                               "stages": [{"stage": "syntax", "status": "passed"}],
                               "facts": [{**{k: c[k] for k in ("id", "category", "requirement", "viewport")},
@@ -1088,6 +1089,7 @@ class DomainTests(TestCase):
             process_run(str(run.id))
         run.refresh_from_db()
         self.assertEqual(run.status, "needs_attention")
+        run.candidate_revision.reports.update(identity='old-validator-policy')
         follow = create_run(self.chat, {"idempotency_key": "new-validator"}, continued_from=run)
         with (
             patch("validation.service.environment_identity", return_value="fixed-validator"),

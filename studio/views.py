@@ -236,10 +236,36 @@ def continue_view(request, ident):
 
 @api_view(["POST"])
 def recheck_view(request, ident):
-    original = owned_run(request, ident)
-    # Owner-only local validation needs no access to the model provider.
-    data = {"idempotency_key": request.data.get("idempotency_key") or str(uuid.uuid4())}
-    return Response(run_data(create_run(original.chat, data, continued_from=original, check_only=True)), status=202)
+    owned_run(request, ident)
+    raise DomainError('validation_moved', 'Проверка теперь запускается для выбранной версии игры. Обновите страницу.', 410)
+
+
+@api_view(['POST'])
+def validations_view(request, ident):
+    from .serialization import validation_data
+    from .validation_tasks import create_validation
+
+    job = create_validation(owned_revision(request, ident), request.data)
+    return Response(validation_data(job), status=202)
+
+
+@api_view(['GET', 'POST'])
+def validation_view(request, ident, cancel=False):
+    from .models import ValidationTask
+    from .serialization import validation_data
+    from .validation_tasks import cancel_validation
+
+    job = get_object_or_404(ValidationTask.objects.select_related('report'), pk=ident,
+                           revision__chat__owner=request.user, revision__chat__deleted_at__isnull=True)
+    if cancel:
+        if request.method != 'POST':
+            return Response(status=405)
+        if job.origin != 'manual':
+            raise DomainError('automatic_validation', 'Остановите создание игры, чтобы отменить автоматическую проверку.', 409)
+        job = cancel_validation(job)
+    elif request.method != 'GET':
+        return Response(status=405)
+    return Response(validation_data(job))
 
 
 @api_view(["POST"])
@@ -248,6 +274,12 @@ def confirm_view(request, ident):
         raise DomainError(
             "confirmation_required", "Подтвердите, что лично проверили отмеченные игровые условия."
         )
+    from validation.service import environment_identity
+
+    # Reject a foreign/missing run before even starting an environment probe.
+    owned_run(request, ident)
+    # Do not hold Chat/Run locks while contacting a browser service.
+    environment = environment_identity()
     with transaction.atomic():
         original = owned_run(request, ident)
         chat = Chat.objects.select_for_update().get(pk=original.chat_id)
@@ -263,7 +295,7 @@ def confirm_view(request, ident):
             or request.data.get("report_id") != report.id
         ):
             raise DomainError("confirmation_changed", "Результат проверки изменился. Откройте его заново.", 409)
-        if report.identity != check_identity(run.candidate_revision):
+        if environment.endswith(':unavailable') or report.identity != check_identity(run.candidate_revision, environment):
             raise DomainError("stale_verification", "Правила проверки изменились. Повторите проверку игры.", 409)
         if (
             chat.current_revision_id != run.base_revision_id

@@ -49,13 +49,45 @@ export interface Finding {
   [key: string]: unknown;
 }
 export interface Report {
+  current?: boolean;
   id?: number;
   status: string;
   findings: Array<Finding | string>;
-  facts: unknown[];
+  facts: Array<{ id?: string; requirement?: string; status?: string; detail?: string }>;
   stages?: Array<{ stage: string; status: string }>;
   elapsed_seconds?: number;
-  assessment?: { action: string; outstanding: string[]; corrections: unknown[] };
+  assessment?: {
+    action: string;
+    outstanding: string[];
+    corrections: unknown[];
+    gates_passed?: boolean;
+    not_run?: string[];
+    timings?: { queue_seconds: number; execution_seconds: number; total_seconds: number };
+    requirement_coverage?: {
+      scope: string;
+      uncovered: string[];
+      independent_semantic_verification: boolean;
+    };
+  };
+}
+export interface ValidationTask {
+  id: string;
+  revision_id: string;
+  artifact_hash: string;
+  origin: 'automatic' | 'manual';
+  status: string;
+  stage: string;
+  progress: {
+    completed?: number;
+    total?: number;
+    batch?: number;
+    batches?: number;
+    phase?: string;
+    check_id?: string;
+  };
+  can_cancel: boolean;
+  error?: { code?: string; message?: string };
+  report: Report | null;
 }
 export interface Revision {
   id: string;
@@ -80,6 +112,8 @@ export interface Revision {
   export_url: string;
   parent_id: string | null;
   report: Report | null;
+  can_validate?: boolean;
+  validation?: ValidationTask | null;
 }
 export type RunStatus =
   | 'queued'

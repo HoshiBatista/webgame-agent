@@ -186,6 +186,44 @@ class CheckReport(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class ValidationTask(models.Model):
+    """A read-only check of an exact revision, independent of model work."""
+
+    ACTIVE = ('queued', 'checking')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    revision = models.ForeignKey(Revision, on_delete=models.CASCADE, related_name='validations')
+    run = models.ForeignKey(Run, null=True, on_delete=models.SET_NULL, related_name='validations')
+    run_fence = models.UUIDField(null=True)
+    origin = models.CharField(max_length=16)
+    snapshot = models.JSONField()
+    status = models.CharField(max_length=32, default='queued', db_index=True)
+    stage = models.CharField(max_length=32, default='queued')
+    progress = models.JSONField(default=dict)
+    timings = models.JSONField(default=dict)
+    batches = models.JSONField(default=list)
+    report = models.OneToOneField(CheckReport, null=True, on_delete=models.SET_NULL, related_name='task')
+    error = models.JSONField(default=dict)
+    fence = models.UUIDField(null=True)
+    lease_until = models.DateTimeField(null=True)
+    dispatched_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True)
+    finished_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['revision'], condition=models.Q(status__in=['queued', 'checking']),
+                                               name='studio_one_active_validation')]
+
+
+class ValidationRequest(models.Model):
+    revision = models.ForeignKey(Revision, on_delete=models.CASCADE)
+    key = models.CharField(max_length=120)
+    task = models.ForeignKey(ValidationTask, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['revision', 'key'], name='studio_validation_request_key')]
+
+
 class Budget(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1)
     limit_usd = models.DecimalField(max_digits=14, decimal_places=6, default=Decimal("50"))

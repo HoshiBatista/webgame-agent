@@ -87,7 +87,7 @@ def request_details(run, base):
         or str(base.id) != state.get("base_revision")
         or report.status != "passed"
         or report.identity != state.get("report_identity")
-        or report.identity != check_identity(base)
+        or report.identity != check_identity(base, report.environment)
         or state.get("packet_hash") != packet_hash(report.visual_evidence)
     ):
         raise ContractError("stale_visual_evidence", "Нет актуального пакета кадров проверенной игры.")

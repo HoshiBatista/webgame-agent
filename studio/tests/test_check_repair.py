@@ -65,6 +65,7 @@ def model(request, **kwargs):
 def browser(html, checks, **kwargs):
     return {
         "status": "unverified" if len(checks) < 3 else "passed",
+        "environment": "checks-test",
         "findings": [{"code": "incomplete_checks"}] if len(checks) < 3 else [],
         "gates": {"syntax": True, "runtime": True, "surface": True},
         "stages": [{"stage": "syntax", "status": "passed"}],

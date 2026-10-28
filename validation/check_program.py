@@ -5,9 +5,33 @@ execution cost. It uses only stdlib so the isolated browser imports the same cod
 """
 
 import json
+import string
 from dataclasses import dataclass
 
 from .checks import INPUT, NUMERIC, RELATIVE, numeric, review_checks
+
+# Deliberately bounded keyboard vocabulary, shared by both providers. These are
+# physical US-layout keys supported by the pinned Playwright browser; arbitrary
+# Unicode text is not a physical key and must not become an infrastructure error.
+KEYS = set(string.ascii_letters + string.digits + string.punctuation + ' ') | {
+    'Enter', 'Tab', 'Escape', 'Space', 'Backspace', 'Delete', 'Insert', 'Home', 'End',
+    'PageUp', 'PageDown', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    'Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock', 'Pause',
+    'Backquote', 'Minus', 'Equal', 'Backslash', 'BracketLeft', 'BracketRight',
+    'Semicolon', 'Quote', 'Comma', 'Period', 'Slash',
+} | {f'Key{x}' for x in string.ascii_uppercase} | {f'Digit{x}' for x in string.digits} | {
+    f'F{x}' for x in range(1, 13)
+} | {f'{key}{side}' for key in ('Shift', 'Control', 'Alt', 'Meta') for side in ('Left', 'Right')}
+
+
+def supported_key(key, action):
+    if key in KEYS:
+        return True
+    if not isinstance(key, str) or action != 'press':
+        return False
+    parts = key.split('+')
+    return (len(parts) > 1 and parts[-1] in KEYS and len(set(parts[:-1])) == len(parts) - 1
+            and all(p in {'Shift', 'Control', 'Alt', 'Meta', 'ControlOrMeta'} for p in parts[:-1]))
 
 
 @dataclass(frozen=True)
@@ -141,8 +165,20 @@ def compile_check(check, *, timer_outcome=False):
         return result('self_report_check', 'observation.attribute', 'Проверяйте игровой эффект, а не атрибут самоотчёта.')
     for step in steps:
         kind = step.get('action')
-        if kind not in INPUT | {'checkpoint','wait_for','wait','blur','resize'}:
+        if kind not in INPUT | {'checkpoint','wait_for','wait','blur','resize', 'await_condition', 'assert'}:
             return result('invalid_check', 'steps', 'Неизвестное действие.')
+        if kind in {'await_condition', 'assert'}:
+            if kind == 'assert' and step.get('ms') != 0:
+                return result('invalid_check', 'steps.ms', 'assert проверяется сразу; для ожидания используйте await_condition.')
+            # Compile a leaf assertion with the same rules; nested programs are
+            # impossible because it has no steps. All waits count in this route.
+            leaf = {**check, 'category': 'regression', 'steps': [],
+                    'observation': step.get('observation'), 'expect': step.get('expect')}
+            issue = compile_check(leaf).issue
+            if issue:
+                return result(issue.code, 'steps.' + issue.field, issue.message)
+            if step['expect']['operator'] in RELATIVE:
+                return result('invalid_check', 'steps.expect', 'Промежуточное условие требует абсолютное сравнение; относительное оставьте финальному checkpoint.')
         if kind in {'click','tap'} and ((step.get('x') is None) != (step.get('y') is None)
                                       or not step.get('selector') and step.get('x') is None):
             return result('invalid_pointer', 'steps', 'Укажите selector или обе координаты действия.')
@@ -153,8 +189,8 @@ def compile_check(check, *, timer_outcome=False):
             not step.get('selector') or any(not numeric(v) or not 0 <= v <= 1 for v in (step.get('x'), step.get('y')))
         ):
             return result('invalid_pointer', 'steps', 'Доли координат требуют selector и x/y от 0 до 1.')
-        if kind in {'press', 'key_down', 'key_up'} and not step.get('key'):
-            return result('invalid_check', 'steps.key', 'Отсутствует клавиша.')
+        if kind in {'press', 'key_down', 'key_up'} and not supported_key(step.get('key'), kind):
+            return result('invalid_check', 'steps.key', 'Неподдерживаемая физическая клавиша. Используйте ArrowUp/Down/Left/Right, Space или клавиши латинской раскладки.')
         if kind == 'resize' and step.get('viewport') not in ('mobile', 'desktop'):
             return result('invalid_check', 'steps.viewport', 'Неизвестный размер контрольного viewport.')
     if op in NUMERIC and source in {'text', 'attribute'}:

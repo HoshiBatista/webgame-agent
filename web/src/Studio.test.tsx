@@ -1144,12 +1144,22 @@ it('keeps the source draft after a rejected edit and can recheck without submitt
         operation: 'edit',
         source_revision_id: 'draft',
         candidate_revision_id: null,
-        can_recheck: true,
         error: { code: 'test_only_change' },
       },
     ],
   });
-  vi.mocked(post).mockResolvedValue({});
+  vi.mocked(post).mockResolvedValue({
+    id: 'validation-draft',
+    revision_id: 'draft',
+    status: 'queued',
+    stage: 'queued',
+    origin: 'manual',
+    can_cancel: true,
+    progress: {},
+    timings: {},
+    error: {},
+    report: null,
+  });
   setup();
   expect(await screen.findByTitle('Игра')).toHaveAttribute(
     'src',
@@ -1158,7 +1168,8 @@ it('keeps the source draft after a rejected edit and can recheck without submitt
   fireEvent.click(screen.getByLabelText('Действия с игрой'));
   fireEvent.click(screen.getAllByRole('button', { name: 'Проверить игру' })[0]);
   await waitFor(() =>
-    expect(post).toHaveBeenCalledWith('/api/runs/failed-edit/recheck/', {
+    expect(post).toHaveBeenCalledWith('/api/revisions/draft/validations/', {
+      artifact_hash: draft.artifact_hash,
       idempotency_key: expect.any(String),
     }),
   );

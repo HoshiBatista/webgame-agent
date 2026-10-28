@@ -186,18 +186,20 @@ def test_check_only_edit_keeps_draft_visible_and_recheck_uses_no_model(chat):
     assert chat.current_revision_id is None
     serialized = chat_data(chat, detail=True)
     assert serialized["candidate_revision"]["id"] == str(source.id)
-    assert run_data(run)["can_recheck"] and not run_data(run)["can_confirm"]
+    assert serialized['candidate_revision']['can_validate'] and not run_data(run)["can_confirm"]
     assert "не изменила саму игру" in run.chat_messages.get(role="assistant").content
-    recheck = create_run(chat, {"idempotency_key": "recheck"}, continued_from=run, check_only=True)
+    from studio.validation_tasks import create_validation, process_validation
+
+    recheck = create_validation(source, {'idempotency_key': 'recheck', 'artifact_hash': source.artifact_hash})
     with (patch("generation.service.generate") as model,
           patch("validation.service.validate", return_value=PASS)):
-        process_run(str(recheck.id))
+        process_validation(str(recheck.id))
     recheck.refresh_from_db()
     model.assert_not_called()
-    assert recheck.status == "succeeded" and recheck.result_revision_id == source.id
+    assert recheck.status == 'passed' and recheck.report.revision_id == source.id
     source.refresh_from_db()
     assert source.checks == first.candidate_revision.checks
-    assert not recheck.invocations.exists()
+    assert not source.accepted and recheck.run_id is None
 
 
 @pytest.mark.django_db

@@ -55,7 +55,7 @@ Preserve every existing check ID, exact requirement text and category. Change st
 
 # Kept as the complete default-create prompt for callers recording its fingerprint.
 CHECK_V4_PROMPT = """
-v4 checks: For pure numeric DOM use text_number/attribute_number; labels/units are invalid. Match value types. For changed/increased/decreased use checkpoint after setup, then real input. End async scenarios with wait_for(ms<=3000) to poll the expectation; total waits <=10000ms.
+v4 checks: Match types. Numeric DOM uses text_number/attribute_number, no labels. checkpoint follows setup. wait_for<=3000ms: unchanged throughout (~25ms samples), others eventually. Total waits<=10000ms. await_condition(observation,expect,ms) and assert(...,ms=0) use absolute comparisons. Visible text; physical US keys.
 """
 SOURCE_V5_PROMPT = """
 v5 source admission: Return executable implementation, never empty files, TODO-only scripts or HTML placeholders. Missing implementation stays CREATE in the same total call budget; no candidate/base exists yet.

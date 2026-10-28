@@ -12,7 +12,7 @@ def eligible(run, base):
     from .tasks import check_identity
 
     report = base.reports.order_by('-id').first()
-    return bool(report and report.identity == check_identity(base)
+    return bool(report and report.identity == check_identity(base, report.environment)
                 and report.assessment.get('gates_passed') is True
                 and report.assessment.get('action') == 'review')
 

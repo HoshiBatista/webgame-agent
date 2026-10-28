@@ -7,6 +7,7 @@ import socket
 import struct
 import subprocess
 import time
+import uuid
 
 from .contracts import browser_watchdog_seconds, implementation_hash, suite_findings
 
@@ -45,18 +46,48 @@ def environment_identity():
         return f"{ENVIRONMENT}:{code_hash}:unavailable"
 
 
-def _socket_validate(path, payload, timeout):
-    from .protocol import receive
+def _socket_validate(path, payload, timeout, *, cancelled=None, progress=None):
+    from .protocol import ValidationCancelled
 
     encoded = json.dumps(payload).encode()
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
-        connection.settimeout(timeout)
+        is_job = bool(payload.get('html'))
+        deadline = time.monotonic() + (1205 if is_job else timeout)
+        connection.settimeout(0.2)
         connection.connect(path)
         connection.sendall(struct.pack("!I", len(encoded)) + encoded)
-        size = struct.unpack("!I", receive(connection, 4))[0]
-        if not 0 < size <= 4_000_000:
-            raise ValueError("invalid response size")
-        return json.loads(receive(connection, size))
+
+        def read(size):
+            value = bytearray()
+            while len(value) < size:
+                if cancelled and cancelled():
+                    _socket_validate(path, {'cancel': True, 'job_id': payload['job_id']}, 2)
+                    raise ValidationCancelled()
+                if time.monotonic() >= deadline:
+                    if is_job:
+                        _socket_validate(path, {'cancel': True, 'job_id': payload['job_id']}, 2)
+                    raise TimeoutError('validator transport deadline')
+                try:
+                    part = connection.recv(size - len(value))
+                except socket.timeout:
+                    continue
+                if not part:
+                    raise ConnectionError('incomplete validation message')
+                value.extend(part)
+            return bytes(value)
+
+        while True:
+            size = struct.unpack('!I', read(4))[0]
+            if not 0 < size <= 4_000_000:
+                raise ValueError('invalid response size')
+            result = json.loads(read(size))
+            if isinstance(result, dict) and result.get('event') in {'queued', 'started', 'scenario'}:
+                if result['event'] == 'started':
+                    deadline = time.monotonic() + timeout
+                if progress:
+                    progress(result)
+                continue
+            return result
 
 
 def _failure(message, artifact_hash, started):
@@ -73,7 +104,7 @@ def _failure(message, artifact_hash, started):
 def _validated_report(report, checks, artifact_hash, started, *, contract=None, operator_criteria=None):
     if not isinstance(report, dict) or report.get("artifact_hash") != artifact_hash:
         raise ValueError("artifact hash mismatch")
-    if report.get("status") not in {"passed", "failed", "unverified", "infrastructure_error"}:
+    if report.get("status") not in {"passed", "failed", "unverified", "infrastructure_error", "cancelled"}:
         raise ValueError("invalid validation status")
     if not all(
         isinstance(report.get(name), list) and all(isinstance(value, dict) for value in report[name])
@@ -88,11 +119,11 @@ def _validated_report(report, checks, artifact_hash, started, *, contract=None, 
             raise ValueError('coverage does not match independent criteria')
         if report['status'] == 'passed' and expected_coverage['uncovered']:
             raise ValueError('passed report lacks independent requirements')
-    if report["status"] != "infrastructure_error":
+    if report["status"] not in {"infrastructure_error", "cancelled"}:
         environment = report.get("environment")
         if not isinstance(environment, str) or not environment.startswith(
             f"{ENVIRONMENT}:{implementation_hash()}:"
-        ):
+        ) or environment.endswith(':unavailable'):
             raise ValueError("validator implementation is stale; rebuild the browser image")
         if 'artifact_evidence' not in report:
             raise ValueError('missing mandatory artifact gate receipt')
@@ -140,12 +171,17 @@ def _validated_report(report, checks, artifact_hash, started, *, contract=None, 
     return report
 
 
-def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None, test_profile=None, operator_criteria=(), capture_visual=False) -> dict:
+def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None, test_profile=None, operator_criteria=(), capture_visual=False,
+             job_id=None, cancelled=None, progress=None) -> dict:
+    from .protocol import ValidationCancelled
     started = time.monotonic()
     if hashlib.sha256(html.encode()).hexdigest() != artifact_hash:
         return _failure("Хеш переданного HTML не совпадает с кандидатом.", artifact_hash, started)
     container = os.environ.get("VALIDATOR_CONTAINER", "gf-mini-validator")
-    payload: dict = {"html": html, "checks": checks, "artifact_hash": artifact_hash}
+    payload: dict = {"html": html, "checks": checks, "artifact_hash": artifact_hash,
+                     "job_id": str(job_id or uuid.uuid4()), "validator_hash": implementation_hash()}
+    if progress:
+        payload['progress'] = True
     from .criteria import OperatorCriterion
 
     if not isinstance(operator_criteria, tuple) or any(type(c) is not OperatorCriterion for c in operator_criteria):
@@ -159,15 +195,20 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None
     if test_profile:
         payload["test_profile"] = test_profile
     try:
+        if cancelled and cancelled():
+            raise ValidationCancelled()
         max_duration = browser_watchdog_seconds(checks, payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False)) + 5
         if os.environ.get("VALIDATOR_BACKEND", "docker") == "native":
             from .native import execute
 
-            return _validated_report(execute(payload), checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
+            options = {'cancelled': cancelled, 'progress': progress} if cancelled or progress else {}
+            report = execute(payload, **options)
+            return _validated_report(report, checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
         if os.environ.get("VALIDATOR_BACKEND", "docker") != "docker":
             raise ValueError("unknown validator backend")
         if socket_path := os.environ.get("VALIDATOR_SOCKET"):
-            report = _socket_validate(socket_path, payload, max_duration)
+            options = {'cancelled': cancelled, 'progress': progress} if cancelled or progress else {}
+            report = _socket_validate(socket_path, payload, max_duration, **options)
             return _validated_report(report, checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
         inspected = subprocess.run(
             ["docker", "inspect", container],
@@ -190,6 +231,12 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None
         ):
             return _failure("Контейнер проверки не соответствует профилю изоляции.", artifact_hash, started)
         # The watchdog bounds broken browser infrastructure, not model generation.
+        if cancelled or progress:
+            if progress:
+                progress({'event': 'started', 'queue_seconds': 0})
+            # Cancellation of a docker exec client alone would orphan the browser.
+            # Managed jobs require the daemon's dedicated cancellation protocol.
+            raise ValueError('managed validation requires the private validator socket or native sandbox')
         result = subprocess.run(
             ["docker", "exec", "-i", container, "python", "-m", "validation.daemon", "--once"],
             input=json.dumps(payload),
@@ -200,5 +247,8 @@ def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None
         )
         report = json.loads(result.stdout)
         return _validated_report(report, checks, artifact_hash, started, contract=contract, operator_criteria=payload.get("operator_criteria"))
+    except ValidationCancelled:
+        return {'status': 'cancelled', 'artifact_hash': artifact_hash, 'facts': [], 'findings': [],
+                'elapsed_seconds': round(time.monotonic() - started, 3)}
     except (OSError, ImportError, subprocess.SubprocessError, ValueError, KeyError, IndexError, TypeError) as exc:
         return _failure(f"Изолированный браузер недоступен ({type(exc).__name__}).", artifact_hash, started)

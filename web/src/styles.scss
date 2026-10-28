@@ -4703,3 +4703,25 @@ svg {
     padding: 18px;
   }
 }
+
+.validation-report {
+  display: grid;
+  gap: 14px;
+  overflow-wrap: anywhere;
+  p,
+  ul {
+    margin: 0;
+  }
+  ul {
+    padding-inline-start: 22px;
+  }
+  li + li {
+    margin-top: 8px;
+  }
+  summary {
+    cursor: pointer;
+  }
+  details[open] summary {
+    margin-bottom: 12px;
+  }
+}

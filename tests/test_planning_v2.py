@@ -81,7 +81,7 @@ def test_manifest_is_a_copy_and_is_not_an_independent_semantic_oracle():
     edit = manifest(request["prompt"], previous=frozen, amendment="Только два попадания")
     next_edit = manifest(request["prompt"], previous=edit, amendment="Цвет зелёный")
     assert next_edit["amendments"] == ["Только два попадания", "Цвет зелёный"]
-    assert next_edit["requirements"] == [] and next_edit["request"] == request["prompt"]
+    assert next_edit["requirements"] == frozen['requirements'] and next_edit["request"] == request["prompt"]
 
 
 def test_well_formed_semantic_lie_is_not_claimed_to_be_detected_by_schema():

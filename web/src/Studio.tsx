@@ -32,6 +32,7 @@ import ModelSelector, { selectedProfile } from './ModelSelector';
 import TemplatePicker from './TemplatePicker';
 import { appendTemplate } from './textLimits';
 import AudienceSelector from './AudienceSelector';
+import ValidationControls from './ValidationControls';
 const feedbackReasons = [
   'Более понятное управление',
   'Лучше визуальное оформление',
@@ -345,9 +346,8 @@ export default function Studio() {
     }
   }
   const runActionKey = useRef({ run: '', action: '', key: '' });
-  async function performRunAction(action: 'recheck' | 'continue') {
-    if (!latestRun?.[action === 'recheck' ? 'can_recheck' : 'can_continue'] || busy || activeRun)
-      return;
+  async function performRunAction(action: 'continue') {
+    if (!latestRun?.can_continue || busy || activeRun) return;
     const startedView = view.current;
     if (runActionKey.current.run !== latestRun.id || runActionKey.current.action !== action)
       runActionKey.current = { run: latestRun.id, action, key: newKey() };
@@ -622,17 +622,7 @@ export default function Studio() {
           </select>
         </div>
         <div className="preview-actions">
-          {latestRun?.can_recheck && revision?.id === defaultRevision?.id && (
-            <button
-              type="button"
-              className="button button-small button-outline"
-              disabled={busy || !!activeRun}
-              onClick={() => performRunAction('recheck')}
-              title="Проверить сохранённую игру без обращения к модели"
-            >
-              Проверить игру
-            </button>
-          )}
+          {revision && <ValidationControls key={revision.id} revision={revision} reload={load} />}
           {inMenu && revision && (
             <button
               type="button"

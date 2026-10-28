@@ -49,7 +49,7 @@ def repairable_surface_gap(base, report):
 
     if not report or report.status != "unverified" or not any(
         f.get("code") == "surface_not_observed" for f in report.findings
-    ) or report.identity != check_identity(base) or report.assessment.get("validator_hash") != implementation_hash():
+    ) or report.identity != check_identity(base, report.environment) or report.assessment.get("validator_hash") != implementation_hash():
         return False
     evidence = report.assessment.get("artifact_evidence")
     if not valid(evidence, base.artifact_hash, report.environment):
@@ -82,7 +82,7 @@ def code_repair_basis(run, base):
     if base.accepted or contract_version(run) != CONTRACT_VERSION:
         return None
     report = base.reports.order_by("-id").first()
-    if not report or report.identity != check_identity(base) or (
+    if not report or report.identity != check_identity(base, report.environment) or (
         report.assessment.get("validator_hash") != implementation_hash()
     ):
         return None

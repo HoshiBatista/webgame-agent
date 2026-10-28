@@ -34,7 +34,7 @@ def start(chat, key="create"):
 
 
 def uncertain(gates=True):
-    return {"status": "unverified", "findings": [{"code": "invalid_check", "check_id": "outcome",
+    return {"status": "unverified", "environment": "completion-test", "findings": [{"code": "invalid_check", "check_id": "outcome",
                                                    "message": "Неверный selector наблюдения"}],
             "gates": {"syntax": gates, "runtime": gates, "surface": gates},
             "stages": [{"stage": "syntax", "status": "passed"}],
@@ -44,7 +44,7 @@ def uncertain(gates=True):
                       for c in fixture_response()["checks"]]}
 
 
-PASS = {"status": "passed", "findings": [], "facts": [], "gates": {"syntax": True, "runtime": True, "surface": True}}
+PASS = {"status": "passed", "environment": "completion-test", "findings": [], "facts": [], "gates": {"syntax": True, "runtime": True, "surface": True}}
 
 
 @pytest.mark.django_db
@@ -131,21 +131,22 @@ def test_recheck_uses_same_candidate_without_any_model_calls_and_is_owner_only(m
         process_run(str(run.id))
     run.refresh_from_db()
     before = run.candidate_revision
-    response = client.post(f"/api/runs/{run.id}/recheck/", {"idempotency_key": "recheck"}, content_type="application/json")
+    response = client.post(f"/api/revisions/{before.id}/validations/", {"idempotency_key": "recheck", "artifact_hash": before.artifact_hash}, content_type="application/json")
     assert response.status_code == 202, response.content
-    again = client.post(f"/api/runs/{run.id}/recheck/", {"idempotency_key": "recheck"}, content_type="application/json")
+    again = client.post(f"/api/revisions/{before.id}/validations/", {"idempotency_key": "recheck", "artifact_hash": before.artifact_hash}, content_type="application/json")
     assert again.status_code == 202 and again.json()["id"] == response.json()["id"]
     with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=PASS) as validator:
-        process_run(response.json()["id"])
+        from studio.validation_tasks import process_validation
+        process_validation(response.json()["id"])
     model.assert_not_called()
     validator.assert_called_once()
     before.refresh_from_db()
-    assert before.accepted and before.verification == "automatic"
+    assert not before.accepted and before.verification == "none"
     assert before.reports.count() == 2 and chat.revisions.count() == 1
     assert run.invocations.count() == 2
     stranger = User.objects.create_user(username="stranger")
     client.force_login(stranger)
-    assert client.post(f"/api/runs/{run.id}/recheck/", {}, content_type="application/json").status_code == 404
+    assert client.post(f"/api/revisions/{before.id}/validations/", {}, content_type="application/json").status_code == 404
 
 
 @pytest.mark.django_db
@@ -163,15 +164,17 @@ def test_recheck_does_not_materialize_a_pending_reply_from_the_previous_run(make
     pending = fake_generate(request, on_event=lambda _: None, is_cancelled=lambda: False)
     invocation = Invocation.objects.create(run=run, attempt=run.attempts + 1, state="returned", request=request,
                                            response=pending["response"])
-    reply = client.post(f"/api/runs/{run.id}/recheck/", {}, content_type="application/json")
+    reply = client.post(f"/api/revisions/{candidate.id}/validations/",
+                        {"idempotency_key": "pending", "artifact_hash": candidate.artifact_hash}, content_type="application/json")
     assert reply.status_code == 202
     with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=PASS):
-        process_run(reply.json()["id"])
+        from studio.validation_tasks import process_validation
+        process_validation(reply.json()["id"])
     model.assert_not_called()
     invocation.refresh_from_db()
     assert invocation.state == "returned" and invocation.revision_id is None
     chat.refresh_from_db()
-    assert chat.current_revision_id == candidate.id and chat.revisions.count() == 1
+    assert chat.current_revision_id is None and chat.revisions.count() == 1
 
 
 @pytest.mark.django_db
@@ -274,12 +277,18 @@ def unknown_candidate(chat):
 
 
 def recheck(client, run, result, key):
-    response = client.post(f"/api/runs/{run.id}/recheck/", {"idempotency_key": key}, content_type="application/json")
+    from studio.validation_tasks import process_validation
+
+    revision = run.candidate_revision
+    response = client.post(f"/api/revisions/{revision.id}/validations/",
+                           {"idempotency_key": key, "artifact_hash": revision.artifact_hash},
+                           content_type="application/json")
     assert response.status_code == 202, response.content
     with patch("generation.service.generate") as model, patch("validation.service.validate", return_value=result):
-        process_run(response.json()["id"])
+        process_validation(response.json()["id"])
     model.assert_not_called()
-    return Run.objects.get(pk=response.json()["id"])
+    run.refresh_from_db()
+    return run
 
 
 @pytest.mark.django_db
@@ -289,7 +298,7 @@ def test_repeated_rechecks_preserve_unknown_consent_in_api_and_actions(maker):
     following = recheck(client, original, failed, "recheck-1")
     following = recheck(client, following, failed, "recheck-2")
     data = client.get(f"/api/runs/{following.id}/").json()
-    assert not data["can_continue"] and data["can_retry_unknown"] and data["can_recheck"]
+    assert not data["can_continue"] and data["can_retry_unknown"]
     path = f"/api/runs/{following.id}/continue/"
     for consent in (None, False, "true"):
         response = client.post(path, {"accept_unknown_cost": consent}, content_type="application/json")
@@ -367,12 +376,14 @@ def test_rechecks_do_not_duplicate_an_ancestor_still_in_flight(maker, settings, 
     # Exercise admission independently of the usual single-provider capacity guard.
     settings.GAMEFORGE_PROVIDER_CONCURRENCY = 2
     following = recheck(client, original, failed, "check-in-flight")
-    retry = create_run(chat, {"idempotency_key": "in-flight-retry"}, continued_from=following)
-    with patch("generation.service.generate") as model:
-        process_run(str(retry.id))
-    model.assert_not_called()
-    retry.refresh_from_db()
-    assert retry.error["code"] == "outcome_pending" and not retry.invocations.exists()
+    from studio.services import DomainError
+
+    # A read-only check leaves the original unknown Run intact. Admission now
+    # rejects continuation before it could reserve or duplicate an in-flight call.
+    with pytest.raises(DomainError) as error:
+        create_run(chat, {"idempotency_key": "in-flight-retry"}, continued_from=following)
+    assert error.value.code == 'cannot_continue'
+    assert Run.objects.filter(chat=chat).count() == 1
 
 
 @pytest.mark.django_db

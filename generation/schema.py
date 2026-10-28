@@ -153,6 +153,10 @@ CHECK_SCHEMA["properties"]["observation"]["anyOf"].extend([
 CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
     obj({"action": {"enum": ["checkpoint"]}}),
     obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
+    obj({"action": {"enum": ["await_condition", "assert"]},
+         "ms": {"type": "integer", "minimum": 0, "maximum": 3000},
+         "observation": CHECK_SCHEMA['properties']['observation'],
+         "expect": CHECK_SCHEMA['properties']['expect']}),
 ])
 CHECK_SCHEMA["properties"]["category"]["enum"].append("restart")
 APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
@@ -289,14 +293,17 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
 def validate_checks(checks, *, require_complete=True):
     if not isinstance(checks, list):
         raise ContractError("invalid_check", "Набор сценариев должен быть списком.")
-    if len(checks) > 12:
+    from validation.suites import MAX_SAVED_CHECKS
+
+    if len(checks) > MAX_SAVED_CHECKS:
         raise ContractError(
-            "too_many_checks", "Итоговый набор мини-игры должен содержать не более 12 проверок."
+            "too_many_checks", "Набор накопленных сценариев превышает 48. Требуется явный пересмотр условий."
         )
     from validation.check_program import envelope
 
     try:
-        envelope(checks)
+        for offset in range(0, len(checks), 12):
+            envelope(checks[offset:offset + 12])
     except (ValueError, TypeError) as exc:
         raise ContractError("invalid_check", "Набор сценариев превышает ограничения размера или структуры.") from exc
     ids = set()

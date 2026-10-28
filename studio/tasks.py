@@ -15,7 +15,7 @@ from generation.service import DURABLE_PROVIDERS, PROVIDERS
 
 from .continuations import returned_response
 from .feedback_tasks import dispatch_feedback_jobs, process_feedback  # noqa: F401 -- register Celery task
-from .models import Budget, Chat, CheckReport, Invocation, Outbox, Revision, Run
+from .models import Budget, Chat, Invocation, Outbox, Revision, Run
 from .services import (
     DomainError,
     event,
@@ -24,6 +24,7 @@ from .services import (
     reserve_invocation,
     settle_invocation,
 )
+from .validation_tasks import dispatch_validations, process_validation  # noqa: F401 -- register Celery task
 
 
 def dispatch_run(run_id):
@@ -62,6 +63,7 @@ def dispatch_outbox():
     ):
         dispatch_run(run_id)
     dispatch_feedback_jobs()
+    dispatch_validations()
 
 
 @shared_task(acks_late=False)
@@ -417,7 +419,7 @@ def request_for(run, base, findings, last_attempt_error=None):
         report = base.reports.order_by("-id").first()
         if report and report.findings == findings and report.status in {"failed", "unverified"}:
             request["validation_evidence"] = repair_evidence({"status": report.status, "facts": report.facts})
-            if run.generation_strategy == "pro" and report.identity == check_identity(base):
+            if run.generation_strategy == "pro" and report.identity == check_identity(base, report.environment):
                 request["validation_evidence"]["report_id"] = report.id
                 request["validation_evidence"]["artifact_hash"] = base.artifact_hash
                 request["validation_evidence"]["gates_passed"] = report.assessment.get("gates_passed")
@@ -477,16 +479,18 @@ def record_exception(run, exc, stage):
     logging.getLogger(__name__).error("run_failed run=%s stage=%s type=%s", run.id, stage, type(exc).__name__)
 
 
-def check_identity(revision):
+def check_identity(revision, environment=None):
     from generation.source_map import VERSION
     from validation import service
     from validation.checks import VERSION as CHECK_VERSION
     from validation.checks import review_checks
+    from validation.contracts import implementation_hash
 
-    environment = service.environment_identity()
+    environment = environment if environment is not None else service.environment_identity()
     checks, _ = review_checks(revision.checks)
     return fingerprint(
         {"artifact": revision.artifact_hash, "checks": checks, "validator": environment,
+         "validator_code": implementation_hash(),
          "source_map": VERSION, "check_policy": CHECK_VERSION,
          "compact_manifest": revision.compact_manifest,
          "requirement_manifest": revision.requirement_manifest,
@@ -594,9 +598,8 @@ def mark_invocation_sent(run, inv):
 
 def _execute(run, lease, generate, materialize, validate):
     from generation.errors import ContractError, GenerationPending
-    from validation.checks import review_checks
 
-    from .acceptance import assess, best_failed_candidate, complete_requirements, repeated_failure
+    from .acceptance import best_failed_candidate, complete_requirements, repeated_failure
 
     base = run.candidate_revision or run.source_revision or run.base_revision
     findings, last_attempt_error = repair_state(run, base)
@@ -619,7 +622,7 @@ def _execute(run, lease, generate, materialize, validate):
     )
     if run.candidate_revision and run.continued_from:
         previous_report = run.candidate_revision.reports.order_by("-id").first()
-        if previous_report and previous_report.identity != check_identity(run.candidate_revision):
+        if previous_report and previous_report.identity != check_identity(run.candidate_revision, previous_report.environment):
             # A validator fix invalidates evidence, not game code; recheck before another paid edit.
             pending = run.candidate_revision
         if run.completion_policy >= 2 and (
@@ -845,108 +848,17 @@ def _execute(run, lease, generate, materialize, validate):
                 finish_run(run.id, run.fence, "needs_attention", "Старый игровой формат больше не поддерживается.",
                            error={"code":"unsupported_game", "message":"Создайте новую игру."})
                 return
-            checks, corrections = review_checks(pending.checks)
-            identity = check_identity(pending)
-            report = (
-                pending.reports.filter(identity=identity)
-                .filter(**({"validation_run": run} if run.continued_from and run.completion_policy >= 2 else {}))
-                .exclude(status="infrastructure_error")
-                .order_by("-id")
-                .first()
-            )
+            from .validation_tasks import automatic_validation
+
+            Run.objects.filter(pk=run.id, fence=run.fence, status__in=Run.ACTIVE).update(
+                status='checking', stage='checking', message='Проверяем сохранённую версию игры.')
+            report = automatic_validation(run, pending, validate=validate, cancelled=lease.cancelled)
             if report is None:
-                Run.objects.filter(pk=run.id, fence=run.fence).update(
-                    status="checking",
-                    stage="checking",
-                    message="Проверяем синтаксис, затем управление и игровые условия.",
-                )
-                cached = None if pending.checks_review_required or run.visual_review_enabled else CheckReport.objects.filter(identity=identity, status="passed").first()
-                if cached:
-                    result = {
-                        "status": cached.status,
-                        "findings": cached.findings,
-                        "facts": cached.facts,
-                        "stages": cached.stages,
-                        "elapsed_seconds": 0,
-                        "environment": cached.environment,
-                        "coverage": cached.assessment.get("coverage"),
-                    }
-                    if cached.assessment.get("artifact_evidence"):
-                        from validation.evidence import gates as evidence_gates
-
-                        result["artifact_evidence"] = cached.assessment["artifact_evidence"]
-                        result["artifact_hash"] = pending.artifact_hash
-                        result["gates"] = evidence_gates(result["artifact_evidence"])
-                else:
-                    try:
-                        validation_options = {"capture_visual": True} if run.visual_review_enabled else {}
-                        if pending.generation_profile == "compact":
-                            from generation.compact import validation_contract
-
-                            validation_options["contract"] = validation_contract(pending.compact_manifest, pending.files)
-                        # An edit can inherit duplicate promises and add scenarios.
-                        # Retain the complete suite, but bound browser work to its
-                        # normal envelope. A partial run can only prove artifact gates.
-                        result = validate(pending.html, checks[:12], artifact_hash=pending.artifact_hash, **validation_options)
-                        if len(checks) > 12:
-                            if result["status"] == "passed":
-                                result["status"] = "unverified"
-                            result["findings"] = [*result.get("findings", []), {
-                                "code": "incomplete_checks", "message": "Набор проверок превышает лимит; исходники сохранены, нужны отдельные сценарии.",
-                            }]
-                    except Exception as exc:
-                        record_exception(run, exc, "validation")
-                        result = {
-                            "status": "infrastructure_error",
-                            "findings": [
-                                {"code": "validator_unavailable", "message": "Среда проверки недоступна."}
-                            ],
-                        }
-                from generation.source_map import locate_findings
-
-                result["findings"] = locate_findings(
-                    result.get("findings", []), files=pending.files, html=pending.html,
-                )
-                if pending.checks_review_required and result["status"] == "passed":
-                    result = {**result, "status": "unverified", "findings": [
-                        *result.get("findings", []), {"code": "check_suite_revised",
-                         "message": "Исходники сохранены; модель изменила сценарии. Подтвердите исходные игровые условия вручную."},
-                    ]}
-                from generation.requirements import coverage
-
-                promises = coverage(checks, pending.requirement_manifest)
-                result["requirement_coverage"] = promises
-                if promises["uncovered"]:
-                    if result["status"] == "passed":
-                        result["status"] = "unverified"
-                    result["findings"] = [*result.get("findings", []), {
-                        "code": "requirement_manifest_mismatch", "requirements": promises["uncovered"],
-                        "message": "Сценарии не покрывают неизменяемые обещания замысла.",
-                    }]
-                assessment = assess(result, checks, corrections)
-                if assessment["action"] == "review" and result["status"] == "failed":
-                    result["status"] = "unverified"
-                with transaction.atomic():
-                    Chat.objects.select_for_update().get(pk=run.chat_id)
-                    current = Run.objects.select_for_update().get(pk=run.id)
-                    if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
-                        return
-                    report = CheckReport.objects.create(
-                        validation_run=run,
-                        revision=pending,
-                        status=result["status"],
-                        findings=result.get("findings", []),
-                        facts=result.get("facts", []),
-                        stages=result.get("stages", []),
-                        elapsed_seconds=result.get("elapsed_seconds", 0),
-                        environment=result.get("environment", {}),
-                        visual_evidence=result.get("visual_evidence") or {},
-                        screenshot_base64=result.get("screenshot_base64") or "",
-                        screenshot_mime=result.get("screenshot_mime", "image/png"),
-                        identity=identity,
-                        checks=checks,
-                        assessment=assessment,
-                    )
+                if not lease.cancelled():
+                    finish_run(run.id, run.fence, "failed", "Проверка прервалась. Игра сохранена; можно проверить её заново.",
+                               error={"code": "validator_unavailable", "message": "Среда проверки недоступна."})
+                return
+            checks = report.checks
             if lease.cancelled():
                 return
             visual_patch_valid = report.status == "passed"

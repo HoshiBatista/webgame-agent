@@ -417,7 +417,7 @@ export function PhonePreview({
         <div className="preview-title">
           <span>
             <i className={`status-dot ${url ? 'ready' : ''}`} />
-            {badge ?? (url ? 'Можно играть' : 'Место для вашей идеи')}
+            {badge ?? (url ? 'Можно открыть игру' : 'Место для вашей идеи')}
           </span>
           <div>
             {onMutedChange && (

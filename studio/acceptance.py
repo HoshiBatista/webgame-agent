@@ -57,22 +57,26 @@ def confirmation_report(run):
     """Fast evidence gate for serialization; the POST also checks the live identity."""
     if run.status in (*run.ACTIVE, "cancelled", "unknown", "succeeded") or not run.candidate_revision_id:
         return None
-    from .models import Chat
+    from .models import Chat, ValidationTask
 
     if (not Chat.objects.filter(pk=run.chat_id, current_revision_id=run.base_revision_id).exists()
-            or run.chat.runs.filter(status__in=run.ACTIVE).exists()):
+            or run.chat.runs.filter(status__in=run.ACTIVE).exists()
+            or run.candidate_revision.validations.filter(status__in=ValidationTask.ACTIVE).exists()):
         return None
     report = run.candidate_revision.reports.order_by("-id").first()
     if report is None:
         return None
     evidence = report.assessment
+    checked_manually = (report.status == 'passed' and evidence.get('action') == 'accept'
+                        and ValidationTask.objects.filter(report=report, origin='manual').exists())
     checks, _ = review_checks(run.candidate_revision.checks)
     if (
         evidence.get("version") != VERSION or evidence.get("validator_hash") != implementation_hash()
-        or evidence.get("action") != "review" or evidence.get("gates_passed") is not True
+        or (evidence.get("action") != "review" and not checked_manually) or evidence.get("gates_passed") is not True
         or not complete_requirements(checks) or not evidence.get("requirements")
         or evidence.get("requirement_coverage", {}).get("uncovered")
-        or report.checks != checks or report.status != "unverified"
+        or evidence.get('not_run')
+        or report.checks != checks or (report.status != "unverified" and not checked_manually)
     ):
         return None
     return report

@@ -4,7 +4,7 @@ import math
 import re
 from copy import deepcopy
 
-VERSION = 3
+VERSION = 4
 RELATIVE = {"changed", "unchanged", "increased", "decreased"}
 NUMERIC = {"increased", "decreased"}
 INPUT = {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
@@ -37,8 +37,17 @@ def review_checks(checks):
     a separate suite snapshot; the original revision and requirement stay intact.
     Ambiguous labels are rejected by the browser, never parsed heuristically.
     """
-    result, corrections = deepcopy(checks), []
+    result = deepcopy(checks)
+    corrections: list[dict] = []
     for check in result:
+        for index, step in enumerate(check.get('steps', [])):
+            if step.get('action') in {'assert', 'await_condition'}:
+                if not isinstance(step.get('observation'), dict) or not isinstance(step.get('expect'), dict):
+                    continue
+                leaf, changes = review_checks([{'observation': step.get('observation', {}),
+                                                'expect': step.get('expect', {})}])
+                step['observation'] = leaf[0]['observation']
+                corrections.extend({**change, 'check_id': check.get('id'), 'step_index': index} for change in changes)
         observation, expect = check.get("observation", {}), check.get("expect", {})
         source = observation.get("source")
         if source in {"text", "attribute"} and (

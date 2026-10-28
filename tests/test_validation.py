@@ -224,7 +224,7 @@ def test_check_geometry_and_protocol_are_part_of_acceptance_identity(tmp_path):
     import validation.contracts as contracts
 
     directory = Path(contracts.__file__).parent
-    for name in ("runner.py", "check_program.py", "criteria.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py", "visual.py"):
+    for name in ("runner.py", "check_program.py", "criteria.py", "contracts.py", "protocol.py", "syntax.py", "checks.py", "evidence.py", "diagnostics.py", "visual.py", "suites.py", "service.py", "daemon.py", "native.py"):
         (tmp_path / name).write_bytes((directory / name).read_bytes())
     assert implementation_hash(tmp_path) == implementation_hash()
     original = implementation_hash(tmp_path)

@@ -14,6 +14,37 @@ def preview_url(revision):
     return f"{settings.GAMEFORGE_PREVIEW_ORIGIN}/preview/{token}/"
 
 
+def report_data(report):
+    if not report:
+        return None
+    from generation.requirements import digest
+    from validation.checks import VERSION, review_checks
+    from validation.contracts import implementation_hash
+
+    current = (report.assessment.get('validator_hash') == implementation_hash()
+               and report.assessment.get('version') == VERSION
+               and report.checks == review_checks(report.revision.checks)[0]
+               and report.assessment.get('requirement_coverage', {}).get('manifest_hash') == digest(report.revision.requirement_manifest))
+    return {'id': report.id, 'status': report.status, 'findings': report.findings, 'facts': report.facts,
+            'stages': report.stages, 'elapsed_seconds': report.elapsed_seconds,
+            'assessment': report.assessment, 'current': current, 'created_at': report.created_at.isoformat()}
+
+
+def validation_data(job):
+    from .models import ValidationTask
+
+    if not job:
+        return None
+    return {'id': str(job.id), 'revision_id': str(job.revision_id), 'origin': job.origin,
+            'artifact_hash': job.snapshot['artifact_hash'], 'status': job.status, 'stage': job.stage,
+            'progress': job.progress, 'timings': job.timings, 'error': job.error,
+            'created_at': job.created_at.isoformat(),
+            'started_at': job.started_at.isoformat() if job.started_at else None,
+            'finished_at': job.finished_at.isoformat() if job.finished_at else None,
+            'can_cancel': job.origin == 'manual' and job.status in ValidationTask.ACTIVE,
+            'report': report_data(job.report)}
+
+
 def revision_data(revision):
     if revision is None:
         return None
@@ -45,17 +76,9 @@ def revision_data(revision):
         "preview_url": preview_url(revision),
         "export_url": f"/api/revisions/{revision.id}/export/",
         "parent_id": str(revision.parent_id) if revision.parent_id else None,
-        "report": {
-            "id": report.id,
-            "status": report.status,
-            "findings": report.findings,
-            "facts": report.facts,
-            "stages": report.stages,
-            "elapsed_seconds": report.elapsed_seconds,
-            "assessment": report.assessment,
-        }
-        if report
-        else None,
+        "can_validate": revision.pipeline_version == 9,
+        "validation": validation_data(revision.validations.select_related('report').order_by('-created_at').first()),
+        "report": report_data(report),
     }
 
 
@@ -113,11 +136,8 @@ def run_data(run, budget=None):
         "can_confirm": confirmation is not None,
         "confirmation": {"artifact_hash": run.candidate_revision.artifact_hash,
                          "report_id": confirmation.id,
-                         "requirements": confirmation.assessment["outstanding"]} if confirmation else None,
-        "can_recheck": bool(run.candidate_revision_id or (
-            (run.error or {}).get("code") == "test_only_change" and (run.source_revision_id or run.base_revision_id)
-        )) and run.status not in (*run.ACTIVE, "succeeded")
-        and run.chat.current_revision_id == run.base_revision_id,
+                         "requirements": confirmation.assessment["outstanding"] or
+                             [c['requirement'] for c in confirmation.checks]} if confirmation else None,
         "attempts": run.attempts,
         "max_repair_attempts": run.max_repair_attempts,
         "max_model_calls": run.max_model_calls,

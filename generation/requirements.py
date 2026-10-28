@@ -19,7 +19,9 @@ def manifest(request, plan=None, *, previous=None, amendment=""):
         "request": request,
         "request_hash": digest(request),
         "scope": "planned_proposals" if plan else "user_request_unmapped",
-        "requirements": deepcopy((plan or {}).get("requirements", [])),
+        # An ordinary edit amends the request, not its frozen promises. A model
+        # may not silently erase those promises by omitting a new plan.
+        "requirements": deepcopy((plan if plan is not None else previous or {}).get("requirements", [])),
     }
     if amendment:
         result.update(

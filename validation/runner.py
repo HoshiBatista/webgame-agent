@@ -164,6 +164,8 @@ def observe(frame, observation, operator):
     if locator.count() != 1:
         raise InvalidCheck(f"Наблюдение {selector!r} должно однозначно находить один элемент.")
     if source in {"text", "text_number"}:
+        if not locator.is_visible():
+            raise InvalidCheck("Текст скрытого элемента не доказывает видимое игровое состояние.")
         value = locator.inner_text(timeout=1200)
         try:
             return parse_number(value) if source == "text_number" else value
@@ -217,7 +219,7 @@ def _input_probe(frame, step):
     return probe
 
 
-def action(page, frame, step):
+def action(page, frame, step, contract=None):
     kind = step.get("action")
     probe = None
     if kind in {"click_fraction", "tap_fraction"}:
@@ -276,6 +278,36 @@ def action(page, frame, step):
         if not isinstance(ms, (int, float)) or not 0 <= ms <= 10000:
             raise InvalidCheck("Ожидание smoke-проверки должно быть от 0 до 10000 мс.")
         wait(page, ms)
+    elif kind in {'await_condition', 'assert'}:
+        observation, expect = step['observation'], step['expect']
+        declared = None
+        if contract and observation.get('source') == 'state':
+            declared = next((o['type'] for o in contract['observations'] if o['path'] == observation.get('path')), None)
+            if declared is None:
+                raise InvalidCheck('Промежуточное наблюдение не объявлено в интерфейсе модуля.')
+        remaining = step.get('ms', 0)
+        deadline = time.monotonic() + remaining / 1000
+        while True:
+            matched = False
+            try:
+                value = observe(frame, observation, expect['operator'])
+                if declared and not {'number': numeric(value), 'string': type(value) is str,
+                                     'boolean': type(value) is bool}[declared]:
+                    raise InvalidCheck('Неверный тип промежуточного состояния модуля.')
+                if expect['operator'] in {'eq', 'not_eq'} and not comparable(value, expect.get('value')):
+                    raise InvalidCheck('Тип промежуточного наблюдения несовместим с ожиданием.')
+                matched = compare(None, value, expect)
+            except InvalidCheck:
+                if kind == 'assert':
+                    raise
+            if matched:
+                return {'status': 'observed', 'action': kind, 'observation': observation,
+                        'after': value, 'expected': expect, 'comparison': True}
+            if (remaining <= 0 if getattr(page, '_gf_clock', False) else time.monotonic() >= deadline):
+                raise InvalidCheck('Промежуточное условие сценария не выполнено; последующий ввод не исполнялся.')
+            interval = min(25, remaining) if getattr(page, '_gf_clock', False) else min(25, max(1, (deadline - time.monotonic()) * 1000))
+            wait(page, interval)
+            remaining -= interval
     elif kind == "blur":
         # Actual focus transfer to host control; no synthetic dispatchEvent('blur').
         page.locator("#outside").click(force=True)
@@ -365,6 +397,10 @@ def run(payload):
                 "screenshot_mime": "image/jpeg",
             }
         for check in [*(p.check() for p in programs), *probes, *diagnostic_actions, *counterfactuals]:
+            if payload.get('progress'):
+                print(json.dumps({'event': 'scenario', 'check_id': check.get('id'),
+                    'completed': len(facts), 'total': len(checks),
+                    'phase': 'control_comparison' if check.get('_paired_action') or check.get('_without_input') else 'scenario'}), flush=True)
             counterfactual = check.get('_without_input') is True
             paired_action = check.get('_paired_action') is True
             diagnostic_pair = counterfactual or paired_action
@@ -477,8 +513,8 @@ def run(payload):
                             if step["action"] == "wait_for":
                                 wait(page, step["ms"])
                             else:
-                                measured = action(page, frame, step)
-                                if measured:
+                                measured = action(page, frame, step, contract)
+                                if measured and step['action'] in INPUT:
                                     fact["input_probes"].append(measured)
                             fact["actions"].append(step)
                         wait(page, 40)
@@ -530,14 +566,21 @@ def run(payload):
                     elif step["action"] == "wait_for":
                         wait_ms = step["ms"]
                     else:
-                        measured = action(page, frame, step)
+                        measured = action(page, frame, step, contract)
                         if measured:
-                            fact["input_probes"].append(measured)
-                            entry["input_probe"] = measured
+                            if step['action'] in INPUT:
+                                fact["input_probes"].append(measured)
+                                entry["input_probe"] = measured
+                            else:
+                                entry['assertion'] = measured
                     fact["actions"].append(step)
                     entry.update(after=trace_snapshot(), status='delivered')
                 deadline = time.monotonic() + wait_ms / 1000
                 virtual_remaining = float(wait_ms)
+                throughout = expect['operator'] == 'unchanged'
+                samples = 0
+                fact['temporal'] = {'mode': 'throughout' if throughout else 'eventually',
+                                    'window_ms': wait_ms, 'sample_interval_ms': 25}
                 while True:
                     try:
                         after = observe(frame, observation, expect["operator"])
@@ -553,19 +596,21 @@ def run(payload):
                             if not comparable(after, value):
                                 raise InvalidCheck("Тип наблюдаемого значения несовместим с ожиданием.")
                         matched = compare(before, after, expect)
+                        samples += 1
                     except InvalidCheck:
-                        if virtual_remaining <= 0 if virtual_clock else time.monotonic() >= deadline:
+                        if throughout or (virtual_remaining <= 0 if virtual_clock else time.monotonic() >= deadline):
                             raise
                         interval = min(25, virtual_remaining) if virtual_clock else min(25, max(1, (deadline - time.monotonic()) * 1000))
                         wait(page, interval)
                         virtual_remaining -= interval
                         continue
-                    if matched or (virtual_remaining <= 0 if virtual_clock else time.monotonic() >= deadline):
+                    if (not matched if throughout else matched) or (virtual_remaining <= 0 if virtual_clock else time.monotonic() >= deadline):
                         break
                     interval = min(25, virtual_remaining) if virtual_clock else min(25, max(1, (deadline - time.monotonic()) * 1000))
                     wait(page, interval)
                     virtual_remaining -= interval
                 fact.update(before=before, after=after, expected=expect, comparison=matched)
+                fact['temporal']['samples'] = samples
                 fact["status"] = "passed" if matched else "failed"
             except (InvalidCheck, KeyError, ValueError) as exc:
                 if not probe:

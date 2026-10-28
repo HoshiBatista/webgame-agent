@@ -183,9 +183,11 @@ def test_invalid_merged_suite_keeps_edit_code_but_cannot_establish_playability()
     result = materialize(response, operation="edit", base_revision="version-1", files=base["files"], previous_checks=old)
     assert len(result["checks"]) == 13 and result["files"] != base["files"]
     assert result["checks"][1:] == old
-    with pytest.raises(ContractError) as error:
-        validate_checks(result["checks"])
-    assert error.value.code == "too_many_checks"
+    # Accumulated scenarios are valid but execute in bounded browser batches.
+    validate_checks(result['checks'])
+    from validation.suites import plan
+
+    assert [len(group) for group in plan(result['checks'])] == [12, 1]
 
 
 @pytest.mark.parametrize("coordinate", [-0.01, 1.01, None, True])
