@@ -37,6 +37,27 @@ def test_unsupported_key_is_a_scenario_error_before_browser(key):
     assert program.issue.field == 'steps.key'
 
 
+@pytest.mark.parametrize('rpc_delay', [0.001, 0.2, 5, 601])
+def test_diagnostic_clock_accepts_scheduler_delay_between_install_and_pause(rpc_delay):
+    from datetime import datetime, timedelta, timezone
+    from types import SimpleNamespace
+
+    from validation.runner import install_diagnostic_clock
+
+    class AdvancingClock:
+        def install(self, *, time):
+            self.now = time + timedelta(seconds=rpc_delay)
+
+        def pause_at(self, instant):
+            if instant < self.now:
+                raise ValueError('Cannot fast-forward to the past')
+            self.now = instant
+
+    clock = AdvancingClock()
+    install_diagnostic_clock(SimpleNamespace(clock=clock))
+    assert clock.now == datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+
 @pytest.mark.browser
 @pytest.mark.native_browser
 @pytest.mark.parametrize('return_to_initial', [False, True])

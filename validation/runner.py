@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -28,6 +28,17 @@ from .syntax import check_javascript
 
 ENVIRONMENT = "mini-browser-v1"
 MAX_SCREENSHOT_BYTES = 512 * 1024
+
+
+def install_diagnostic_clock(page):
+    fixed = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    # install() starts a running clock. Two separate RPCs cannot safely pause at
+    # the install instant: even a small scheduler delay puts it in the past.
+    # Preroll happens on the empty page, before game scripts/timers exist. The
+    # margin exceeds the entire browser watchdog; both paired runs freeze at
+    # the same absolute instant before navigating to the game.
+    page.clock.install(time=fixed - timedelta(days=1))
+    page.clock.pause_at(fixed)
 
 
 def capture_screenshot(page: Page) -> tuple[str, str]:
@@ -442,9 +453,7 @@ def run(payload):
                   }),configurable:false,writable:false});
                 })();""")
             if virtual_clock:
-                fixed = datetime(2026, 1, 1, tzinfo=timezone.utc)
-                page.clock.install(time=fixed)
-                page.clock.pause_at(fixed)
+                install_diagnostic_clock(page)
             page.set_default_timeout(1800)
 
             def page_error(error):
