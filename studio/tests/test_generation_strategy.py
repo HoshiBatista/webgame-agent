@@ -281,7 +281,7 @@ def test_plan_to_sources_to_real_browser_finishes_without_live_model(chat, profi
 
     def model(request, **kwargs):
         if profile == "compact" and request["operation"] == "create":
-            response = compact_response()
+            response = compact_response(with_assets=True)
             response["source_lines"] = response.pop("source").split("\n")
             return {"response": response, "usage": {"input_tokens": 0, "output_tokens": 0}}
         return fake_generate(request, **kwargs)

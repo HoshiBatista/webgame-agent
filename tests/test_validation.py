@@ -117,7 +117,7 @@ def fixture_checks():
             "category": "outcome",
             "requirement": "Два шага завершают игру",
             "viewport": "desktop",
-            "steps": [start, tap, tap],
+            "steps": [start, {**tap, 'action':'click'}, {**tap, 'action':'click'}],
             "observation": {"source": "text", "selector": "#result"},
             "expect": {"operator": "eq", "value": "Победа"},
         },
@@ -144,7 +144,7 @@ def fixture_report(html, checks):
     evidence = receipt(report['artifact_hash'], report['environment'], {'status': 'passed', 'scripts': 1}, [
         {'viewport': viewport, 'loaded': True, 'errors': [], 'requests': [],
          'surface': {'canvases': [{'visible': True, 'width': 280, 'height': 180, 'pixel_evidence': 'varied'}], 'overflow': False}}
-        for viewport in ['mobile', 'desktop']])
+        for viewport in ['mobile', 'landscape', 'desktop']])
     report.update(artifact_evidence=evidence, gates=gates(evidence), stages=[{'stage': 'syntax', 'status': 'passed'}])
     return report
 
@@ -339,12 +339,12 @@ def test_browser_watchdog_kills_hung_process_and_accepts_following_job(monkeypat
 
 
 def test_watchdog_bounds_browser_waits_but_accepts_supported_suite():
-    # Each causal check adds a matched treatment/control pair to the ordinary run.
-    assert 55 <= browser_watchdog_seconds(fixture_checks()) < 56
+    # Causal pairs plus exposure of all three device profiles, including landscape.
+    assert 60 <= browser_watchdog_seconds(fixture_checks()) < 61
     checks = fixture_checks()
     checks[0]["steps"] = [{"action": "wait", "ms": 6000}] * 2
     # Invalid semantics still allow mandatory artifact gates.
-    assert browser_watchdog_seconds(checks) < 56
+    assert browser_watchdog_seconds(checks) < 61
     with pytest.raises(ValueError):
         browser_watchdog_seconds(checks * 13)
 
@@ -642,7 +642,7 @@ def test_independent_receipts_and_bounded_diagnostics(kind):
         checks[1]['observation'] = {'source': 'text', 'selector': '#missing'}
     report = validate(html, checks, artifact_hash=hashlib.sha256(html.encode()).hexdigest())
     assert report['artifact_evidence']['artifact_hash'] == report['artifact_hash']
-    assert {v['viewport'] for v in report['artifact_evidence']['viewports']} == {'mobile', 'desktop'}
+    assert {v['viewport'] for v in report['artifact_evidence']['viewports']} == {'mobile', 'landscape', 'desktop'}
     if kind in {'runtime', 'network'}:
         assert report['status'] == 'failed'
         assert not gates_verified(report, checks)

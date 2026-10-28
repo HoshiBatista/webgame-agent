@@ -18,7 +18,7 @@ def test_compact_visual_patch_keeps_runtime_rules_and_frozen_criteria(maker, use
 
     def model(request, **kwargs):
         if request["operation"] == "create":
-            return {"response": compact_response(), "usage": {"input_tokens": 10, "output_tokens": 20}}
+            return {"response": compact_response(with_assets=True), "usage": {"input_tokens": 10, "output_tokens": 20}}
         result = (
             response_for(request, **kwargs)
             if request["operation"] == "visual_review"

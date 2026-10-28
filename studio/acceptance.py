@@ -6,7 +6,7 @@ from validation.checks import VERSION, gates_verified, review_checks
 from validation.contracts import implementation_hash
 
 HARD_FAILURES = {"javascript_syntax", "runtime_or_network", "canvas_missing", "mobile_overflow", "module_not_registered", "control_obstructed"}
-CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal", "effect_mismatch", "uncovered_requirements", "missing_effects", "missing_mobile_start", "missing_mobile_control"}
+CHECK_PROBLEMS = {"invalid_check", "check_unverified", "check_timeout", "incomplete_checks", "surface_not_observed", "input_obstructed", "effect_not_causal", "effect_mismatch", "uncovered_requirements", "missing_effects", "missing_mobile_start", "missing_mobile_control", "missing_keyboard_control"}
 
 
 def complete_requirements(checks):
@@ -76,6 +76,7 @@ def confirmation_report(run):
         or not complete_requirements(checks) or not evidence.get("requirements")
         or evidence.get("requirement_coverage", {}).get("uncovered")
         or evidence.get('not_run')
+        or any(f.get('code') == 'missing_keyboard_control' for f in report.findings)
         or report.checks != checks or (report.status != "unverified" and not checked_manually)
     ):
         return None

@@ -7,6 +7,7 @@ from jsonschema import Draft202012Validator
 from validation.contracts import suite_findings
 
 from .errors import ContractError
+from .experience import SCHEMA as ASSET_SCHEMA
 
 
 def obj(properties):
@@ -64,7 +65,7 @@ FRACTION_POINT = obj(
 KEY = obj({"action": {"enum": ["press", "key_down", "key_up"]}, "key": string(minLength=1, maxLength=40)})
 WAIT = obj({"action": {"enum": ["wait"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 10000}})
 BLUR = obj({"action": {"enum": ["blur"]}})
-RESIZE = obj({"action": {"enum": ["resize"]}, "viewport": {"enum": ["mobile", "desktop"]}})
+RESIZE = obj({"action": {"enum": ["resize"]}, "viewport": {"enum": ["mobile", "landscape", "desktop"]}})
 OBSERVATION = {
     "anyOf": [
         obj({"source": {"enum": ["text"]}, "selector": string(minLength=1, maxLength=200)}),
@@ -92,7 +93,7 @@ CHECK_SCHEMA = obj(
         "id": string(pattern=r"^[a-zA-Z0-9_-]+$", minLength=1, maxLength=80),
         "category": {"enum": ["start", "control", "outcome", "regression"]},
         "requirement": string(minLength=8, maxLength=500),
-        "viewport": {"enum": ["mobile", "desktop"]},
+        "viewport": {"enum": ["mobile", "landscape", "desktop"]},
         "steps": array({"anyOf": [POINT, FRACTION_POINT, KEY, WAIT, BLUR, RESIZE]}, maxItems=30),
         "observation": OBSERVATION,
         "expect": obj(
@@ -169,6 +170,9 @@ MODULE_REPLACEMENT = obj({
     "content": string(maxLength=12288),
 })
 APPLICATION_SCHEMA["properties"]["patches"]["items"] = {"anyOf": [EXACT_PATCH, MODULE_REPLACEMENT]}
+# The application accepts fixtures without media; current model requests below
+# require one typed object instead of JSON encoded inside a file string.
+APPLICATION_SCHEMA['properties']['assets'] = {'anyOf': [deepcopy(ASSET_SCHEMA), {'type':'null'}]}
 CONTRACT_VERSION = 9
 
 CHECK_REPAIR_SCHEMA = obj({
@@ -217,6 +221,13 @@ def response_schema(request):
     if operation not in {"create", "edit", "repair"}:
         raise ContractError("operation_mismatch", "Неизвестная операция генерации.")
     props = schema["properties"]
+    from .experience import enabled
+
+    if enabled(request):
+        message = props.pop('message')
+        props['assets'] = {'anyOf': [deepcopy(ASSET_SCHEMA), {'type':'null'}]}
+        props['message'] = message
+        schema['required'].append('assets')
     props["operation"] = {"enum": [operation]}
     if operation == "create":
         props["status"] = {"enum": ["ok", "scope_refusal"]}
@@ -268,7 +279,7 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
             validate_checks(response["checks"])
         return
     if response["status"] == "scope_refusal":
-        if not response["message"].strip() or response["files"] or response["patches"]:
+        if not response["message"].strip() or response["files"] or response["patches"] or response.get('assets') is not None:
             raise ContractError("invalid_refusal", "Отказ должен объяснять ограничение и не изменять игру.")
         return
     if response["status"] == "unchanged":
@@ -277,12 +288,15 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
             or not response["base_revision"]
             or not response["message"].strip()
             or any(response[name] for name in ("files", "patches", "checks"))
+            or response.get('assets') is not None
         ):
             raise ContractError(
                 "invalid_unchanged",
                 "Ответ «без изменений» требует существующей базовой версии, объяснения и пустых files/patches/checks.",
             )
         return
+    if response['operation'] == 'repair' and response.get('assets') is not None:
+        raise ContractError('assets_locked', 'Ремонт кода сохраняет ассеты; верните assets=null.')
     partial = response["operation"] in {"edit", "repair"} and response["base_revision"] is not None
     if not defer_check_errors:
         validate_checks(response["checks"], require_complete=not partial)

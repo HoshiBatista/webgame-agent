@@ -108,6 +108,8 @@ def restore(response, policy, *, files, base_revision, profile):
     if response["status"] == "unchanged":
         for field in ("edits", "probes", "observations") if profile == "compact" else ("patches", "checks", "files"):
             result[field] = []
+        if 'assets' in result:
+            result['assets'] = None
         return result
     corrections = {item["index"]: item["patches"] for item in response["corrections"]}
     patches = patches_for(result, files, profile)

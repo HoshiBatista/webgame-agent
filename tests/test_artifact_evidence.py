@@ -13,7 +13,7 @@ def valid_report():
         {'status': 'passed', 'scripts': 1}, [
         {'viewport': viewport, 'loaded': True, 'errors': [], 'requests': [],
          'surface': {'canvases': [{'visible': True, 'width': 300, 'height': 200}], 'overflow': False}}
-        for viewport in ['mobile', 'desktop']])
+        for viewport in ['mobile', 'landscape', 'desktop']])
     return {'status': 'unverified', 'artifact_hash': 'hash', 'environment': evidence['environment'],
             'artifact_evidence': evidence, 'gates': gates(evidence), 'facts': [], 'findings': [],
             'stages': [{'stage': 'syntax', 'status': 'passed'}]}

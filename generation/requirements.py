@@ -60,6 +60,8 @@ def policy_snapshot():
         "presentation.py",
         "compact.py",
         "helpers.py",
+        "experience.py",
+        "runtime/experience-v1.js",
         "visual.py",
         "feedback_image.py",
         "../studio/visual.py",

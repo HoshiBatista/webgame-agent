@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useSoundPreference } from './useSoundPreference';
 import {
   ArrowDownToLine,
   ArrowUp,
@@ -83,7 +84,7 @@ export default function Studio() {
     initialDraft?.selectedRevision ?? null,
   );
   const [previewOpen, setPreviewOpen] = useState(true);
-  const [soundMuted, setSoundMuted] = useState(false);
+  const [soundMuted, setSoundMuted] = useSoundPreference();
   const toolsMenu = useRef<HTMLDetailsElement>(null);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [mobile, setMobile] = useState(

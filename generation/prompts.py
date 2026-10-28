@@ -19,7 +19,7 @@ Use a coherent palette, readable type, clear composition and distinctive Canvas 
 SOURCE AND DISPLAY
 Use HTML/CSS/classic JS and real Canvas2D/WebGL, index.html entry; prefer styles.css/game.js. Local resources only: no imports, npm, CDN, remote fonts, fetch, network, embedded pages or backend. System fonts; declared DOM refs, no implicit ID globals. Optional JSON: <script type="application/json" src="levels.json" id="levels"></script>; read embedded textContent, never fetch.
 Write readable source with real line breaks, never minified JS. In JSON encode each source newline as \n, decoded to an actual newline. End // comments with a newline. Check syntax and variable declarations.
-Keep design short. In design.visual state usable play bounds/formulas and object sizes at mobile {VIEWPORTS["mobile"]["width"]}x{VIEWPORTS["mobile"]["height"]} and desktop {VIEWPORTS["desktop"]["width"]}x{VIEWPORTS["desktop"]["height"]}. Fit width AND height after controls; size containers before measuring Canvas. Preserve rule-fixed geometry; flexible worlds need no fixed square. Play bounds are not the background. Share one coordinate mapping for drawing/input/placement/collisions, separate pixel density. Resize without resetting progress.
+Keep design short. In design.visual state usable play bounds/formulas and object sizes at mobile {VIEWPORTS["mobile"]["width"]}x{VIEWPORTS["mobile"]["height"]} and landscape {VIEWPORTS["landscape"]["width"]}x{VIEWPORTS["landscape"]["height"]}, desktop {VIEWPORTS["desktop"]["width"]}x{VIEWPORTS["desktop"]["height"]}. Fit width AND height after controls; size containers before measuring Canvas. Preserve rule-fixed geometry; flexible worlds need no fixed square. Play bounds are not the background. Share one coordinate mapping for drawing/input/placement/collisions, separate pixel density. Resize without resetting progress.
 Keep the scene primary, controls reachable and touch targets generous. Use legible text and keyboard/pointer support. Compact instructions may disappear on start; no start button is mandatory. Preserve gameplay text. No universal HUD, score/lives, aspect ratio or buttons.
 
 SHORT HONEST CHECKS
@@ -155,7 +155,9 @@ def _system_prompt(request):
         text += ("\nThe application verified the code defect in code_repair_basis. Repair only that defect. "
                  "The inherited scenario suite may be incomplete; return checks=[] and preserve it exactly. "
                  "Do not fix or invent scenarios while repairing source.\n")
-    return text + presentation.implementation_prompt(request)
+    from .experience import guidance as experience_guidance
+
+    return text + presentation.implementation_prompt(request) + experience_guidance(request)
 
 
 def build_messages(request):
@@ -171,6 +173,13 @@ def build_messages(request):
     files = request.get("files") or {}
     if isinstance(files, list):
         files = {f["path"]: f["content"] for f in files}
+    # The model edits recipes, never trusted helper bytes or derived SVGs.
+    from .helpers import sources
+
+    files = {p: c for p, c in files.items() if p not in sources() and not p.startswith('gf-assets/')}
+    from .experience import RECIPE
+
+    media = json.loads(files.pop(RECIPE)) if RECIPE in files else None
     context = {
         "operation": request.get("operation", "create"),
         "prompt": request.get("prompt", ""),
@@ -192,6 +201,8 @@ def build_messages(request):
         "last_attempt_error": request.get("last_attempt_error"),
         "unresolved_count": len(request.get("unresolved_findings", request.get("findings") or [])),
     }
+    if media is not None and request.get('generation_profile') != 'compact':
+        context['assets'] = media
     for operation in ('visual_review', 'visual_patch'):
         if request.get(operation):
             context[operation] = request[operation]

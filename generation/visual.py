@@ -177,6 +177,8 @@ def validate_binding(response, policy):
 
 
 def permitted_issues(response, policy, files):
+    from .helpers import sources
+
     validate_binding(response, policy)
     if response["status"] != "ok":
         if response["issues"]:
@@ -188,7 +190,7 @@ def permitted_issues(response, policy, files):
             issue["kind"] != "reproducible_defect"
             or issue["defect"] == "other"
             or issue["path"] not in files
-            or issue["path"] in {"runtime.js", "runtime.css", "gf-motion-v1.js"}
+            or issue["path"] in {"runtime.js", "runtime.css", *sources()}
             or not issue["path"].endswith((".js", ".css", ".html"))
             or issue["requirement_id"] not in policy["requirement_ids"]
             or not set(issue["frames"]).issubset(FRAME_IDS)

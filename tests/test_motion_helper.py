@@ -10,7 +10,7 @@ from validation.service import validate
 
 
 def helper_game(script):
-    response = fixture_response()
+    response = fixture_response(with_assets=True)
     page = next(f for f in response["files"] if f["path"] == "index.html")
     page["content"] = page["content"].replace(
         '<script src="game.js">', '<script src="gf-motion-v1.js"></script><script src="game.js">'

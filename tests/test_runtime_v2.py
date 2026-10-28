@@ -99,13 +99,21 @@ def test_runtime_restart_releases_input_and_resize_keeps_world_coordinates():
 
 
 @pytest.mark.browser
-def test_large_control_labels_leave_real_canvas_and_reachable_scrolling_controls():
-    response = compact_response()
+@pytest.mark.parametrize('with_assets', [False, True])
+def test_large_control_labels_leave_real_canvas_and_reachable_scrolling_controls(with_assets):
+    response = compact_response(with_assets=with_assets)
     for i in range(6):
         response["controls"].append(
             {"id": f"other{i}", "label": ("Длинная подпись действия " * 3).strip(), "key": None}
         )
-    report = verify(artifact(response))
+    if with_assets:
+        from generation.artifacts import materialize
+        from generation.helpers import catalog
+
+        game = materialize(response, operation='create', generation_profile='compact', helper_catalog=catalog())
+    else:
+        game = artifact(response)
+    report = verify(game)
     assert report["status"] == "passed", report["findings"]
 
 

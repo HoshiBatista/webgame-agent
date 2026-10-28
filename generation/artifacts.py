@@ -58,14 +58,33 @@ def normalize_files(files):
         raise ContractError("invalid_files", "Ожидался набор исходников игры.")
     if not all(isinstance(content, str) for content in result.values()):
         raise ContractError("invalid_content", "Игровые исходники должны быть текстовыми.")
-    if len(result) > 20 or sum(len(c.encode()) for c in result.values()) > MAX_TOTAL_BYTES:
+    if sum(len(c.encode()) for c in result.values()) > MAX_TOTAL_BYTES:
         raise ContractError("artifact_too_large", "Размер превышает формат небольшой автономной игры.")
+    if len(result) > 20:
+        from .experience import RECIPE, read
+        from .helpers import sources
+
+        # App-owned media must not consume the model's existing 20-file budget.
+        # Exempt only exact trusted bytes or exact validated recipe derivatives.
+        owned = {p for p, source in sources().items() if result.get(p) == source.read_text()}
+        if RECIPE in result:
+            recipe = read(result)
+            owned.add(RECIPE)
+            owned.update(f"gf-assets/{g['id']}.svg" for g in recipe['graphics']
+                         if result.get(f"gf-assets/{g['id']}.svg") == g['svg'])
+        if len(result.keys() - owned) > 20:
+            raise ContractError("artifact_too_large", "Размер превышает формат небольшой автономной игры.")
     return result
 
 
 def apply_patches(files, patches, *, module_repair=None):
+    from .experience import RECIPE
+    from .helpers import sources
+
     original = normalize_files(files)
     result = dict(original)
+    if any(safe_path(p['path']) in {RECIPE, *sources()} or safe_path(p['path']).startswith('gf-assets/') for p in patches):
+        raise ContractError('trusted_helper_locked', 'Ресурсы меняются через assets; проигрыватель и производные файлы принадлежат приложению.')
     if (module_repair or {}).get("scope") == "single_module" and any(
         safe_path(patch["path"]) not in module_repair["files"] for patch in patches
     ):
@@ -327,7 +346,7 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
                                              "module_repair": module_repair or {}, "check_repair": check_repair,
                                              "code_repair_basis": code_repair_basis, "checks_create": checks_create,
                                              "generation_strategy": generation_strategy,
-                                             "requirement_manifest": requirement_manifest},
+                                             "requirement_manifest": requirement_manifest, "helper_catalog": helper_catalog or {}},
                                    files=files, previous_checks=previous_checks)
     from .schema import response_schema
 
@@ -392,11 +411,18 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             raise ContractError(
                 "invalid_create", "Новая игра должна содержать исходники без патчей к чужой версии."
             )
-        from .helpers import PATH
+        from .helpers import sources
 
         result = normalize_files(response["files"])
-        if PATH in result:
+        if any(path in result for path in sources()) or any(path.startswith('gf-assets/') for path in result) or 'game-assets.json' in result:
             raise ContractError("trusted_helper_locked", "Содержимое helper не принимает модель.")
+    from .experience import RECIPE, enabled
+    from .experience import validate as validate_assets
+
+    if operation == 'create' and enabled({'helper_catalog': helper_catalog or {}}) and response.get('assets') is None:
+        raise ContractError('incomplete_sources', 'Нужен объект assets с ресурсами игры; game-assets.json создаёт приложение.')
+    if response.get('assets') is not None:
+        result[RECIPE] = validate_assets(response['assets'])
     check_map = {c["id"]: c for c in response["checks"]}
     for old in previous_checks or []:
         if old["id"] in check_map:
@@ -431,8 +457,11 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
             "no_changes",
             "Ответ заявляет об изменении, но исходники и проверки остались прежними. Верните нужный точный патч; если запрос уже реализован, используйте status=unchanged и объясните почему.",
         )
+    from .experience import PATH as experience_path
+    from .experience import attach, provenance
     from .helpers import resolve
 
+    result = attach(result, required=operation == 'create' and experience_path in (helper_catalog or {}))
     result = resolve(result, helper_catalog)
     try:
         document = bundle(result)
@@ -458,7 +487,7 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
         "html": document,
         "artifact_hash": sha256(document),
         "file_hashes": {p: sha256(c) for p, c in result.items()},
-        "design": response["design"],
+        "design": {**response["design"], **({'assets': provenance(result)} if 'game-assets.json' in result else {})},
         "checks": checks,
         "title": response["title"],
         "diff": "".join(changes),

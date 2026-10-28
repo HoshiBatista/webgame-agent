@@ -35,7 +35,7 @@ def test_two_games_have_independent_receipts_and_third_waits(run, api, settings)
     process_run(str(third.id))
     assert len(api.jobs) == 2 and not third.invocations.exists()
     first_id, second_id = str(run.invocations.get().id), str(second.invocations.get().id)
-    response = fixture_response()
+    response = fixture_response(with_assets=True)
     response['title'] = 'Вторая игра'
     api.finish(second_id, response)
     process_run(str(second.id))
@@ -44,7 +44,7 @@ def test_two_games_have_independent_receipts_and_third_waits(run, api, settings)
     assert run.invocations.get().state == 'sent' and not run.candidate_revision
     process_run(str(third.id))
     assert len(api.jobs) == 3 and third.invocations.count() == 1
-    api.finish(first_id, fixture_response())
+    api.finish(first_id, fixture_response(with_assets=True))
     process_run(str(run.id))
     run.refresh_from_db()
     assert run.status == 'succeeded'
@@ -65,7 +65,7 @@ def test_pending_cancellation_keeps_slot_without_blocking_other_receipt(run, api
     process_run(str(third.id))
     assert not third.invocations.exists()
     api.fail = None
-    api.finish(str(second.invocations.get().id), fixture_response())
+    api.finish(str(second.invocations.get().id), fixture_response(with_assets=True))
     process_run(str(second.id))
     second.refresh_from_db()
     assert second.status == 'succeeded'
@@ -81,7 +81,7 @@ def test_reduced_capacity_can_receive_both_admitted_jobs(run, api, settings):
     second = another(run)
     for job in [run, second]:
         process_run(str(job.id))
-        api.finish(str(job.invocations.get().id), fixture_response())
+        api.finish(str(job.invocations.get().id), fixture_response(with_assets=True))
     settings.GAMEFORGE_CODEX_API_CONCURRENCY = 1
     for job in [run, second]:
         process_run(str(job.id))
@@ -106,7 +106,7 @@ def test_retrieved_plan_waits_for_capacity_before_next_model_step(run, api, sett
     assert planned.status == 'queued' and planned.game_plan == response['plan']
     assert planned.invocations.count() == 1 and planned.attempts == 1
     assert planned.error == {}
-    api.finish(str(run.invocations.get().id), fixture_response())
+    api.finish(str(run.invocations.get().id), fixture_response(with_assets=True))
     process_run(str(run.id))
     process_run(str(planned.id))
     assert planned.invocations.count() == 2

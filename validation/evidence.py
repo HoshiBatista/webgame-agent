@@ -61,8 +61,8 @@ def gates(evidence):
         any(any(c.get("visible") is True and type(c.get("width")) in {int, float}
                 and type(c.get("height")) in {int, float} and c["width"] > 0 and c["height"] > 0
                 for c in s.get("canvases", []) if isinstance(c, dict))
-            and (v["viewport"] != "mobile" or s.get("overflow") is False) for s in v["surfaces"])
-        and not any(s.get("overflow") is True for s in v["surfaces"] if v["viewport"] == "mobile")
+            and (v["viewport"] not in {"mobile", "landscape"} or s.get("overflow") is False) for s in v["surfaces"])
+        and not any(s.get("overflow") is True for s in v["surfaces"] if v["viewport"] in {"mobile", "landscape"})
         for v in evidence["viewports"]
     )
     result = {"syntax": syntax, "runtime": runtime, "surface": surface}
@@ -81,7 +81,7 @@ def proven_defects(evidence):
     for view in evidence["viewports"]:
         if view["errors"] or view["requests"]:
             codes.add("runtime_or_network")
-        if view["viewport"] == "mobile" and any(s.get("overflow") is True for s in view["surfaces"]):
+        if view["viewport"] in {"mobile", "landscape"} and any(s.get("overflow") is True for s in view["surfaces"]):
             codes.add("mobile_overflow")
         if evidence.get('contract'):
             if any(m.get('ready') is False for m in view.get('modules', [])):

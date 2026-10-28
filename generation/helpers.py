@@ -11,25 +11,35 @@ PATH = "gf-motion-v1.js"
 SOURCE = Path(__file__).parent / "runtime" / "motion-v1.js"
 
 
+def sources():
+    from .experience import PATH as experience_path
+    from .experience import SOURCE as experience_source
+
+    return {PATH: SOURCE, experience_path: experience_source}
+
+
 def catalog():
-    return {PATH: {"version": 1, "sha256": hashlib.sha256(SOURCE.read_bytes()).hexdigest()}}
+    return {path: {"version": 1, "sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
+            for path, source in sources().items()}
 
 
 def resolve(files, frozen=None):
     result = dict(files)
-    if PATH in result or BeautifulSoup(result.get("index.html", ""), "html.parser").find("script", src=PATH):
-        allowed = catalog() if frozen is None else frozen
-        if allowed.get(PATH) != catalog()[PATH]:
-            raise ContractError("helper_version_changed", "Версия разрешённого средства анимации изменилась.")
-        source = SOURCE.read_text()
-        if PATH in result and result[PATH] != source:
-            raise ContractError("trusted_helper_locked", "Средства приложения не могут заменяться моделью.")
-        result[PATH] = source
+    soup = BeautifulSoup(result.get("index.html", ""), "html.parser")
+    for path, source_path in sources().items():
+        if path in result or soup.find("script", src=path):
+            allowed = catalog() if frozen is None else frozen
+            if allowed.get(path) != catalog()[path]:
+                raise ContractError("helper_version_changed", "Версия разрешённого средства приложения изменилась.")
+            source = source_path.read_text()
+            if path in result and result[path] != source:
+                raise ContractError("trusted_helper_locked", "Средства приложения не могут заменяться моделью.")
+            result[path] = source
     return result
 
 
 def used(files):
-    return catalog() if PATH in files else {}
+    return {path: item for path, item in catalog().items() if path in files}
 
 
 GUIDANCE = """

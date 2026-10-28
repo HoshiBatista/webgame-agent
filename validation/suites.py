@@ -43,7 +43,9 @@ def combine(checks, batches, *, artifact_hash):
     for batch in batches:
         result['facts'].extend(deepcopy(batch.get('facts', [])))
         result['findings'].extend(f for f in batch.get('findings', []) if f.get('code') not in ignored)
-    result['findings'].extend(suite_findings(checks))
+    keyboard_required = any(f.get('code') == 'missing_keyboard_control' for f in result['findings'])
+    result['findings'] = [f for f in result['findings'] if f.get('code') != 'missing_keyboard_control']
+    result['findings'].extend(suite_findings(checks, require_keyboard=keyboard_required))
     seen = {f.get('id') for f in result['facts']}
     for check in checks:
         if check.get('id') not in seen:

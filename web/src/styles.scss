@@ -228,6 +228,10 @@ svg {
   background: var(--soft);
   color: var(--ink);
 }
+.icon-button.sound-button {
+  min-width: 48px;
+  min-height: 48px;
+}
 .text-button {
   border: 0;
   background: none;

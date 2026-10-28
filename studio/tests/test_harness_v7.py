@@ -393,7 +393,7 @@ def test_scenario_repair_for_unobserved_surface_requires_current_loading_evidenc
     environment = 'mini-browser-v1:' + implementation_hash() + ':test'
     evidence = receipt(base.artifact_hash, environment, {'status': 'passed', 'scripts': 1}, [
         {'viewport': viewport, 'loaded': True, 'errors': [], 'requests': [], 'surface': {}}
-        for viewport in ['mobile', 'desktop']])
+        for viewport in ['mobile', 'landscape', 'desktop']])
     result = {'status': 'unverified', 'findings': [{'code': 'surface_not_observed'}], 'facts': [],
               'artifact_evidence': evidence, 'artifact_hash': base.artifact_hash, 'environment': environment,
               'gates': gates(evidence), 'stages': [{'stage': 'syntax', 'status': 'passed'}]}

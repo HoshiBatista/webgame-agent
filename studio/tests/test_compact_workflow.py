@@ -21,7 +21,7 @@ def test_compact_profile_survives_real_relay_pending_and_receipt_reentry(environ
     run.generation_profile = "compact"
     run.source_format = "lines"
     run.save(update_fields=["generation_profile", "source_format"])
-    reply = compact_response()
+    reply = compact_response(with_assets=True)
     reply["source_lines"] = reply.pop("source").split("\n")
     monkeypatch.setattr("studio.tests.test_relay.fixture_response", lambda: reply)
     process_run(str(run.id))
@@ -53,7 +53,7 @@ def test_compact_reply_receipt_creates_version_and_validation_receives_frozen_co
 
     def model(request, **kwargs):
         return {
-            "response": compact_response(),
+            "response": compact_response(with_assets=True),
             "usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0},
         }
 
@@ -73,17 +73,19 @@ def test_compact_reply_receipt_creates_version_and_validation_receives_frozen_co
 def test_codex_rpc_accepts_compact_profile_without_changing_tool_permissions(codex_rpc):
     import json
 
+    from generation.helpers import catalog
     from generation.service import generate
 
-    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(compact_response())
+    codex_rpc["events"][1]["params"]["item"]["text"] = json.dumps(compact_response(with_assets=True))
     request = {
         "provider": "codex",
         "model": "gpt-6-luna",
         "operation": "create",
         "generation_profile": "compact",
+        "helper_catalog": catalog(),
     }
     result = generate(request, on_event=lambda _: None, is_cancelled=lambda: False)
-    assert result["response"]["source"] == compact_response()["source"]
+    assert result["response"]["source"] == compact_response(with_assets=True)["source"]
     params = next(params for method, params in codex_rpc["calls"] if method == "turn/start")
     assert "source" in params["outputSchema"]["properties"]
 
@@ -121,9 +123,9 @@ def test_factory_interface_error_repairs_game_module_despite_runtime_stack_frame
     def model(request, **kwargs):
         requests.append(deepcopy(request))
         if len(requests) == 1:
-            response = compact_response(SOURCE.replace('input(e)', 'onInput(e)'))
+            response = compact_response(SOURCE.replace('input(e)', 'onInput(e)'), with_assets=True)
         else:
-            response = {'status': 'ok', 'message': 'Исправлен интерфейс', 'source': SOURCE}
+            response = {'status': 'ok', 'message': 'Исправлен интерфейс', 'source': SOURCE, 'assets': None}
         return {'response': response, 'usage': {'input_tokens': 0, 'cached_input_tokens': 0, 'output_tokens': 0}}
 
     with patch('generation.providers.fake.generate', side_effect=model):

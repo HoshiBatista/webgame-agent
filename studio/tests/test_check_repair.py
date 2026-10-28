@@ -43,11 +43,15 @@ def model(request, **kwargs):
         result["response"]["checks"] = result["response"]["checks"][:2]
         return result
     policy = request["check_repair"]
-    originals = fixture_response()["checks"]
+    originals = fixture_response(with_assets=True)["checks"]
     checks = []
     for entry in policy["requirements"]:
-        original = next(c for c in originals if c["category"] == entry["category"])
+        choices = [c for c in originals if c['category'] == entry['category']]
+        original = next((c for c in choices if c['viewport'] == entry['viewport']), choices[0])
         checks.append({**deepcopy(original), **entry})
+        if entry['viewport'] == 'desktop':
+            for step in checks[-1]['steps']:
+                step['action'] = {'tap':'click', 'tap_fraction':'click_fraction'}.get(step['action'], step['action'])
     return {
         "response": {
             "status": "ok",
@@ -131,13 +135,13 @@ def test_incomplete_checks_keep_sources_and_repaired_suite_requires_bound_human_
         and original.artifact_hash == revised.artifact_hash
     )
     assert original.design == revised.design and original.title == revised.title
-    assert len(original.checks) == 2 and len(revised.checks) == 3
+    assert len(original.checks) == 2 and len(revised.checks) == 4
     assert revised.checks_review_required and not original.checks_review_required
     assert not chat.current_revision_id and not revised.accepted
     assert revised.reports.get().assessment["action"] == "review"
     data = run_data(run)
     assert data["can_confirm"]
-    assert len(data["confirmation"]["requirements"]) == 3
+    assert len(data["confirmation"]["requirements"]) == 4
     assert (
         client.post(
             f"/api/runs/{run.id}/confirm/", {"confirmed": True}, content_type="application/json"
@@ -305,7 +309,7 @@ def test_real_browser_check_repair_preserves_game_and_exposes_manual_evidence(ma
     def inference(request, **kwargs):
         result = model(request, **kwargs)
         if request["operation"] == "create" and defect == "wrong_sequence":
-            result["response"]["checks"] = fixture_response()["checks"]
+            result["response"]["checks"] = fixture_response(with_assets=True)["checks"]
             result["response"]["checks"][2]["steps"].pop()
         return result
 
@@ -320,7 +324,10 @@ def test_real_browser_check_repair_preserves_game_and_exposes_manual_evidence(ma
     assert second.checks_review_required and run_data(run)["can_confirm"]
     assert not second.accepted
     if defect == "wrong_sequence":
-        assert first.reports.get().status == "failed"
+        # Checks policy 4 keeps a scenario mismatch unverified; it is not proof
+        # that the game is broken and must not authorize a source rewrite.
+        assert first.reports.get().status == "unverified"
+        assert first.reports.get().assessment['action'] == 'review'
         assert first.reports.get().findings[0]["code"] == "effect_mismatch"
     final = second.reports.get()
     assert all(

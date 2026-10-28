@@ -4,6 +4,7 @@ import html
 import json
 from copy import deepcopy
 from pathlib import Path
+from typing import Any
 
 from jsonschema import Draft202012Validator
 
@@ -63,7 +64,7 @@ def wire_schema(request):
             "id": ident,
             "category": {"enum": ["start", "control", "outcome", "restart", "regression"]},
             "requirement": string(minLength=8, maxLength=500),
-            "viewport": {"enum": ["mobile", "desktop"]},
+            "viewport": {"enum": ["mobile", "landscape", "desktop"]},
             "steps": array(step, maxItems=30),
             "observation": ident,
             "operator": {"enum": ["eq", "not_eq", "contains", "changed", "unchanged", "increased", "decreased"]},
@@ -71,7 +72,7 @@ def wire_schema(request):
         }
     )
     operation = request.get("operation", "create")
-    props = {
+    props: dict[str, Any] = {
         "status": {"enum": ["ok", "scope_refusal"] if operation == "create" else ["ok", "unchanged", "scope_refusal"]},
     }
     if operation in {"create", "check_repair", "checks_create", "edit"}:
@@ -93,6 +94,10 @@ def wire_schema(request):
                 }
             ),
         )
+    from .experience import SCHEMA, enabled
+
+    if enabled(request) and operation in {'create', 'edit', 'repair'}:
+        props['assets'] = {'anyOf': [SCHEMA, {'type': 'null'}]}
     replacement = (
         operation == "create"
         or operation == "repair"
@@ -122,6 +127,8 @@ def validate_wire(response, request):
         raise ContractError(
             "invalid_schema", f"Компактный ответ: {'.'.join(map(str, error.path))}: {error.message[:350]}"
         )
+    if request.get('operation') == 'repair' and response.get('assets') is not None:
+        raise ContractError('assets_locked', 'Ремонт механики сохраняет ассеты; верните assets=null.')
     # Keep Unicode restrictions out of the decoder's negated character class.
     # Older decoders truncate U+2028/U+2029 to bytes, accidentally banning ( and ).
     # The application enforces the complete line contract without rewriting code.
@@ -132,7 +139,7 @@ def validate_wire(response, request):
     if response["status"] == "unchanged" and request.get("operation", "create") == "create":
         raise ContractError("invalid_unchanged", "У новой игры ещё нет исходной версии.")
     if response["status"] != "ok" and any(
-        response.get(key) for key in ["source", "source_lines", "edits", "probes", "observations"]
+        response.get(key) for key in ["source", "source_lines", "edits", "probes", "observations", "assets"]
     ):
         raise ContractError(
             "invalid_unchanged", "При остановке исходники, правки и сценарии должны быть пустыми."
@@ -165,6 +172,7 @@ def compile_checks(manifest):
     observations = {o['id']: o for o in manifest['observations'] if counts[o['id']] == 1}
     checks = []
     for probe in manifest["probes"]:
+        pointer = 'click' if probe['viewport'] == 'desktop' else 'tap'
         observation = observations.get(probe["observation"])
         path = observation["path"] if observation else "__unregistered." + probe["observation"]
         steps = []
@@ -175,10 +183,10 @@ def compile_checks(manifest):
                     if step["id"] in controls
                     else "#gf-unknown-control"
                 )
-                steps.append({"action": "tap", "selector": selector, "x": None, "y": None})
+                steps.append({"action": pointer, "selector": selector, "x": None, "y": None})
             elif step["action"] == "canvas":
                 steps.append(
-                    {"action": "tap_fraction", "selector": "#gf-canvas", "x": step["x"], "y": step["y"]}
+                    {"action": pointer + "_fraction", "selector": "#gf-canvas", "x": step["x"], "y": step["y"]}
                 )
             elif step['action'] in {'await_condition', 'assert'}:
                 observed = observations.get(step['observation'])
@@ -208,9 +216,9 @@ def files_for(source, manifest, title):
         {k: manifest[k] for k in ["world", "controls"]}, ensure_ascii=False, separators=(",", ":")
     )
     configuration = configuration.replace("<", "\\u003c")
-    return {
+    result = {
         "index.html": '<!doctype html><html lang="ru"><meta charset="utf-8">'
-        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
         "<title>" + html.escape(title) + '</title><link rel="stylesheet" href="runtime.css">'
         '<body><main id="gf-stage"><canvas id="gf-canvas" tabindex="0"></canvas></main>'
         '<nav id="gf-controls" aria-label="Управление игрой"></nav>'
@@ -221,6 +229,13 @@ def files_for(source, manifest, title):
         "runtime.js": (ROOT / "compact-v2.js").read_text(),
         "game.js": source,
     }
+    if manifest.get('assets'):
+        from .experience import RECIPE, attach, validate
+        from .helpers import resolve
+
+        result[RECIPE] = validate(manifest['assets'])
+        result = resolve(attach(result))
+    return result
 
 
 def validation_contract(manifest, files):
@@ -248,9 +263,18 @@ def materialize_compact(response, request, *, files=None, previous_checks=None):
     original = files or {}
     if operation == "create":
         manifest = {k: deepcopy(response[k]) for k in ["world", "controls", "observations"]}
+        from .experience import enabled
+
+        if enabled(request) and not response.get('assets'):
+            raise ContractError('incomplete_sources', 'Нужны сгенерированные ассеты новой игры.')
+        if response.get('assets'):
+            manifest['assets'] = deepcopy(response['assets'])
         manifest["probes"] = deepcopy(response.get("probes", []))
         title = response["title"]
         original = files_for(source_from(response, request.get("source_format", "string")), manifest, title)
+        from .helpers import resolve
+
+        original = resolve(original, request.get('helper_catalog') or None)
     elif operation in {"edit", "repair"}:
         if operation == "repair":
             from .schema import validate_checks
@@ -287,6 +311,13 @@ def materialize_compact(response, request, *, files=None, previous_checks=None):
                 for edit in response["edits"]
             ]
         updated = apply_patches(original, patches, module_repair=request.get("module_repair"))
+        if response.get('assets') is not None:
+            from .experience import RECIPE, attach, validate
+            from .helpers import resolve
+
+            updated[RECIPE] = validate(response['assets'])
+            updated = resolve(attach(updated), request.get('helper_catalog') or None)
+            manifest['assets'] = deepcopy(response['assets'])
         if updated == original:
             raise ContractError("no_changes", "Модуль механики не изменился.")
         original = updated
@@ -329,6 +360,8 @@ def materialize_compact(response, request, *, files=None, previous_checks=None):
             previous_checks=previous_checks or [],
             policy=policy,
         )
+    from .experience import provenance
+
     document = bundle(original)
     checks = compile_checks(manifest)
     if operation == "repair":
@@ -345,6 +378,7 @@ def materialize_compact(response, request, *, files=None, previous_checks=None):
             "visual": "Canvas с общими утилитами",
             "controls": [c["label"] for c in manifest["controls"]],
             "outcome": response.get("outcome", ""),
+            **({'assets': provenance(original)} if 'game-assets.json' in original else {}),
         },
         "diff": [],
         "checks_review_required": operation in {"check_repair", "checks_create"}
@@ -373,6 +407,11 @@ For edit return exact unique old_text/new_text edits ONLY for game.js, preserve 
 
 def prompt(request):
     text = PROMPT
+    from .experience import guidance
+
+    text += guidance(request)
+    if request.get('operation') == 'edit':
+        text += '\nCompact edit: assets=null preserves every media byte; replace assets only when the request concerns media. Exact source edits may be empty for an assets-only edit.'
     if request.get('generation_strategy') == 'lite_code_then_checks' and request.get('operation') == 'create':
         start = text.index('Return 3-5 short probes')
         end = text.index('Keep code readable', start)

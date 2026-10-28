@@ -40,7 +40,7 @@ def request_for_api(**extra):
     if request["operation"] == "check_repair":
         from generation.check_repair import permission
 
-        response = fixture_response()
+        response = fixture_response(with_assets=True)
         request["check_repair"] = permission("a" * 64, response["checks"], response["design"])
     request["codex_api"] = codex_api.prepare(request, str(uuid.uuid4()))
     return request
@@ -111,7 +111,7 @@ def test_corrupt_or_cross_job_receipt_stays_pending(api, tamper):
     request = request_for_api()
     codex_api.fetch(request)
     ident = request["codex_api"]["id"]
-    api.finish(ident, fixture_response())
+    api.finish(ident, fixture_response(with_assets=True))
     row = api.jobs[ident]
     if tamper in {"model", "raw_response"}:
         row["receipt"][tamper] = "wrong"
@@ -213,7 +213,7 @@ def test_crash_deadline_and_lost_commit_only_retrieve_existing_job(run, api):
     recover_expired()
     process_run(str(run.id))
     assert run.invocations.count() == 1
-    api.finish(str(inv.id), fixture_response())
+    api.finish(str(inv.id), fixture_response(with_assets=True))
     with patch("studio.tasks.settle_invocation", side_effect=RuntimeError("DB lost")):
         process_run(str(run.id))
     process_run(str(run.id))
@@ -229,7 +229,7 @@ def test_cancelled_run_preserves_late_receipt_without_applying_game(run, api):
     process_run(str(run.id))
     inv = run.invocations.get()
     cancel_run(run)
-    api.finish(str(inv.id), fixture_response())
+    api.finish(str(inv.id), fixture_response(with_assets=True))
     reconcile_relay_cancellations()
     inv.refresh_from_db()
     assert inv.usage["output_tokens"] == 50 and inv.raw_response

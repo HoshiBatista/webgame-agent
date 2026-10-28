@@ -31,7 +31,7 @@ def checked_browser(html, checks, **kwargs):
     result["artifact_evidence"] = receipt(kwargs["artifact_hash"], "draft-tests", {"status": "passed", "scripts": 1}, [
         {"viewport": view, "loaded": True, "errors": [], "requests": [],
          "surface": {"canvases": [{"visible": True, "width": 300, "height": 300}], "overflow": False}}
-        for view in ("mobile", "desktop")
+        for view in ("mobile", "landscape", "desktop")
     ])
     return result
 
@@ -44,6 +44,7 @@ def edit_model(request, **kwargs):
     else:
         _, response = edit_case()
         response["base_revision"] = request["base_revision"]
+        response['assets'] = None
     return {"response": response, "usage": {"input_tokens": 7, "output_tokens": 9}}
 
 

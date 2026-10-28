@@ -67,11 +67,13 @@ def recover_saved_response(invocation_id, *, apply=False):
         generation_profile=parent.generation_profile, compact_manifest=saved_request.get('compact_manifest'),
         source_format=parent.source_format, check_repair=saved_request.get('check_repair'),
         code_repair_basis=basis,
+        helper_catalog=saved_request.get('helper_catalog'),
     )
     if artifact.get("status") in {"unchanged", "scope_refusal"}:
         raise DomainError("no_saved_candidate", "Ответ не содержит нового кандидата игры.")
     if parent.generation_profile == 'compact' and base:
-        artifact.update(title=base.title, design=base.design)
+        artifact.update(title=base.title, design={**base.design,
+            **({'assets': artifact['design']['assets']} if artifact.get('design', {}).get('assets') else {})})
     audit = {"source_invocation": str(source.id), "source_run": str(parent.id),
              "raw_sha256": fingerprint(raw), "normalization_version": VERSION, "paths": paths}
     summary = {"source_invocation": str(source.id), "changes": paths,

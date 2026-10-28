@@ -20,6 +20,8 @@
   let height = 0;
   const buttons = document.getElementById('gf-controls');
   const keyControls = new Map();
+  const keyNames = new Map();
+  const actionHolds = new Map();
 
   function field(object, key) {
     const d = descriptor(object, key);
@@ -62,6 +64,14 @@
 
   function input(event) {
     if (!game || failed) return;
+    if(event.action && ['down','up'].includes(event.phase)) {
+      const sources=actionHolds.get(event.action)||new Set();
+      const had=sources.size>0;
+      const source=event.type==='key'?'key:'+event.key:'pointer:'+(event.pointerId??'click');
+      if(event.phase==='down')sources.add(source);else sources.delete(source);
+      actionHolds.set(event.action,sources);
+      if(had===(sources.size>0))return;
+    }
     inputs += 1;
     invoke(game.input, freeze(event));
     paint();
@@ -88,12 +98,23 @@
     const label = document.createElement("span");
     label.textContent = control.label;
     button.appendChild(label);
+    let pointerClickUntil=0;
     button.addEventListener('pointerdown', event => {
+      if (event.button !== 0) return;
+      pointerClickUntil=performance.now()+750;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
-      const action = { type: 'action', action: control.id, phase: 'down' };
+      const action = { type: 'action', action: control.id, pointerId:event.pointerId, phase: 'down' };
       pointers.set(event.pointerId, action);
       input(action);
+    });
+    button.addEventListener('keydown',()=>{pointerClickUntil=0;});
+    button.addEventListener('click', event => {
+      if(performance.now()<pointerClickUntil){pointerClickUntil=0;return;}
+      if (event.detail === 0) {
+        input({type:'action',action:control.id,phase:'down'});
+        input({type:'action',action:control.id,phase:'up'});
+      }
     });
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, event => {
       const action = pointers.get(event.pointerId);
@@ -101,7 +122,14 @@
       if (action) input({ ...action, phase: 'up' });
     });
     buttons.appendChild(button);
-    if (control.key) keyControls.set(control.key, control.id);
+    if (control.key) {
+      keyControls.set(control.key, control.id);
+      const physical = /^[a-z]$/i.test(control.key) ? 'Key'+control.key.toUpperCase() : control.key === ' ' ? 'Space' : control.key;
+      const logical = /^Key[A-Z]$/.test(control.key) ? control.key.slice(3).toLowerCase()
+        : /^Digit[0-9]$/.test(control.key) ? control.key.slice(5)
+        : control.key === 'Space' ? ' ' : control.key;
+      keyControls.set(physical,control.id); keyControls.set(logical,control.id); keyNames.set(physical,logical);
+    }
   }
 
   for (const name of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
@@ -112,7 +140,7 @@
       const phase = name === 'pointerdown' ? 'down' : name === 'pointermove' ? 'move' : 'up';
       const nx = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width));
       const ny = Math.min(1, Math.max(0, (event.clientY - box.top) / box.height));
-      const action = { type: 'pointer', phase, x: nx * world.width, y: ny * world.height, nx, ny };
+      const action = { type: 'pointer', phase, pointerId:event.pointerId, x: nx * world.width, y: ny * world.height, nx, ny };
       if (phase === 'down') {
         canvas.setPointerCapture(event.pointerId);
         pointers.set(event.pointerId, action);
@@ -126,21 +154,26 @@
     });
   }
   addEventListener('keydown', event => {
-    if (keyControls.has(event.key) || ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(event.key)) event.preventDefault();
-    if (event.repeat || held.has(event.key)) return;
-    held.add(event.key);
-    input({ type: 'key', key: event.key, action: keyControls.get(event.key) || null, phase: 'down' });
+    if (event.target instanceof Element && event.target.closest('input,textarea,select,[contenteditable="true"],#gf-player-tools')) return;
+    if (['Enter',' '].includes(event.key) && event.target instanceof Element && event.target.closest('button')) return;
+    if(event.ctrlKey || event.altKey || event.metaKey) return;
+    const key=keyNames.get(event.code)||event.key;
+    if (keyControls.has(key) || ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(key)) event.preventDefault();
+    if (event.repeat || held.has(key)) return;
+    held.add(key);
+    input({ type: 'key', key, action: keyControls.get(key) || null, phase: 'down' });
   });
   addEventListener('keyup', event => {
-    if (!held.delete(event.key)) return;
-    input({ type: 'key', key: event.key, action: keyControls.get(event.key) || null, phase: 'up' });
+    const key=keyNames.get(event.code)||event.key;
+    if (!held.delete(key)) return;
+    input({ type: 'key', key, action: keyControls.get(key) || null, phase: 'up' });
   });
   addEventListener('blur', releaseAll);
   document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
   addEventListener('resize', resize);
   new ResizeObserver(resize).observe(document.getElementById('gf-stage'));
 
-  const api = freeze({ width: world.width, height: world.height, random: () => Math.random(), resetInput: releaseAll, motion: window.GameForgeMotion });
+  const api = freeze({ width: world.width, height: world.height, random: () => Math.random(), resetInput: releaseAll, motion: window.GameForgeMotion, experience: window.GameForgeExperience });
   const platform = freeze({
     register(factory) {
       if (game || typeof factory !== 'function') throw new Error('GF register exactly one game factory');

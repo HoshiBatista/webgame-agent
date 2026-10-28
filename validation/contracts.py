@@ -6,11 +6,12 @@ from typing import Any
 
 VIEWPORTS = {
     "mobile": {"width": 390, "height": 844},
+    "landscape": {"width": 844, "height": 390},
     "desktop": {"width": 1280, "height": 800},
 }
 
 
-def suite_findings(checks: list[dict[str, Any]]) -> list[dict[str, str]]:
+def suite_findings(checks: list[dict[str, Any]], *, require_keyboard=False) -> list[dict[str, str]]:
     """Minimum effects required before a suite can establish playability."""
     findings = []
     if not {"start", "control", "outcome"}.issubset({check.get("category") for check in checks}):
@@ -40,6 +41,12 @@ def suite_findings(checks: list[dict[str, Any]]) -> list[dict[str, str]]:
                 "message": "Добавьте мобильный сценарий control: реальное касание вызывает игровой эффект без клавиатуры.",
             }
         )
+    if require_keyboard and not any(c.get('category') == 'control' and c.get('viewport') == 'desktop'
+            and any(s.get('action') in {'press', 'key_down'} for s in c.get('steps', []))
+            and not any(s.get('action') in {'click', 'tap', 'click_fraction', 'tap_fraction'} for s in c.get('steps', []))
+            for c in checks):
+        findings.append({'code': 'missing_keyboard_control',
+                         'message': 'Нужен настольный сценарий control с реальным игровым эффектом только от клавиатуры.'})
     return findings
 
 

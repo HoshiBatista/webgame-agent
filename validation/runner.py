@@ -230,8 +230,10 @@ def _input_probe(frame, step):
     return probe
 
 
-def action(page, frame, step, contract=None):
+def action(page, frame, step, contract=None, *, touch_enabled=True):
     kind = step.get("action")
+    if kind in {'tap', 'tap_fraction'} and not touch_enabled:
+        raise InvalidCheck('Настольный сценарий без сенсорного экрана требует click или клавиатуру вместо tap.')
     probe = None
     if kind in {"click_fraction", "tap_fraction"}:
         selector, x, y = step.get("selector"), step.get("x"), step.get("y")
@@ -368,7 +370,8 @@ def run(payload):
     screenshot = None
     screenshot_mime = "image/png"
     required = {"start", "control", "outcome"}
-    findings.extend(suite_findings(checks))
+    requires_keyboard = bool(re.search(r'<script\b[^>]*\bid=[\"\x27]gf-assets[\"\x27]', html, re.I))
+    findings.extend(suite_findings(checks, require_keyboard=requires_keyboard))
     incomplete = bool(findings) or not required.issubset({c.get("category") for c in checks}) or not 3 <= len(checks) <= 12 or len({c.get("id") for c in checks}) != len(checks)
     if incomplete:
         findings.append({"code": "incomplete_checks", "message": "Нужны проверки начала, управления и исхода."})
@@ -423,12 +426,18 @@ def run(payload):
             # Replaying them proves only artifact gates in the other viewport.
             route_check = min(successful_routes, key=lambda c: (c["category"] != "start", len(c["steps"]))) \
                 if probe and successful_routes else None
+            if route_check and check.get('viewport') == 'desktop':
+                # Only an artifact exposure probe: a mouse route is not evidence
+                # for a requested touch or keyboard gameplay requirement.
+                route_check = {**route_check, 'steps': [
+                    {**step, 'action': {'tap': 'click', 'tap_fraction': 'click_fraction'}.get(step['action'], step['action'])}
+                    for step in route_check['steps']]}
             size = VIEWPORTS.get(check.get("viewport", "mobile"), VIEWPORTS["mobile"])
             viewport: ViewportSize = {"width": size["width"], "height": size["height"]}
             # Opaque sandbox origins cannot register service workers. Playwright's
             # additional service-worker shim itself throws on these origins.
             context = browser.new_context(
-                viewport=viewport, has_touch=True, device_scale_factor=1, accept_downloads=False
+                viewport=viewport, has_touch=check.get("viewport") != "desktop", device_scale_factor=1, accept_downloads=False
             )
             errors, requests = [], []
             locations: list[dict[str, Any]] = []
@@ -522,7 +531,7 @@ def run(payload):
                             if step["action"] == "wait_for":
                                 wait(page, step["ms"])
                             else:
-                                measured = action(page, frame, step, contract)
+                                measured = action(page, frame, step, contract, touch_enabled=check.get('viewport') != 'desktop')
                                 if measured and step['action'] in INPUT:
                                     fact["input_probes"].append(measured)
                             fact["actions"].append(step)
@@ -575,7 +584,7 @@ def run(payload):
                     elif step["action"] == "wait_for":
                         wait_ms = step["ms"]
                     else:
-                        measured = action(page, frame, step, contract)
+                        measured = action(page, frame, step, contract, touch_enabled=check.get('viewport') != 'desktop')
                         if measured:
                             if step['action'] in INPUT:
                                 fact["input_probes"].append(measured)
@@ -665,8 +674,15 @@ def run(payload):
                         info.pixel_evidence=transparent?'transparent':uniform?'uniform':'varied';
                       } catch (_) { /* Readback failure is absence of evidence, not a defect. */ }
                       return info;
-                    }), overflow:document.documentElement.scrollWidth>innerWidth+2})""")
+                    }), overflow:document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2})""")
                     fact["surface"] = surface
+                    if requires_keyboard and not diagnostic_pair:
+                        fact['player_experience'] = frame.evaluate('''() => {
+                          const api=window.GameForgeExperience;
+                          return api ? {...api.inspect(), layout:api.layout(),
+                            keyboardOnly:!matchMedia('(pointer:coarse)').matches,
+                            audioQuality:'not_listened',audienceFit:'not_independently_verified'} : {unavailable:true};
+                        }''')
                     if not any(c["width"] > 0 and c["height"] > 0 and c["visible"] for c in surface["canvases"]):
                         # A broken selector or a pre-start page is not proof that
                         # the implementation lacks a scene. Keep real defects hard.
@@ -681,7 +697,7 @@ def run(payload):
                                 "message": "Не обнаружена видимая игровая Canvas/WebGL-сцена.",
                             }
                         )
-                    if surface["overflow"] and check.get("viewport") == "mobile":
+                    if surface["overflow"] and check.get("viewport") in {"mobile", "landscape"}:
                         fact["status"] = "failed"
                         findings.append(
                             {

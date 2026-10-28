@@ -215,7 +215,7 @@ export function SoundButton({
   return (
     <button
       type="button"
-      className="icon-button"
+      className="icon-button sound-button"
       onClick={onToggle}
       disabled={disabled}
       aria-label={text}

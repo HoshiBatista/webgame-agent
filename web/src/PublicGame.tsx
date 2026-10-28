@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSoundPreference } from './useSoundPreference';
 import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { errorText, post, request } from './api';
@@ -15,7 +16,7 @@ export default function PublicGame() {
   const [game, setGame] = useState<Publication | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [soundMuted, setSoundMuted] = useState(false);
+  const [soundMuted, setSoundMuted] = useSoundPreference();
   useEffect(() => {
     let alive = true;
     request<Publication>(`/api/publications/${id}/`)

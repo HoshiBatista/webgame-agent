@@ -41,7 +41,7 @@ def uncertain(gates=True):
             "facts": [{**{k: c[k] for k in ("id", "category", "requirement", "viewport")},
                        "status": "unverified" if c["id"] == "outcome" else "passed",
                        "surface": {"canvases": [{"visible": True, "width": 300, "height": 300}], "overflow": False}}
-                      for c in fixture_response()["checks"]]}
+                      for c in fixture_response(with_assets=True)["checks"]]}
 
 
 PASS = {"status": "passed", "environment": "completion-test", "findings": [], "facts": [], "gates": {"syntax": True, "runtime": True, "surface": True}}

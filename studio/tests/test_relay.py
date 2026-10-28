@@ -8,13 +8,17 @@ import httpx
 import pytest
 from django.utils import timezone
 
-from generation.providers.fake import fixture_response
+from generation.providers.fake import fixture_response as base_fixture_response
 from generation.relay_api.client import Client
 from studio.models import Chat, Outbox, Revision, User
 from studio.services import create_run
 from studio.tasks import process_run, reconcile_relay_cancellations, recover_expired
 from tests.relay_double import RelayDouble
 from tests.test_generation_planning import plan_response
+
+
+def fixture_response():
+    return base_fixture_response(with_assets=True)
 
 
 @pytest.fixture
@@ -57,6 +61,12 @@ def environment(tmp_path, settings, monkeypatch):
             if response.get("operation") == "plan":
                 context = json.loads(job["payload"]["messages"][-1]["content"])
                 response["plan"]["request_reference"] = context.get("game_request") or context["prompt"]
+                response["plan"]["player_experience"] = {
+                    'audience': 'Крупная цель и понятная инструкция для новичков.',
+                    'audio': 'Оригинальная короткая фраза и эффект попадания.',
+                    'input': 'Касание или пробел увеличивают число попаданий.',
+                    'layouts': 'Цель видна на телефоне в двух ориентациях и на ПК.',
+                }
             self.pending = (
                 job["id"],
                 {
@@ -258,7 +268,7 @@ def test_check_repair_pending_reentry_keeps_job_and_consumes_receipt_after_deadl
         policy = inv.request['check_repair']
         repaired = []
         for entry in policy['requirements']:
-            scenario = next(c for c in original_fixture['checks'] if c['category'] == entry['category'])
+            scenario = next(c for c in original_fixture['checks'] if c['category'] == entry['category'] and c['viewport'] == entry['viewport'])
             repaired.append({**scenario, **entry})
         response = {'status': 'ok', 'operation': 'check_repair', 'base_revision': inv.request['base_revision'],
                     'artifact_hash': policy['artifact_hash'], 'checks_hash': policy['checks_hash'],

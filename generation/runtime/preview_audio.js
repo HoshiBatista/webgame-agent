@@ -83,9 +83,16 @@
         data.type !== 'gameforge:audio' || data.artifactKey !== config.artifactKey ||
         typeof data.muted !== 'boolean') return;
     muted = data.muted;
-    for (const [context, output] of outputs)
-      if (context.state !== 'closed') output.gain.setValueAtTime(muted ? 0 : 1, context.currentTime);
+    window.GameForgeExperience?.setHostControl(muted);
+    for (const [context, output] of outputs) {
+      if (context.state === 'closed') continue;
+      const now=context.currentTime, gain=output.gain;
+      gain.cancelScheduledValues(now);
+      if(context.state!=='running') gain.setValueAtTime(muted?0:1,now);
+      else {gain.setValueAtTime(gain.value,now);gain.linearRampToValueAtTime(muted?0:1,now+.025);}
+    }
     media.forEach(track);
   });
+  window.addEventListener('gameforge:experience-ready', () => window.GameForgeExperience?.setHostControl(muted));
   window.parent.postMessage({ type: 'gameforge:audio-ready', artifactKey: config.artifactKey }, config.origin);
 })(__GAMEFORGE_AUDIO_CONFIG__);

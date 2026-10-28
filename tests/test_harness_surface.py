@@ -82,6 +82,6 @@ def test_probe_waits_are_included_in_the_browser_watchdog():
     _, checks = startup_game('mobile_only')
     before = browser_watchdog_seconds(checks)
     checks[0]['steps'].append({'action': 'wait', 'ms': 10000})
-    # Ten seconds for the original route plus ten if replayed in desktop.
-    assert browser_watchdog_seconds(checks) == before + 20
-    assert browser_watchdog_seconds([]) == 30
+    # Original route plus mandatory landscape and desktop exposure probes.
+    assert browser_watchdog_seconds(checks) == before + 30
+    assert browser_watchdog_seconds([]) == 35

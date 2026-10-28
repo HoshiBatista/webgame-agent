@@ -761,7 +761,8 @@ def _execute(run, lease, generate, materialize, validate):
                     source_format=inv.request.get("source_format", "string"),
                 )
                 if inv.request.get("generation_profile") == "compact" and response_base:
-                    artifact.update(title=response_base.title, design=response_base.design)
+                    artifact.update(title=response_base.title, design={**response_base.design,
+                        **({'assets': artifact['design']['assets']} if artifact.get('design', {}).get('assets') else {})})
                 if (inv.request["operation"] in {"check_repair", "checks_create", "visual_patch"} or inv.request.get("code_repair_basis")) and artifact.get("status") != "unchanged":
                     if response_base is None:
                         raise ContractError("missing_base", "Для ремонта нужна сохранённая версия игры.")

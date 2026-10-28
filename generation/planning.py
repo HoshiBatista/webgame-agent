@@ -10,7 +10,7 @@ REQUIREMENT = obj({
     "id": string(pattern=r"^[A-Za-z][A-Za-z0-9_]{0,39}$"),
     "category": {"enum": ["start", "control", "outcome", "restart", "regression"]},
     "requirement": string(minLength=8, maxLength=500),
-    "viewport": {"enum": ["mobile", "desktop"]},
+    "viewport": {"enum": ["mobile", "landscape", "desktop"]},
     "origin": {"enum": ["user", "design"]},
     "quote": string(maxLength=500),
     "example": obj({"action": string(minLength=3, maxLength=300), "effect": string(minLength=3, maxLength=300)}),
@@ -56,15 +56,30 @@ def schema(request):
         plan = result["properties"]["plan"]["anyOf"][0]
         plan["properties"]["presentation"] = deepcopy(presentation.PLAN_SCHEMA)
         plan["required"].append("presentation")
+    from .experience import enabled
+
+    if enabled(request):
+        plan = result['properties']['plan']['anyOf'][0]
+        plan['properties']['player_experience'] = obj({
+            'audience': string(minLength=10, maxLength=350),
+            'audio': string(minLength=10, maxLength=350),
+            'input': string(minLength=10, maxLength=350),
+            'layouts': string(minLength=10, maxLength=350),
+        })
+        plan['required'].append('player_experience')
     return result
 
 
 def prompt(request):
+    from .experience import enabled
+
     return PLAN_PROMPT + (
         "\nPro: develop up to four tightly connected mechanics, a distinctive visual direction and a satisfying arc. Keep the implementation feasible as a self-contained mini-game."
         if request.get("generation_strategy") == "pro" else
         "\nLite: choose one core mechanic and at most one supporting mechanic. Keep rules explicit, implementation small, and the whole game complete."
-    ) + (presentation.PLAN_GUIDANCE if presentation.enabled(request) else "")
+    ) + (presentation.PLAN_GUIDANCE if presentation.enabled(request) else "") + (
+        '\nplayer_experience: briefly specify concrete audience adaptations; original generated music mood and action sounds; equivalent touch/keyboard actions; portrait/landscape/desktop layout. All art and audio are generated for this game, no stock assets or preset tunes. No extra stage or full score in the plan. Preserve explicit silence/static requests. Include one desktop keyboard control requirement within the existing 3-8 promises.'
+        if enabled(request) else '')
 
 
 def strategy(provider, model):

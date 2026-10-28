@@ -9,6 +9,7 @@ import string
 from dataclasses import dataclass
 
 from .checks import INPUT, NUMERIC, RELATIVE, numeric, review_checks
+from .contracts import VIEWPORTS
 
 # Deliberately bounded keyboard vocabulary, shared by both providers. These are
 # physical US-layout keys supported by the pinned Playwright browser; arbitrary
@@ -137,7 +138,7 @@ def compile_check(check, *, timer_outcome=False):
         return CheckProgram(encoded, measured_from, steps[-1].get('ms', 40) if awaits and awaits[-1] == len(steps)-1 else 40,
                             op in RELATIVE, CheckIssue(code, field, message) if code else None)
 
-    if check.get('viewport') not in {'mobile', 'desktop'} or check.get('category') not in {'start','control','outcome','restart','regression'}:
+    if check.get('viewport') not in VIEWPORTS or check.get('category') not in {'start','control','outcome','restart','regression'}:
         return result('invalid_check', 'category', 'Неизвестная категория или размер экрана.')
     if any(str(k).startswith('_') for k in check):
         return result('invalid_check', 'steps', 'Служебные поля не входят в сценарий.')
@@ -191,7 +192,7 @@ def compile_check(check, *, timer_outcome=False):
             return result('invalid_pointer', 'steps', 'Доли координат требуют selector и x/y от 0 до 1.')
         if kind in {'press', 'key_down', 'key_up'} and not supported_key(step.get('key'), kind):
             return result('invalid_check', 'steps.key', 'Неподдерживаемая физическая клавиша. Используйте ArrowUp/Down/Left/Right, Space или клавиши латинской раскладки.')
-        if kind == 'resize' and step.get('viewport') not in ('mobile', 'desktop'):
+        if kind == 'resize' and step.get('viewport') not in VIEWPORTS:
             return result('invalid_check', 'steps.viewport', 'Неизвестный размер контрольного viewport.')
     if op in NUMERIC and source in {'text', 'attribute'}:
         return result('invalid_check', 'observation.source', 'Числовое сравнение требует числовое наблюдение.')

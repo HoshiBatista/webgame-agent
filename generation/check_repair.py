@@ -17,6 +17,7 @@ CHECK_FINDINGS = {
     "missing_effects",
     "missing_mobile_start",
     "missing_mobile_control",
+    "missing_keyboard_control",
     "effect_mismatch",
     "surface_not_observed",
     "input_obstructed",
@@ -107,12 +108,19 @@ def permission(artifact_hash, checks, design, manifest=None):
             ident += "_"
         ids.add(ident)
         requirements.append({**original, "id": ident, "viewport": "mobile"})
+    require_keyboard = bool(design.get('assets'))
+    if require_keyboard and not any(r['category'] == 'control' and r['viewport'] == 'desktop' for r in requirements):
+        ident = 'required_keyboard_control'
+        while ident in ids:
+            ident += '_'
+        requirements.append({'id': ident, 'category': 'control', 'viewport': 'desktop',
+                             'requirement': 'Реальное управление с клавиатуры вызывает игровой эффект без мыши.'})
     if len(requirements) > 12:
         raise ContractError(
             "check_review_required", "Для обязательных условий недостаточно места в наборе проверок."
         )
     return {"artifact_hash": artifact_hash, "checks_hash": checks_hash(checks), "requirements": requirements,
-            "identity_repairs": repairs}
+            "identity_repairs": repairs, "require_keyboard": require_keyboard}
 
 
 def repaired_checks(response, *, base_revision, artifact_hash, previous_checks, policy):
@@ -129,6 +137,12 @@ def repaired_checks(response, *, base_revision, artifact_hash, previous_checks, 
         return None
     checks = response["checks"]
     validate_checks(checks)
+    if policy.get('require_keyboard'):
+        from validation.contracts import suite_findings
+
+        missing = suite_findings(checks, require_keyboard=True)
+        if missing:
+            raise ContractError(missing[0]['code'], missing[0]['message'])
     expected = {r["id"]: r for r in policy["requirements"]}
     actual = {check["id"]: {key: check[key] for key in IDENTITY} for check in checks}
     if expected != actual:

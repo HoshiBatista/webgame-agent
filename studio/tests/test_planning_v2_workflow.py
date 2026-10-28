@@ -42,7 +42,7 @@ def start(chat, **overrides):
 
 
 def response_for(request, **kwargs):
-    compact = compact_response()
+    compact = compact_response(with_assets=True)
     if request["operation"] == "plan":
         result = fake_generate(request, **kwargs)
         result["response"]["plan"]["requirements"] = [
@@ -62,20 +62,21 @@ def response_for(request, **kwargs):
         response = {
             "status": "ok",
             "message": "Исправлена синтаксическая ошибка",
+            "assets": None,
             "source": compact["source"],
         }
     else:
         assert request["operation"] == "checks_create"
         policy = request["checks_create"]
+        def probe_for(requirement):
+            choices = [p for p in compact['probes'] if p['category'] == requirement['category']]
+            return {**next((p for p in choices if p['viewport'] == requirement['viewport']), choices[0]), **requirement}
         response = {
             "status": "ok",
             "message": "Сценарии для сохранённой версии",
             **{k: policy[k] for k in ("base_revision", "artifact_hash", "manifest_hash")},
             "observations": compact["observations"],
-            "probes": [
-                {**next(p for p in compact["probes"] if p["category"] == r["category"]), **r}
-                for r in policy["requirements"]
-            ],
+            "probes": [probe_for(r) for r in policy["requirements"]],
         }
     return {
         "response": response,
@@ -154,7 +155,7 @@ def test_checks_create_failure_is_bounded_and_keeps_source(maker, fault):
     run.refresh_from_db()
     assert run.status == ("unknown" if fault == "unknown" else "needs_attention"), run.error
     assert calls.call_count == 2 and run.revisions.count() == 1 and not confirmation_report(run)
-    assert run.candidate_revision.files["game.js"] == compact_response()["source"]
+    assert run.candidate_revision.files["game.js"] == compact_response(with_assets=True)["source"]
 
 
 @pytest.mark.django_db(transaction=True)

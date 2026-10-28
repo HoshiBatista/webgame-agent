@@ -31,8 +31,8 @@ SOURCE = """GameForge.register(api => {
 });"""
 
 
-def compact_response(source=SOURCE):
-    return {
+def compact_response(source=SOURCE, *, with_assets=False):
+    result = {
         "status": "ok",
         "message": "Тестовая механика, без модели.",
         "title": "Проверка утилит",
@@ -83,6 +83,17 @@ def compact_response(source=SOURCE):
         ],
         "source": source,
     }
+
+    if with_assets:
+        from generation.providers.fake import fixture_assets
+
+        result['assets'] = fixture_assets()
+        result['probes'].append({'id':'keyboard_move','category':'control',
+            'requirement':'Стрелка двигает игрока с клавиатуры', 'viewport':'desktop',
+            'steps':[{'action':'press','key':'Enter'},{'action':'key_down','key':'ArrowRight'},
+                     {'action':'wait','ms':150},{'action':'key_up','key':'ArrowRight'}],
+            'observation':'x','operator':'increased','value':None})
+    return result
 
 
 def artifact(response=None, source_format="string"):
