@@ -52,6 +52,12 @@ services:
       DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:?Set initial password}
   app:
     <<: *app
+    environment:
+      <<: *environment
+      VALIDATOR_SOCKET: /run/validator/service.sock
+    # Manual confirmation probes the same private service as the worker.
+    # Read-only mount; no Docker socket or validator network port is exposed.
+    volumes: [validator-ipc:/run/validator:ro]
     depends_on:
       init: {condition: service_completed_successfully}
   preview:
