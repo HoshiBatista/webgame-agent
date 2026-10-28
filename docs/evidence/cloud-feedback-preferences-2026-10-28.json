@@ -1,0 +1,209 @@
+{
+  "date": "2026-10-28",
+  "host": "212.57.126.215",
+  "revision": "ed354318ec0e66bdb36b158e306ad06f62eefe52",
+  "previous_revision": "e309cc59d6b55df589916468718fd40d0333be49",
+  "source_archive_sha256": "d586413fef2ba6e97702636ee2a2b887b6f84881a668d113af189704962b5a27",
+  "server": {
+    "revision": "ed354318ec0e66bdb36b158e306ad06f62eefe52",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 32,
+      "CheckReport": 14,
+      "Feedback": 2,
+      "Invocation": 137,
+      "Like": 2,
+      "Message": 132,
+      "Outbox": 68,
+      "Preference": 3,
+      "PromptTemplate": 3,
+      "Publication": 2,
+      "Revision": 14,
+      "Run": 68,
+      "RunEvent": 715,
+      "User": 4
+    },
+    "all_existing_records_preserved": true,
+    "unknown_preserved": 5,
+    "visible_chats": 5,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_application_image": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [
+      "0022_feedback_preferences"
+    ],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:5ecd250ecf43f4f08ec0d3927065f1939f4042594c279fd35d2ee1745e5751dd",
+        "image_tag": "gameforge-mini:cloud-ed35431-20261028"
+      },
+      "preview": {
+        "image_id": "sha256:5ecd250ecf43f4f08ec0d3927065f1939f4042594c279fd35d2ee1745e5751dd",
+        "image_tag": "gameforge-mini:cloud-ed35431-20261028"
+      },
+      "worker": {
+        "image_id": "sha256:5ecd250ecf43f4f08ec0d3927065f1939f4042594c279fd35d2ee1745e5751dd",
+        "image_tag": "gameforge-mini:cloud-ed35431-20261028"
+      },
+      "beat": {
+        "image_id": "sha256:5ecd250ecf43f4f08ec0d3927065f1939f4042594c279fd35d2ee1745e5751dd",
+        "image_tag": "gameforge-mini:cloud-ed35431-20261028"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-ed35431-20261028T135544Z.dump",
+    "backup_sha256": "5767e40a3be0954ce08a915300b4ea951850505408d4cfec9b94c91a99eafad3"
+  },
+  "backend": {
+    "legacy_reviews_restored": 2,
+    "full_review_roundtrip": true,
+    "settings_model_snapshotted": [
+      "pro",
+      "lite"
+    ],
+    "save_does_not_call_model_or_broker": true,
+    "append_preserves_existing_notes": true,
+    "repeated_save_and_stars_no_duplicate_job": true,
+    "server_limit_3000": true,
+    "temporary_fixtures_rolled_back": true,
+    "persistent_record_counts_unchanged": true,
+    "simulated_model_calls": 2,
+    "real_model_calls": 0
+  },
+  "browser": {
+    "revision": "ed354318ec0e66bdb36b158e306ad06f62eefe52",
+    "https_verified": true,
+    "assets_exact": 22,
+    "guest_pro_denied": true,
+    "viewports": [
+      {
+        "browser": "chromium",
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "saved_review_restored_after_reload": true,
+        "limit_3000": true,
+        "over_limit_blocks_save": true,
+        "saved_preferences_unchanged": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "saved_review_restored_after_reload": true,
+        "limit_3000": true,
+        "over_limit_blocks_save": true,
+        "saved_preferences_unchanged": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "saved_review_restored_after_reload": true,
+        "limit_3000": true,
+        "over_limit_blocks_save": true,
+        "saved_preferences_unchanged": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 320,
+        "height": 568,
+        "theme": "dark",
+        "saved_review_restored_after_reload": true,
+        "limit_3000": true,
+        "over_limit_blocks_save": true,
+        "saved_preferences_unchanged": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "saved_review_restored_after_reload": true,
+        "limit_3000": true,
+        "over_limit_blocks_save": true,
+        "saved_preferences_unchanged": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "saved_review_restored_after_reload": true,
+        "limit_3000": true,
+        "over_limit_blocks_save": true,
+        "saved_preferences_unchanged": true,
+        "horizontal_overflow": false,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      }
+    ],
+    "http_mutations": "Existing tester login/logout only",
+    "model_calls": 0,
+    "physical_ios": false
+  },
+  "final_health": {
+    "run_count": 68,
+    "invocation_count": 137,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0022": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "ed354318ec0e66bdb36b158e306ad06f62eefe52",
+    "validator_isolation_verified": true,
+    "new_migrations": [
+      "0022_feedback_preferences"
+    ]
+  },
+  "verification_notes": [
+    "Existing-record hashes compared using pre-migration columns; new fields verified separately against defaults and no historical processing jobs.",
+    "Temporary backend fixtures and their preference changes rolled back; no broker submissions or real provider calls.",
+    "First browser pass failed once awaiting the 3001 counter after automated WebKit 390 px input; isolated repeat and complete six-case rerun passed, with textarea value additionally asserted. No application change was needed; the cause was not reproduced.",
+    "Reviewed screenshots of mobile limit and desktop restored review."
+  ],
+  "limitations": [
+    "Real-model semantic quality was not measured.",
+    "Physical iPhone was not tested."
+  ],
+  "separate_codex_worker_modified": false,
+  "gpu_host_accessed": false
+}
