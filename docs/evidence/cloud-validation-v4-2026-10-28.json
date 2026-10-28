@@ -1,0 +1,175 @@
+{
+  "date": "2026-10-28",
+  "host": "212.57.126.215",
+  "source_revision": "bd1f48bd4c92ebd3185c787e03745515cfb71bdd",
+  "previous_revision": "ed354318ec0e66bdb36b158e306ad06f62eefe52",
+  "source_archive_sha256": "ba32250099dc9fc632b9848e16849b7957cd2cb1dbab1bed15b8b7d9903981e2",
+  "server": {
+    "revision": "bd1f48bd4c92ebd3185c787e03745515cfb71bdd",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 32,
+      "CheckReport": 19,
+      "Feedback": 2,
+      "FeedbackProcessing": 0,
+      "Invocation": 141,
+      "Like": 2,
+      "Message": 142,
+      "Outbox": 73,
+      "Preference": 3,
+      "PromptTemplate": 3,
+      "Publication": 2,
+      "Revision": 18,
+      "Run": 73,
+      "RunEvent": 746,
+      "User": 4
+    },
+    "all_existing_records_preserved": true,
+    "unknown_preserved": 5,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_image_tags": true,
+    "relay_db_redis_identity_preserved": true,
+    "new_migrations": [
+      "0023_independent_validation_tasks",
+      "0024_validation_run_fence"
+    ],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:b80104c7b635c1dd1723df57f378eda075901540fe13cea9badad947b7335876",
+        "image_tag": "gameforge-mini:cloud-bd1f48b-20261028"
+      },
+      "preview": {
+        "image_id": "sha256:b80104c7b635c1dd1723df57f378eda075901540fe13cea9badad947b7335876",
+        "image_tag": "gameforge-mini:cloud-bd1f48b-20261028"
+      },
+      "worker": {
+        "image_id": "sha256:b80104c7b635c1dd1723df57f378eda075901540fe13cea9badad947b7335876",
+        "image_tag": "gameforge-mini:cloud-bd1f48b-20261028"
+      },
+      "beat": {
+        "image_id": "sha256:b80104c7b635c1dd1723df57f378eda075901540fe13cea9badad947b7335876",
+        "image_tag": "gameforge-mini:cloud-bd1f48b-20261028"
+      },
+      "validator": {
+        "image_id": "sha256:7b42e2593522bc67ce12c12462a7727e0f437eecb1754c346983953a33b74898",
+        "image_tag": "gameforge-mini-validator:cloud-bd1f48b-20261028"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-bd1f48b-20261028T183103Z.dump",
+    "backup_sha256": "8d546f26c75848efec45e8e7f2cd9b5700d147626014a261b52d5aa475b81cdf",
+    "validator_isolation_verified": true,
+    "app_private_socket_read_only": true
+  },
+  "backend": {
+    "app_environment_probe": "mini-browser-v1:edf15d8702f5fc6a94bd2b5ec37df27a4c826468252279f45b2a6f82f8ea26bb:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "manual_api_real_browser": "passed",
+    "idempotency": true,
+    "fresh_run": true,
+    "cancellation": true,
+    "no_autopromotion_or_generation": true,
+    "temporary_fixtures_rolled_back": true,
+    "persistent_records_unchanged": true,
+    "model_calls": 0
+  },
+  "validator_canary": {
+    "environment": "mini-browser-v1:edf15d8702f5fc6a94bd2b5ec37df27a4c826468252279f45b2a6f82f8ea26bb:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "concurrency": [
+      {
+        "requests": 1,
+        "health_seconds": 0.0014,
+        "queue_seconds": [
+          0.0
+        ],
+        "execution_seconds": [
+          15.654
+        ]
+      },
+      {
+        "requests": 2,
+        "health_seconds": 0.0017,
+        "queue_seconds": [
+          15.969,
+          0.0
+        ],
+        "execution_seconds": [
+          15.881,
+          15.971
+        ]
+      },
+      {
+        "requests": 4,
+        "health_seconds": 0.0047,
+        "queue_seconds": [
+          45.783,
+          30.254,
+          15.01,
+          0.0
+        ],
+        "execution_seconds": [
+          17.048,
+          15.53,
+          15.241,
+          15.02
+        ]
+      }
+    ],
+    "fourteen_scenarios": {
+      "status": "passed",
+      "facts": 14,
+      "batches": 2
+    },
+    "cancel_and_next_check": true,
+    "unsupported_key_is_check_error": true,
+    "late_invariant_not_passed": true,
+    "model_calls": 0,
+    "records_created": 0
+  },
+  "http": {
+    "https_verified": true,
+    "health_http": 200,
+    "assets_exact": 22,
+    "guest_private_api_denied": true,
+    "model_calls": 0,
+    "http_mutations": 0
+  },
+  "final_health": {
+    "run_count": 73,
+    "invocation_count": 141,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0024": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "bd1f48bd4c92ebd3185c787e03745515cfb71bdd",
+    "validator_isolation_verified": true,
+    "new_migrations": [
+      "0023_independent_validation_tasks",
+      "0024_validation_run_fence"
+    ]
+  },
+  "external_health_from_operator_computer": "ok",
+  "real_model_calls": 0,
+  "gpu_host_accessed": false,
+  "separate_codex_worker_modified": false,
+  "pre_release_issue": {
+    "attempt": "ab24e11",
+    "failure": "Clock.pause_at: Cannot fast-forward to the past during actual concurrent cloud validation",
+    "automatic_rollback": "Previous images restored; no database restore; additive migrations retained",
+    "fix_commit": "bd1f48b",
+    "fix": "Initialize diagnostic clock earlier and pause on empty page before game loads",
+    "regression_checks": {
+      "unit": 9,
+      "isolated_browser": 12
+    }
+  },
+  "verification_notes": [
+    "Isolated canary used the exact final image, no network/DB/provider credentials, and was removed with its private volume.",
+    "All previous studio records hashed and compared before reopening ingress; temporary API fixtures rolled back.",
+    "HTTP verifier corrected to normalize favicon query strings and compare only public routes (22 files), excluding package-only license text.",
+    "No new live generation pilot, WebKit or physical-device UI test."
+  ]
+}
