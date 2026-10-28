@@ -5,6 +5,7 @@ import {
   Gamepad2,
   Heart,
   Pencil,
+  Play,
   Plus,
   Search,
   Share2,
@@ -13,7 +14,8 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { errorText, post, request } from './api';
-import { ErrorNotice, GameFrame, GameThumbnail, Modal, Spinner } from './components';
+import { ErrorNotice, GameThumbnail, Modal, Spinner } from './components';
+import GameQuickView from './GameQuickView';
 import { chatsChanged } from './context';
 import type { Chat, Publication } from './types';
 
@@ -23,7 +25,7 @@ export default function Feed() {
   const [sort, setSort] = useState('new');
   const [mine, setMine] = useState(false);
   const [error, setError] = useState('');
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [preview, setPreview] = useState<Publication | null>(null);
   const [editing, setEditing] = useState<Publication | null>(null);
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -179,22 +181,20 @@ export default function Feed() {
       ) : (
         <div className="game-grid">
           {games.map((game, index) => (
-            <article
-              key={game.id}
-              className="game-card"
-              onMouseEnter={() => {
-                if (window.matchMedia('(hover: hover)').matches) setHovered(game.id);
-              }}
-              onMouseLeave={() => setHovered((current) => (current === game.id ? null : current))}
-            >
+            <article key={game.id} className="game-card">
               <GameThumbnail game={game} index={index}>
-                {hovered === game.id && (
-                  <GameFrame
-                    url={game.preview_url}
-                    title={`Предпросмотр: ${game.title}`}
-                    className="hover-game"
-                  />
-                )}
+                <button
+                  className="game-cover-button"
+                  onClick={(event) => {
+                    event.currentTarget.focus({ preventScroll: true });
+                    setPreview(game);
+                  }}
+                  aria-label={`Быстрый просмотр: ${game.title}`}
+                >
+                  <span>
+                    <Play size={17} fill="currentColor" /> Играть
+                  </span>
+                </button>
               </GameThumbnail>
               <div className="game-card-body">
                 <div className="game-card-heading">
@@ -275,6 +275,9 @@ export default function Feed() {
             </article>
           ))}
         </div>
+      )}
+      {preview && (
+        <GameQuickView key={preview.id} game={preview} onClose={() => setPreview(null)} />
       )}
       {editing && (
         <Modal title="Название в ленте" onClose={() => setEditing(null)}>

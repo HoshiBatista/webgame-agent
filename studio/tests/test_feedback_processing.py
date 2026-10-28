@@ -160,6 +160,26 @@ def test_append_only_preserves_manual_text_and_sends_new_notes_to_future_games(c
     assert future.preferences_snapshot == pref.notes
 
 
+@pytest.mark.parametrize('review,wish,source', [
+    ('В целом все понравилось, то в горизонтальном положении телефона не готово к игре',
+     'Поддержка горизонтального положения телефона.',
+     'в горизонтальном положении телефона не готово к игре'),
+    ('Красиво, но на телефоне текст не разобрать', 'Крупный читаемый текст на телефоне',
+     'на телефоне текст не разобрать'),
+    ('Без мыши не получается управлять', 'Управление с клавиатуры без мыши',
+     'Без мыши не получается управлять'),
+])
+def test_device_need_from_mixed_review_is_grounded_and_appended(client, account, review, wish, source):
+    # Provider decisions are fixtures; this checks transport/application, not model quality.
+    save(client, account, selected_reasons=[], custom_reason=review)
+    job = FeedbackProcessing.objects.get()
+    generate = run_job(job, response(('add', wish, source)))
+    assert generate.call_args.args[0]['preference_extraction']['custom_reason'] == review
+    assert job.status == 'applied' and job.added_notes == [wish]
+    assert Preference.objects.get(pk=account[1].pk).notes == ['Спокойные цвета', wish]
+    assert Feedback.objects.get().custom_reason == review
+
+
 def test_duplicate_conflicting_and_irrelevant_model_decisions_are_not_appended(client, account):
     save(client, account, custom_reason='Яркие цвета. Всё понравилось. Крупный текст.')
     job = FeedbackProcessing.objects.get()

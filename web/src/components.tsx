@@ -35,6 +35,8 @@ export function GameThumbnail({
   index?: number;
   children?: ReactNode;
 }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const imageUrl = game.thumbnail_url !== failedUrl ? game.thumbnail_url : null;
   return (
     <div className={`game-thumbnail thumbnail-${index % 5}`}>
       <div className="thumbnail-art" aria-hidden="true">
@@ -43,11 +45,25 @@ export function GameThumbnail({
         <Gamepad2 size={58} />
         <Sparkles className="thumbnail-spark" size={20} />
       </div>
-      {game.thumbnail_url && (
-        <img src={game.thumbnail_url} alt={`Кадр игры «${game.title}»`} loading="lazy" />
+      {imageUrl && (
+        <>
+          <img
+            className="thumbnail-ambient"
+            src={imageUrl}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+          />
+          <img
+            className="thumbnail-image"
+            src={imageUrl}
+            alt={`Кадр игры «${game.title}»`}
+            loading="lazy"
+            onError={() => setFailedUrl(imageUrl)}
+          />
+        </>
       )}
       {children}
-      <span className="game-format">MINI GAME</span>
     </div>
   );
 }
@@ -97,26 +113,31 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  className = '',
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
     const dialog = ref.current;
+    const priorFocus = document.activeElement;
     if (dialog && !dialog.open) dialog.showModal();
     return () => {
       dialog?.close();
+      if (priorFocus instanceof HTMLElement && priorFocus.isConnected)
+        priorFocus.focus({ preventScroll: true });
     };
   }, []);
   return (
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      className={`modal ${wide ? 'modal-wide' : ''}`}
+      className={`modal ${wide ? 'modal-wide' : ''} ${className}`}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -143,12 +164,16 @@ export function GameFrame({
   artifactKey = url,
   className = '',
   muted,
+  onLoad,
+  onEscape,
 }: {
   url: string;
   title: string;
   artifactKey?: string;
   className?: string;
   muted?: boolean;
+  onLoad?: () => void;
+  onEscape?: () => void;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const controlled = muted !== undefined;
@@ -172,12 +197,10 @@ export function GameFrame({
   }, [controlled, muted, artifactKey]);
   useEffect(() => {
     const ready = (event: MessageEvent) => {
-      if (
-        event.source === frame.current?.contentWindow &&
-        event.data?.type === 'gameforge:audio-ready' &&
-        event.data.artifactKey === artifactKey
-      )
-        sendAudio();
+      if (event.source !== frame.current?.contentWindow || event.data?.artifactKey !== artifactKey)
+        return;
+      if (event.data.type === 'gameforge:audio-ready') sendAudio();
+      if (event.data.type === 'gameforge:escape') onEscape?.();
     };
     window.addEventListener('message', ready);
     document.addEventListener('visibilitychange', sendAudio);
@@ -186,11 +209,14 @@ export function GameFrame({
       window.removeEventListener('message', ready);
       document.removeEventListener('visibilitychange', sendAudio);
     };
-  }, [sendAudio, artifactKey]);
+  }, [sendAudio, artifactKey, onEscape]);
   return (
     <iframe
       ref={frame}
-      onLoad={sendAudio}
+      onLoad={() => {
+        sendAudio();
+        onLoad?.();
+      }}
       className={`game-frame ${className}`}
       src={loaded.current.url}
       title={title}

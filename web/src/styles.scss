@@ -1482,7 +1482,7 @@ svg {
   }
 }
 
-/* Community, with at most one running hover preview. */
+/* Community: complete covers; live games open only by request. */
 .feed {
   padding: 35px 4% 60px;
   max-width: 1600px;
@@ -1634,7 +1634,7 @@ svg {
   border-color: color-mix(in srgb, var(--accent-text) 35%, var(--border));
 }
 .game-thumbnail {
-  height: 190px;
+  height: clamp(260px, 24vw, 320px);
   position: relative;
   overflow: hidden;
   background: #e7d9c2;
@@ -1695,28 +1695,270 @@ svg {
   color: #fff9e9;
   font-style: normal;
 }
-.game-thumbnail > img {
+/* The sharp foreground keeps the entire frame. Only the ambient copy is cropped. */
+.thumbnail-ambient {
+  position: absolute;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  object-fit: cover;
+  filter: blur(24px) brightness(0.55) saturate(1.15);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.thumbnail-image {
+  position: absolute;
+  inset: 16px;
+  width: calc(100% - 32px);
+  height: calc(100% - 32px);
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px #0005);
+  transition: transform 280ms ease;
+}
+.game-thumbnail:has(.thumbnail-image) .thumbnail-art {
+  visibility: hidden;
+}
+.game-cover-button {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  border: 0;
+  padding: 16px;
+  background: linear-gradient(transparent 60%, #1318244d);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  cursor: pointer;
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 30px;
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: 0 4px 16px #0003;
+    font-weight: 700;
+    font-size: 13px;
+    transition:
+      background 200ms,
+      transform 200ms;
+  }
+  &:is(:hover, :focus-visible) > span {
+    background: var(--accent);
+    color: var(--accent-text);
+    transform: translateY(-3px);
+  }
+  &:focus-visible {
+    outline-offset: -5px;
+  }
 }
-.game-format {
+.game-quick-view {
+  width: calc(100vw - 32px);
+  max-width: 1120px;
+  height: min(940px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  .modal-inner {
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+  .modal-heading {
+    margin-bottom: 0;
+    flex: none;
+    h2 {
+      font-size: 22px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    > button {
+      flex: none;
+    }
+  }
+}
+.quick-view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: none;
+  > button {
+    flex: none;
+  }
+}
+.quick-view-open {
+  display: none;
+}
+.quick-view-modes {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--soft);
+  border-radius: 12px;
+  button:nth-child(2) svg {
+    transform: rotate(-90deg);
+  }
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    transition:
+      background 160ms,
+      color 160ms;
+    &[aria-pressed='true'] {
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 1px 5px #0001;
+    }
+  }
+}
+.quick-view-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 25% 0, #344050, #151923 75%);
+  isolation: isolate;
+  > .loading {
+    position: absolute;
+    inset: 0;
+    color: #fff;
+    z-index: 1;
+  }
+}
+.quick-view-ambient {
   position: absolute;
-  bottom: 12px;
-  left: 13px;
-  border-radius: 5px;
-  padding: 4px 6px;
-  font-size: var(--text-small);
-  letter-spacing: 1.1px;
-  background: #fff9e9b3;
-  color: #59705e;
-}
-.hover-game {
-  position: absolute !important;
-  inset: 0;
+  inset: -10%;
+  width: 120%;
+  height: 120%;
+  object-fit: cover;
+  filter: blur(48px);
+  opacity: 0.14;
   pointer-events: none;
+}
+.quick-view-screen {
+  position: absolute;
+  transform-origin: top left;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px #ffffff24,
+    0 18px 70px #0006;
+  opacity: 0;
+  transition: opacity 220ms;
+  &.is-loaded {
+    opacity: 1;
+  }
+}
+.quick-view-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: none;
+  > p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  > a {
+    flex: none;
+  }
+}
+@media (max-width: 600px) {
+  .game-quick-view {
+    width: calc(100vw - 12px);
+    max-width: none;
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: 18px;
+    .modal-inner {
+      padding: 12px;
+      gap: 10px;
+    }
+    .modal-heading h2 {
+      font-size: 18px;
+    }
+  }
+  .quick-view-modes {
+    flex: 1;
+    button {
+      flex: 1;
+      padding: 9px 6px;
+    }
+    button span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+  }
+  .quick-view-footer > p {
+    gap: 6px;
+  }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  .game-quick-view .modal-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 40px minmax(0, 1fr);
+    padding: 12px;
+    gap: 8px;
+  }
+  .game-quick-view .modal-heading {
+    h2 {
+      font-size: 18px;
+    }
+    > button {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+    }
+  }
+  .quick-view-controls {
+    margin-right: 44px;
+  }
+  .quick-view-modes button span {
+    display: none;
+  }
+  .quick-view-modes button {
+    padding: 8px 10px;
+  }
+  .quick-view-stage {
+    grid-column: 1 / -1;
+  }
+  .quick-view-footer {
+    display: none;
+  }
+  .quick-view-open {
+    display: inline-flex;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-cover-button > span,
+  .thumbnail-image,
+  .quick-view-screen {
+    transition: none;
+  }
 }
 .game-card-body {
   padding: 17px;
@@ -2849,9 +3091,6 @@ svg {
   .feed {
     padding-inline: 5%;
   }
-  .game-thumbnail {
-    height: 230px;
-  }
 }
 @media (max-width: 1200px) {
   .studio {
@@ -3359,9 +3598,6 @@ svg {
     gap: 15px;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   }
-  .game-thumbnail {
-    height: 145px;
-  }
   .game-card-body {
     padding: 12px;
   }
@@ -3708,9 +3944,6 @@ svg {
   }
   .game-grid {
     grid-template-columns: 1fr;
-  }
-  .game-thumbnail {
-    height: 200px;
   }
   .game-card-actions {
     flex-wrap: nowrap;

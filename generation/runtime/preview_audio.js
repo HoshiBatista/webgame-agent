@@ -1,4 +1,4 @@
-// Preview-only audio control. Saved games and offline exports are not modified.
+// Preview-only host controls. Saved games and offline exports are not modified.
 ((config) => {
   'use strict';
   let muted = true;
@@ -94,5 +94,10 @@
     media.forEach(track);
   });
   window.addEventListener('gameforge:experience-ready', () => window.GameForgeExperience?.setHostControl(muted));
+  // Keyboard events inside the isolated game do not bubble to the host dialog.
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !event.repeat)
+      window.parent.postMessage({ type: 'gameforge:escape', artifactKey: config.artifactKey }, config.origin);
+  }, true);
   window.parent.postMessage({ type: 'gameforge:audio-ready', artifactKey: config.artifactKey }, config.origin);
 })(__GAMEFORGE_AUDIO_CONFIG__);

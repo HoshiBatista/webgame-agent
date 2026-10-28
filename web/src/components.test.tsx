@@ -53,6 +53,37 @@ describe('sandbox and preview lifecycle', () => {
     );
     expect(send).toHaveBeenCalledOnce();
   });
+  it('accepts Escape only from the current game and matching artifact', () => {
+    const close = vi.fn();
+    render(
+      <GameFrame
+        url="http://localhost:8001/p/test"
+        title="Игра"
+        artifactKey="game-hash"
+        muted
+        onEscape={close}
+      />,
+    );
+    const frame = screen.getByTitle('Игра') as HTMLIFrameElement;
+    for (const [source, artifactKey] of [
+      [window, 'game-hash'],
+      [frame.contentWindow, 'wrong-game'],
+    ] as const) {
+      fireEvent(
+        window,
+        new MessageEvent('message', { source, data: { type: 'gameforge:escape', artifactKey } }),
+      );
+    }
+    expect(close).not.toHaveBeenCalled();
+    fireEvent(
+      window,
+      new MessageEvent('message', {
+        source: frame.contentWindow,
+        data: { type: 'gameforge:escape', artifactKey: 'game-hash' },
+      }),
+    );
+    expect(close).toHaveBeenCalledOnce();
+  });
   it('scales the whole validated viewport in a small bezel and keeps the frame on resize/fullscreen', () => {
     let resize = () => {};
     const observe = vi.fn();
