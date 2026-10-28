@@ -1,0 +1,197 @@
+{
+  "date": "2026-10-28",
+  "release": "e7b9485f76d9533356a9ba9770f6f7e76aeb503e",
+  "previous_release": "75f5065b0f2d47a1090b9b8457a4e5b9e01ee587",
+  "server": {
+    "revision": "e7b9485f76d9533356a9ba9770f6f7e76aeb503e",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 28,
+      "CheckReport": 3,
+      "Feedback": 0,
+      "Invocation": 116,
+      "Like": 2,
+      "Message": 114,
+      "Outbox": 59,
+      "Preference": 3,
+      "PromptTemplate": 3,
+      "Publication": 1,
+      "Revision": 3,
+      "Run": 59,
+      "RunEvent": 608,
+      "User": 4
+    },
+    "existing_records_preserved_except_authorized_empty_preference_defaults": true,
+    "migrated_empty_preferences": 2,
+    "unknown_preserved": 5,
+    "visible_chats": 1,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_application_image_and_pro_access": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "accounts": {
+      "existing_accounts": [
+        {
+          "id": 1,
+          "username": "admin",
+          "pro_available": true,
+          "model_preference": "pro",
+          "preference_exists": false
+        },
+        {
+          "id": 2,
+          "username": "tester",
+          "pro_available": true,
+          "model_preference": "pro",
+          "preference_exists": true
+        },
+        {
+          "id": 3,
+          "username": "tester2",
+          "pro_available": true,
+          "model_preference": "pro",
+          "preference_exists": true
+        },
+        {
+          "id": 4,
+          "username": "tester3",
+          "pro_available": true,
+          "model_preference": "pro",
+          "preference_exists": true
+        }
+      ],
+      "all_existing_active_accounts_have_pro": true,
+      "future_accounts_have_pro_by_default": true,
+      "guests_and_inactive_denied": true,
+      "model_calls": 0,
+      "records_created": 0
+    },
+    "new_migrations": [
+      "0021_pro_default"
+    ],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:68f4a514d472f793a45e4c928eb95f1312fdfd47ac0cd545867875ec6033096f",
+        "image_tag": "gameforge-mini:cloud-e7b9485-20261028"
+      },
+      "preview": {
+        "image_id": "sha256:68f4a514d472f793a45e4c928eb95f1312fdfd47ac0cd545867875ec6033096f",
+        "image_tag": "gameforge-mini:cloud-e7b9485-20261028"
+      },
+      "worker": {
+        "image_id": "sha256:68f4a514d472f793a45e4c928eb95f1312fdfd47ac0cd545867875ec6033096f",
+        "image_tag": "gameforge-mini:cloud-e7b9485-20261028"
+      },
+      "beat": {
+        "image_id": "sha256:68f4a514d472f793a45e4c928eb95f1312fdfd47ac0cd545867875ec6033096f",
+        "image_tag": "gameforge-mini:cloud-e7b9485-20261028"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-e7b9485-20261028T004458Z.dump",
+    "backup_sha256": "8ed037e805a6c37fd2029937387c2fdb0430ab116784b3e909762e1d020ed1fb"
+  },
+  "browser": {
+    "revision": "e7b9485f76d9533356a9ba9770f6f7e76aeb503e",
+    "https_verified": true,
+    "html_assets_exact": true,
+    "viewports": [
+      {
+        "username": "tester2",
+        "browser": "chromium",
+        "theme": "light",
+        "width": 390,
+        "height": 844,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester2",
+        "browser": "chromium",
+        "theme": "light",
+        "width": 1440,
+        "height": 1000,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester3",
+        "browser": "chromium",
+        "theme": "light",
+        "width": 390,
+        "height": 844,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester3",
+        "browser": "chromium",
+        "theme": "light",
+        "width": 1440,
+        "height": 1000,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester2",
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 390,
+        "height": 844,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester2",
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 1440,
+        "height": 1000,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester3",
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 390,
+        "height": 844,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      },
+      {
+        "username": "tester3",
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 1440,
+        "height": 1000,
+        "settings_and_new_chat_pro_selected_and_enabled": true,
+        "is_staff": false
+      }
+    ],
+    "guest_pro_denied": true,
+    "http_mutations": "login/logout only",
+    "chats_created": 0,
+    "model_calls": 0,
+    "page_errors": [],
+    "physical_ios": false
+  },
+  "final_health": {
+    "run_count": 59,
+    "invocation_count": 116,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0021": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "e7b9485f76d9533356a9ba9770f6f7e76aeb503e",
+    "validator_isolation_verified": true,
+    "new_migrations": [
+      "0021_pro_default"
+    ]
+  },
+  "gpu_accessed": false,
+  "codex_worker_changed": false
+}
