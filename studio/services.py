@@ -291,7 +291,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     # unless the user explicitly selects another profile.
     inherited = previous or continued_from
     default_choice = inherited.model_profile if inherited else (
-        "" if settings.GAMEFORGE_PROVIDER == "fake" else preference_for(chat.owner).model_profile
+        "" if settings.GAMEFORGE_PROVIDER == "fake" else (preference_for(chat.owner).model_profile or "pro")
     )
     profile_id = data.get("model_profile", default_choice)
     if not isinstance(profile_id, str) or profile_id not in {"", "pro", "lite"}:

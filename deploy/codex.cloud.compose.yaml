@@ -2,8 +2,8 @@
 # Auth is mounted only into worker; app can read only the exported model catalog.
 x-pro-environment: &pro-environment
   GAMEFORGE_PRO_ENABLED: ${GAMEFORGE_PRO_ENABLED:-0}
-  GAMEFORGE_PRO_ACCESS: restricted
-  GAMEFORGE_PRO_USER_IDS: ${GAMEFORGE_PRO_USER_IDS:?Set explicit allowed user IDs}
+  GAMEFORGE_PRO_ACCESS: ${GAMEFORGE_PRO_ACCESS:-authenticated}
+  GAMEFORGE_PRO_USER_IDS: ${GAMEFORGE_PRO_USER_IDS:-}
   GAMEFORGE_CODEX_BINARY: /usr/local/bin/codex
 
 x-codex-binary: &codex-binary

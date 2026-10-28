@@ -94,7 +94,8 @@ def environment(tmp_path, settings, monkeypatch):
         owner = User.objects.create_user(username="owner")
         chat = Chat.objects.create(owner=owner)
         # Existing receipt tests cover the one-call path of a detailed Lite request.
-        run = create_run(chat, {"prompt": "Create a mini game. " * 20, "idempotency_key": "stable"})
+        run = create_run(chat, {"prompt": "Create a mini game. " * 20, "idempotency_key": "stable",
+                                "model_profile": "lite", "generation_profile": "full"})
         yield run, store, executor, calls
 
 

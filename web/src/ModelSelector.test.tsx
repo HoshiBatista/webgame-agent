@@ -58,12 +58,12 @@ const chat = {
   runs: [],
   active_run: null,
 } as unknown as Chat;
-function setup(page: 'studio' | 'settings', initial = session) {
+function setup(page: 'studio' | 'settings', initial = session, path = '/chats/one') {
   function Harness() {
     const [value, updateSession] = useState(initial);
     return (
       <SessionContext.Provider value={{ session: value, updateSession, refresh: vi.fn() }}>
-        <MemoryRouter initialEntries={['/chats/one']}>
+        <MemoryRouter initialEntries={[path]}>
           <Routes>
             <Route
               path="/chats/:id"
@@ -95,6 +95,38 @@ beforeEach(() => {
     return preferences;
   });
   vi.mocked(post).mockRejectedValue(new Error('Соединение потеряно'));
+});
+
+const newAccountSession: Session = {
+  ...session,
+  user: { id: 'new-member', username: 'new-member', is_staff: false },
+  preferences: { ...session.preferences, model_profile: 'pro' },
+  capabilities: { ...session.capabilities, local_only: false, default_model_profile: 'pro' },
+};
+
+it('shows Pro in a new account settings without a preference write or generation', () => {
+  setup('settings', newAccountSession);
+  expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked();
+  expect(screen.getByRole('radio', { name: /Pro/ })).toBeEnabled();
+  expect(request).not.toHaveBeenCalled();
+  expect(post).not.toHaveBeenCalled();
+});
+
+it('starts a new account chat with Pro without needing to choose it first', async () => {
+  setup('studio', newAccountSession, '/chats/new');
+  await screen.findByLabelText('Выбрать модель: Pro');
+  expect(post).not.toHaveBeenCalled();
+  vi.mocked(post).mockResolvedValueOnce(chat);
+  fireEvent.change(screen.getByLabelText('Описание вашей игры'), {
+    target: { value: 'Собрать звёзды' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+  await screen.findByText('Соединение потеряно');
+  expect(post).toHaveBeenNthCalledWith(
+    2,
+    '/api/chats/one/runs/',
+    expect.objectContaining({ model_profile: 'pro' }),
+  );
 });
 
 it('saves the chat choice without generating, then uses it and retains the retry key', async () => {

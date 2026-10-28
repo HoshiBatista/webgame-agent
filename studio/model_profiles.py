@@ -22,7 +22,7 @@ def configured_profiles():
     }
 
 
-def local_operator(request):
+def local_account(request):
     return bool(
         settings.GAMEFORGE_LOCAL_ONLY
         and urlparse(settings.GAMEFORGE_APP_ORIGIN).hostname in {"localhost", "127.0.0.1", "::1"}
@@ -30,16 +30,16 @@ def local_operator(request):
         and request.META.get("REMOTE_ADDR") in {"127.0.0.1", "::1"}
         and request.user is not None
         and request.user.is_authenticated
-        and request.user.is_staff
+        and request.user.is_active
     )
 
 
 def can_use_pro(request):
     if settings.GAMEFORGE_PRO_ACCESS == "local":
-        return local_operator(request)
+        return local_account(request)
     origin = urlparse(settings.GAMEFORGE_APP_ORIGIN)
     return bool(
-        settings.GAMEFORGE_PRO_ACCESS == "restricted"
+        settings.GAMEFORGE_PRO_ACCESS in {"restricted", "authenticated"}
         and not settings.GAMEFORGE_LOCAL_ONLY
         and origin.scheme == "https"
         and request.is_secure()
@@ -47,7 +47,8 @@ def can_use_pro(request):
         and request.user is not None
         and request.user.is_authenticated
         and request.user.is_active
-        and request.user.pk in settings.GAMEFORGE_PRO_USER_IDS
+        and (settings.GAMEFORGE_PRO_ACCESS == "authenticated"
+             or request.user.pk in settings.GAMEFORGE_PRO_USER_IDS)
     )
 
 
@@ -56,7 +57,7 @@ def unavailable_reason(profile, request=None):
         if not settings.GAMEFORGE_PRO_ENABLED:
             return "Pro не включён на этом сервере."
         if settings.GAMEFORGE_PRO_ACCESS == "local" and not settings.GAMEFORGE_LOCAL_ONLY:
-            return "Pro доступен только локальному администратору."
+            return "Pro доступен только при локальном подключении."
         if request is not None and not can_use_pro(request):
             return "Для вашего аккаунта Pro не разрешён на этом сервере."
         if profile["provider"] == "codex_api":
@@ -91,6 +92,7 @@ def profile_options(request):
 
 
 def default_profile(options):
-    preferred = "pro" if settings.GAMEFORGE_PROVIDER in {"codex", "codex_api"} else "lite"
-    return next((p["id"] for p in options if p["id"] == preferred and p["available"]),
+    # The account starts on Pro even during an outage; never silently choose a
+    # different model. An explicitly saved Lite preference takes precedence.
+    return next((p["id"] for p in options if p["id"] == "pro"),
                 next((p["id"] for p in options if p["available"]), ""))

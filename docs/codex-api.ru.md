@@ -71,14 +71,18 @@ Codex не удалять. Для возврата к CLI дождаться о�
 
 ```dotenv
 GAMEFORGE_PRO_ENABLED=1
-GAMEFORGE_PRO_USER_IDS=1,2
+GAMEFORGE_PRO_ACCESS=authenticated
 GAMEFORGE_CODEX_API_URL=https://72.56.101.64
 GAMEFORGE_CODEX_API_KEY_HOST=/opt/gameforge/secrets/codex-api-cloud.token
 GAMEFORGE_CODEX_API_CATALOG_HOST=/opt/gameforge/codex-api-catalog
 ```
 
-ID 1,2 — ранее согласованные аккаунты текущего стенда; в другой установке указать
-реальные разрешённые ID. Новые пользователи автоматически Pro не получают.
+Режим authenticated предоставляет Pro всем активным вошедшим аккаунтам, включая
+созданные позднее. Список `GAMEFORGE_PRO_USER_IDS` не требуется и в этом режиме не
+ограничивает доступ. HTTPS и совпадение APP_ORIGIN остаются обязательными.
+При обновлении старого выпуска заменить явный `GAMEFORGE_PRO_ACCESS=restricted`,
+если он есть, на authenticated и применить миграцию 0021. Новые настройки выбирают Pro;
+сохранённый Lite не меняется. До этой выкладки облачный выпуск 75f5065 сохраняет прежний доступ.
 Файл ключа должен читаться UID 10001 (0600); каталог снимка должен быть доступен
 на запись worker UID 10001 и на чтение app. Содержимое снимка не содержит секретов.
 

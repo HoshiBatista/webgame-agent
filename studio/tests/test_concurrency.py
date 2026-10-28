@@ -23,7 +23,7 @@ class RaceTests(TransactionTestCase):
     def test_manual_rename_wins_when_generation_finishes_at_the_same_time(self):
         user = User.objects.create_user(username="rename-owner")
         chat = Chat.objects.create(owner=user)
-        run = create_run(chat, {"prompt": "Игра про звёзды", "idempotency_key": "new"})
+        run = create_run(chat, {"prompt": "Игра про звёзды", "idempotency_key": "new", "model_profile": ""})
         run.fence = uuid.uuid4()
         run.save(update_fields=["fence"])
         revision = Revision.objects.create(
@@ -79,7 +79,8 @@ class RaceTests(TransactionTestCase):
         user = User.objects.create_user(username="owner")
         Budget.objects.create(pk=1, limit_usd=Decimal("0.314"))
         chats = [Chat.objects.create(owner=user) for _ in range(2)]
-        runs = [create_run(chat, {"prompt": "A mini game", "idempotency_key": "new"}) for chat in chats]
+        # This race uses the explicitly configured Luna tariff, not the account's Pro default.
+        runs = [create_run(chat, {"prompt": "A mini game", "idempotency_key": "new", "model_profile": ""}) for chat in chats]
         barrier = Barrier(2)
 
         def reserve(run):

@@ -36,7 +36,7 @@ def setup(settings):
 
 
 def new_run(chat):
-    return create_run(chat, {"prompt": "Make a complete small game", "idempotency_key": "staged"})
+    return create_run(chat, {"prompt": "Make a complete small game", "idempotency_key": "staged", "model_profile": ""})
 
 
 @pytest.mark.django_db(transaction=True)

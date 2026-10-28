@@ -20,7 +20,7 @@ class Preference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="preference")
     theme = models.CharField(max_length=10, default="light")
     notes = models.JSONField(default=list)
-    model_profile = models.CharField(max_length=10, blank=True, default="")
+    model_profile = models.CharField(max_length=10, blank=True, default="pro")
 
 
 class PromptTemplate(models.Model):

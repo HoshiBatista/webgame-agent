@@ -34,7 +34,7 @@ def test_trace_is_durable_before_send_and_failure_does_not_repeat(settings, monk
         patch("validation.service.environment_identity", return_value={"version": "test"}),
         patch("generation.service.generate", side_effect=fail) as model,
     ):
-        run = create_run(chat, {"prompt": "PRIVATE PROMPT", "idempotency_key": "diagnostic"})
+        run = create_run(chat, {"prompt": "PRIVATE PROMPT", "idempotency_key": "diagnostic", "model_profile": ""})
         process_run(str(run.id))
         process_run(str(run.id))
         model.assert_called_once()

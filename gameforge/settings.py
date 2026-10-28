@@ -129,7 +129,7 @@ if GAMEFORGE_MAX_REPAIR_ATTEMPTS not in (2, 3):
 GAMEFORGE_LEASE_SECONDS = int(os.environ.get("GAMEFORGE_LEASE_SECONDS", "45"))
 GAMEFORGE_LOCAL_ONLY = os.environ.get("GAMEFORGE_LOCAL_ONLY", "1") == "1"
 # Pro is opt-in. The default remains local-only; a trusted cloud installation
-# must separately allow exact existing account IDs, never every logged-in visitor.
+# can allow all active accounts over HTTPS, or an explicitly restricted list.
 GAMEFORGE_PRO_ENABLED = os.environ.get("GAMEFORGE_PRO_ENABLED", "0") == "1"
 GAMEFORGE_PRO_PROVIDER = os.environ.get(
     "GAMEFORGE_PRO_PROVIDER", "codex_api" if GAMEFORGE_PROVIDER == "codex_api" else "codex"
@@ -137,8 +137,8 @@ GAMEFORGE_PRO_PROVIDER = os.environ.get(
 if GAMEFORGE_PRO_PROVIDER not in {"codex", "codex_api"}:
     raise ValueError("GAMEFORGE_PRO_PROVIDER must be codex or codex_api")
 GAMEFORGE_PRO_ACCESS = os.environ.get("GAMEFORGE_PRO_ACCESS", "local")
-if GAMEFORGE_PRO_ACCESS not in {"local", "restricted"}:
-    raise ValueError("GAMEFORGE_PRO_ACCESS must be local or restricted")
+if GAMEFORGE_PRO_ACCESS not in {"local", "restricted", "authenticated"}:
+    raise ValueError("GAMEFORGE_PRO_ACCESS must be local, restricted or authenticated")
 GAMEFORGE_PRO_USER_IDS = frozenset(
     int(value.strip()) for value in os.environ.get("GAMEFORGE_PRO_USER_IDS", "").split(",") if value.strip()
 )
