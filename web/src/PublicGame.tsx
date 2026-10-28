@@ -15,6 +15,7 @@ export default function PublicGame() {
   const [game, setGame] = useState<Publication | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(false);
   useEffect(() => {
     let alive = true;
     request<Publication>(`/api/publications/${id}/`)
@@ -64,7 +65,6 @@ export default function PublicGame() {
       {game ? (
         <main>
           <div className="public-game-title">
-            <span className="eyebrow">МАЛЕНЬКИЙ МИР ОТ {game.author.username}</span>
             <h1>{game.title}</h1>
           </div>
           <div className="public-preview">
@@ -73,6 +73,8 @@ export default function PublicGame() {
               url={game.preview_url}
               title={game.title}
               forceFullscreen={mobileFullscreen}
+              muted={soundMuted}
+              onMutedChange={() => setSoundMuted((value) => !value)}
             />
           </div>
           <p className="public-game-footnote">

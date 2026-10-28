@@ -1753,8 +1753,9 @@ svg {
   margin-top: 12px;
 }
 .avatar-small {
-  height: 18px;
-  width: 18px;
+  height: 24px;
+  width: 24px;
+  flex-shrink: 0;
   font-size: var(--text-small);
 }
 .manual-badge {
