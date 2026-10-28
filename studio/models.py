@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 from generation.helpers import catalog as helper_catalog
 from generation.requirements import policy_snapshot
@@ -20,6 +21,7 @@ class Preference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="preference")
     theme = models.CharField(max_length=10, default="light")
     notes = models.JSONField(default=list)
+    notes_version = models.PositiveBigIntegerField(default=0)
     model_profile = models.CharField(max_length=10, blank=True, default="pro")
 
 
@@ -253,6 +255,8 @@ class Feedback(models.Model):
     revision = models.ForeignKey(Revision, on_delete=models.SET_NULL, null=True)
     rating = models.PositiveSmallIntegerField()
     reasons = models.JSONField(default=list)
+    selected_reasons = models.JSONField(null=True, default=None)
+    custom_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -261,3 +265,34 @@ class Feedback(models.Model):
                 condition=models.Q(rating__gte=1, rating__lte=5), name="studio_feedback_range"
             )
         ]
+
+
+class FeedbackProcessing(models.Model):
+    """Durable one-call background job and accounting receipt, independent of game Runs."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    feedback = models.OneToOneField(Feedback, null=True, on_delete=models.SET_NULL, related_name="processing")
+    user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    model_profile = models.CharField(max_length=10)
+    provider = models.CharField(max_length=32)
+    model = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, default="queued", db_index=True)
+    invocation_state = models.CharField(max_length=20, blank=True)
+    request = models.JSONField(default=dict)
+    response = models.JSONField(null=True)
+    raw_response = models.JSONField(null=True)
+    error = models.JSONField(default=dict)
+    usage = models.JSONField(null=True)
+    provider_metadata = models.JSONField(default=dict)
+    price = models.JSONField(default=dict)
+    reservation_usd = models.DecimalField(max_digits=14, decimal_places=6, default=0)
+    cost_usd = models.DecimalField(max_digits=14, decimal_places=6, null=True)
+    added_notes = models.JSONField(default=list)
+    notes_version = models.PositiveBigIntegerField(null=True)
+    fence = models.UUIDField(null=True)
+    lease_until = models.DateTimeField(null=True)
+    available_at = models.DateTimeField(default=timezone.now, db_index=True)
+    dispatched_at = models.DateTimeField(null=True)
+    sent_at = models.DateTimeField(null=True)
+    finished_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)

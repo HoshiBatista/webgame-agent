@@ -180,6 +180,10 @@ CHECK_REPAIR_SCHEMA = obj({
 
 def response_schema(request):
     """One current operation contract; unsupported games are retired, not reinterpreted."""
+    if request.get("operation") == "extract_preferences":
+        from .preference_extraction import SCHEMA
+
+        return deepcopy(SCHEMA)
     version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
@@ -245,7 +249,7 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
             "operation_mismatch",
             "Ответ изменил вид операции. Используйте operation из текущего запроса приложения.",
         )
-    if response["operation"] in {"visual_review", "visual_patch"}:
+    if response["operation"] in {"visual_review", "visual_patch", "extract_preferences"}:
         return
     if response["operation"] == "plan":
         from .planning import validate_plan

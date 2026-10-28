@@ -14,6 +14,7 @@ from django.utils import timezone
 from generation.service import DURABLE_PROVIDERS, PROVIDERS
 
 from .continuations import returned_response
+from .feedback_tasks import dispatch_feedback_jobs, process_feedback  # noqa: F401 -- register Celery task
 from .models import Budget, Chat, CheckReport, Invocation, Outbox, Revision, Run
 from .services import (
     DomainError,
@@ -60,6 +61,7 @@ def dispatch_outbox():
         .values_list("run_id", flat=True)[:100]
     ):
         dispatch_run(run_id)
+    dispatch_feedback_jobs()
 
 
 @shared_task(acks_late=False)

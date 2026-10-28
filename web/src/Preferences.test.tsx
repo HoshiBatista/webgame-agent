@@ -136,23 +136,23 @@ it('shows the canonical saved notes returned by the server', async () => {
 });
 
 it('counts Unicode and line breaks, blocks oversized saves and accepts a long paragraph', async () => {
-  vi.mocked(request).mockResolvedValue({ ...session.preferences, notes: ['🌙'.repeat(2500)] });
+  vi.mocked(request).mockResolvedValue({ ...session.preferences, notes: ['🌙'.repeat(3000)] });
   setup();
   const field = screen.getByLabelText('Что учитывать в новых играх');
-  fireEvent.change(field, { target: { value: '🌙'.repeat(2500) + '\n' } });
-  expect(screen.getByText('2501 / 2500')).toBeInTheDocument();
+  fireEvent.change(field, { target: { value: '🌙'.repeat(3000) + '\n' } });
+  expect(screen.getByText('3001 / 3000')).toBeInTheDocument();
   expect(field).toHaveAttribute('aria-invalid', 'true');
   expect(document.querySelector('#notes-count')).toHaveClass('over-limit');
   expect(screen.getByRole('button', { name: 'Сохранить' })).toBeDisabled();
   fireEvent.submit(screen.getByRole('form', { name: 'Настройки аккаунта' }));
   expect(request).not.toHaveBeenCalled();
-  fireEvent.change(field, { target: { value: '🌙'.repeat(2500) } });
+  fireEvent.change(field, { target: { value: '🌙'.repeat(3000) } });
   expect(screen.getByRole('button', { name: 'Сохранить' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Сохранить' }));
   await screen.findByText('Пожелания сохранены');
   expect(request).toHaveBeenCalledWith('/api/preferences/', {
     method: 'PATCH',
-    body: JSON.stringify({ notes: ['🌙'.repeat(2500)] }),
+    body: JSON.stringify({ notes: ['🌙'.repeat(3000)] }),
   });
 });
 

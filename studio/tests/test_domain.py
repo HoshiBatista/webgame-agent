@@ -570,7 +570,7 @@ class DomainTests(TestCase):
         self.client.force_login(self.other)
         self.assertEqual(self.client.get(f"/api/runs/{run.id}/diagnostics/").status_code, 404)
 
-    def test_feedback_no_paid_call_and_next_preferences(self):
+    def test_feedback_saved_before_background_processing_changes_preferences(self):
         revision = Revision.objects.create(chat=self.chat, number=1, **artifact())
         response = self.client.post(
             f"/api/chats/{self.chat.id}/feedback/",
@@ -579,7 +579,9 @@ class DomainTests(TestCase):
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(Invocation.objects.count(), 0)
-        self.assertIn("Make controls larger", self.client.get("/api/preferences/").json()["notes"])
+        self.assertEqual(self.client.get("/api/preferences/").json()["notes"], [])
+        self.assertEqual(response.json()["feedback"]["custom_reason"], "Make controls larger")
+        self.assertEqual(response.json()["feedback"]["processing_status"], "queued")
 
     def test_preview_isolation_same_bytes(self):
         revision = Revision.objects.create(

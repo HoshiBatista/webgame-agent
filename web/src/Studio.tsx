@@ -30,7 +30,7 @@ import { useSavedChat } from './useSavedChat';
 import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { selectedProfile } from './ModelSelector';
 import TemplatePicker from './TemplatePicker';
-import { appendTemplate, NOTES_LIMIT } from './textLimits';
+import { appendTemplate } from './textLimits';
 import AudienceSelector from './AudienceSelector';
 const feedbackReasons = [
   'Более понятное управление',
@@ -109,6 +109,9 @@ export default function Studio() {
   const [customReason, setCustomReason] = useState('');
   const [ratedRevisions, setRatedRevisions] = useState<string[]>([]);
   const [feedbackNotice, setFeedbackNotice] = useState('');
+  const [savedFeedback, setSavedFeedback] = useState<
+    Record<string, NonNullable<Revision['feedback']>>
+  >({});
   const idempotency = useRef(initialDraft?.idempotencyKey ?? newKey());
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
@@ -170,6 +173,7 @@ export default function Studio() {
     setShowFeedback(false);
     setFeedbackRevision(null);
     setRatedRevisions([]);
+    setSavedFeedback({});
     setRating(0);
     setReasons([]);
     setCustomReason('');
@@ -555,19 +559,28 @@ export default function Studio() {
     const startedView = view.current;
     setBusy(true);
     try {
-      const result = await post<{ preferences_full?: boolean }>(`/api/chats/${chat.id}/feedback/`, {
-        revision_id: feedbackRevision.id,
-        rating,
-        reasons: [...reasons, ...(customReason.trim() ? [customReason.trim()] : [])],
-      });
+      const result = await post<{ feedback?: Revision['feedback'] }>(
+        `/api/chats/${chat.id}/feedback/`,
+        {
+          revision_id: feedbackRevision.id,
+          rating,
+          selected_reasons: reasons,
+          custom_reason: customReason,
+        },
+      );
       void refresh();
       if (view.current !== startedView) return;
       setShowFeedback(false);
+      if (result?.feedback) {
+        setSavedFeedback((items) => ({ ...items, [feedbackRevision.id]: result.feedback! }));
+      }
       setRatedRevisions((items) => [...items, feedbackRevision.id]);
       setFeedbackNotice(
-        result?.preferences_full
-          ? `Оценка сохранена. Часть пожеланий не добавлена в настройки: достигнут лимит ${NOTES_LIMIT} символов. Освободите место, чтобы добавить их.`
-          : '',
+        result?.feedback?.processing_status === 'failed'
+          ? 'Отзыв сохранён. Сейчас не удалось запустить обработку пожеланий.'
+          : reasons.length || customReason.trim()
+            ? 'Отзыв сохранён. Подходящие пожелания появятся в настройках после обработки.'
+            : 'Отзыв сохранён.',
       );
       load();
     } catch (cause) {
@@ -672,9 +685,10 @@ export default function Studio() {
             disabled={!revision || busy}
             onClick={() => {
               setFeedbackRevision(revision);
-              setRating(revision?.feedback_rating ?? 0);
-              setReasons([]);
-              setCustomReason('');
+              const feedback = revision ? (savedFeedback[revision.id] ?? revision.feedback) : null;
+              setRating(feedback?.rating ?? revision?.feedback_rating ?? 0);
+              setReasons(feedback?.selected_reasons ?? []);
+              setCustomReason(feedback?.custom_reason ?? '');
               setShowFeedback(true);
             }}
             aria-label="Оценить результат"
@@ -1181,8 +1195,9 @@ export default function Studio() {
               </p>
             )}
             <p className="field-help">
-              Выберите звёзды, чтобы сохранить оценку. Пожелания появятся в настройках; их можно
-              изменить или удалить. Уже созданная игра не изменится.
+              Отзыв сохранится сразу. Выбранная в настройках модель обработает пожелания в фоне и
+              добавит подходящие в настройки. Их можно изменить или удалить. Уже созданная игра не
+              изменится.
             </p>
             <button
               className="button button-primary"

@@ -2,7 +2,7 @@
 from django.conf import settings
 from django.db.models import Q
 
-from .models import Run
+from .models import FeedbackProcessing, Run
 
 
 def provider_limit(provider):
@@ -16,4 +16,17 @@ def capacity_full(run):
     occupied = Run.objects.filter(provider=run.provider).exclude(pk=run.pk).filter(
         Q(status__in=["generating", "checking"]) | Q(invocations__state__in=["reserved", "sent"])
     ).values("pk").distinct().count()
+    occupied += FeedbackProcessing.objects.filter(provider=run.provider).filter(
+        Q(status="processing") | Q(invocation_state__in=["reserved", "sent"])
+    ).count()
     return occupied >= provider_limit(run.provider)
+
+
+def feedback_capacity_full(job):
+    occupied = Run.objects.filter(provider=job.provider).filter(
+        Q(status__in=["generating", "checking"]) | Q(invocations__state__in=["reserved", "sent"])
+    ).values("pk").distinct().count()
+    occupied += FeedbackProcessing.objects.filter(provider=job.provider).exclude(pk=job.pk).filter(
+        Q(status="processing") | Q(invocation_state__in=["reserved", "sent"])
+    ).count()
+    return occupied >= provider_limit(job.provider)

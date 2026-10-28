@@ -69,6 +69,13 @@ export interface Revision {
   verification: 'automatic' | 'manual' | 'none';
   publication?: { id: string; title: string; public_url: string } | null;
   feedback_rating?: number | null;
+  feedback?: {
+    id: number;
+    rating: number;
+    selected_reasons: string[];
+    custom_reason: string;
+    processing_status: string;
+  } | null;
   preview_url: string;
   export_url: string;
   parent_id: string | null;

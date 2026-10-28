@@ -99,6 +99,68 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('saved work and mutation submission', () => {
+  it('restores the saved rating, checkboxes and free text for the selected version', async () => {
+    const saved = {
+      ...revision,
+      feedback_rating: 4,
+      feedback: {
+        id: 7,
+        rating: 4,
+        selected_reasons: ['Более понятное управление'],
+        custom_reason: 'Крупный текст\nБез тонких линий',
+        processing_status: 'applied',
+      },
+    };
+    vi.mocked(request).mockResolvedValue({ ...chat, current_revision: saved, revisions: [saved] });
+    const first = setup();
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Оценить результат',
+      }),
+    );
+    expect(screen.getByRole('button', { name: 'Оценка 4 из 5' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('checkbox', { name: 'Более понятное управление' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Уделить внимание звуку' })).not.toBeChecked();
+    expect(screen.getByLabelText('Своё пожелание')).toHaveValue('Крупный текст\nБез тонких линий');
+    first.unmount();
+    setup();
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Оценить результат',
+      }),
+    );
+    expect(screen.getByLabelText('Своё пожелание')).toHaveValue('Крупный текст\nБез тонких линий');
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it('closes the review as soon as it is saved while background processing is still queued', async () => {
+    setup();
+    await screen.findByTitle('Игра');
+    fireEvent.click(screen.getByLabelText('Действия с игрой'));
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByRole('button', {
+        name: 'Оценить результат',
+      }),
+    );
+    fireEvent.change(screen.getByLabelText('Своё пожелание'), {
+      target: { value: 'В следующих играх крупнее текст' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Оценка 5 из 5' }));
+    vi.mocked(post).mockResolvedValue({ feedback: { processing_status: 'queued' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Сохранить оценку' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByText(/Отзыв сохранён. Подходящие пожелания/)).toBeInTheDocument();
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('textbox', { name: 'Что изменить в игре' })).toBeEnabled();
+  });
+
   it('sends on Enter, preserves Shift+Enter and does not submit composition events', async () => {
     setup();
     const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
@@ -557,7 +619,8 @@ describe('saved work and mutation submission', () => {
       expect(post).toHaveBeenCalledWith('/api/chats/one/feedback/', {
         revision_id: 'r1',
         rating,
-        reasons: ['Крупнее текст и элементы управления', 'Шрифт без тонких линий'],
+        selected_reasons: ['Крупнее текст и элементы управления'],
+        custom_reason: 'Шрифт без тонких линий',
       });
     },
   );
@@ -719,7 +782,8 @@ describe('saved work and mutation submission', () => {
       expect(post).toHaveBeenCalledWith('/api/chats/one/feedback/', {
         revision_id: 'r2',
         rating: 5,
-        reasons: [],
+        selected_reasons: [],
+        custom_reason: '',
       }),
     );
     await waitFor(() =>

@@ -23,7 +23,10 @@ def revision_data(revision):
     publication = Publication.objects.filter(
         revision=revision, owner_id=revision.chat.owner_id, unavailable_at__isnull=True
     ).order_by("created_at", "id").first()
-    rating = Feedback.objects.filter(revision=revision, user_id=revision.chat.owner_id).order_by("-created_at", "-id").values_list("rating", flat=True).first()
+    from .feedback import data as feedback_data
+
+    feedback = Feedback.objects.select_related("processing").filter(
+        revision=revision, user_id=revision.chat.owner_id).order_by("-created_at", "-id").first()
     return {
         "id": str(revision.id),
         "title": revision.title,
@@ -37,7 +40,8 @@ def revision_data(revision):
         "verification": revision.verification,
         "publication": {"id": str(publication.id), "title": publication.title,
                         "public_url": f"{settings.GAMEFORGE_APP_ORIGIN}/games/{publication.id}"} if publication else None,
-        "feedback_rating": rating,
+        "feedback_rating": feedback.rating if feedback else None,
+        "feedback": feedback_data(feedback),
         "preview_url": preview_url(revision),
         "export_url": f"/api/revisions/{revision.id}/export/",
         "parent_id": str(revision.parent_id) if revision.parent_id else None,

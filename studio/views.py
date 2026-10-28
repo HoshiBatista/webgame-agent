@@ -28,7 +28,7 @@ from .model_profiles import (
     unavailable_reason,
 )
 from .models import Chat, Feedback, Like, Message, Preference, Publication, Revision, Run, User
-from .preferences import add_feedback_notes, validate_notes
+from .preferences import validate_notes
 from .serialization import chat_data, preview_url, publication_data, revision_data, run_data
 from .services import (
     DomainError,
@@ -613,41 +613,44 @@ def preferences_view(request):
             pref.theme = request.data["theme"]
         if "notes" in request.data:
             pref.notes = validate_notes(request.data["notes"])
+            pref.notes_version += 1
         pref.save(update_fields=[key for key in ("theme", "notes", "model_profile")
-                                 if key in request.data])
+                                 if key in request.data] + (["notes_version"] if "notes" in request.data else []))
     return Response(preference_data(pref))
 
 
 @api_view(["POST"])
 def feedback_view(request, ident):
+    from .feedback import data as feedback_data
+    from .feedback import enqueue, parse
+
     chat = owned_chat(request, ident)
+    values = parse(request.data)
     revision = selected_saved_revision(chat, request.data)
-    rating = request.data.get("rating")
-    reasons = request.data.get("reasons", [])
-    if type(rating) is not int or not 1 <= rating <= 5:
-        raise DomainError("invalid_rating", "Оценка должна быть от 1 до 5.")
-    if (
-        not isinstance(reasons, list)
-        or len(reasons) > 5
-        or not all(isinstance(s, str) and len(s) <= 300 for s in reasons)
-    ):
-        raise DomainError("invalid_reasons", "Добавьте до пяти коротких пожеланий.")
     with transaction.atomic():
-        feedback = Feedback.objects.create(
-            chat=chat, user=request.user, revision=revision, rating=rating, reasons=reasons
-        )
+        if not Chat.objects.select_for_update().filter(pk=chat.pk, deleted_at__isnull=True).first():
+            raise DomainError("chat_not_found", "Этот чат удалён или недоступен.", 404)
+        feedback = Feedback.objects.filter(chat=chat, user=request.user, revision=revision).order_by(
+            "-created_at", "-id").first()
         pref = preference_for(request.user)
         pref = Preference.objects.select_for_update().get(pk=pref.pk)
-        pref.notes, preferences_full = add_feedback_notes(pref.notes, reasons)
-        pref.save(update_fields=["notes"])
+        # Repeated HTTP saves don't create another paid inference or another review.
+        if feedback is not None and all(getattr(feedback, key) == value for key, value in values.items()
+                                        if key != "rating"):
+            if feedback.rating != values["rating"]:
+                feedback.rating = values["rating"]
+                feedback.save(update_fields=["rating"])
+        else:
+            feedback = Feedback.objects.create(chat=chat, user=request.user, revision=revision, **values)
+            enqueue(feedback, pref, request)
     return Response(
         {
             "id": feedback.id,
             "revision_id": str(revision.id),
-            "rating": rating,
-            "reasons": reasons,
+            "rating": feedback.rating,
+            "reasons": feedback.reasons,
+            "feedback": feedback_data(feedback),
             "preferences": preference_data(pref),
-            "preferences_full": preferences_full,
         },
         status=201,
     )

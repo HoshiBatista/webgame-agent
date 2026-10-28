@@ -16,7 +16,18 @@ from generation.audiences import AUDIENCES
 
 from .continuations import delivery_state, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
-from .models import Budget, Chat, Invocation, Message, Outbox, Preference, Revision, Run, RunEvent
+from .models import (
+    Budget,
+    Chat,
+    FeedbackProcessing,
+    Invocation,
+    Message,
+    Outbox,
+    Preference,
+    Revision,
+    Run,
+    RunEvent,
+)
 from .replies import assistant_reply, run_reply
 from .titles import DEFAULT_CHAT_TITLE, short_game_title, title_from_prompt
 
@@ -72,6 +83,14 @@ def budget_snapshot():
     )["n"] or Decimal(0)
     unknown = Invocation.objects.filter(
         state__in=["unknown", "returned", "settled"], cost_usd__isnull=True
+    ).aggregate(n=Sum("reservation_usd"))["n"] or Decimal(0)
+    # Background review calls use the same global budget and keep ambiguous liabilities.
+    spent += FeedbackProcessing.objects.filter(cost_usd__isnull=False).aggregate(n=Sum("cost_usd"))["n"] or Decimal(0)
+    reserved += FeedbackProcessing.objects.filter(
+        invocation_state__in=["reserved", "sent"], cost_usd__isnull=True
+    ).aggregate(n=Sum("reservation_usd"))["n"] or Decimal(0)
+    unknown += FeedbackProcessing.objects.filter(
+        invocation_state__in=["unknown", "returned"], cost_usd__isnull=True
     ).aggregate(n=Sum("reservation_usd"))["n"] or Decimal(0)
     return {
         k: float(v)

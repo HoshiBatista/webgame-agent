@@ -113,7 +113,8 @@ def test_feedback_is_bound_to_selected_draft_and_survives_reload(client, version
     assert not schedule.called and not Invocation.objects.exists()
     assert revision_data(draft)["feedback_rating"] == 3
     assert revision_data(first)["feedback_rating"] is None
-    assert client.get('/api/preferences/').json()["notes"] == ["Крупнее кнопки"]
+    assert client.get('/api/preferences/').json()["notes"] == []
+    assert revision_data(draft)["feedback"]["custom_reason"] == "Крупнее кнопки"
     client.force_login(other)
     assert client.post(f"/api/chats/{chat.pk}/feedback/", {
         "revision_id": str(draft.pk), "rating": 5,

@@ -156,8 +156,8 @@ export default function Preferences() {
               </label>
               <CharacterCount value={notes} limit={NOTES_LIMIT} id="notes-count" />
               <p className="field-help" id="notes-help">
-                Ваши оценки добавляют сюда пожелания. Вы можете добавлять, редактировать и удалять
-                их.
+                Пожелания из отзывов появляются здесь после обработки. Вы можете добавлять,
+                редактировать и удалять их.
               </p>
               <button
                 type="button"

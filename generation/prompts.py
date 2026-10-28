@@ -159,6 +159,10 @@ def _system_prompt(request):
 
 
 def build_messages(request):
+    if request.get("operation") == "extract_preferences":
+        from .preference_extraction import messages
+
+        return messages(request)
     if request.get("patch_repair"):
         from .patch_repair import prompt_context
 

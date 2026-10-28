@@ -15,12 +15,12 @@ class PersonalContentTests(TestCase):
         return self.client.patch('/api/preferences/', data, content_type='application/json')
 
     def test_notes_allow_free_text_many_lines_and_exact_unicode_limit(self):
-        for notes in (["я" * 2500], ["🪴" * 2500], ["Пожелание"] * 100,
+        for notes in (["я" * 3000], ["🪴" * 3000], ["Пожелание"] * 100,
                       ["Первый абзац", "", ("Второй абзац длиннее прежнего лимита " * 20).strip()]):
             result = self.patch_preferences({'notes': notes})
             self.assertEqual(result.status_code, 200)
             self.assertEqual(result.json()['notes'], notes)
-        for notes in (["я" * 2501], ["🪴" * 2501], ["я" * 1500, "я" * 1500],
+        for notes in (["я" * 3001], ["🪴" * 3001], ["я" * 1500, "я" * 1500],
                       "обычный текст вместо массива", [123], None):
             before = Preference.objects.get(user=self.owner).notes
             self.assertEqual(self.patch_preferences({'notes': notes}).status_code, 400)
@@ -35,7 +35,7 @@ class PersonalContentTests(TestCase):
         self.assertEqual(run.preferences_snapshot, notes)
         self.assertFalse(Invocation.objects.exists())
 
-    def test_five_star_wishes_are_saved_and_reach_next_generation(self):
+    def test_review_saves_immediately_without_changing_preferences_or_generating_a_game(self):
         chat = Chat.objects.create(owner=self.owner)
         revision = Revision.objects.create(chat=chat, number=1, files={}, html='<canvas></canvas>')
         reasons = ['Сохранить спокойный темп', 'Крупнее текст и элементы управления']
@@ -43,33 +43,11 @@ class PersonalContentTests(TestCase):
             {'revision_id': str(revision.pk), 'rating': 5, 'reasons': reasons},
             content_type='application/json')
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Feedback.objects.get().rating, 5)
-        self.assertEqual(Feedback.objects.get().revision_id, revision.pk)
-        self.assertEqual(self.client.get('/api/preferences/').json()['notes'], reasons)
-        next_chat = Chat.objects.create(owner=self.owner)
-        run = create_run(next_chat, {'prompt': 'Игра про планеты', 'idempotency_key': 'five-star-wishes'})
-        self.assertEqual(run.preferences_snapshot, reasons)
+        self.assertEqual(Feedback.objects.get().reasons, reasons)
+        self.assertEqual(response.json()['feedback']['processing_status'], 'queued')
+        self.assertEqual(self.client.get('/api/preferences/').json()['notes'], [])
         self.assertFalse(Invocation.objects.exists())
-
-    def test_feedback_capacity_keeps_existing_text_and_reports_unadded_wishes(self):
-        text = "а" * 2480
-        self.patch_preferences({'notes': [text]})
-        chat = Chat.objects.create(owner=self.owner)
-        chat.current_revision = Revision.objects.create(chat=chat, number=1, files={}, html='<canvas></canvas>')
-        chat.save(update_fields=['current_revision'])
-        response = self.client.post(f'/api/chats/{chat.id}/feedback/',
-            {'rating': 3, 'reasons': ['Крупный текст', 'Длинное пожелание, которое уже не помещается']},
-            content_type='application/json')
-        self.assertEqual(response.status_code, 201)
-        self.assertTrue(response.json()['preferences_full'])
-        self.assertEqual(response.json()['preferences']['notes'], [text, 'Крупный текст'])
-        self.assertEqual(len(Feedback.objects.get().reasons), 2)
-        self.assertFalse(Invocation.objects.exists())
-        self.patch_preferences({'notes': [str(i) for i in range(20)]})
-        response = self.client.post(f'/api/chats/{chat.id}/feedback/',
-            {'rating': 3, 'reasons': ['Новая идея', 'Новая идея']}, content_type='application/json')
-        self.assertEqual(len(response.json()['preferences']['notes']), 21)
-        self.assertFalse(response.json()['preferences_full'])
+        self.assertFalse(Run.objects.exists())
 
     def test_preferences_return_only_current_account_settings(self):
         expected = {"theme", "notes", "model_profile"}
@@ -124,7 +102,7 @@ class PersonalContentTests(TestCase):
             self.assertEqual({k: saved[k] for k in payload}, payload)
 
     def test_preexisting_long_text_is_preserved_and_must_be_shortened_before_new_generation(self):
-        old_text = 'я' * 3000
+        old_text = 'я' * 3001
         preference = Preference.objects.create(user=self.owner, notes=[old_text])
         template = PromptTemplate.objects.create(owner=self.owner, title='Старый шаблон', description=old_text)
         self.assertEqual(self.client.get('/api/preferences/').json()['notes'], [old_text])

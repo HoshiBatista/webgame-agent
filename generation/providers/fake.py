@@ -68,6 +68,10 @@ def generate(request, *, on_event, is_cancelled):
             "Запуск отменён до запроса.",
             usage={"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0},
         )
+    if request.get("operation") == "extract_preferences":
+        return {"response": {"operation": "extract_preferences", "decisions": []},
+                "usage": {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0},
+                "model": "fixture"}
     response = fixture_response()
     if request.get("operation") == "plan":
         result: dict[str, Any] = {"response": {"operation": "plan", "status": "ok", "message": "Тестовый замысел без модели.",
