@@ -55,7 +55,7 @@ Preserve every existing check ID, exact requirement text and category. Change st
 
 # Kept as the complete default-create prompt for callers recording its fingerprint.
 CHECK_V4_PROMPT = """
-v4 checks: text_number/attribute_number eq/not_eq: JSON numbers, also in assertions. checkpoint after setup. wait_for<=3000ms: unchanged throughout (~25ms), others eventually; total waits<=10000ms. await_condition(...,ms)/assert(...,0): absolute. Visible text; US keys. Keyboard-only setup/action, actual focus/Tab order.
+v4 checks: text_number/attribute_number eq/not_eq: JSON numbers, also in assertions. One checkpoint after setup. wait_for<=3000ms: unchanged throughout (~25ms), others eventually; total waits<=10000ms. await_condition(...,ms)/assert(...,0): absolute. Visible text; US keys. Keyboard-only setup/action, actual focus/Tab order.
 """
 SOURCE_V5_PROMPT = """
 v5 source admission: Return executable implementation, never empty files, TODO-only scripts or HTML placeholders. Missing implementation stays CREATE in the same total call budget; no candidate/base exists yet.
@@ -71,6 +71,7 @@ Do not return or modify game source, patches, design, rules, title or implementa
 Return every application-issued check_repair.requirements entry with its exact id, category, requirement and viewport. Do not drop or weaken an effect. Add no unrelated checks. Change steps/observation/expect only to honestly measure that same effect on the existing game. If a requirement cannot be verified without changing the game, return status=unchanged, checks=[] and explain why; never invent a passing assertion.
 identity_repairs maps each original scenario index to the required ID. Repeated scenarios for the same promise need one honest replacement covering that whole promise; different promises receive distinct IDs. All original scenarios remain context, not authority to weaken an effect.
 Each scenario runs on a fresh page. Use real player input, correct start/setup, reachable CSS coordinates or fractions of the displayed Canvas, and bounded waits. Trace the actual moves before claiming a win or draw. Match the observed value's type. Observe rendered DOM text/attributes or own plain window data; closed local variables are not window paths. Do not add getters, test-only hooks or self-reported pass values.
+Use at most ONE checkpoint in the entire scenario. Multiple subcases use absolute assert/await_condition instead. For control/outcome, stop at the decisive action: the final observation must fail when that action is omitted. Remove redundant post-win inputs; keep reset/replay in its restart scenario.
 diagnostic.observations lists actually observed values, types and their observation specifications. Prefer those exact existing observations; do not invent a field such as direction merely because a requirement mentions direction. Values are snapshots at the stated phase, not guarantees before setup. diagnostic.input_probe shows the actual hit target; an obstruction may require valid setup rather than a different selector. If the existing artifact cannot expose the required effect honestly, return unchanged.
 All checks are independently run in the isolated browser. A revised suite requires explicit user review even when it passes. Return a concise Russian message explaining which player action or game result still needs checking, without implementation details. Do not claim you ran tests.
 """ + CHECK_V4_PROMPT
@@ -118,9 +119,11 @@ def _system_prompt(request):
     if operation not in {"create", "edit", "repair", "check_repair"}:
         raise ContractError("invalid_operation", "Неизвестный вид операции генерации.")
     if operation == "check_repair":
+        from .experience import guidance as experience_guidance
+
         return CHECK_REPAIR_PROMPT + (PLAN_CHECK_CONTEXT if request.get("game_plan") else "") + (
             PRO_GUIDANCE if request.get("generation_strategy") == "pro" else ""
-        )
+        ) + experience_guidance(request)
     guidance = {"create": CREATE_PROMPT, "edit": EDIT_PROMPT, "repair": REPAIR_PROMPT}
     text = COMMON_PROMPT + guidance[operation]
     if request.get("generation_strategy") == "pro":

@@ -5,10 +5,18 @@ import re
 from copy import deepcopy
 from decimal import Decimal
 
-VERSION = 5
+VERSION = 6
 RELATIVE = {"changed", "unchanged", "increased", "decreased"}
 NUMERIC = {"increased", "decreased"}
 INPUT = {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
+EXPERIENCE_NUMBERS = {"effectsPlayed", "voicesPlayed", "graphicsReady", "drawCalls"}
+EXPERIENCE_BOOLEANS = {"musicPlaying", "muted"}
+EXPERIENCE_FIELDS = EXPERIENCE_NUMBERS | EXPERIENCE_BOOLEANS | {"state", "audioError"}
+# Exact application players only; never call a game-authored inspector.
+TRUSTED_EXPERIENCE_HASHES = {
+    "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9",
+    "d63f526258f365b1e775cfe53eccb130344a20302ac11dd73bc4b56d563b1624",
+}
 NUMBER = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
 
 
@@ -52,7 +60,9 @@ def review_checks(checks):
                 corrections.extend({**change, 'check_id': check.get('id'), 'step_index': index} for change in changes)
         observation, expect = check.get("observation", {}), check.get("expect", {})
         source = observation.get("source")
-        if source in {"text_number", "attribute_number"} and expect.get("operator") in {"eq", "not_eq"}:
+        numeric_source = source in {"text_number", "attribute_number"} or (
+            source == 'experience' and observation.get('field') in EXPERIENCE_NUMBERS)
+        if numeric_source and expect.get("operator") in {"eq", "not_eq"}:
             original = expect.get("value")
             if isinstance(original, str):
                 try:

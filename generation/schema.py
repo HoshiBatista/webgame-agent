@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from jsonschema import Draft202012Validator
 
+from validation.checks import EXPERIENCE_FIELDS
 from validation.contracts import suite_findings
 
 from .errors import ContractError
@@ -88,6 +89,10 @@ OBSERVATION = {
         ),
     ]
 }
+OBSERVATION['anyOf'].append(obj({
+    'source': {'enum': ['experience']},
+    'field': {'enum': sorted(EXPERIENCE_FIELDS)},
+}))
 CHECK_SCHEMA = obj(
     {
         "id": string(pattern=r"^[a-zA-Z0-9_-]+$", minLength=1, maxLength=80),

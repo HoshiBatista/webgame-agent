@@ -8,7 +8,16 @@ import json
 import string
 from dataclasses import dataclass
 
-from .checks import INPUT, NUMERIC, RELATIVE, numeric, review_checks
+from .checks import (
+    EXPERIENCE_BOOLEANS,
+    EXPERIENCE_FIELDS,
+    EXPERIENCE_NUMBERS,
+    INPUT,
+    NUMERIC,
+    RELATIVE,
+    numeric,
+    review_checks,
+)
 from .contracts import VIEWPORTS
 
 # Deliberately bounded keyboard vocabulary, shared by both providers. These are
@@ -155,8 +164,21 @@ def compile_check(check, *, timer_outcome=False):
             return result('no_real_input', 'steps', 'После подготовки сценарий должен выполнять настоящий игровой ввод.')
     if op not in RELATIVE | {'eq', 'not_eq', 'contains', 'visible'}:
         return result('invalid_check', 'expect.operator', 'Неизвестный оператор сравнения.')
-    if source not in {'state', 'text', 'attribute', 'text_number', 'attribute_number'}:
+    if source not in {'state', 'text', 'attribute', 'text_number', 'attribute_number', 'experience'}:
         return result('invalid_check', 'observation.source', 'Неизвестный вид наблюдения.')
+    if source == 'experience':
+        field = observation.get('field')
+        if check['category'] in {'start', 'outcome', 'restart'}:
+            return result('invalid_check', 'observation', 'Начало, исход и повтор проверяются по игре, а не проигрывателю.')
+        if field not in EXPERIENCE_FIELDS:
+            return result('invalid_check', 'observation.field', 'Неизвестное наблюдение проигрывателя.')
+        if op == 'visible' or (field in EXPERIENCE_NUMBERS and
+                              (op == 'contains' or op in {'eq', 'not_eq'} and not numeric(value))) or (
+            field in EXPERIENCE_BOOLEANS and (op in NUMERIC or op == 'contains'
+                                             or op in {'eq', 'not_eq'} and type(value) is not bool)):
+            return result('invalid_check', 'expect', 'Тип ожидания не соответствует наблюдению проигрывателя.')
+        if field in {'state', 'audioError'} and (op in NUMERIC or op in {'eq', 'not_eq'} and not isinstance(value, str)):
+            return result('invalid_check', 'expect', 'Это наблюдение проигрывателя требует строковое ожидание.')
     if source == 'state' and any(p.lower() in {'__proto__','constructor','prototype','passed','testpassed','test_passed'}
                                  for p in observation.get('path', '').split('.')):
         return result('self_report_check', 'observation.path', 'Проверяйте игровой эффект, а не игровой самоотчёт passed.')

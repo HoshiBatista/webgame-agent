@@ -132,3 +132,27 @@ def test_early_scene_capture_does_not_lock_the_game_into_a_context():
     result = validate(html, checks, artifact_hash=sha256(html))
     assert result['gates']['runtime'], result
     assert not any(f['code'] == 'runtime_or_network' for f in result['findings'])
+
+
+@pytest.mark.browser
+def test_hidden_result_text_is_absent_in_counterfactual_not_a_broken_observer():
+    html, checks = game_and_checks()
+    checks[-1]['expect'] = {'operator': 'eq', 'value': 'Победа'}
+    result = validate(html, checks, artifact_hash=sha256(html))
+    final = next(f for f in result['facts'] if f['id'] == 'finish')
+    assert result['status'] == 'passed', result
+    assert final['counterfactual']['observation_absent']
+    assert final['counterfactual']['comparison'] is False
+
+
+@pytest.mark.browser
+def test_hidden_final_text_cannot_excuse_a_failed_intermediate_assertion():
+    html, checks = game_and_checks()
+    checks[-1]['expect'] = {'operator': 'eq', 'value': 'Победа'}
+    checks[-1]['steps'].insert(-1, {'action': 'assert', 'ms': 0,
+        'observation': {'source': 'text', 'selector': '#count'},
+        'expect': {'operator': 'eq', 'value': '999'}})
+    result = validate(html, checks, artifact_hash=sha256(html))
+    final = next(f for f in result['facts'] if f['id'] == 'finish')
+    assert final['status'] != 'passed'
+    assert not final.get('counterfactual', {}).get('observation_absent')

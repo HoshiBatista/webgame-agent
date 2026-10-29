@@ -177,6 +177,8 @@ def collect(frame, check, step_index, before, after, state_script):
         elif observation.get("selector"):
             locator = frame.locator(observation["selector"])
             result["selector_matches"] = locator.count()
+            if result['selector_matches'] == 1:
+                result['selector_visible'] = locator.is_visible()
     except Exception:
         result["unavailable"] = True
     return bounded(result)

@@ -17,14 +17,23 @@ from playwright.sync_api import Page, ViewportSize, sync_playwright
 from playwright.sync_api import TimeoutError as BrowserTimeout
 
 from .check_program import compile_suite
-from .checks import INPUT, NUMERIC, RELATIVE, comparable, numeric, parse_number
+from .checks import (
+    EXPERIENCE_FIELDS,
+    INPUT,
+    NUMERIC,
+    RELATIVE,
+    TRUSTED_EXPERIENCE_HASHES,
+    comparable,
+    numeric,
+    parse_number,
+)
 from .contracts import VIEWPORTS, implementation_hash, suite_findings
 from .criteria import bindings, coverage
 from .diagnostics import INPUT_TARGET
 from .diagnostics import collect as collect_diagnostic
 from .evidence import gates as evidence_gates
 from .evidence import receipt as artifact_receipt
-from .syntax import check_javascript
+from .syntax import Scripts, check_javascript
 
 ENVIRONMENT = "mini-browser-v1"
 MAX_SCREENSHOT_BYTES = 512 * 1024
@@ -183,6 +192,23 @@ def inspect_module(frame, contract):
 
 def observe(frame, observation, operator):
     source = observation.get("source")
+    if source == 'experience':
+        field = observation.get('field')
+        if field not in EXPERIENCE_FIELDS or not getattr(frame, '_gf_experience_verified', False):
+            raise InvalidCheck('Неизвестное наблюдение проигрывателя.')
+        # This is the pinned application player, installed before game scripts;
+        # no model-selected function/path/getter is executed.
+        observed = frame.evaluate('''field => {
+          const d=Object.getOwnPropertyDescriptor(window,'GameForgeExperience');
+          if(!d||d.writable||d.configurable||!Object.isFrozen(d.value))return {available:false};
+          const reader=Object.getOwnPropertyDescriptor(d.value,'inspect');
+          if(!reader||typeof reader.value!=='function')return {available:false};
+          const data=reader.value();
+          return Object.hasOwn(data,field)?{available:true,value:data[field]}:{available:false};
+        }''', field)
+        if not observed.get('available') or type(observed.get('value')) not in {str, int, float, bool}:
+            raise InvalidCheck('Наблюдение встроенного проигрывателя недоступно.')
+        return observed['value']
     if source == "state":
         path = observation.get("path", "")
         if not path or any(
@@ -381,6 +407,11 @@ def run(payload):
     started = time.monotonic()
     environment = identity()
     html, checks = payload["html"], payload["checks"]
+    scripts = Scripts()
+    scripts.feed(html)
+    scripts.close()
+    trusted_player = bool(scripts.scripts and hashlib.sha256(
+        scripts.scripts[0]['content'].encode()).hexdigest() in TRUSTED_EXPERIENCE_HASHES)
     criteria = payload.get("operator_criteria", [])
     bound_criteria = bindings(checks, criteria)
     timers = {key for key, c in bound_criteria.items() if c["mode"] == "timer"}
@@ -562,6 +593,7 @@ def run(payload):
             try:
                 page.goto("https://harness.invalid/", wait_until="load", timeout=5000)
                 frame = page.frames[1]
+                setattr(frame, '_gf_experience_verified', trusted_player)
                 frame.wait_for_load_state("load", timeout=2000)
                 loaded = True
                 record_scene()
@@ -798,7 +830,10 @@ def run(payload):
             if diagnostic_pair:
                 snapshot: dict[str, Any] = next((f.get('diagnostic', {}) for f in findings[finding_start:]
                                  if f.get('code') == 'invalid_check'), {})
-                absent = snapshot.get('selector_matches') == 0 or snapshot.get('state', {}).get('reason') == 'absent'
+                absent = bool(fact.get('temporal')) and (
+                    snapshot.get('selector_matches') == 0 or snapshot.get('state', {}).get('reason') == 'absent'
+                    or check.get('observation', {}).get('source') in {'text', 'text_number'}
+                    and snapshot.get('selector_visible') is False)
                 absence_proven = absent and loaded and not errors and not requests and (
                     not contract or module and module.get('ready') is True and not module.get('failed')
                 )

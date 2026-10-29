@@ -7,7 +7,7 @@
   const imageLoads=[], graphicsErrors=[];
   let context, master, analyser, timer, button, tools, hostControlled = false;
   let muted = false, hostMuted = false, unlocked = false, playing = false, musicStart = 0, nextCycle = 0;
-  let lastScheduled = -1, pausedPosition = 0, voicesPlayed = 0, drawCalls = 0, audioError = '';
+  let lastScheduled = -1, pausedPosition = 0, voicesPlayed = 0, effectsPlayed = 0, drawCalls = 0, audioError = '';
   const voices = new Set(), lastEffect = new Map();
   try { muted = localStorage.getItem('gameforge:sound-muted') === '1'; } catch { /* opaque iframe */ }
   if (recipe) {
@@ -114,6 +114,7 @@
     const entry = {source, filter, envelope, channel}; voices.add(entry); voicesPlayed++;
     source.onended = () => { source.disconnect(); filter.disconnect(); envelope.disconnect(); voices.delete(entry); };
     source.start(start); source.stop(end+.005);
+    if (channel === 'effect') effectsPlayed++;
   }
   function stopVoices(channel) {
     for (const entry of voices) {
@@ -262,7 +263,7 @@
       let peak=0;
       if(analyser){const samples=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(samples);for(const n of samples)peak=Math.max(peak,Math.abs(n));}
       return {version:1,graphicsReady:[...images.values()].filter(i=>i.complete&&i.naturalWidth).length,graphicsErrors:[...graphicsErrors],drawCalls,
-        voicesPlayed,activeVoices:voices.size,musicPlaying:playing,muted:muted||hostMuted,state:context?.state||'locked',peak,audioError};
+        voicesPlayed,effectsPlayed,activeVoices:voices.size,musicPlaying:playing,muted:muted||hostMuted,state:context?.state||'locked',peak,audioError};
     }}),writable:false,configurable:false});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
   dispatchEvent(new Event('gameforge:experience-ready'));

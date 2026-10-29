@@ -78,7 +78,7 @@ def prompt(request):
         if request.get("generation_strategy") == "pro" else
         "\nLite: choose one core mechanic and at most one supporting mechanic. Keep rules explicit, implementation small, and the whole game complete."
     ) + (presentation.PLAN_GUIDANCE if presentation.enabled(request) else "") + (
-        '\nplayer_experience: briefly specify concrete audience adaptations; original generated music mood and action sounds; equivalent touch/keyboard actions; portrait/landscape/desktop layout. All art and audio are generated for this game, no stock assets or preset tunes. No extra stage or full score in the plan. Preserve explicit silence/static requests. Include one desktop keyboard control requirement within the existing 3-8 promises.'
+        '\nplayer_experience: specify audience adaptations, original music/action sounds, touch/keyboard and portrait/landscape/desktop layouts. No stock assets, extra stage or full score. Preserve silence/static requests. Include a desktop keyboard control requirement in 3-8 promises. Each outcome example ends at the decisive winning/losing action; replay is separate. Invariants use regression. Audio quality/mood belongs in player_experience, not a pass/fail promise. Full checks can observe player musicPlaying/effectsPlayed; compact audio stays in player_experience.'
         if enabled(request) else '')
 
 

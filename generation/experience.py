@@ -178,15 +178,22 @@ def provenance(files):
 
 
 def guidance(request):
-    if not enabled(request) or request.get('operation', 'create') not in {'create', 'edit', 'repair'}:
+    if not enabled(request) or request.get('operation', 'create') not in {'create', 'edit', 'repair', 'check_repair', 'checks_create'}:
         return ''
+    if request.get('operation') in {'check_repair', 'checks_create'}:
+        return CHECK_GUIDANCE
     if request.get('operation') == 'repair':
         return '\nPreserve generated media and audience adaptations. GameForgeExperience (compact api.experience): draw(ctx,id,x,y,w,h), sound(id), startMusic(), stopMusic(), bindInput(actions,callback), layout(). Do not edit trusted helpers, game-assets.json or derived gf-assets/*. Full and compact repair must return assets=null. Fix only the proven defect; no new asset/model stage.'
     limit = ('Lite target: 1-3 simple vector assets, 1-2 instruments, 2-4 effects, 8-24 notes with rests; recipe target <=4 KiB.'
              if request.get('generation_strategy') != 'pro' else
              'Pro target: a cohesive small set of vector assets, 2-4 instruments and 24-64 notes with variations; recipe target <=8 KiB.')
     edit = ('\nEdit: assets=null preserves all media. Return a complete assets object only for requested media changes. An assets-only edit may have empty patches/edits; preserve all mechanics and checks.' if request.get('operation') == 'edit' else '')
-    return GUIDANCE + '\n' + limit + edit
+    return GUIDANCE + CHECK_GUIDANCE + '\n' + limit + edit
+
+
+CHECK_GUIDANCE = '''
+Player observations (full checks, including nested assert/await_condition): {source:"experience",field:"musicPlaying"|"muted"|"effectsPlayed"|"voicesPlayed"|"state"|"audioError"|"graphicsReady"|"drawCalls"}. Boolean musicPlaying/muted, numeric counters, string state/audioError. They read the pinned player, never game self-reports. effectsPlayed counts only started action effects, excluding music; checkpoint after setup and increased after the decisive action can verify an effect. Music: real start input then musicPlaying eq true; state eq "running". These prove playback, not pleasantness. Keep artistic audio descriptions in player_experience. Audio is additional coverage, never a substitute for gameplay control/outcome checks.
+'''
 
 
 GUIDANCE = """
