@@ -112,7 +112,7 @@ CHECK_SCHEMA = obj(
         "expect": obj(
             {
                 "operator": {
-                    "enum": ["eq", "not_eq", "contains", "changed", "unchanged", "increased", "decreased", "visible"]
+                    "enum": ["eq", "not_eq", "gte", "lte", "contains", "changed", "unchanged", "increased", "decreased", "visible"]
                 },
                 "value": {"type": ["string", "number", "boolean", "null"]},
             }
@@ -165,7 +165,7 @@ CHECK_SCHEMA["properties"]["observation"]["anyOf"].extend([
          "attribute": string(minLength=1, maxLength=80)}),
 ])
 ABSOLUTE_EXPECT = deepcopy(CHECK_SCHEMA['properties']['expect'])
-ABSOLUTE_EXPECT['properties']['operator']['enum'] = ['eq', 'not_eq', 'contains', 'visible']
+ABSOLUTE_EXPECT['properties']['operator']['enum'] = ['eq', 'not_eq', 'gte', 'lte', 'contains', 'visible']
 CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
     obj({"action": {"enum": ["checkpoint"]}}),
     {**obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),

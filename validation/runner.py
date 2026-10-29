@@ -21,6 +21,7 @@ from .checks import (
     EXPERIENCE_FIELDS,
     INPUT,
     NUMERIC,
+    ORDERED,
     RELATIVE,
     TRUSTED_EXPERIENCE_HASHES,
     comparable,
@@ -259,6 +260,8 @@ def observe(frame, observation, operator):
 
 def compare(before, after, expect):
     op, value = expect.get("operator"), expect.get("value")
+    if op in ORDERED:
+        return numeric(after) and numeric(value) and (after >= value if op == 'gte' else after <= value)
     if op == "eq":
         return isinstance(after, bool) == isinstance(value, bool) and after == value
     if op == "not_eq":
@@ -270,9 +273,6 @@ def compare(before, after, expect):
     if op == 'unchanged':
         return before == after
     if op in {"increased", "decreased"}:
-
-        def numeric(x):
-            return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
         return (
             numeric(before) and numeric(after) and (after > before if op == "increased" else after < before)
@@ -402,6 +402,8 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
                     raise InvalidCheck('Неверный тип промежуточного состояния модуля.')
                 if expect['operator'] in {'eq', 'not_eq'} and not comparable(value, expect.get('value')):
                     raise InvalidCheck('Тип промежуточного наблюдения несовместим с ожиданием.')
+                if expect['operator'] in ORDERED and not numeric(value):
+                    raise InvalidCheck('Числовой порог требует числовое наблюдение.')
                 matched = compare(None, value, expect)
                 available = True
             except InvalidCheck:
@@ -762,7 +764,8 @@ def run(payload):
                             "boolean": type(after) is bool,
                         }[declared_type]:
                             raise InvalidCheck("Тип фактического состояния не совпадает с объявленным наблюдением.")
-                        if expect["operator"] in NUMERIC and not (numeric(before) and numeric(after)):
+                        if expect["operator"] in NUMERIC and (not numeric(after) or
+                                expect["operator"] not in ORDERED and not numeric(before)):
                             raise InvalidCheck("Числовое сравнение получило нечисловое состояние.")
                         if expect["operator"] in {"eq", "not_eq"}:
                             value = expect.get("value")

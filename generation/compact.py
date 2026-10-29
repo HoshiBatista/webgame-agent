@@ -54,7 +54,7 @@ def wire_schema(request):
             ),
             obj({"action": {"enum": ["checkpoint", "blur"]}}),
             obj({'action': {'enum': ['await_condition', 'assert']}, 'observation': ident,
-                 'operator': {'enum': ['eq', 'not_eq', 'contains']},
+                 'operator': {'enum': ['eq', 'not_eq', 'gte', 'lte', 'contains']},
                  'value': {'type': ['string', 'number', 'boolean', 'null']},
                  'ms': {'type': 'integer', 'minimum': 0, 'maximum': 3000}}),
         ]
@@ -67,7 +67,7 @@ def wire_schema(request):
             "viewport": {"enum": ["mobile", "landscape", "desktop"]},
             "steps": array(step, maxItems=30),
             "observation": ident,
-            "operator": {"enum": ["eq", "not_eq", "contains", "changed", "unchanged", "increased", "decreased"]},
+            "operator": {"enum": ["eq", "not_eq", "gte", "lte", "contains", "changed", "unchanged", "increased", "decreased"]},
             "value": {"type": ["string", "number", "boolean", "null"]},
         }
     )

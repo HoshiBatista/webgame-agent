@@ -14,6 +14,7 @@ from .checks import (
     EXPERIENCE_NUMBERS,
     INPUT,
     NUMERIC,
+    ORDERED,
     RELATIVE,
     numeric,
     review_checks,
@@ -168,8 +169,10 @@ def compile_check(check, *, timer_outcome=False):
             return result('invalid_check', 'expect.operator', 'Отсутствие изменения относится к регрессии, а не доказывает основное управление или исход.')
         if not any(s.get('action') in INPUT for s in steps[measured_from:]):
             return result('no_real_input', 'steps', 'После подготовки сценарий должен выполнять настоящий игровой ввод.')
-    if op not in RELATIVE | {'eq', 'not_eq', 'contains', 'visible'}:
+    if op not in RELATIVE | ORDERED | {'eq', 'not_eq', 'contains', 'visible'}:
         return result('invalid_check', 'expect.operator', 'Неизвестный оператор сравнения.')
+    if op in ORDERED and not numeric(value):
+        return result('invalid_check', 'expect.value', 'Порог сравнения должен быть конечным числом.')
     if source not in {'state', 'text', 'attribute', 'text_number', 'attribute_number', 'experience'}:
         return result('invalid_check', 'observation.source', 'Неизвестный вид наблюдения.')
     if source == 'experience':

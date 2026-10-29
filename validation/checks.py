@@ -5,9 +5,10 @@ import re
 from copy import deepcopy
 from decimal import Decimal
 
-VERSION = 8
+VERSION = 9
 RELATIVE = {"changed", "unchanged", "increased", "decreased"}
-NUMERIC = {"increased", "decreased"}
+ORDERED = {"gte", "lte"}
+NUMERIC = {"increased", "decreased"} | ORDERED
 INPUT = {"click", "tap", "hold_touch", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
 EXPERIENCE_NUMBERS = {"effectsPlayed", "voicesPlayed", "graphicsReady", "drawCalls"}
 EXPERIENCE_BOOLEANS = {"musicPlaying", "muted"}
