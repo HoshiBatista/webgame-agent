@@ -211,3 +211,21 @@ def test_generation_schema_excludes_relative_intermediate_assertions(operator):
         'observation': deepcopy(check['observation']), 'expect': {'operator': operator, 'value': None}})
     assert not Draft202012Validator(CHECK_SCHEMA).is_valid(check)
     assert compile_check(check).issue.field == 'steps.expect'
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('fake_console_error', [False, True])
+def test_browser_blocked_autofocus_is_not_game_failure_but_console_errors_remain_hard(fake_console_error):
+    html, checks = game_and_checks()
+    html = html.replace('<button id="start">', '<button id="start" autofocus>')
+    if fake_console_error:
+        html += '<script>console.error("Blocked autofocusing on a <button> element in a cross-origin subframe.")</script>'
+    result = validate(html, checks, artifact_hash=sha256(html))
+    assert any(f['browser_warnings'] == [{'code': 'autofocus_blocked'}] for f in result['facts'])
+    assert result['gates']['runtime'] is (not fake_console_error)
+    if fake_console_error:
+        assert result['status'] == 'failed'
+        assert any(f['code'] == 'runtime_or_network' for f in result['findings'])
+    else:
+        assert result['status'] == 'passed', result
+        assert not any(f['code'] == 'runtime_or_network' for f in result['findings'])

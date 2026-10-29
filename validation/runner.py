@@ -511,7 +511,7 @@ def run(payload):
             context = browser.new_context(
                 viewport=viewport, has_touch=check.get("viewport") != "desktop", device_scale_factor=1, accept_downloads=False
             )
-            errors, requests = [], []
+            errors, requests, browser_warnings = [], [], []
             locations: list[dict[str, Any]] = []
             page = context.new_page()
             pair_seed = int(hashlib.sha256((artifact_hash + str(check.get('id'))).encode()).hexdigest()[:8], 16)
@@ -545,10 +545,21 @@ def run(payload):
                                           "location": "bundled_html"})
 
             page.on("pageerror", page_error)
-            page.on(
-                "console",
-                lambda message: errors.append(message.text[:700]) if message.type == "error" else None,
-            )
+
+            def console_message(message):
+                if message.type != 'error':
+                    return
+                # Chromium emits this security diagnostic as console.error even
+                # when the game keeps running. Browser diagnostics have no JS
+                # arguments; a game console.error with the same words is still
+                # an error. Keyboard playability is verified by actual input.
+                if (not message.args
+                        and re.fullmatch(r'Blocked autofocusing on a <[a-z][a-z0-9-]{0,24}> element in a cross-origin subframe\.', message.text)):
+                    browser_warnings.append({'code': 'autofocus_blocked'})
+                else:
+                    errors.append(message.text[:700])
+
+            page.on('console', console_message)
 
             def route(request_route):
                 url = request_route.request.url
@@ -575,6 +586,7 @@ def run(payload):
 
             context.route("**/*", route)
             fact = {
+                'browser_warnings': browser_warnings,
                 "id": check.get("id"),
                 "category": check.get("category"),
                 "requirement": check.get("requirement"),
