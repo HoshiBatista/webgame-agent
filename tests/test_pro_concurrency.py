@@ -162,6 +162,20 @@ def test_parallel_admission_is_atomic_and_does_not_raise_lite_or_cli_limit(setti
 
 
 @pytest.mark.django_db(transaction=True)
+def test_hundred_pro_slots_stop_at_boundary_and_refill(settings):
+    settings.GAMEFORGE_CODEX_API_CONCURRENCY = 100
+    Budget.objects.get_or_create(pk=1)
+    user = User.objects.create_user(username='hundred-pro-slots')
+    jobs = [Run.objects.create(chat=Chat.objects.create(owner=user), provider='codex_api',
+                               idempotency_key=str(i), prompt='test') for i in range(101)]
+    assert all(claim_run(job.id) for job in jobs[:100])
+    assert claim_run(jobs[100].id) is False
+    Run.objects.filter(pk=jobs[0].pk).update(status='succeeded')
+    assert claim_run(jobs[100].id)
+    assert Run.objects.filter(status='generating', provider='codex_api').count() == 100
+
+
+@pytest.mark.django_db(transaction=True)
 def test_same_chat_still_rejects_second_active_game(run):
     with pytest.raises(DomainError) as error:
         create_run(run.chat, {'prompt':'Ещё игра','idempotency_key':'two','model_profile':'pro'})

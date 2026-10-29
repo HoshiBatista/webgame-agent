@@ -50,9 +50,17 @@ def test_https_proxy_requires_explicit_trust(monkeypatch, trusted):
     assert values["SESSION_COOKIE_SECURE"] and values["CSRF_COOKIE_SECURE"]
 
 
-@pytest.mark.parametrize('value', ['0', '-1', '5', 'invalid'])
+@pytest.mark.parametrize('value', ['0', '-1', '101', 'invalid'])
 def test_remote_pro_concurrency_is_bounded(monkeypatch, value):
     monkeypatch.setattr('dotenv.load_dotenv', lambda *_: None)
     monkeypatch.setenv('GAMEFORGE_CODEX_API_CONCURRENCY', value)
     with pytest.raises(ValueError):
         runpy.run_path(str(Path(__file__).resolve().parents[1] / 'gameforge/settings.py'))
+
+
+@pytest.mark.parametrize('value', [1, 2, 100])
+def test_remote_pro_concurrency_accepts_supported_range(monkeypatch, value):
+    monkeypatch.setattr('dotenv.load_dotenv', lambda *_: None)
+    monkeypatch.setenv('GAMEFORGE_CODEX_API_CONCURRENCY', str(value))
+    values = runpy.run_path(str(Path(__file__).resolve().parents[1] / 'gameforge/settings.py'))
+    assert values['GAMEFORGE_CODEX_API_CONCURRENCY'] == value
