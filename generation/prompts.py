@@ -81,7 +81,7 @@ PLAN_GUIDANCE = """
 The saved requirement_manifest freezes promises and their stable IDs/category/text/viewport before code. Preserve them exactly in checks and repairs; origin=user cites the current request, origin=preference cites saved account settings, and origin=design is a model interpretation. The saved game_plan is the implementation brief. Preserve it across repairs; a later explicit user edit takes priority over the earlier brief. Implement its mechanics and outcome, and cover their observable effects in checks. Its assumptions are generated design choices, not user-authored constraints. Do not claim the plan itself proves implementation.
 """
 PREFERENCE_PRIORITY = """
-The explicit current request takes priority over conflicting general preferences. Apply compatible saved preferences without changing the user's requested scope; your own design choices have lower priority than both. Preserve frozen promises during repairs.
+The current game request overrides conflicting saved preferences; compatible preferences override design choices. Repairs preserve frozen promises.
 """
 PRO_GUIDANCE = """
 Pro workflow: the application executes each candidate in an isolated browser and returns real findings and, when available, a screenshot. Use this feedback to diagnose the cause and choose a coherent fix. A screenshot is one observed frame, not proof that the game works. You do not control final acceptance. Never substitute a changed test for an implementation.
@@ -105,6 +105,8 @@ QUICK_REVIEW_GUIDANCE = """
 QUICK FINAL REVIEW
 After preparing code/patches, briefly inspect the resulting game: syntax/references, requested rules, start/control/outcome/replay and readable, reachable phone/desktop controls. Fix obvious issues within scope; preserve frozen requirements/checks. Review within this response, with no extra call/tools/stage. Inspection is not execution. Return message last, after code and checks, with only the player-facing conclusion.
 """
+
+JSON_FORMAT_GUIDANCE = '\nEmit minified JSON: no whitespace outside strings; escape source newlines. Close every field/object.\n'
 
 
 def _system_prompt(request):
@@ -341,4 +343,4 @@ def system_prompt(request):
         text += PREFERENCE_PRIORITY + GUIDANCE + QUICK_REVIEW_GUIDANCE
     if operation != 'visual_review':
         text += PUBLIC_REPLY_GUIDANCE
-    return text
+    return text + JSON_FORMAT_GUIDANCE
