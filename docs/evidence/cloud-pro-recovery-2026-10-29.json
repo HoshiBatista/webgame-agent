@@ -1,0 +1,188 @@
+{
+  "deployment": {
+    "revision": "9006db7956f80bd195579129a954981219f17236",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 59,
+      "CheckReport": 46,
+      "Feedback": 3,
+      "FeedbackProcessing": 1,
+      "Invocation": 203,
+      "Like": 3,
+      "Message": 196,
+      "Outbox": 100,
+      "Preference": 4,
+      "PromptTemplate": 3,
+      "Publication": 2,
+      "Revision": 41,
+      "Run": 100,
+      "RunEvent": 1060,
+      "User": 5,
+      "ValidationRequest": 27,
+      "ValidationTask": 27
+    },
+    "all_existing_records_preserved": true,
+    "unknown_preserved": 11,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_image_tags": true,
+    "relay_db_redis_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:f366fcde4c104289fcbdc0ddd008e0a9266261810392bcd7b2d91a04c01840e9",
+        "image_tag": "gameforge-mini:cloud-9006db7-20261029"
+      },
+      "preview": {
+        "image_id": "sha256:f366fcde4c104289fcbdc0ddd008e0a9266261810392bcd7b2d91a04c01840e9",
+        "image_tag": "gameforge-mini:cloud-9006db7-20261029"
+      },
+      "worker": {
+        "image_id": "sha256:f366fcde4c104289fcbdc0ddd008e0a9266261810392bcd7b2d91a04c01840e9",
+        "image_tag": "gameforge-mini:cloud-9006db7-20261029"
+      },
+      "beat": {
+        "image_id": "sha256:f366fcde4c104289fcbdc0ddd008e0a9266261810392bcd7b2d91a04c01840e9",
+        "image_tag": "gameforge-mini:cloud-9006db7-20261029"
+      },
+      "validator": {
+        "image_id": "sha256:5fac57513db564733b77de8e78039d4d16537238e65893829131b62a6c79965e",
+        "image_tag": "gameforge-mini-validator:cloud-9006db7-20261029"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-9006db7-20261029T090814Z.dump",
+    "backup_sha256": "4a899e560b96a550cef701ac7cab200f8ef1004dd9cfe1fa14258beddcde49b1",
+    "validator_isolation_verified": true,
+    "app_private_socket_read_only": true
+  },
+  "canary": [
+    {
+      "environment": "mini-browser-v1:efc484303eaf22fae92ae2a26f86ab5811955c753eb5e97373fc87544cd0f80d:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+      "profiles": {
+        "full": {
+          "status": "passed",
+          "facts": 5,
+          "viewports": [
+            "mobile",
+            "landscape",
+            "desktop"
+          ],
+          "keyboard_only": true,
+          "generated_graphics_drawn": true,
+          "audio_voices_played": true,
+          "rotation_preserves_state": true,
+          "seconds": 22.401,
+          "audio_quality": "not_listened",
+          "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+        },
+        "compact": {
+          "status": "passed",
+          "facts": 6,
+          "viewports": [
+            "mobile",
+            "landscape",
+            "desktop"
+          ],
+          "keyboard_only": true,
+          "generated_graphics_drawn": true,
+          "audio_voices_played": true,
+          "rotation_preserves_state": true,
+          "seconds": 31.098,
+          "audio_quality": "not_listened",
+          "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+        }
+      },
+      "model_calls": 0,
+      "records_created": 0
+    },
+    {
+      "graphics_count_diagnostic": "passed",
+      "model_calls": 0
+    },
+    {
+      "frozen_initial_viewport": "passed",
+      "model_calls": 0
+    }
+  ],
+  "backend": {
+    "app_environment_probe": "mini-browser-v1:efc484303eaf22fae92ae2a26f86ab5811955c753eb5e97373fc87544cd0f80d:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "manual_api_real_browser": "passed",
+    "idempotency": true,
+    "fresh_run": true,
+    "cancellation": true,
+    "no_autopromotion_or_generation": true,
+    "temporary_fixtures_rolled_back": true,
+    "persistent_records_unchanged": true,
+    "model_calls": 0
+  },
+  "scope_replay": {
+    "revision_id": "42b40e54-4da5-47af-9f65-de3ee457e23e",
+    "artifact_hash": "181563895e1300d0d13e6113f5deb4be831629bd8c339d96fbe2237a4208baec",
+    "saved_real_reply_replayed": true,
+    "original_failed_check": "R08",
+    "retained_passed_checks": [
+      "R01",
+      "R02",
+      "R03",
+      "R04",
+      "R05",
+      "R06",
+      "R07"
+    ],
+    "scope_audit": {
+      "retained_passed_checks": [
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07"
+      ]
+    },
+    "raw_reply_sha256": "a1a40e4dee39c53a37a8f927de4a48916a5a6281285f3edfcacff8675b9782e8",
+    "original_source_checks_and_reply_unchanged": true,
+    "new_suite_status": "passed",
+    "checks": 8,
+    "frozen_requirements_covered": true,
+    "explicit_review_still_required": true,
+    "records_modified": 0,
+    "new_model_calls": 0
+  },
+  "final_health": {
+    "run_count": 101,
+    "invocation_count": 204,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0024": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "9006db7956f80bd195579129a954981219f17236",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "worker_health": {
+    "active_jobs": 0,
+    "attention_required": false,
+    "concurrency": 2,
+    "draining": false,
+    "free_bytes": 7535935488,
+    "idle": true,
+    "jobs": {
+      "cancelled": 2,
+      "completed": 132,
+      "unknown": 7
+    },
+    "protocol": 1,
+    "storage_bytes": 5505024,
+    "usage": {
+      "input_tokens": 1311160,
+      "output_tokens": 696081,
+      "submitted_without_known_usage": 4
+    },
+    "worker_online": true,
+    "worker_seen": 1793265624.3895326
+  }
+}
