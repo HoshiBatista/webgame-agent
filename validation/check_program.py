@@ -176,7 +176,10 @@ def compile_check(check, *, timer_outcome=False):
                               (op == 'contains' or op in {'eq', 'not_eq'} and not numeric(value))) or (
             field in EXPERIENCE_BOOLEANS and (op in NUMERIC or op == 'contains'
                                              or op in {'eq', 'not_eq'} and type(value) is not bool)):
-            return result('invalid_check', 'expect', 'Тип ожидания не соответствует наблюдению проигрывателя.')
+            expected_type = 'числовое' if field in EXPERIENCE_NUMBERS else 'логическое true/false'
+            detail = ' graphicsReady — количество загруженных изображений, не признак готовности.' if field == 'graphicsReady' else ''
+            return result('invalid_check', 'expect',
+                          f'Наблюдение проигрывателя {field} требует {expected_type} ожидание и совместимый оператор.' + detail)
         if field in {'state', 'audioError'} and (op in NUMERIC or op in {'eq', 'not_eq'} and not isinstance(value, str)):
             return result('invalid_check', 'expect', 'Это наблюдение проигрывателя требует строковое ожидание.')
     if source == 'state' and any(p.lower() in {'__proto__','constructor','prototype','passed','testpassed','test_passed'}

@@ -39,7 +39,7 @@ def test_exact_trusted_player_is_first_executable_script_and_is_pinned():
     assert sha256(scripts.scripts[0]['content']) in TRUSTED_EXPERIENCE_HASHES
 
 
-@pytest.mark.parametrize('field,value', [('effectsPlayed', 1), ('effectsPlayed', '1'), ('musicPlaying', True), ('state', 'running')])
+@pytest.mark.parametrize('field,value', [('effectsPlayed', 1), ('effectsPlayed', '1'), ('musicPlaying', True), ('state', 'running'), ('graphicsReady', 3)])
 def test_player_observation_schema_and_compiler_agree(field, value):
     check = player_check(field, value)
     validate_checks([check], require_complete=False)
@@ -47,9 +47,22 @@ def test_player_observation_schema_and_compiler_agree(field, value):
 
 
 @pytest.mark.parametrize('field,value', [('unknown', 1), ('inspect', 1), ('__proto__', 1),
-                                         ('effectsPlayed', '1px'), ('musicPlaying', 1), ('state', True)])
+                                         ('effectsPlayed', '1px'), ('musicPlaying', 1), ('state', True), ('graphicsReady', True)])
 def test_player_field_and_expected_types_are_bounded(field, value):
     assert compile_check(player_check(field, value)).issue is not None
+
+
+@pytest.mark.parametrize('action', ['assert', 'await_condition'])
+def test_graphics_count_diagnostic_identifies_the_nested_type_error_without_reinterpreting_it(action):
+    check = player_check()
+    check['steps'].append({'action': action, 'ms': 0 if action == 'assert' else 100,
+                          'observation': {'source': 'experience', 'field': 'graphicsReady'},
+                          'expect': {'operator': 'eq', 'value': True}})
+    original = deepcopy(check)
+    issue = compile_check(check).issue
+    assert issue and issue.field == 'steps.expect' and issue.code == 'invalid_check'
+    assert 'graphicsReady' in issue.message and 'количество' in issue.message
+    assert check == original
 
 
 def test_audio_cannot_replace_gameplay_or_outcome_coverage():

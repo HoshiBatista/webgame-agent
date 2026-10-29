@@ -91,7 +91,8 @@ OBSERVATION = {
 }
 OBSERVATION['anyOf'].append(obj({
     'source': {'enum': ['experience']},
-    'field': {'enum': sorted(EXPERIENCE_FIELDS)},
+    'field': {'enum': sorted(EXPERIENCE_FIELDS),
+              'description': 'Numbers: effectsPlayed, voicesPlayed, graphicsReady (loaded graphic COUNT), drawCalls. Booleans: musicPlaying, muted. Strings: state, audioError. Match expectation type; graphicsReady is never boolean.'},
 }))
 CHECK_SCHEMA = obj(
     {
