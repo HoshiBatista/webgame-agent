@@ -37,6 +37,7 @@ from .syntax import Scripts, check_javascript
 
 ENVIRONMENT = "mini-browser-v1"
 MAX_SCREENSHOT_BYTES = 512 * 1024
+INITIAL_LAYOUT_MS = 50
 
 
 def install_diagnostic_clock(page):
@@ -619,6 +620,13 @@ def run(payload):
                 setattr(frame, '_gf_experience_verified', trusted_player)
                 frame.wait_for_load_state("load", timeout=2000)
                 loaded = True
+                # A paused diagnostic clock otherwise prevents initial rAF
+                # layout callbacks from running, unlike the ordinary page.
+                # Advance the same bounded interval in every run, before any
+                # observation/input. This does not dismiss overlays, mutate
+                # game state or turn an obstructed control into a valid input.
+                wait(page, INITIAL_LAYOUT_MS)
+                fact['initial_layout_ms'] = INITIAL_LAYOUT_MS
                 record_scene()
                 if contract:
                     module = inspect_module(frame, contract)

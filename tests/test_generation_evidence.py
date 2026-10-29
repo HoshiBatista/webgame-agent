@@ -43,6 +43,10 @@ def test_operator_binding_includes_expectation_actions_and_requirement():
 def relative_checks():
     checks = game_checks()
     checks[2].update(steps=deepcopy(checks[1]['steps']), expect={'operator': 'increased', 'value': None})
+    # Preserve the desktop profile: it has a mouse, not a touchscreen.
+    for step in checks[2]['steps']:
+        if step['action'] == 'tap':
+            step['action'] = 'click'
     return checks
 
 
