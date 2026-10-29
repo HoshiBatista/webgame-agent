@@ -6,6 +6,38 @@ from . import presentation
 from .errors import ContractError
 from .schema import array, obj, string
 
+PROVENANCE_VERSION = 1
+PREFERENCE_GUIDANCE = """
+REQUIREMENT SOURCES
+The current game_request (or prompt when absent) takes priority over general preferences. Preferences are the saved user settings for this run, not part of the current message. Apply only compatible preferences: an explicit request for one level overrides a general preference for multiple levels. Do not merge conflicting wishes or invent an exception to the current request. List your own additions as design choices.
+For origin=user, quote an exact nonempty substring of game_request/prompt. For origin=preference, quote an exact nonempty substring of ONE entry in preferences. For origin=design, quote must be empty. Never cite a preference as origin=user or use a paraphrase as a quote. request_reference always quotes the current request, never preferences. A quote establishes its source, not proof that the interpretation is correct.
+"""
+
+
+def preference_sources(request):
+    notes = (request or {}).get('preferences')
+    return notes if isinstance(notes, list) and all(isinstance(note, str) for note in notes) else []
+
+
+def normalize_plan_sources(response, request):
+    """Only relabel a verbatim saved wish; retain the original receipt separately."""
+    result, changes = deepcopy(response), []
+    if request.get('plan_provenance') != PROVENANCE_VERSION or not isinstance(result, dict):
+        return result, changes
+    plan = result.get('plan')
+    if not isinstance(plan, dict) or not isinstance(plan.get('requirements'), list):
+        return result, changes
+    text = request.get('game_request') or request.get('prompt', '')
+    for index, requirement in enumerate(plan['requirements']):
+        if not isinstance(requirement, dict):
+            continue
+        quote = requirement.get('quote')
+        if (requirement.get('origin') == 'user' and isinstance(quote, str) and quote.strip()
+                and quote not in text and any(quote in note for note in preference_sources(request))):
+            requirement['origin'] = 'preference'
+            changes.append({'path': f'plan.requirements.{index}.origin', 'from': 'user', 'to': 'preference'})
+    return result, changes
+
 REQUIREMENT = obj({
     "id": string(pattern=r"^[A-Za-z][A-Za-z0-9_]{0,39}$"),
     "category": {"enum": ["start", "control", "outcome", "restart", "regression"]},
@@ -50,6 +82,8 @@ requirements lists 3-8 frozen promises with stable IDs, category, exact requirem
 
 def schema(request):
     result = deepcopy(PLAN_SCHEMA)
+    if request.get('plan_provenance') == PROVENANCE_VERSION:
+        result['properties']['plan']['anyOf'][0]['properties']['requirements']['items']['properties']['origin']['enum'].append('preference')
     if request.get("generation_strategy") != "pro":
         result["properties"]["plan"]["anyOf"][0]["properties"]["mechanics"]["maxItems"] = 2
     if presentation.enabled(request):
@@ -73,7 +107,7 @@ def schema(request):
 def prompt(request):
     from .experience import enabled
 
-    return PLAN_PROMPT + (
+    return PLAN_PROMPT + (PREFERENCE_GUIDANCE if request.get('plan_provenance') == PROVENANCE_VERSION else '') + (
         "\nPro: develop up to four tightly connected mechanics, a distinctive visual direction and a satisfying arc. Keep the implementation feasible as a self-contained mini-game."
         if request.get("generation_strategy") == "pro" else
         "\nLite: choose one core mechanic and at most one supporting mechanic. Keep rules explicit, implementation small, and the whole game complete."
@@ -118,3 +152,10 @@ def validate_plan(response, request=None):
             not r['quote'].strip() or request is not None and r['quote'] not in text
         ):
             raise ContractError('invalid_plan', 'Происхождение требования не подтверждено цитатой запроса.')
+        if r['origin'] == 'preference' and (
+            not r['quote'].strip() or request is not None and (
+                request.get('plan_provenance') != PROVENANCE_VERSION
+                or not any(r['quote'] in note for note in preference_sources(request))
+            )
+        ):
+            raise ContractError('invalid_plan', 'Пожелание должно содержать точную цитату сохранённых настроек пользователя.')

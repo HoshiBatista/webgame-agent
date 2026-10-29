@@ -6,6 +6,7 @@ import pytest
 
 from generation.artifacts import sha256
 from generation.prompts import (
+    PREFERENCE_PRIORITY,
     PUBLIC_REPLY_GUIDANCE,
     QUICK_REVIEW_GUIDANCE,
     SYSTEM_PROMPT,
@@ -21,8 +22,9 @@ def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol()
     text = system_prompt({"operation": "create"})
     from generation.helpers import GUIDANCE
 
-    assert text == SYSTEM_PROMPT + GUIDANCE + QUICK_REVIEW_GUIDANCE + PUBLIC_REPLY_GUIDANCE
-    assert len(text) < 7600
+    assert text == SYSTEM_PROMPT + PREFERENCE_PRIORITY + GUIDANCE + QUICK_REVIEW_GUIDANCE + PUBLIC_REPLY_GUIDANCE
+    # Includes the current input/check contract and shared review/source priority.
+    assert len(text) < 9000
     assert "4-6 meaningful checks" in text
     assert "complete sources in files" in text
     assert "PATCH CONTRACT" not in text
@@ -39,8 +41,8 @@ def test_edit_and_repair_keep_distinct_requirement_policies():
     assert "exact requirement text and category" in repair
     assert "syntax or startup failure must be fixed before" in repair
     for text in (edit, repair):
-        # Motion and the short player-facing review remain bounded.
-        assert len(text) < 8800
+        # Includes the current check contract, motion and player-facing review.
+        assert len(text) < 10500
         assert "old_text must occur exactly once in the ORIGINAL file" in text
         assert "omitted checks are inherited unchanged" in text
         assert "status=unchanged" in text

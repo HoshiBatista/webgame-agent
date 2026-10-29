@@ -80,21 +80,23 @@ export default function RunMessage({
   const label = run.model_label === 'Pro' || run.model_profile === 'pro' ? 'Pro' : 'Lite';
   const progress = sending
     ? 'Отправляю запрос…'
-    : run.stage === 'waiting_admin'
-      ? 'Ожидаю восстановления подключения к модели…'
-      : run.stage === 'waiting_model'
-        ? 'Ожидаю ответ модели…'
-        : run.stage === 'planning'
-          ? 'Продумываю механику и игровой замысел…'
-          : run.stage === 'repairing_checks'
-            ? 'Проверяю сценарии игры…'
-            : run.status === 'queued'
-              ? 'Ожидаю начала работы…'
-              : run.status === 'checking'
-                ? 'Проверяю игру…'
-                : run.operation === 'edit' || run.operation === 'repair'
-                  ? 'Дорабатываю игру…'
-                  : 'Создаю игру…';
+    : run.stage === 'waiting_capacity'
+      ? `Все места ${label} заняты. Запрос в очереди…`
+      : run.stage === 'waiting_admin'
+        ? 'Ожидаю восстановления подключения к модели…'
+        : run.stage === 'waiting_model'
+          ? 'Ожидаю ответ модели…'
+          : run.stage === 'planning'
+            ? 'Продумываю механику и игровой замысел…'
+            : run.stage === 'repairing_checks'
+              ? 'Проверяю сценарии игры…'
+              : run.status === 'queued'
+                ? 'Ожидаю начала работы…'
+                : run.status === 'checking'
+                  ? 'Проверяю игру…'
+                  : run.operation === 'edit' || run.operation === 'repair'
+                    ? 'Дорабатываю игру…'
+                    : 'Создаю игру…';
   return (
     <article className="chat-message message-assistant active-message">
       <span className="message-author">

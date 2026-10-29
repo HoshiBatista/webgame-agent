@@ -48,6 +48,14 @@ def generate(request, *, on_event, is_cancelled):
             **(result.get("provider_metadata") or {}),
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
+    if request.get('operation') == 'plan':
+        from .planning import PROVENANCE_VERSION, normalize_plan_sources
+
+        result['response'], source_changes = normalize_plan_sources(result['response'], request)
+        if source_changes:
+            result['provider_metadata']['plan_provenance'] = {
+                'version': PROVENANCE_VERSION, 'changes': source_changes,
+            }
     try:
         if request.get('response_completion'):
             from .response_completion import assemble

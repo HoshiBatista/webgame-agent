@@ -214,6 +214,11 @@ def claim_run(run_id):
     # Receiving an admitted job must not deadlock when capacity is reduced.
     # Any subsequent NEW invocation passes admission again in reserve_invocation.
     if not resuming_relay and capacity_full(run):
+        if run.stage != 'waiting_capacity':
+            run.stage = 'waiting_capacity'
+            run.message = 'Все места для генерации заняты. Запрос сохранён и начнётся, когда освободится место.'
+            run.save(update_fields=['stage', 'message', 'updated_at'])
+            event(run, 'waiting_capacity', run.message)
         return False
     run.fence = uuid.uuid4()
     run.lease_until = timezone.now() + timedelta(seconds=settings.GAMEFORGE_LEASE_SECONDS)
@@ -364,7 +369,10 @@ def request_for(run, base, findings, last_attempt_error=None):
         "generation_contract": {"pipeline_version": version},
     }
     if run.planning_required and not run.game_plan and base is None:
+        from generation.planning import PROVENANCE_VERSION
+
         request["operation"] = "plan"
+        request['plan_provenance'] = PROVENANCE_VERSION
     if request["operation"] == "edit":
         from .patch_repair import pending_permission
 

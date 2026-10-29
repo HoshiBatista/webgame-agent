@@ -64,6 +64,7 @@ it('offers one unobtrusive link without recommendations or technical run cards',
 });
 
 it.each([
+  ['waiting_capacity', 'Все места Lite заняты. Запрос в очереди…'],
   ['waiting_model', 'Ожидаю ответ модели…'],
   ['waiting_admin', 'Ожидаю восстановления подключения к модели…'],
   ['planning', 'Продумываю механику и игровой замысел…'],
