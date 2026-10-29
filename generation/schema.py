@@ -162,7 +162,8 @@ ABSOLUTE_EXPECT = deepcopy(CHECK_SCHEMA['properties']['expect'])
 ABSOLUTE_EXPECT['properties']['operator']['enum'] = ['eq', 'not_eq', 'contains', 'visible']
 CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
     obj({"action": {"enum": ["checkpoint"]}}),
-    obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
+    {**obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
+     "description": "At most once, only the LAST step. Poll the final observation/expect, not a fixed pause. Use wait for an intermediate pause."},
     obj({"action": {"enum": ["await_condition", "assert"]},
          "ms": {"type": "integer", "minimum": 0, "maximum": 3000},
          "observation": CHECK_SCHEMA['properties']['observation'],
