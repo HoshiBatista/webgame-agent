@@ -1,0 +1,1006 @@
+{
+  "captured_at": "2026-10-29T12:14:39.115192+00:00",
+  "deployment": {
+    "server": {
+      "revision": "a1ea77d464c8fee470331184647f7ab29af031d6",
+      "preserved_counts": {
+        "Budget": 1,
+        "Chat": 65,
+        "CheckReport": 55,
+        "Feedback": 3,
+        "FeedbackProcessing": 1,
+        "Invocation": 221,
+        "Like": 3,
+        "Message": 212,
+        "Outbox": 108,
+        "Preference": 4,
+        "PromptTemplate": 3,
+        "Publication": 2,
+        "Revision": 50,
+        "Run": 108,
+        "RunEvent": 1155,
+        "User": 5,
+        "ValidationRequest": 36,
+        "ValidationTask": 36
+      },
+      "all_existing_records_preserved": true,
+      "unknown_preserved": 11,
+      "active_runs": 0,
+      "active_invocations": 0,
+      "configuration_preserved_except_image_tags": true,
+      "relay_db_redis_identity_preserved": true,
+      "new_migrations": [],
+      "model_calls": 0,
+      "images": {
+        "app": {
+          "image_id": "sha256:b71df6b50783c53143113c0edefcef9ed89369b1434201545498a2d6d1133f15",
+          "image_tag": "gameforge-mini:cloud-a1ea77d-20261029"
+        },
+        "preview": {
+          "image_id": "sha256:b71df6b50783c53143113c0edefcef9ed89369b1434201545498a2d6d1133f15",
+          "image_tag": "gameforge-mini:cloud-a1ea77d-20261029"
+        },
+        "worker": {
+          "image_id": "sha256:b71df6b50783c53143113c0edefcef9ed89369b1434201545498a2d6d1133f15",
+          "image_tag": "gameforge-mini:cloud-a1ea77d-20261029"
+        },
+        "beat": {
+          "image_id": "sha256:b71df6b50783c53143113c0edefcef9ed89369b1434201545498a2d6d1133f15",
+          "image_tag": "gameforge-mini:cloud-a1ea77d-20261029"
+        },
+        "validator": {
+          "image_id": "sha256:625dd9f947908ae703769fe480d9bf7f2d6443568c48e45dc22dd0851d3369fc",
+          "image_tag": "gameforge-mini-validator:cloud-a1ea77d-20261029"
+        }
+      },
+      "backup_path": "/opt/gameforge/backups/before-a1ea77d-20261029T120337Z.dump",
+      "backup_sha256": "6c36a8690a821c3860fc339dba1cc0581901c86077729c79084779f3e91e9f9a",
+      "validator_isolation_verified": true,
+      "app_private_socket_read_only": true
+    },
+    "canary": [
+      {
+        "environment": "mini-browser-v1:ad310fc0802cdc0e562425753ee5400364a41776aaa610fe80f4c9651db3aa96:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+        "profiles": {
+          "full": {
+            "status": "passed",
+            "facts": 5,
+            "viewports": [
+              "mobile",
+              "landscape",
+              "desktop"
+            ],
+            "keyboard_only": true,
+            "generated_graphics_drawn": true,
+            "audio_voices_played": true,
+            "rotation_preserves_state": true,
+            "seconds": 22.891,
+            "audio_quality": "not_listened",
+            "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+          },
+          "compact": {
+            "status": "passed",
+            "facts": 6,
+            "viewports": [
+              "mobile",
+              "landscape",
+              "desktop"
+            ],
+            "keyboard_only": true,
+            "generated_graphics_drawn": true,
+            "audio_voices_played": true,
+            "rotation_preserves_state": true,
+            "seconds": 30.863,
+            "audio_quality": "not_listened",
+            "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+          }
+        },
+        "model_calls": 0,
+        "records_created": 0
+      },
+      {
+        "graphics_count_diagnostic": "passed",
+        "model_calls": 0
+      },
+      {
+        "frozen_initial_viewport": "passed",
+        "model_calls": 0
+      },
+      {
+        "response_completion": "passed",
+        "retained_files": 2,
+        "original_source_equal": true,
+        "original_checks_equal": true,
+        "browser_checks": 4,
+        "model_calls": 0
+      }
+    ],
+    "backend": {
+      "app_environment_probe": "mini-browser-v1:ad310fc0802cdc0e562425753ee5400364a41776aaa610fe80f4c9651db3aa96:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+      "manual_api_real_browser": "passed",
+      "idempotency": true,
+      "fresh_run": true,
+      "cancellation": true,
+      "no_autopromotion_or_generation": true,
+      "temporary_fixtures_rolled_back": true,
+      "persistent_records_unchanged": true,
+      "model_calls": 0
+    },
+    "http": {
+      "https_verified": true,
+      "health_http": 200,
+      "assets_exact": 22,
+      "guest_private_api_denied": true,
+      "model_calls": 0,
+      "http_mutations": 0
+    }
+  },
+  "final_health": {
+    "run_count": 109,
+    "invocation_count": 223,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0024": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "a1ea77d464c8fee470331184647f7ab29af031d6",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "codex_worker": {
+    "active_jobs": 0,
+    "attention_required": false,
+    "concurrency": 2,
+    "draining": false,
+    "free_bytes": 7527993344,
+    "idle": true,
+    "jobs": {
+      "cancelled": 2,
+      "completed": 148,
+      "failed": 3,
+      "unknown": 7
+    },
+    "protocol": 1,
+    "storage_bytes": 6369280,
+    "usage": {
+      "input_tokens": 1535299,
+      "output_tokens": 828480,
+      "submitted_without_known_usage": 4
+    },
+    "worker_online": true,
+    "worker_seen": 1793275856.8226068
+  },
+  "pilot": {
+    "additional_call_limit": 50,
+    "previous_pilot_calls": 50,
+    "used": 16,
+    "budget": {
+      "limit_usd": 75.0,
+      "spent_usd": 10.055819,
+      "reserved_usd": 0.0,
+      "unknown_usd": 43.96,
+      "available_usd": 20.984181
+    },
+    "runs": [
+      {
+        "key": "output-followup-20261029-original-1",
+        "run_id": "366466bb-e77f-4f7b-a07f-b74af860d5a0",
+        "status": "unverified",
+        "max_calls": 4,
+        "error_code": "manual_verification",
+        "created": "2026-10-29T11:12:56.811881+00:00",
+        "finished": "2026-10-29T11:20:58.302741+00:00",
+        "revision_id": "bad11485-ac81-409a-a9fd-f85571507d53",
+        "artifact_hash": "009cac21c8475395e9aaf71b6f96f00094d1267f6126ba10bc49770d89ce7efa",
+        "accepted": false,
+        "verification": "none",
+        "report_id": 121,
+        "gates_passed": true,
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "failed"
+          },
+          {
+            "id": "R5",
+            "status": "failed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "audio",
+            "status": "passed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "effect_mismatch",
+            "check_id": "R4"
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "R5"
+          }
+        ],
+        "calls": [
+          {
+            "operation": "create",
+            "state": "settled",
+            "seconds": 138.968197,
+            "usage": {
+              "input_tokens": 18973,
+              "output_tokens": 7397,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.111916",
+            "error_code": null,
+            "completion": true,
+            "response_chars": 30370,
+            "completion_proof": {
+              "original_raw_sha256": "28795001fa43b8faa21d7369392852754fb45776a9abbb0dfcfbf802410da3b2",
+              "source_hash_matches": true,
+              "retained_fields_unchanged": true,
+              "retained_files_unchanged": true,
+              "saved_file_count": 2,
+              "new_file_count": 1,
+              "original_receipt_state": "failed"
+            }
+          },
+          {
+            "operation": "repair",
+            "state": "settled",
+            "seconds": 162.580365,
+            "usage": {
+              "input_tokens": 22551,
+              "output_tokens": 6273,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.107832",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 1379
+          },
+          {
+            "operation": "check_repair",
+            "state": "settled",
+            "seconds": 109.83197,
+            "usage": {
+              "input_tokens": 20233,
+              "output_tokens": 3966,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.080126",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 475
+          }
+        ]
+      },
+      {
+        "key": "output-followup-20261029-movement-1",
+        "run_id": "544515fe-f2b7-46ed-8e68-aa68adc06a64",
+        "status": "unverified",
+        "max_calls": 5,
+        "error_code": "manual_verification",
+        "created": "2026-10-29T11:20:00.194775+00:00",
+        "finished": "2026-10-29T11:27:54.991320+00:00",
+        "revision_id": "f4ad76f1-7dd8-49e6-80b1-329ea8cae155",
+        "artifact_hash": "58913f707aec9c77789c649bc34abe02666da0aae7d5bfe2d85da90e17717698",
+        "accepted": false,
+        "verification": "none",
+        "report_id": 123,
+        "gates_passed": true,
+        "facts": [
+          {
+            "id": "R01",
+            "status": "passed"
+          },
+          {
+            "id": "R03",
+            "status": "passed"
+          },
+          {
+            "id": "R04",
+            "status": "passed"
+          },
+          {
+            "id": "R02",
+            "status": "passed"
+          },
+          {
+            "id": "required_keyboard_control",
+            "status": "passed"
+          },
+          {
+            "id": "R05",
+            "status": "passed"
+          },
+          {
+            "id": "R06",
+            "status": "passed"
+          },
+          {
+            "id": "R07",
+            "status": "passed"
+          },
+          {
+            "id": "R08",
+            "status": "unverified"
+          }
+        ],
+        "findings": [
+          {
+            "code": "invalid_check",
+            "check_id": "R08"
+          }
+        ],
+        "calls": [
+          {
+            "operation": "plan",
+            "state": "settled",
+            "seconds": 79.559064,
+            "usage": {
+              "input_tokens": 3227,
+              "output_tokens": 2638,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.032834",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 6173
+          },
+          {
+            "operation": "create",
+            "state": "settled",
+            "seconds": 265.960769,
+            "usage": {
+              "input_tokens": 11993,
+              "output_tokens": 13156,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.155546",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 27509
+          },
+          {
+            "operation": "check_repair",
+            "state": "settled",
+            "seconds": 43.176794,
+            "usage": {
+              "input_tokens": 19038,
+              "output_tokens": 2118,
+              "cached_input_tokens": 2048,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.055570",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 7307
+          }
+        ]
+      },
+      {
+        "key": "output-followup-20261029-movement-2",
+        "run_id": "f4f64d0d-c548-4616-8b11-c2090b772d14",
+        "status": "unverified",
+        "max_calls": 5,
+        "error_code": "manual_verification",
+        "created": "2026-10-29T11:41:22.366265+00:00",
+        "finished": "2026-10-29T11:49:45.818148+00:00",
+        "revision_id": "b9bd76a5-b73f-4e4c-a28d-9ae0bd5a92b1",
+        "artifact_hash": "a8783aaa45741d1a5b5148cdee67d3474a39b1a2f54ee59423eb6e8de46a4bb2",
+        "accepted": false,
+        "verification": "none",
+        "report_id": 127,
+        "gates_passed": true,
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "unverified"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "failed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "invalid_check",
+            "check_id": "R5"
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "R4"
+          }
+        ],
+        "calls": [
+          {
+            "operation": "plan",
+            "state": "settled",
+            "seconds": 73.669844,
+            "usage": {
+              "input_tokens": 3261,
+              "output_tokens": 2566,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.032182",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 5884
+          },
+          {
+            "operation": "create",
+            "state": "settled",
+            "seconds": 248.005088,
+            "usage": {
+              "input_tokens": 12138,
+              "output_tokens": 11767,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.141946",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 27055
+          },
+          {
+            "operation": "check_repair",
+            "state": "settled",
+            "seconds": 61.59101,
+            "usage": {
+              "input_tokens": 20285,
+              "output_tokens": 2489,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.065460",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 7231
+          }
+        ]
+      },
+      {
+        "key": "output-followup-20261029-memory-1",
+        "run_id": "b51fb13b-b072-4323-ae45-0d2e3ed28d5c",
+        "status": "succeeded",
+        "max_calls": 5,
+        "error_code": null,
+        "created": "2026-10-29T11:41:37.257959+00:00",
+        "finished": "2026-10-29T11:47:17.274874+00:00",
+        "revision_id": "38bfa9ff-e2d6-47c8-a5e9-cf1b1ed21cb5",
+        "artifact_hash": "a047735c4c2d3a1efc1b14450e7fbd6c69a3347727007c864193e15d7b26b25d",
+        "accepted": true,
+        "verification": "automatic",
+        "report_id": 125,
+        "gates_passed": true,
+        "facts": [
+          {
+            "id": "MEMORy_01",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_02",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_07",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_03",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_04",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_05",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_06",
+            "status": "passed"
+          },
+          {
+            "id": "MEMORy_08",
+            "status": "passed"
+          }
+        ],
+        "findings": [],
+        "calls": [
+          {
+            "operation": "plan",
+            "state": "settled",
+            "seconds": 73.090121,
+            "usage": {
+              "input_tokens": 3215,
+              "output_tokens": 2866,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.035090",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 5974
+          },
+          {
+            "operation": "create",
+            "state": "settled",
+            "seconds": 221.934131,
+            "usage": {
+              "input_tokens": 12060,
+              "output_tokens": 11034,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.134460",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 26962
+          }
+        ]
+      },
+      {
+        "key": "output-followup-20261029-original-fresh-1",
+        "run_id": "2f30deb6-1151-4f81-acfd-8ce97ccaf4c3",
+        "status": "succeeded",
+        "max_calls": 5,
+        "error_code": null,
+        "created": "2026-10-29T11:49:32.602971+00:00",
+        "finished": "2026-10-29T11:59:10.125742+00:00",
+        "revision_id": "cc3748fb-3b2a-46d6-972c-04b3fe7ed5c1",
+        "artifact_hash": "ccccdb9c655569c82e8aa358595b903fb64819c3c609c6de8e56a14c1f5ad2a5",
+        "accepted": true,
+        "verification": "automatic",
+        "report_id": 128,
+        "gates_passed": true,
+        "facts": [
+          {
+            "id": "R01",
+            "status": "passed"
+          },
+          {
+            "id": "R02",
+            "status": "passed"
+          },
+          {
+            "id": "R07",
+            "status": "passed"
+          },
+          {
+            "id": "R03",
+            "status": "passed"
+          },
+          {
+            "id": "R04",
+            "status": "passed"
+          },
+          {
+            "id": "R05",
+            "status": "passed"
+          },
+          {
+            "id": "R06",
+            "status": "passed"
+          },
+          {
+            "id": "R08",
+            "status": "passed"
+          },
+          {
+            "id": "audio",
+            "status": "passed"
+          }
+        ],
+        "findings": [],
+        "calls": [
+          {
+            "operation": "plan",
+            "state": "settled",
+            "seconds": 97.375135,
+            "usage": {
+              "input_tokens": 3100,
+              "output_tokens": 2793,
+              "cached_input_tokens": 2048,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.030444",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 6989
+          },
+          {
+            "operation": "create",
+            "state": "failed",
+            "seconds": 259.942542,
+            "usage": {
+              "input_tokens": 12258,
+              "output_tokens": 11458,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.139096",
+            "error_code": "response_output_limit",
+            "completion": false,
+            "response_chars": 0
+          },
+          {
+            "operation": "create",
+            "state": "settled",
+            "seconds": 181.806322,
+            "usage": {
+              "input_tokens": 19411,
+              "output_tokens": 8444,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.123262",
+            "error_code": null,
+            "completion": true,
+            "response_chars": 32126,
+            "completion_proof": {
+              "original_raw_sha256": "fb3f98e2808b8e010ff498a6ea325c519315795ab70ad72045f22a6eb0e9aa6d",
+              "source_hash_matches": true,
+              "retained_fields_unchanged": true,
+              "retained_files_unchanged": true,
+              "saved_file_count": 2,
+              "new_file_count": 1,
+              "original_receipt_state": "failed"
+            }
+          }
+        ]
+      },
+      {
+        "key": "output-followup-20261029-movement-3",
+        "run_id": "23411246-0da5-438f-b9e3-c3c862c455bd",
+        "status": "succeeded",
+        "max_calls": 5,
+        "error_code": null,
+        "created": "2026-10-29T12:05:12.715803+00:00",
+        "finished": "2026-10-29T12:11:22.585498+00:00",
+        "revision_id": "49da1da3-d5e6-41c3-bf6a-b57bad7162bd",
+        "artifact_hash": "bdbf479471064fe120b2d6aa930762e255726297b4654faa8946da89d90c4983",
+        "accepted": true,
+        "verification": "automatic",
+        "report_id": 130,
+        "gates_passed": true,
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "R9",
+            "status": "passed"
+          },
+          {
+            "id": "R10",
+            "status": "passed"
+          },
+          {
+            "id": "R11",
+            "status": "passed"
+          }
+        ],
+        "findings": [],
+        "calls": [
+          {
+            "operation": "plan",
+            "state": "settled",
+            "seconds": 61.889759,
+            "usage": {
+              "input_tokens": 3261,
+              "output_tokens": 2050,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.027022",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 5814
+          },
+          {
+            "operation": "create",
+            "state": "settled",
+            "seconds": 266.085374,
+            "usage": {
+              "input_tokens": 12310,
+              "output_tokens": 12803,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0
+            },
+            "cost_usd": "0.152650",
+            "error_code": null,
+            "completion": false,
+            "response_chars": 26796
+          }
+        ]
+      }
+    ]
+  },
+  "pilot_confirmed_cost_usd": "1.425436",
+  "manual_browser_review": {
+    "original": {
+      "revision": "bad11485-ac81-409a-a9fd-f85571507d53",
+      "browser": "in-app Chromium",
+      "viewports": [
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ],
+      "observed": [
+        "Enter starts and plays a card",
+        "an invalid card is rejected without adding a pair",
+        "a matching-rank card adds a second pair",
+        "rotation preserves the round and cards",
+        "D completes the defended attack and changes turns",
+        "6 of clubs transfers an incoming 6 of spades; game shows transfer in history",
+        "higher same-suit cards defend attacks",
+        "T takes the table cards and advances the round",
+        "built-in autoplay reaches a real end with an empty deck",
+        "replay returns to the start menu",
+        "new game with four opponents resets deck and round"
+      ],
+      "ending_used_builtin_autoplay": true,
+      "all_rule_edge_cases_exhaustively_verified": false,
+      "automated_suite_passed": false,
+      "manual_acceptance_applied": false,
+      "audio_quality": "not_listened",
+      "screenshots": [
+        "screenshots/durak-transfer-landscape.jpg"
+      ]
+    },
+    "movement-1": {
+      "revision": "f4ad76f1-7dd8-49e6-80b1-329ea8cae155",
+      "observed": [
+        "keyboard starts the level",
+        "held Down moves the character",
+        "keyboard movement goes around the obstacle",
+        "collecting crystal opens the ship",
+        "keyboard route reaches victory",
+        "rotation to 844x390 preserves victory",
+        "replay resets crystal and character on 390x844"
+      ],
+      "automated_suite_passed": false,
+      "manual_acceptance_applied": false,
+      "audio_quality": "not_listened",
+      "screenshots": [
+        "screenshots/movement-1-landscape-win.jpg"
+      ]
+    },
+    "memory": {
+      "revision": "38bfa9ff-e2d6-47c8-a5e9-cf1b1ed21cb5",
+      "browser": "in-app Chromium",
+      "viewports": [
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ],
+      "observed": [
+        "Enter starts; arrow and Enter open cards",
+        "mismatched cards close and matched pairs stay revealed",
+        "rotation preserves progress",
+        "all six pairs matched through visible cards, real victory",
+        "replay resets score to zero and all cards closed"
+      ],
+      "console_errors": [],
+      "physical_device": false,
+      "audio_listened": false,
+      "manual_acceptance_applied": false
+    },
+    "movement_2": {
+      "revision": "b9bd76a5-b73f-4e4c-a28d-9ae0bd5a92b1",
+      "browser": "in-app Chromium",
+      "viewports": [
+        [
+          1280,
+          800
+        ]
+      ],
+      "observed": [
+        "Enter starts",
+        "held keys move astronaut",
+        "obstacle bypassed",
+        "collecting crystal unlocks ship",
+        "return to ship reaches victory"
+      ],
+      "manual_acceptance_applied": false,
+      "original_checks_changed": false
+    },
+    "original_fresh": {
+      "revision": "cc3748fb-3b2a-46d6-972c-04b3fe7ed5c1",
+      "browser": "in-app Chromium",
+      "viewports": [
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ],
+      "observed": [
+        "Enter starts with two opponents",
+        "selecting and playing a legal card changes table and hand",
+        "invalid card does not enable Play",
+        "legal toss completes turn and draws cards",
+        "rotation preserves party",
+        "built-in autoplay reaches end with empty deck and user hand",
+        "replay opens opponent choice and new four-opponent party resets counters"
+      ],
+      "end_reached_via_builtin_autoplay": true,
+      "all_rules_edge_cases_verified": false,
+      "console_errors": [],
+      "manual_acceptance_applied": false,
+      "physical_device": false,
+      "audio_listened": false
+    },
+    "movement_3": {
+      "revision": "49da1da3-d5e6-41c3-bf6a-b57bad7162bd",
+      "browser": "in-app Chromium",
+      "viewports": [
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ],
+      "observed": [
+        "Enter starts",
+        "real keyboard movement stops at rock",
+        "ship cannot be entered without crystal",
+        "collecting crystal unlocks ship",
+        "rotation preserves sector and collected crystal",
+        "real keyboard route reaches victory",
+        "replay resets sector and crystal",
+        "second victory using visible directional buttons"
+      ],
+      "console_errors": [],
+      "physical_device": false,
+      "audio_listened": false,
+      "manual_acceptance_applied": false
+    }
+  },
+  "independent_hold_checks": {
+    "revision_id": "f4ad76f1-7dd8-49e6-80b1-329ea8cae155",
+    "artifact_hash": "58913f707aec9c77789c649bc34abe02666da0aae7d5bfe2d85da90e17717698",
+    "independent_held_input_checks": [
+      {
+        "id": "operator_hold",
+        "status": "passed",
+        "before": 261.99,
+        "after": 309.98,
+        "comparison": true
+      },
+      {
+        "id": "operator_release",
+        "status": "passed",
+        "before": 292.0,
+        "after": 292.0,
+        "comparison": true
+      },
+      {
+        "id": "operator_blur",
+        "status": "passed",
+        "before": 301.02,
+        "after": 301.02,
+        "comparison": true
+      }
+    ],
+    "diagnostic_only": true,
+    "original_suite_changed": false,
+    "model_calls": 0,
+    "records_modified": 0
+  },
+  "local_tests": {
+    "last_run_passed": 79,
+    "last_run_failed": 1,
+    "failure": "compact native browser TimeoutExpired",
+    "isolated_retry_passed": 1,
+    "runtime_suite_total": 80,
+    "ruff": "passed"
+  },
+  "limits": {
+    "gpu_lite_touched": false,
+    "codex_worker_changed": false,
+    "new_unknown_receipts": 0,
+    "physical_iphone_checked": false,
+    "audio_quality_listened": false,
+    "all_card_rules_exhaustively_verified": false
+  }
+}
