@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from generation.prompts import build_messages, system_prompt
+from generation.prompts import PUBLIC_REPLY_GUIDANCE, QUICK_REVIEW_GUIDANCE, build_messages, system_prompt
 from generation.schema import response_schema
-from studio.replies import assistant_reply, player_message
+from studio.replies import MAX_PLAYER_MESSAGE_LENGTH, assistant_reply, player_message
 from studio.titles import short_game_title, title_from_prompt
 
 
@@ -68,7 +68,10 @@ def test_every_public_model_reply_uses_player_language_and_source_steps_self_rev
     prompt = system_prompt({"generation_profile": profile, "operation": operation})
     assert "PLAYER-FACING REPLY" in prompt
     assert "no programming knowledge" in prompt
-    assert "1-2 short sentences" in prompt
+    assert "no fixed sentence count for the whole reply" in prompt
+    assert f"<={MAX_PLAYER_MESSAGE_LENGTH} characters" in prompt
+    assert "1-2 short sentences" not in PUBLIC_REPLY_GUIDANCE
+    assert "1-2 short sentences" in QUICK_REVIEW_GUIDANCE
     assert "AFTER checking this exact version" in prompt
     assert ("QUICK FINAL REVIEW" in prompt) == (operation in {"create", "edit", "repair"})
 
@@ -105,7 +108,7 @@ def test_model_receives_the_final_reply_field_after_the_implementation(profile, 
     "Проверки пройдены.",
     "Игра идеально работает на всех устройствах.",
     "Игра без ошибок и багов.",
-    "Длинное объяснение. " * 50,
+    "Длинное объяснение. " * 100,
 ])
 def test_technical_or_unsubstantiated_model_messages_use_a_plain_fallback(text):
     assert player_message(text) == ""
@@ -123,3 +126,20 @@ def test_player_quality_details_are_preserved_without_an_extra_technical_report(
     assert assistant_reply("succeeded", "Internal", text, checks_passed=True).startswith(text)
     manual = assistant_reply("succeeded", "Internal", "Всё проверено!", manually_confirmed=True)
     assert "вашей проверки" in manual and "пройдены" not in manual
+
+
+def test_clear_change_explanation_longer_than_two_sentences_and_500_characters_survives():
+    text = (
+        "Исправил движение героя: после отпускания стрелки он сразу останавливается. "
+        "Экранные кнопки стали крупнее, чтобы по ним было легче попадать пальцем. "
+        "При повороте телефона поле перестраивается, а собранные звёзды и положение героя сохраняются. "
+        "Добавил понятную подсказку перед началом: соберите три звезды и доберитесь до выхода. "
+        "После победы можно начать заново одной кнопкой; препятствия и цель остаются прежними. "
+        "При кратком просмотре результата явных противоречий в правилах не заметил. "
+        "Крупные подписи помогают различать действия, а подсказка объясняет цель без долгого обучения."
+    )
+    assert 500 < len(text) <= MAX_PLAYER_MESSAGE_LENGTH
+    assert player_message(text) == text
+    assert assistant_reply("succeeded", "Internal", text, checks_passed=True) == (
+        f"{text} Выполненные проверки пройдены — можно пробовать играть."
+    )

@@ -24,8 +24,8 @@ def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol()
 
     assert text.startswith(SYSTEM_PROMPT)
     assert all(guidance in text for guidance in [PREFERENCE_PRIORITY, GUIDANCE, QUICK_REVIEW_GUIDANCE, PUBLIC_REPLY_GUIDANCE])
-    # Includes the current input/check contract and shared review/source priority.
-    assert len(text) < 9000
+    # Includes held touch input and the separate work explanation/review summary.
+    assert len(text) < 9500
     assert "4-6 meaningful checks" in text
     assert "complete sources in files" in text
     assert "PATCH CONTRACT" not in text

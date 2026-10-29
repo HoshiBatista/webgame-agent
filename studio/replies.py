@@ -2,6 +2,8 @@
 
 import re
 
+MAX_PLAYER_MESSAGE_LENGTH = 1000
+
 # A conservative fallback for models that ignore the player-facing reply policy.
 # Do not partially redact a technical explanation into misleading fragments.
 _IMPLEMENTATION = re.compile(
@@ -29,7 +31,7 @@ def player_message(value):
     if not isinstance(value, str):
         return ""
     value = " ".join(value.split())
-    if len(value) > 500 or _IMPLEMENTATION.search(value) or _UNSUPPORTED_CLAIM.search(value):
+    if len(value) > MAX_PLAYER_MESSAGE_LENGTH or _IMPLEMENTATION.search(value) or _UNSUPPORTED_CLAIM.search(value):
         return ""
     return value
 

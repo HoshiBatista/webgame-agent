@@ -98,12 +98,12 @@ PLAN_CHECK_CONTEXT = "\nThe saved game_plan is context only. Repair exactly the 
 
 PUBLIC_REPLY_GUIDANCE = """
 PLAYER-FACING REPLY
-message is for someone with no programming knowledge: plain Russian, 1-2 short sentences, <=500 characters. Describe the actual result and one supported player-quality detail (readability, controls, progression) or limitation. Plans/refusals are not finished games. No code, files, identifiers, libraries, APIs, implementation details or review reasoning, even if requested; technical data belongs in other JSON fields. Never claim execution, passed checks, perfection, beauty or smoothness on every device. The app adds verification AFTER checking this exact version; old findings/screenshots prove no new success. No technical approval requests.
+message is for someone with no programming knowledge: concise, clear Russian, <=1000 characters, no fixed sentence count for the whole reply. Explain what was created/changed/fixed and how it affects play; mention relevant controls or limitations. Plans/refusals are not finished games. No code, files, identifiers, libraries, APIs, implementation details or review reasoning. Never claim execution, passed checks, perfection or quality on every device. The app adds verification AFTER checking this exact version; old findings prove no new success. No technical approval requests.
 """
 
 QUICK_REVIEW_GUIDANCE = """
 QUICK FINAL REVIEW
-After preparing code/patches, briefly inspect the resulting game: syntax/references, requested rules, start/control/outcome/replay and readable, reachable phone/desktop controls. Fix obvious issues within scope; preserve frozen requirements/checks. Review within this response, with no extra call/tools/stage. Inspection is not execution. Return message last, after code and checks, with only the player-facing conclusion.
+After preparing code/patches, inspect syntax/references, requested rules, start/control/outcome/replay and phone/desktop usability. Fix obvious issues; preserve frozen requirements/checks. No extra call/tools/stage. Inspection is not execution. Return message last, after code and checks: explain the work, then summarize supported player-quality details or limitations in 1-2 short sentences. This limit applies ONLY to the self-review summary, not the whole reply or inspection.
 """
 
 JSON_FORMAT_GUIDANCE = '\nEmit minified JSON: no whitespace outside strings; escape source newlines. Close every field/object.\n'
