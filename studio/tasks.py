@@ -447,6 +447,12 @@ def request_for(run, base, findings, last_attempt_error=None):
 
         if image_input(request) is None:
             raise DomainError("invalid_visual_image", "Нет допустимого изображения для оценки оформления.")
+    if base is None and request['operation'] == 'create':
+        from .response_completion import pending_permission
+
+        completion = pending_permission(run, request)
+        if completion:
+            request['response_completion'] = completion
     request["reasoning_effort"] = (
         "high" if run.generation_strategy == "pro" and request["operation"] in {"plan", "create", "repair"}
         else "medium" if run.generation_strategy == "pro" else "low"
@@ -825,6 +831,11 @@ def _execute(run, lease, generate, materialize, validate):
                 inv.state = "settled"
                 inv.error = error_data(exc)
                 inv.save(update_fields=["state", "error"])
+                if inv.request.get('response_completion'):
+                    finish_run(run.id, run.fence, 'needs_attention', exc.message,
+                               error={'code': 'invalid_response_completion', 'message': exc.message,
+                                      'cause': exc.code})
+                    return
                 if inv.request["operation"] == "visual_patch":
                     from .visual import skip
 
@@ -982,6 +993,7 @@ def _execute(run, lease, generate, materialize, validate):
         resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()
         if run.attempts >= run.max_model_calls and resumed is None:
             incomplete = base is None and (last_attempt_error or {}).get("code") == "incomplete_sources"
+            output_limited = base is None and (last_attempt_error or {}).get('code') == 'response_output_limit'
             plan_only = base is None and bool(run.game_plan)
             finish_run(
                 run.id,
@@ -992,7 +1004,7 @@ def _execute(run, lease, generate, materialize, validate):
                 "Лимит вызовов исчерпан: модель не передала полную реализацию игры. Ответы сохранены; можно продолжить создание."
                 if incomplete else "Лимит исправлений исчерпан. Ответы и черновик сохранены; доступно продолжение.",
                 error={
-                    "code": "incomplete_sources" if incomplete else "plan_without_game" if plan_only else "repair_exhausted",
+                    "code": "response_output_limit" if output_limited else "incomplete_sources" if incomplete else "plan_without_game" if plan_only else "repair_exhausted",
                     "message": "Не получена полная реализация игры." if incomplete else "Остались проблемы применения или проверки.",
                     "details": findings or ([last_attempt_error] if last_attempt_error else []),
                     "max_repair_attempts": run.max_repair_attempts,
@@ -1064,6 +1076,8 @@ def _execute(run, lease, generate, materialize, validate):
             inv.save(update_fields=["provider_metadata"])
         if not resumed:
             message = (
+                "Завершаем недостающую часть игры. Уже полученные части сохранены."
+                if req.get('response_completion') else
                 "Придумываем игровой замысел: механику, развитие и цель."
                 if req["operation"] == "plan" else
                 "Уточняем сценарии проверки сохранённой игры. Исходники остаются прежними."
@@ -1147,6 +1161,15 @@ def _execute(run, lease, generate, materialize, validate):
                 skip(run, "visual_call_failed")
                 pending = base = fallback(run) or base
                 continue
+            if req.get('response_completion'):
+                finish_run(run.id, run.fence, 'failed', data['message'], error=error_data(exc))
+                return
+            if base is None and data['code'] == 'response_output_limit':
+                from .response_completion import pending_permission
+
+                if pending_permission(run, req):
+                    last_attempt_error = error_data(exc)
+                    continue
             if isinstance(exc, ContractError) or data["code"] == "invalid_json":
                 if req["operation"] in {"check_repair", "checks_create"}:
                     finish_run(run.id, run.fence, "needs_attention", "Не удалось восстановить проверки. Код игры сохранён.",

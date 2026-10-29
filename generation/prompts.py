@@ -105,6 +105,10 @@ After preparing code/patches, briefly inspect the resulting game: syntax/referen
 
 
 def _system_prompt(request):
+    if request.get('response_completion'):
+        from .response_completion import PROMPT, original_request
+
+        return _system_prompt(original_request(request)) + PROMPT
     if request.get("patch_repair"):
         from .patch_repair import PROMPT
 
@@ -217,6 +221,8 @@ def build_messages(request):
     }
     if media is not None and request.get('generation_profile') != 'compact':
         context['assets'] = media
+    if request.get('response_completion'):
+        context['response_completion'] = request['response_completion']
     for operation in ('visual_review', 'visual_patch'):
         if request.get(operation):
             context[operation] = request[operation]

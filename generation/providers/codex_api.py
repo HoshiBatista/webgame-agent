@@ -210,6 +210,12 @@ def unpack(status, ident):
     metadata = {**receipt["metadata"], "codex_api_job_id": ident,
                 "receipt_hash": status["receipt_hash"], "inference_submitted": status.get("inference_submitted")}
     if not receipt["ok"]:
+        if (status['state'] == 'failed' and receipt['error']['outcome_unknown'] is False
+                and metadata.get('turn_status') == 'failed'
+                and metadata.get('provider_error', {}).get('incomplete_reason') == 'max_output_tokens'):
+            raise GenerationError('response_output_limit',
+                                  'Ответ модели прервался из-за ограничения длины. Полученные данные сохранены.',
+                                  usage=usage, raw_response=receipt.get('partial_response'), provider_metadata=metadata)
         raise GenerationError(receipt["error"]["code"], "Pro не завершил ответ. Полученные данные сохранены.",
                               usage=usage, outcome_unknown=receipt["error"]["outcome_unknown"],
                               raw_response=receipt.get("partial_response"), provider_metadata=metadata)

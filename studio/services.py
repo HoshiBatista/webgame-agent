@@ -524,6 +524,10 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         model_call_deadline=deadline,
     )
     chat.audience = audience
+    if continued_from:
+        from .response_completion import adopt_completion_policy
+
+        adopt_completion_policy(run)
     chat.save(update_fields=["audience", "title", "updated_at"])
     Message.objects.create(chat=chat, run=run, role="user", content=prompt.strip())
     event(run, "queued", "Запрос принят. Ожидаем свободное место для генерации.")

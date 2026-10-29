@@ -197,6 +197,10 @@ CHECK_REPAIR_SCHEMA = obj({
 
 def response_schema(request):
     """One current operation contract; unsupported games are retired, not reinterpreted."""
+    if request.get('response_completion'):
+        from .response_completion import reply_schema
+
+        return reply_schema(request)
     if request.get("operation") == "extract_preferences":
         from .preference_extraction import SCHEMA
 

@@ -49,7 +49,17 @@ def generate(request, *, on_event, is_cancelled):
             "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
         }
     try:
-        if request.get("patch_repair"):
+        if request.get('response_completion'):
+            from .response_completion import assemble
+
+            result['response'] = assemble(original, request)
+            policy = request['response_completion']
+            result['provider_metadata']['response_completion'] = {
+                'source_invocation': policy['source_invocation'], 'source_sha256': policy['source_sha256'],
+                'retained_fields': list(policy['retained_fields']),
+                'retained_files': [f['path'] for f in policy['retained_files']],
+            }
+        elif request.get("patch_repair"):
             from .patch_repair import validate_reply
 
             validate_reply(result["response"], request["patch_repair"])
