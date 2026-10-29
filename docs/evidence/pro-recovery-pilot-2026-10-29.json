@@ -1,0 +1,658 @@
+{
+  "limit": 50,
+  "used": 19,
+  "runs": [
+    {
+      "key": "r1-memory",
+      "run_id": "6f703cdd-947c-4aaa-a276-8504af74a084",
+      "status": "needs_attention",
+      "error_code": "unchanged",
+      "created": "2026-10-29T00:26:48.982105+00:00",
+      "finished": "2026-10-29T00:32:10.525456+00:00",
+      "revision_id": "68ff89ff-cf4b-44e1-b341-f7e598adf4a5",
+      "artifact_hash": "0639544fcd64f7588abfb1d819d037266c3fd6fac98ed28e5ccede9eb5d0d8a2",
+      "report_id": 89,
+      "gates_passed": true,
+      "findings": [
+        "effect_not_causal",
+        "requirement_manifest_mismatch"
+      ],
+      "facts": [
+        {
+          "id": "R01",
+          "status": "passed"
+        },
+        {
+          "id": "R02",
+          "status": "passed"
+        },
+        {
+          "id": "R06",
+          "status": "unverified"
+        },
+        {
+          "id": "R03",
+          "status": "passed"
+        },
+        {
+          "id": "R04",
+          "status": "passed"
+        },
+        {
+          "id": "R05",
+          "status": "passed"
+        },
+        {
+          "id": "R07",
+          "status": "passed"
+        }
+      ],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 55.068118,
+          "response_chars": 6447,
+          "usage": {
+            "input_tokens": 3101,
+            "output_tokens": 2147,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "183911ad56874e35bd974d134a1152f32633582660a061b9bae8393f4ce9d29e"
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "seconds": 187.998165,
+          "response_chars": 27436,
+          "usage": {
+            "input_tokens": 10571,
+            "output_tokens": 10185,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "283a3ba94f6df89ff19fdaf1d84e1fff2c7f16b0232ab488ed770bec02b1d0b9"
+        },
+        {
+          "operation": "check_repair",
+          "state": "settled",
+          "seconds": 12.872214,
+          "response_chars": 488,
+          "usage": {
+            "input_tokens": 16950,
+            "output_tokens": 366,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "5a07691676d90ab783a3dc10bc5c04ae97565666cd96e56ff34dd9884be5af4c"
+        }
+      ]
+    },
+    {
+      "key": "r1-grid",
+      "run_id": "97691a31-f43c-4fb2-a8d5-9c973157c7a9",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "created": "2026-10-29T00:26:51.130989+00:00",
+      "finished": "2026-10-29T00:32:02.656927+00:00",
+      "revision_id": "9f14fa86-a11e-4fac-8856-0a3e1b18db6a",
+      "artifact_hash": "20af91200d98d35263fa5c6a450c2b6fe54b85a0a9f904072017f6af0f5a2bb4",
+      "report_id": 88,
+      "gates_passed": true,
+      "findings": [
+        "effect_not_causal"
+      ],
+      "facts": [
+        {
+          "id": "R01",
+          "status": "passed"
+        },
+        {
+          "id": "R02",
+          "status": "passed"
+        },
+        {
+          "id": "R05",
+          "status": "unverified"
+        },
+        {
+          "id": "R03",
+          "status": "passed"
+        },
+        {
+          "id": "R04",
+          "status": "passed"
+        },
+        {
+          "id": "R06",
+          "status": "passed"
+        },
+        {
+          "id": "R07",
+          "status": "passed"
+        },
+        {
+          "id": "R08",
+          "status": "passed"
+        }
+      ],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 54.871901,
+          "response_chars": 6672,
+          "usage": {
+            "input_tokens": 3081,
+            "output_tokens": 2220,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "183911ad56874e35bd974d134a1152f32633582660a061b9bae8393f4ce9d29e"
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "seconds": 174.112462,
+          "response_chars": 24106,
+          "usage": {
+            "input_tokens": 10814,
+            "output_tokens": 10275,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "283a3ba94f6df89ff19fdaf1d84e1fff2c7f16b0232ab488ed770bec02b1d0b9"
+        },
+        {
+          "operation": "check_repair",
+          "state": "failed",
+          "seconds": 49.909656,
+          "response_chars": 0,
+          "usage": {
+            "input_tokens": 15969,
+            "output_tokens": 2550,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": "invalid_check",
+          "provider_error": null,
+          "prompt_hash": "5a07691676d90ab783a3dc10bc5c04ae97565666cd96e56ff34dd9884be5af4c"
+        }
+      ]
+    },
+    {
+      "key": "r2-memory",
+      "run_id": "0289e004-2f13-4852-9529-eb18f15c8787",
+      "status": "unknown",
+      "error_code": "codex_turn_failed",
+      "created": "2026-10-29T01:01:58.440866+00:00",
+      "finished": "2026-10-29T01:06:43.273890+00:00",
+      "revision_id": null,
+      "artifact_hash": null,
+      "report_id": null,
+      "gates_passed": null,
+      "findings": [],
+      "facts": [],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 54.287262,
+          "response_chars": 6392,
+          "usage": {
+            "input_tokens": 3163,
+            "output_tokens": 2863,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "ec712599fb0fe78f78991bc5ff37923c29e4018aa62959c904795c760c7390a9"
+        },
+        {
+          "operation": "create",
+          "state": "unknown",
+          "seconds": 229.90356,
+          "response_chars": 0,
+          "usage": {
+            "input_tokens": 11023,
+            "output_tokens": 13807,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": "codex_turn_failed",
+          "provider_error": {
+            "category": "other"
+          },
+          "prompt_hash": "73c371e1f1ca616e091eaed35d696145c618581eee7c7f6a7d21b8dad8efec76"
+        }
+      ]
+    },
+    {
+      "key": "r2-grid",
+      "run_id": "e9c2bda6-2242-4849-b6c0-f1a53806b888",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "created": "2026-10-29T01:02:00.647921+00:00",
+      "finished": "2026-10-29T01:07:38.655603+00:00",
+      "revision_id": "e18e6984-a6c7-4033-9527-8b9024f15237",
+      "artifact_hash": "a56e69be1cef4049d96942001b382812ada2a4fadd6e5a6c82d02cd2820a77ca",
+      "report_id": 92,
+      "gates_passed": true,
+      "findings": [
+        "check_suite_revised"
+      ],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        }
+      ],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 60.296809,
+          "response_chars": 6166,
+          "usage": {
+            "input_tokens": 3143,
+            "output_tokens": 2583,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "ec712599fb0fe78f78991bc5ff37923c29e4018aa62959c904795c760c7390a9"
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "seconds": 169.708052,
+          "response_chars": 24131,
+          "usage": {
+            "input_tokens": 10932,
+            "output_tokens": 10473,
+            "cached_input_tokens": 7552,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "73c371e1f1ca616e091eaed35d696145c618581eee7c7f6a7d21b8dad8efec76"
+        },
+        {
+          "operation": "check_repair",
+          "state": "settled",
+          "seconds": 37.744988,
+          "response_chars": 6685,
+          "usage": {
+            "input_tokens": 17161,
+            "output_tokens": 2310,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "ed1cf6c2c91eae2d697a4c858accf49b46e9f2b599f532e112e294310fa59757"
+        }
+      ]
+    },
+    {
+      "key": "r2-memory-diagnostic",
+      "run_id": "127f1260-4a87-4ea3-8210-3670994a1ff8",
+      "status": "needs_attention",
+      "error_code": "no_progress",
+      "created": "2026-10-29T01:20:38.541499+00:00",
+      "finished": "2026-10-29T01:26:54.469612+00:00",
+      "revision_id": "6ba4fe7e-2dd1-4cfb-920f-bf868bab6239",
+      "artifact_hash": "03467ad43e4b81844a428efa6444345f1a3ab182f3197f103a004e19f536e45f",
+      "report_id": 94,
+      "gates_passed": false,
+      "findings": [
+        "missing_keyboard_control",
+        "incomplete_checks",
+        "runtime_or_network",
+        "runtime_or_network",
+        "runtime_or_network",
+        "runtime_or_network",
+        "invalid_check",
+        "runtime_or_network",
+        "runtime_or_network",
+        "runtime_or_network",
+        "runtime_or_network",
+        "runtime_or_network"
+      ],
+      "facts": [
+        {
+          "id": "R01",
+          "status": "failed"
+        },
+        {
+          "id": "R02",
+          "status": "failed"
+        },
+        {
+          "id": "R06",
+          "status": "failed"
+        },
+        {
+          "id": "R03",
+          "status": "failed"
+        },
+        {
+          "id": "R04",
+          "status": "failed"
+        },
+        {
+          "id": "R05",
+          "status": "failed"
+        },
+        {
+          "id": "R07",
+          "status": "failed"
+        },
+        {
+          "id": "R08",
+          "status": "failed"
+        }
+      ],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 54.110868,
+          "response_chars": 6524,
+          "usage": {
+            "input_tokens": 3163,
+            "output_tokens": 2759,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "ec712599fb0fe78f78991bc5ff37923c29e4018aa62959c904795c760c7390a9"
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "seconds": 199.977333,
+          "response_chars": 30837,
+          "usage": {
+            "input_tokens": 11037,
+            "output_tokens": 11910,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "73c371e1f1ca616e091eaed35d696145c618581eee7c7f6a7d21b8dad8efec76"
+        },
+        {
+          "operation": "repair",
+          "state": "settled",
+          "seconds": 24.244639,
+          "response_chars": 2026,
+          "usage": {
+            "input_tokens": 16446,
+            "output_tokens": 1116,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "7c89a74678e38b5b84f5dc98412f27ad5c1621330bf11a9365bc133a6f53480f"
+        }
+      ]
+    },
+    {
+      "key": "r3-grid",
+      "run_id": "50093871-0f04-4171-91e2-0c8d77bc1e80",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "created": "2026-10-29T01:45:39.976946+00:00",
+      "finished": "2026-10-29T01:50:15.950737+00:00",
+      "revision_id": "1ef2e336-53ec-4df2-8628-4b4fe8bba624",
+      "artifact_hash": "e7bbc97059d74e6ee7386d5f4cd68bc357b4d441939ed4f51eb99646cf1044a5",
+      "report_id": 97,
+      "gates_passed": true,
+      "findings": [
+        "missing_keyboard_control",
+        "incomplete_checks",
+        "invalid_check",
+        "effect_mismatch",
+        "effect_not_causal"
+      ],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "unverified"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "audio-mark",
+          "status": "passed"
+        },
+        {
+          "id": "audio-music",
+          "status": "unverified"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "failed"
+        }
+      ],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 31.146978,
+          "response_chars": 6422,
+          "usage": {
+            "input_tokens": 3143,
+            "output_tokens": 2355,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "ec712599fb0fe78f78991bc5ff37923c29e4018aa62959c904795c760c7390a9"
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "seconds": 152.138475,
+          "response_chars": 26524,
+          "usage": {
+            "input_tokens": 11002,
+            "output_tokens": 11212,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "73c371e1f1ca616e091eaed35d696145c618581eee7c7f6a7d21b8dad8efec76"
+        },
+        {
+          "operation": "check_repair",
+          "state": "failed",
+          "seconds": 43.574612,
+          "response_chars": 0,
+          "usage": {
+            "input_tokens": 18456,
+            "output_tokens": 2602,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": "invalid_check",
+          "provider_error": null,
+          "prompt_hash": "ed1cf6c2c91eae2d697a4c858accf49b46e9f2b599f532e112e294310fa59757"
+        }
+      ]
+    },
+    {
+      "key": "r3-movement",
+      "run_id": "a9c40e59-84d8-4a76-84eb-f590d863a6c9",
+      "status": "unknown",
+      "error_code": "codex_turn_failed",
+      "created": "2026-10-29T01:45:42.391082+00:00",
+      "finished": "2026-10-29T01:53:07.599738+00:00",
+      "revision_id": null,
+      "artifact_hash": null,
+      "report_id": null,
+      "gates_passed": null,
+      "findings": [],
+      "facts": [],
+      "calls": [
+        {
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 37.383179,
+          "response_chars": 5925,
+          "usage": {
+            "input_tokens": 3104,
+            "output_tokens": 2429,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": null,
+          "provider_error": null,
+          "prompt_hash": "ec712599fb0fe78f78991bc5ff37923c29e4018aa62959c904795c760c7390a9"
+        },
+        {
+          "operation": "create",
+          "state": "unknown",
+          "seconds": 133.800293,
+          "response_chars": 0,
+          "usage": {
+            "input_tokens": 10788,
+            "output_tokens": 12468,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "error_code": "codex_turn_failed",
+          "provider_error": {
+            "category": "other",
+            "incomplete_reason": "max_output_tokens"
+          },
+          "prompt_hash": "73c371e1f1ca616e091eaed35d696145c618581eee7c7f6a7d21b8dad8efec76"
+        }
+      ]
+    },
+    {
+      "key": "r4-memory",
+      "run_id": "ca3adb7e-4a93-482c-96a5-3b00e9aa4685",
+      "status": "needs_attention",
+      "error_code": "budget_exhausted",
+      "created": "2026-10-29T02:08:27.060094+00:00",
+      "finished": "2026-10-29T02:08:27.511522+00:00",
+      "revision_id": null,
+      "artifact_hash": null,
+      "report_id": null,
+      "gates_passed": null,
+      "findings": [],
+      "facts": [],
+      "calls": []
+    },
+    {
+      "key": "r4-movement",
+      "run_id": "964a17c6-8fe1-4d58-b70e-96401be7e1db",
+      "status": "needs_attention",
+      "error_code": "budget_exhausted",
+      "created": "2026-10-29T02:08:29.246221+00:00",
+      "finished": "2026-10-29T02:08:29.724297+00:00",
+      "revision_id": null,
+      "artifact_hash": null,
+      "report_id": null,
+      "gates_passed": null,
+      "findings": [],
+      "facts": [],
+      "calls": []
+    }
+  ],
+  "status": "blocked_pending_monetary_budget_approval",
+  "application_revision": "58bd83a8c47e8f2f1b7d09a35e1a2b01bb7572e7",
+  "worker_revision": "7b35f8579e78130b4ed92428b29d48c05deaf997",
+  "gpu_server_touched": false,
+  "budget": {
+    "limit_usd": 50,
+    "spent_usd": 5.940457,
+    "unknown_reserved_usd": 43.96,
+    "available_usd": 0.099543,
+    "next_pro_reservation_usd": 6.28,
+    "proposed_limit_usd": 75,
+    "proposal_applied": false
+  },
+  "limitations": [
+    "New shorter Pro instructions not yet tested by real generation: both admissions stopped before a model call.",
+    "No complete successful final-release live series yet.",
+    "One repaired check suite passes but remains unverified pending explicit review; not an automatic success.",
+    "Private preview access/screenshots pending approval; no independent visual-quality claim.",
+    "Audio quality not listened; no physical iPhone test.",
+    "One incomplete response has confirmed max_output_tokens; prior incomplete cause was not retained."
+  ],
+  "additional_server_checks": {
+    "key": "r2-grid",
+    "revision_id": "e18e6984-a6c7-4033-9527-8b9024f15237",
+    "original_checks_passed": 7,
+    "rotation_progress_passed": true,
+    "music_and_mute_passed": true,
+    "total_passed": 9,
+    "model_calls": 0,
+    "records_modified": 0,
+    "visual_quality": "not_independently_reviewed",
+    "audio_quality": "not_listened"
+  }
+}
