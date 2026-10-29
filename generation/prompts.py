@@ -82,6 +82,14 @@ The saved requirement_manifest freezes promises and their stable IDs/category/te
 PRO_GUIDANCE = """
 Pro workflow: the application executes each candidate in an isolated browser and returns real findings and, when available, a screenshot. Use this feedback to diagnose the cause and choose a coherent fix. A screenshot is one observed frame, not proof that the game works. You do not control final acceptance. Never substitute a changed test for an implementation.
 """
+PRO_CREATE_GUIDANCE = """
+COMPACT COMPLETE RESPONSE
+The response has a finite output budget. Aim for <=24,000 characters overall, including assets and checks; source files together normally <=12,000 characters. These are planning targets, never permission to omit requested mechanics or frozen requirements. Keep readable line breaks, short CSS and shared drawing/layout functions. No decorative framework, duplicated markup, long comments or repeated scene code. Use a few reusable original graphics and a short musical motif with rests/variation; the player loops it. Keep metadata brief. Return a complete JSON object, never truncate a file to fit.
+CHECK ROUTES
+Return one concise scenario per frozen promise. Avoid repeating the final observation in intermediate assertions. Intermediate assertions are only for a distinct required sub-effect; the final oracle measures the decisive action itself. Observe visible game text or actual plain gameplay state. Do not assert text in a hidden end panel before the outcome.
+A desktop keyboard control scenario must use NO click/tap at any point, including start. Follow the game's actual Tab order and Enter/Space or its explicit keyboard start shortcut; then perform the gameplay action with keys. Never assume autofocus works inside a sandboxed frame.
+Trace outcome moves exactly and stop at the winning/losing move. Replay belongs in restart: reach the end, activate replay and observe the actual fresh round state, which may be an intro or a playing state according to the implementation.
+"""
 PLAN_CHECK_CONTEXT = "\nThe saved game_plan is context only. Repair exactly the application-issued requirements; do not expand them from the plan or implement source changes.\n"
 
 PUBLIC_REPLY_GUIDANCE = """
@@ -133,6 +141,8 @@ def _system_prompt(request):
         text = text.replace("Avoid optional features.",
                             "Realize the planned player decisions and progression, including the concept's supporting mechanics. Do not reduce it to a movement-only prototype.")
         text += PRO_GUIDANCE
+        if operation == "create":
+            text += PRO_CREATE_GUIDANCE
     if request.get("game_plan"):
         text = text.replace("no separate planning turn", "follow the saved game concept")
         text += PLAN_GUIDANCE
