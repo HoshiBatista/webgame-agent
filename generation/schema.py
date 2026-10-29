@@ -99,7 +99,8 @@ CHECK_SCHEMA = obj(
         "id": string(pattern=r"^[a-zA-Z0-9_-]+$", minLength=1, maxLength=80),
         "category": {"enum": ["start", "control", "outcome", "regression"]},
         "requirement": string(minLength=8, maxLength=500),
-        "viewport": {"enum": ["mobile", "landscape", "desktop"]},
+        "viewport": {"enum": ["mobile", "landscape", "desktop"],
+                     "description": "INITIAL screen of this check. Copy the same requirement ID's frozen viewport exactly. Rotation uses resize steps; it never changes this initial viewport."},
         "steps": array({"anyOf": [POINT, FRACTION_POINT, KEY, WAIT, BLUR, RESIZE]}, maxItems=30),
         "observation": OBSERVATION,
         "expect": obj(

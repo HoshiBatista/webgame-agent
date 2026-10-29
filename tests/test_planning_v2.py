@@ -94,3 +94,18 @@ def test_well_formed_semantic_lie_is_not_claimed_to_be_detected_by_schema():
         coverage([], manifest(request["prompt"], response["plan"]))["independent_semantic_verification"]
         is False
     )
+
+
+def test_rotation_does_not_replace_the_frozen_initial_viewport():
+    frozen = manifest("Поворот телефона", {"requirements": [{
+        "id": "rotation", "category": "regression", "requirement": "Прогресс сохраняется при повороте",
+        "viewport": "landscape",
+    }]})
+    check = {**frozen["requirements"][0], "viewport": "mobile",
+             "steps": [{"action": "resize", "viewport": "landscape"}]}
+    original = deepcopy(check)
+    assert coverage([check], frozen)["uncovered"] == ["rotation"]
+    assert check == original
+    check["viewport"] = "landscape"
+    check["steps"] = [{"action": "resize", "viewport": "mobile"}]
+    assert coverage([check], frozen)["uncovered"] == []
