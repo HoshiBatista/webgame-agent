@@ -60,8 +60,17 @@ def generate(request, *, on_event, is_cancelled):
         else:
             validate_response(result["response"], operation=request.get("operation", "create"),
                           schema=response_schema(request),
-                          defer_check_errors=request.get("operation", "create") in {"create", "edit"}
+                          defer_check_errors=(request.get("operation", "create") in {"create", "edit"}
                           and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
+                          or bool(request.get('operation') == 'check_repair' and
+                                  request.get('check_repair', {}).get('protected_checks')))
+            if request.get('operation') == 'check_repair' and request.get('check_repair', {}).get('protected_checks'):
+                from .check_repair import scoped_response
+
+                result['response'], retained = scoped_response(result['response'],
+                    previous_checks=request['checks'], policy=request['check_repair'])
+                result['provider_metadata']['check_repair_scope'] = {'retained_passed_checks': retained}
+                validate_response(result['response'], operation='check_repair', schema=response_schema(request))
         if request.get('operation') == 'plan':
             from .planning import validate_plan
 

@@ -382,10 +382,13 @@ def request_for(run, base, findings, last_attempt_error=None):
     if request["operation"] == "repair" and needs_repair(run, base, findings):
         from generation.check_repair import permission
 
+        from .check_repair import protected_ids
+
         if attempted(run, base):
             raise DomainError("check_review_required", "Проверки уже пересматривались для этих исходников. Код сохранён; нужен разбор результата.")
         try:
-            request["check_repair"] = permission(base.artifact_hash, base.checks, base.design, run.requirement_manifest)
+            request["check_repair"] = permission(base.artifact_hash, base.checks, base.design, run.requirement_manifest,
+                                                  protected_ids=protected_ids(base))
         except ContractError as exc:
             raise DomainError(exc.code, exc.message) from exc
         request["operation"] = "check_repair"

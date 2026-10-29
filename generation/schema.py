@@ -284,7 +284,7 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
         if response["status"] == "unchanged":
             if response["checks"]:
                 raise ContractError("invalid_unchanged", "Ответ без изменений должен содержать checks=[].")
-        else:
+        elif not defer_check_errors:
             validate_checks(response["checks"])
         return
     if response["status"] == "scope_refusal":

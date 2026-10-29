@@ -26,7 +26,7 @@ def fixture_assets():
 
 def fixture_response(*, with_assets=False):
     tap = {"action": "tap", "selector": "#arena", "x": 150, "y": 150}
-    response = {
+    response: dict = {
         "status": "ok",
         "operation": "create",
         "title": "Тестовая сцена — заглушка",

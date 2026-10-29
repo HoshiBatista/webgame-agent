@@ -346,16 +346,20 @@ def test_shared_call_cap_stops_before_scenario_repair_without_losing_code(maker)
 
 @pytest.mark.browser
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("defect", ["missing_category", "wrong_sequence"])
+@pytest.mark.parametrize("defect", ["missing_category", "wrong_sequence", "unrelated_rewrite"])
 def test_real_browser_check_repair_preserves_game_and_exposes_manual_evidence(maker, defect):
     chat, _ = maker
     run = start(chat)
 
     def inference(request, **kwargs):
         result = model(request, **kwargs)
-        if request["operation"] == "create" and defect == "wrong_sequence":
+        if request["operation"] == "create" and defect in {"wrong_sequence", "unrelated_rewrite"}:
             result["response"]["checks"] = fixture_response(with_assets=True)["checks"]
             result["response"]["checks"][2]["steps"].pop()
+        if request['operation'] == 'check_repair' and defect == 'unrelated_rewrite':
+            assert 'tap' in {c['id'] for c in request['check_repair']['protected_checks']}
+            check = next(c for c in result['response']['checks'] if c['id'] == 'tap')
+            check['expect'] = {'operator': 'unchanged', 'value': None}
         return result
 
     with patch("generation.providers.fake.generate", side_effect=inference) as provider:
@@ -368,12 +372,16 @@ def test_real_browser_check_repair_preserves_game_and_exposes_manual_evidence(ma
     assert first.artifact_hash == second.artifact_hash
     assert second.checks_review_required and run_data(run)["can_confirm"]
     assert not second.accepted
-    if defect == "wrong_sequence":
+    if defect in {"wrong_sequence", "unrelated_rewrite"}:
         # Checks policy 4 keeps a scenario mismatch unverified; it is not proof
         # that the game is broken and must not authorize a source rewrite.
         assert first.reports.get().status == "unverified"
         assert first.reports.get().assessment['action'] == 'review'
         assert first.reports.get().findings[0]["code"] == "effect_mismatch"
+    if defect == 'unrelated_rewrite':
+        receipt = run.invocations.get(attempt=2)
+        assert receipt.provider_metadata['check_repair_scope']['retained_passed_checks'] == ['tap']
+        assert next(c for c in second.checks if c['id'] == 'tap') == next(c for c in first.checks if c['id'] == 'tap')
     final = second.reports.get()
     assert all(
         f["status"] == "passed" and f["actions"] == c["steps"] for f, c in zip(final.facts, final.checks)

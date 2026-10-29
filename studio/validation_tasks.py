@@ -143,7 +143,7 @@ def execute_validation(job, *, validate=None, outer_cancel=None, capture_visual=
         return stopped
 
     def progress(event):
-        update = {'stage': 'queued' if event['event'] == 'queued' else 'checking'}
+        update: dict = {'stage': 'queued' if event['event'] == 'queued' else 'checking'}
         if event['event'] == 'started' and job.started_at is None:
             job.started_at = timezone.now()
             update['started_at'] = job.started_at

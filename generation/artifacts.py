@@ -350,6 +350,12 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
                                    files=files, previous_checks=previous_checks)
     from .schema import response_schema
 
+    if operation == 'check_repair' and (check_repair or {}).get('protected_checks'):
+        from .check_repair import scoped_response
+
+        validate_response(response, operation=operation, schema=response_schema({
+            'operation': operation, 'check_repair': check_repair}), defer_check_errors=True)
+        response, _ = scoped_response(response, previous_checks=previous_checks or [], policy=check_repair)
     validate_response(response, operation=operation,
                       schema=response_schema({"operation": operation, "generation_contract": {"pipeline_version": version},
                                               "check_repair": check_repair}) if operation == "check_repair" else None,

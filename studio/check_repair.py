@@ -67,6 +67,31 @@ def attempted(run, base):
     ).exists()
 
 
+def protected_ids(base):
+    """Only current, complete, artifact-bound browser evidence can lock a check."""
+    from validation.checks import review_checks
+    from validation.contracts import implementation_hash
+
+    from .tasks import check_identity
+
+    if base.generation_profile != 'full':
+        return []
+    report = base.reports.order_by('-id').first()
+    if not report or report.identity != check_identity(base, report.environment) or (
+        report.assessment.get('validator_hash') != implementation_hash()
+        or report.assessment.get('gates_passed') is not True
+        or report.assessment.get('requirement_coverage', {}).get('uncovered')
+        or review_checks(base.checks)[0] != report.checks
+    ):
+        return []
+    try:
+        validate_checks(base.checks)
+    except ContractError:
+        return []
+    failed_ids = {f.get('check_id') for f in report.findings}
+    return [f['id'] for f in report.facts if f.get('status') == 'passed' and f['id'] not in failed_ids]
+
+
 def can_repair(run, base, findings):
     return run.allow_model_calls and needs_repair(run, base, findings) and not attempted(run, base)
 

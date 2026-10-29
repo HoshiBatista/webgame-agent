@@ -48,7 +48,7 @@ def needs_check_repair(checks, findings):
     return bool(codes)
 
 
-def permission(artifact_hash, checks, design, manifest=None):
+def permission(artifact_hash, checks, design, manifest=None, *, protected_ids=()):
     requirements: list[dict[str, str]] = []
     identities: dict[tuple, str] = {}
     repairs = []
@@ -119,8 +119,45 @@ def permission(artifact_hash, checks, design, manifest=None):
         raise ContractError(
             "check_review_required", "Для обязательных условий недостаточно места в наборе проверок."
         )
-    return {"artifact_hash": artifact_hash, "checks_hash": checks_hash(checks), "requirements": requirements,
-            "identity_repairs": repairs, "require_keyboard": require_keyboard}
+    policy = {"artifact_hash": artifact_hash, "checks_hash": checks_hash(checks), "requirements": requirements,
+              "identity_repairs": repairs, "require_keyboard": require_keyboard}
+    if protected_ids:
+        validate_checks(checks)
+        expected = {r['id']: r for r in requirements}
+        protected = [c for c in checks if c['id'] in protected_ids]
+        if len(protected) != len(set(protected_ids)) or any(
+            {key: c[key] for key in IDENTITY} != expected.get(c['id']) for c in protected
+        ):
+            raise ContractError('stale_checks', 'Нельзя закрепить сценарий с изменившимся условием.')
+        policy['protected_checks'] = deepcopy(protected)
+    return policy
+
+
+def scoped_response(response, *, previous_checks, policy):
+    """Retain already verified scenarios; never repair their meaning from model text.
+
+    Call after wire-schema validation. The raw reply remains immutable, and the
+    caller records every retained original in the response audit metadata.
+    """
+    protected = policy.get('protected_checks', []) if policy else []
+    if not protected or response['status'] == 'unchanged':
+        return response, []
+    if response['checks_hash'] != checks_hash(previous_checks) or policy['checks_hash'] != checks_hash(previous_checks):
+        raise ContractError('stale_checks', 'Изменился исходный набор проверок.')
+    original = {c['id']: c for c in previous_checks}
+    if len(original) != len(previous_checks) or any(original.get(c['id']) != c for c in protected):
+        raise ContractError('stale_checks', 'Закреплённые сценарии не совпадают с исходными.')
+    expected = {r['id']: r for r in policy['requirements']}
+    incoming = {c['id']: c for c in response['checks']}
+    if len(incoming) != len(response['checks']) or expected != {
+        ident: {key: c[key] for key in IDENTITY} for ident, c in incoming.items()
+    }:
+        raise ContractError('changed_requirement', 'Нельзя удалять или менять условия проверок.')
+    locked = {c['id']: c for c in protected}
+    retained = [c['id'] for c in response['checks'] if c['id'] in locked and c != locked[c['id']]]
+    result = deepcopy(response)
+    result['checks'] = [deepcopy(locked.get(c['id'], c)) for c in response['checks']]
+    return result, retained
 
 
 def repaired_checks(response, *, base_revision, artifact_hash, previous_checks, policy):
