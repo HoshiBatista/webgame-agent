@@ -116,6 +116,51 @@ def test_mobile_coverage_repair_preserves_game_through_real_browser(maker, missi
 
 
 @pytest.mark.django_db
+@pytest.mark.browser
+def test_quoted_number_and_hidden_winning_field_allow_scenario_repair(maker):
+    chat, _ = maker
+    run = start(chat)
+
+    def cloud_shape(request, **kwargs):
+        if request['operation'] == 'check_repair':
+            return model(request, **kwargs)
+        result = fake_generate(request, **kwargs)
+        response = result['response']
+        script = next(f for f in response['files'] if f['path'] == 'game.js')
+        script['content'] += '''
+        board.setAttribute('data-hits', '0');
+        const originalHit = hit;
+        hit = function() {
+          originalHit();
+          board.setAttribute('data-hits', String(gameState.hits));
+          if (gameState.hits === 3) board.hidden = true;
+        };
+        '''
+        response['checks'][1]['observation'] = {
+            'source': 'attribute_number', 'selector': '#arena', 'attribute': 'data-hits'}
+        response['checks'][1]['expect']['value'] = '1'
+        # A wrong key is a scenario failure, not permission to rewrite the game.
+        response['checks'][-1]['steps'] = [{'action': 'press', 'key': 'Enter'}]
+        return result
+
+    with patch('generation.providers.fake.generate', side_effect=cloud_shape) as inference:
+        process_run(str(run.id))
+    run.refresh_from_db()
+    assert [c.args[0]['operation'] for c in inference.call_args_list] == ['create', 'check_repair'], run.error
+    original, revised = run.revisions.order_by('number')
+    assert original.files == revised.files and original.html == revised.html
+    assert original.artifact_hash == revised.artifact_hash
+    assert original.checks[1]['expect']['value'] == '1'
+    report = original.reports.get()
+    assert report.assessment['gates_passed'] is True
+    assert any(c['code'] == 'explicit_numeric_expectation' for c in report.assessment['corrections'])
+    assert not any(f['code'] in {'canvas_missing', 'invalid_check'} for f in report.findings)
+    assert next(f for f in report.facts if f['category'] == 'outcome')['status'] == 'passed'
+    assert run.status == 'unverified' and revised.checks_review_required
+    assert all(f['status'] == 'passed' for f in revised.reports.get().facts)
+
+
+@pytest.mark.django_db
 def test_incomplete_checks_keep_sources_and_repaired_suite_requires_bound_human_confirmation(maker):
     chat, client = maker
     run = start(chat)

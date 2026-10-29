@@ -14,7 +14,7 @@ def receipt(artifact_hash, environment, syntax, measurements, *, contract=None):
             "loaded": bool(rows) and all(m["loaded"] for m in rows),
             "errors": [e for m in rows for e in m["errors"]][:8],
             "requests": [e for m in rows for e in m["requests"]][:8],
-            "surfaces": [m["surface"] for m in rows if m.get("surface")],
+            "surfaces": [m[key] for m in rows for key in ("scene_surface", "surface") if m.get(key)],
             "probes": [m["probe"] for m in rows if "probe" in m],
             "lifecycle": {"loaded": bool(rows) and all(m["loaded"] for m in rows),
                           "input_delivered": any(m.get("inputs") for m in rows),

@@ -3,8 +3,9 @@
 import math
 import re
 from copy import deepcopy
+from decimal import Decimal
 
-VERSION = 4
+VERSION = 5
 RELATIVE = {"changed", "unchanged", "increased", "decreased"}
 NUMERIC = {"increased", "decreased"}
 INPUT = {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}
@@ -47,9 +48,23 @@ def review_checks(checks):
                 leaf, changes = review_checks([{'observation': step.get('observation', {}),
                                                 'expect': step.get('expect', {})}])
                 step['observation'] = leaf[0]['observation']
+                step['expect'] = leaf[0]['expect']
                 corrections.extend({**change, 'check_id': check.get('id'), 'step_index': index} for change in changes)
         observation, expect = check.get("observation", {}), check.get("expect", {})
         source = observation.get("source")
+        if source in {"text_number", "attribute_number"} and expect.get("operator") in {"eq", "not_eq"}:
+            original = expect.get("value")
+            if isinstance(original, str):
+                try:
+                    number = parse_number(original)
+                    # Reject conversion that rounds the authored decimal value.
+                    if Decimal(str(number)) == Decimal(original.strip()):
+                        expect["value"] = number
+                        corrections.append({"check_id": check.get("id"), "code": "explicit_numeric_expectation",
+                                            "from": original, "to": number,
+                                            "reason": "Явное числовое наблюдение сравнивается с тем же числом."})
+                except ValueError:
+                    pass
         if source in {"text", "attribute"} and (
             expect.get("operator") in NUMERIC
             or expect.get("operator") in {"eq", "not_eq"} and numeric(expect.get("value"))

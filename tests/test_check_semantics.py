@@ -94,7 +94,7 @@ def game_checks():
          "observation": {"source": "text_number", "selector": "#score"},
          "expect": {"operator": "increased", "value": None}},
         {"id": "outcome", "category": "outcome", "requirement": "Два нажатия достигают цели",
-         "viewport": "desktop", "steps": [start, click, click, wait],
+         "viewport": "desktop", "steps": [start, {**click, "action": "click"}, {**click, "action": "click"}, wait],
          "observation": {"source": "state", "path": "s.count"}, "expect": {"operator": "eq", "value": 12}},
     ]
 

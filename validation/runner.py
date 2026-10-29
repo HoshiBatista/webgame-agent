@@ -129,6 +129,36 @@ class ObstructedInput(InvalidCheck):
     pass
 
 
+def visible_scene(surface):
+    return any(c["width"] > 0 and c["height"] > 0 and c["visible"] for c in surface["canvases"])
+
+
+def inspect_surface(frame, *, earlier=False):
+    return frame.evaluate("""earlier => ({canvases:[...document.querySelectorAll('canvas')].map(c=>{
+      const rect=c.getBoundingClientRect();
+      const info={width:c.width,height:c.height,visible:rect.width>0&&rect.height>0,
+        pixel_evidence:'unavailable'};
+      if (!info.visible || !c.width || !c.height) return info;
+      try {
+        // An existing WebGL framebuffer cannot be inspected through a 2D context.
+        // Early inspection must not create a 2D context before a game starts
+        // its own WebGL renderer. A positive pixel sample needs no context on c.
+        if (!earlier && !c.getContext('2d')) return info;
+        const sample=document.createElement('canvas');sample.width=32;sample.height=32;
+        const ctx=sample.getContext('2d');ctx.drawImage(c,0,0,32,32);
+        const data=ctx.getImageData(0,0,32,32).data;
+        let uniform=true,transparent=true;
+        for(let i=0;i<data.length;i+=4){
+          if(data[i+3]!==0) transparent=false;
+          if(data[i]!==data[0]||data[i+1]!==data[1]||data[i+2]!==data[2]||data[i+3]!==data[3]) uniform=false;
+        }
+        info.pixel_evidence=earlier && uniform ? 'unavailable' :
+          transparent?'transparent':uniform?'uniform':'varied';
+      } catch (_) { /* A readback failure does not prove an empty scene. */ }
+      return info;
+    }), overflow:document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2})""", earlier)
+
+
 def inspect_module(frame, contract):
     try:
         result = frame.evaluate("""() => {
@@ -516,11 +546,25 @@ def run(payload):
             step_index = None
             before = after = None
             module = None
+
+            def record_scene():
+                # Keep one actual in-scenario scene, separate from the final
+                # screen. Stop sampling once useful pixel evidence is available.
+                previous = fact.get('scene_surface', {})
+                if any(c.get('visible') and c.get('pixel_evidence') == 'varied'
+                       for c in previous.get('canvases', [])):
+                    return
+                observed = inspect_surface(frame, earlier=True)
+                if visible_scene(observed):
+                    fact['scene_surface'] = observed
+                    fact['scene_observed_after_step'] = step_index
+
             try:
                 page.goto("https://harness.invalid/", wait_until="load", timeout=5000)
                 frame = page.frames[1]
                 frame.wait_for_load_state("load", timeout=2000)
                 loaded = True
+                record_scene()
                 if contract:
                     module = inspect_module(frame, contract)
                 if probe:
@@ -535,6 +579,7 @@ def run(payload):
                                 if measured and step['action'] in INPUT:
                                     fact["input_probes"].append(measured)
                             fact["actions"].append(step)
+                            record_scene()
                         wait(page, 40)
                     raise InvalidCheck("artifact_probe")
                 program = by_id[check['id']]
@@ -593,6 +638,7 @@ def run(payload):
                                 entry['assertion'] = measured
                     fact["actions"].append(step)
                     entry.update(after=trace_snapshot(), status='delivered')
+                    record_scene()
                 deadline = time.monotonic() + wait_ms / 1000
                 virtual_remaining = float(wait_ms)
                 throughout = expect['operator'] == 'unchanged'
@@ -654,27 +700,7 @@ def run(payload):
             # These gates run even if a selector/state/test is defective.
             if frame is not None:
                 try:
-                    surface = frame.evaluate("""() => ({canvases:[...document.querySelectorAll('canvas')].map(c=>{
-                      const rect=c.getBoundingClientRect();
-                      const info={width:c.width,height:c.height,visible:rect.width>0&&rect.height>0,
-                        pixel_evidence:'unavailable'};
-                      if (!info.visible || !c.width || !c.height) return info;
-                      try {
-                        // Existing WebGL contexts return null; their framebuffer must not
-                        // be declared empty because a 2D readback is unavailable.
-                        if (!c.getContext('2d')) return info;
-                        const sample=document.createElement('canvas');sample.width=32;sample.height=32;
-                        const ctx=sample.getContext('2d');ctx.drawImage(c,0,0,32,32);
-                        const data=ctx.getImageData(0,0,32,32).data;
-                        let uniform=true,transparent=true;
-                        for(let i=0;i<data.length;i+=4){
-                          if(data[i+3]!==0) transparent=false;
-                          if(data[i]!==data[0]||data[i+1]!==data[1]||data[i+2]!==data[2]||data[i+3]!==data[3]) uniform=false;
-                        }
-                        info.pixel_evidence=transparent?'transparent':uniform?'uniform':'varied';
-                      } catch (_) { /* Readback failure is absence of evidence, not a defect. */ }
-                      return info;
-                    }), overflow:document.documentElement.scrollWidth>innerWidth+2 || document.documentElement.scrollHeight>innerHeight+2})""")
+                    surface = inspect_surface(frame)
                     fact["surface"] = surface
                     if requires_keyboard and not diagnostic_pair:
                         fact['player_experience'] = frame.evaluate('''() => {
@@ -683,7 +709,12 @@ def run(payload):
                             keyboardOnly:!matchMedia('(pointer:coarse)').matches,
                             audioQuality:'not_listened',audienceFit:'not_independently_verified'} : {unavailable:true};
                         }''')
-                    if not any(c["width"] > 0 and c["height"] > 0 and c["visible"] for c in surface["canvases"]):
+                    # A verified outcome can replace its previously observed
+                    # playing field with a result screen. Never infer this from
+                    # the category alone, or borrow another scenario's scene.
+                    finished_scene = fact.get('scene_surface') and (
+                        probe or check.get('category') == 'outcome' and fact.get('comparison') is True)
+                    if not visible_scene(surface) and not finished_scene:
                         # A broken selector or a pre-start page is not proof that
                         # the implementation lacks a scene. Keep real defects hard.
                         confirmed_missing = not probe and fact.get("comparison") is True and any(
@@ -760,6 +791,7 @@ def run(payload):
                         finding["diagnostic"] = diagnostic
             measurement = {"viewport": check.get("viewport", "mobile"), "loaded": loaded,
                            "errors": errors, "requests": requests, "surface": fact.get("surface"),
+                           "scene_surface": fact.get("scene_surface"),
                            "inputs": fact["input_probes"],
                            "module": module,
                            "scenario_start": check.get("category") == "start" and fact["status"] == "passed"}
@@ -852,7 +884,9 @@ def run(payload):
     observed = [
         canvas
         for fact in facts
-        for canvas in fact.get("surface", {}).get("canvases", [])
+        for sample in (fact.get("surface", {}), *(
+            [fact["scene_surface"]] if fact.get("scene_surface") and not visible_scene(fact.get("surface", {"canvases": []})) else []))
+        for canvas in sample.get("canvases", [])
         if canvas.get("visible") and canvas.get("width", 0) > 0 and canvas.get("height", 0) > 0
     ]
     if observed and all(canvas.get("pixel_evidence") in {"uniform", "transparent"} for canvas in observed):

@@ -206,7 +206,10 @@ def test_check_only_edit_keeps_draft_visible_and_recheck_uses_no_model(chat):
 def test_profile_selection_sets_plan_policy_and_pro_effort_without_contacting_model(chat, settings):
     settings.GAMEFORGE_PROVIDER = "codex"
     settings.GAMEFORGE_MODEL = "gpt-6-sol"
-    pro = create_run(chat, {"prompt": "Подробное описание " * 50, "idempotency_key": "pro"})
+    settings.GAMEFORGE_PRO_PROVIDER = "codex"
+    with patch('studio.model_profiles.unavailable_reason', return_value=''), \
+            patch('studio.services.unavailable_reason', return_value=''):
+        pro = create_run(chat, {"prompt": "Подробное описание " * 50, "idempotency_key": "pro"})
     assert pro.generation_strategy == "pro" and pro.planning_required
     req = request_for(pro, None, [])
     assert req["operation"] == "plan" and req["reasoning_effort"] == "high"
@@ -284,7 +287,14 @@ def test_plan_to_sources_to_real_browser_finishes_without_live_model(chat, profi
             response = compact_response(with_assets=True)
             response["source_lines"] = response.pop("source").split("\n")
             return {"response": response, "usage": {"input_tokens": 0, "output_tokens": 0}}
-        return fake_generate(request, **kwargs)
+        result = fake_generate(request, **kwargs)
+        if profile == 'compact' and request['operation'] == 'plan':
+            result['response']['plan']['requirements'] = [
+                {**{k: c[k] for k in ('id', 'category', 'requirement', 'viewport')},
+                 'origin': 'design', 'quote': '',
+                 'example': {'action': 'Выполнить действие', 'effect': c['requirement']}}
+                for c in compact_response(with_assets=True)['probes']]
+        return result
 
     with patch("generation.providers.fake.generate", side_effect=model) as provider:
         process_run(str(run.id))

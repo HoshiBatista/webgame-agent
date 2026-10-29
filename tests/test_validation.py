@@ -579,6 +579,7 @@ def test_fraction_input_measures_displayed_canvas_and_preserves_pixel_units(kind
     checks[1]["steps"] = [checks[0]["steps"][0], point]
     checks[1]["expect"] = {"operator": "eq", "value": 450}
     checks[2]["steps"] = [checks[0]["steps"][0], point, point]
+    checks[2]['viewport'] = 'mobile' if kind == 'tap_fraction' else 'desktop'
     if kind == "click_fraction":
         touch = deepcopy(checks[1])
         touch["id"] = "mobile-touch"
