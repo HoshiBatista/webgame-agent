@@ -138,6 +138,12 @@ class ObstructedInput(InvalidCheck):
     pass
 
 
+class AssertionMismatch(InvalidCheck):
+    def __init__(self, measurement):
+        super().__init__('Промежуточное условие сценария не выполнено; последующий ввод не исполнялся.')
+        self.measurement = measurement
+
+
 def visible_scene(surface):
     return any(c["width"] > 0 and c["height"] > 0 and c["visible"] for c in surface["canvases"])
 
@@ -358,6 +364,7 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
         deadline = time.monotonic() + remaining / 1000
         while True:
             matched = False
+            available = False
             try:
                 value = observe(frame, observation, expect['operator'])
                 if declared and not {'number': numeric(value), 'string': type(value) is str,
@@ -366,6 +373,7 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
                 if expect['operator'] in {'eq', 'not_eq'} and not comparable(value, expect.get('value')):
                     raise InvalidCheck('Тип промежуточного наблюдения несовместим с ожиданием.')
                 matched = compare(None, value, expect)
+                available = True
             except InvalidCheck:
                 if kind == 'assert':
                     raise
@@ -373,6 +381,9 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
                 return {'status': 'observed', 'action': kind, 'observation': observation,
                         'after': value, 'expected': expect, 'comparison': True}
             if (remaining <= 0 if getattr(page, '_gf_clock', False) else time.monotonic() >= deadline):
+                if available:
+                    raise AssertionMismatch({'status': 'observed', 'action': kind, 'observation': observation,
+                                             'after': value, 'expected': expect, 'comparison': False})
                 raise InvalidCheck('Промежуточное условие сценария не выполнено; последующий ввод не исполнялся.')
             interval = min(25, remaining) if getattr(page, '_gf_clock', False) else min(25, max(1, (deadline - time.monotonic()) * 1000))
             wait(page, interval)
@@ -661,7 +672,22 @@ def run(payload):
                     elif step["action"] == "wait_for":
                         wait_ms = step["ms"]
                     else:
-                        measured = action(page, frame, step, contract, touch_enabled=check.get('viewport') != 'desktop')
+                        try:
+                            measured = action(page, frame, step, contract, touch_enabled=check.get('viewport') != 'desktop')
+                        except AssertionMismatch as exc:
+                            # In the control run, an assertion after the omitted
+                            # final input may legitimately fail. Still measure the
+                            # unchanged final oracle; the assertion is not a pass
+                            # or a substitute for that oracle. A timed condition
+                            # could shift the control clock, so only immediate
+                            # assertions qualify. Never continue past failed setup
+                            # or deliver further input.
+                            if not (counterfactual and step['action'] == 'assert' and check.get('_omitted')
+                                    and step_index >= min(check['_omitted'])
+                                    and not any(s['action'] in INPUT for s in steps[step_index:])):
+                                raise
+                            measured = exc.measurement
+                            entry['counterfactual_assertion_failed'] = True
                         if measured:
                             if step['action'] in INPUT:
                                 fact["input_probes"].append(measured)

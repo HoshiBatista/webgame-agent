@@ -156,3 +156,58 @@ def test_hidden_final_text_cannot_excuse_a_failed_intermediate_assertion():
     final = next(f for f in result['facts'] if f['id'] == 'finish')
     assert final['status'] != 'passed'
     assert not final.get('counterfactual', {}).get('observation_absent')
+
+
+@pytest.mark.browser
+def test_post_action_assertion_mismatch_still_measures_counterfactual_final_effect():
+    html, checks = game_and_checks()
+    control = checks[1]
+    control['steps'].append({'action': 'assert', 'ms': 0,
+        'observation': deepcopy(control['observation']), 'expect': {'operator': 'eq', 'value': 1}})
+    original = deepcopy(checks)
+    result = validate(html, checks, artifact_hash=sha256(html))
+    fact = next(f for f in result['facts'] if f['id'] == 'count')
+    assert result['status'] == 'passed', result
+    assert fact['counterfactual']['comparison'] is False
+    trace = fact['counterfactual']['trace'][-1]
+    assert trace['counterfactual_assertion_failed'] and trace['assertion']['comparison'] is False
+    assert checks == original
+
+
+@pytest.mark.browser
+def test_failed_timed_condition_cannot_shift_control_clock_and_claim_causality():
+    html, checks = game_and_checks()
+    control = checks[1]
+    control['steps'].append({'action': 'await_condition', 'ms': 100,
+        'observation': deepcopy(control['observation']), 'expect': {'operator': 'eq', 'value': 1}})
+    result = validate(html, checks, artifact_hash=sha256(html))
+    fact = next(f for f in result['facts'] if f['id'] == 'count')
+    assert fact['status'] == 'unverified'
+    assert fact['counterfactual']['comparison'] is None
+
+
+@pytest.mark.browser
+def test_counterfactual_assertion_cannot_replace_an_unrelated_always_passing_final_oracle():
+    html, checks = game_and_checks()
+    control = checks[1]
+    control['steps'].append({'action': 'assert', 'ms': 0,
+        'observation': deepcopy(control['observation']), 'expect': {'operator': 'eq', 'value': 1}})
+    control.update(observation={'source': 'text', 'selector': '#play'},
+                   expect={'operator': 'visible', 'value': None})
+    result = validate(html, checks, artifact_hash=sha256(html))
+    fact = next(f for f in result['facts'] if f['id'] == 'count')
+    assert fact['status'] == 'unverified'
+    assert fact['counterfactual']['comparison'] is True
+    assert any(f['code'] == 'effect_not_causal' for f in result['findings'])
+
+
+@pytest.mark.parametrize('operator', ['changed', 'unchanged', 'increased', 'decreased'])
+def test_generation_schema_excludes_relative_intermediate_assertions(operator):
+    from jsonschema import Draft202012Validator
+
+    from generation.schema import CHECK_SCHEMA
+    check = numeric_check(1)
+    check['steps'].append({'action': 'assert', 'ms': 0,
+        'observation': deepcopy(check['observation']), 'expect': {'operator': operator, 'value': None}})
+    assert not Draft202012Validator(CHECK_SCHEMA).is_valid(check)
+    assert compile_check(check).issue.field == 'steps.expect'

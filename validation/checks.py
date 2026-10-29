@@ -5,7 +5,7 @@ import re
 from copy import deepcopy
 from decimal import Decimal
 
-VERSION = 6
+VERSION = 7
 RELATIVE = {"changed", "unchanged", "increased", "decreased"}
 NUMERIC = {"increased", "decreased"}
 INPUT = {"click", "tap", "click_fraction", "tap_fraction", "press", "key_down", "key_up"}

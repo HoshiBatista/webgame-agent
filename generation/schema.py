@@ -156,13 +156,15 @@ CHECK_SCHEMA["properties"]["observation"]["anyOf"].extend([
     obj({"source": {"enum": ["attribute_number"]}, "selector": string(minLength=1, maxLength=200),
          "attribute": string(minLength=1, maxLength=80)}),
 ])
+ABSOLUTE_EXPECT = deepcopy(CHECK_SCHEMA['properties']['expect'])
+ABSOLUTE_EXPECT['properties']['operator']['enum'] = ['eq', 'not_eq', 'contains', 'visible']
 CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
     obj({"action": {"enum": ["checkpoint"]}}),
     obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
     obj({"action": {"enum": ["await_condition", "assert"]},
          "ms": {"type": "integer", "minimum": 0, "maximum": 3000},
          "observation": CHECK_SCHEMA['properties']['observation'],
-         "expect": CHECK_SCHEMA['properties']['expect']}),
+         "expect": ABSOLUTE_EXPECT}),
 ])
 CHECK_SCHEMA["properties"]["category"]["enum"].append("restart")
 APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
