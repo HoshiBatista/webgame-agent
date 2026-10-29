@@ -21,7 +21,8 @@ def preference_sources(request):
 
 def normalize_plan_sources(response, request):
     """Only relabel a verbatim saved wish; retain the original receipt separately."""
-    result, changes = deepcopy(response), []
+    result = deepcopy(response)
+    changes: list[dict[str, str]] = []
     if request.get('plan_provenance') != PROVENANCE_VERSION or not isinstance(result, dict):
         return result, changes
     plan = result.get('plan')

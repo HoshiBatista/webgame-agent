@@ -22,7 +22,8 @@ def test_create_contract_is_compact_and_does_not_teach_unneeded_patch_protocol()
     text = system_prompt({"operation": "create"})
     from generation.helpers import GUIDANCE
 
-    assert text == SYSTEM_PROMPT + PREFERENCE_PRIORITY + GUIDANCE + QUICK_REVIEW_GUIDANCE + PUBLIC_REPLY_GUIDANCE
+    assert text.startswith(SYSTEM_PROMPT)
+    assert all(guidance in text for guidance in [PREFERENCE_PRIORITY, GUIDANCE, QUICK_REVIEW_GUIDANCE, PUBLIC_REPLY_GUIDANCE])
     # Includes the current input/check contract and shared review/source priority.
     assert len(text) < 9000
     assert "4-6 meaningful checks" in text

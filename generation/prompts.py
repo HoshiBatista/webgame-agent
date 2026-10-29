@@ -333,6 +333,10 @@ def system_prompt(request):
 
     operation = request.get('operation', 'create')
     text = _system_prompt(request)
+    if operation in {'create', 'edit', 'repair', 'check_repair'} and request.get('generation_profile') != 'compact':
+        text += ('\nFor held screen buttons use hold_touch(selector,x:null,y:null,ms:1..3000), real touch then release. '
+                 'tap is brief. Checkpoint before hold tests movement; after hold + wait tests stopping. '
+                 'Time counts in wait budget; touch-only checks never use keys.\n')
     if operation in {'create', 'edit', 'repair', 'visual_patch'}:
         text += PREFERENCE_PRIORITY + GUIDANCE + QUICK_REVIEW_GUIDANCE
     if operation != 'visual_review':

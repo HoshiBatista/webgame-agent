@@ -295,7 +295,7 @@ def _input_probe(frame, step):
 
 def action(page, frame, step, contract=None, *, touch_enabled=True):
     kind = step.get("action")
-    if kind in {'tap', 'tap_fraction'} and not touch_enabled:
+    if kind in {'tap', 'tap_fraction', 'hold_touch'} and not touch_enabled:
         raise InvalidCheck('Настольный сценарий без сенсорного экрана требует click или клавиатуру вместо tap.')
     probe = None
     if kind in {"click_fraction", "tap_fraction"}:
@@ -324,6 +324,35 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
         # or an assumption about the game's Canvas backing-store dimensions.
         click = page.touchscreen.tap if kind == "tap_fraction" else page.mouse.click
         click(box["x"] + box["width"] * x, box["y"] + box["height"] * y)
+    elif kind == 'hold_touch':
+        ms = step.get('ms')
+        if type(ms) is not int or not 1 <= ms <= 3000:
+            raise InvalidCheck('Удержание касания должно длиться 1–3000 мс.')
+        selector, x, y = step.get('selector'), step.get('x'), step.get('y')
+        if selector:
+            probe = _input_probe(frame, step)
+            element = frame.locator(selector)
+            if element.count() != 1 or not element.is_visible():
+                raise InvalidCheck('Удержание требует один видимый элемент.')
+            box = element.bounding_box(timeout=1500)
+            if not box or box['width'] <= 0 or box['height'] <= 0:
+                raise InvalidCheck('Элемент для удержания не виден.')
+            x, y = (box['x'] + (box['width']/2 if x is None else x),
+                    box['y'] + (box['height']/2 if y is None else y))
+        if not numeric(x) or not numeric(y):
+            raise InvalidCheck('Укажите точку удержания касания.')
+        # Trusted Chromium touch input in the isolated browser. Never invoke a
+        # game handler, dispatch a synthetic DOM event or substitute the mouse.
+        session = page.context.new_cdp_session(page)
+        try:
+            session.send('Input.dispatchTouchEvent', {'type': 'touchStart',
+                'touchPoints': [{'x': x, 'y': y, 'id': 0, 'radiusX': 1, 'radiusY': 1, 'force': 1}]})
+            try:
+                wait(page, ms)
+            finally:
+                session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        finally:
+            session.detach()
     elif kind in {"click", "tap"}:
         selector = step.get("selector")
         x, y = step.get("x"), step.get("y")
@@ -497,8 +526,10 @@ def run(payload):
             probe = check.get("_artifact_probe") is True
             # These exact inputs have already exposed a scene in a real scenario.
             # Replaying them proves only artifact gates in the other viewport.
-            route_check = min(successful_routes, key=lambda c: (c["category"] != "start", len(c["steps"]))) \
-                if probe and successful_routes else None
+            routes = [c for c in successful_routes if check.get('viewport') != 'desktop'
+                      or not any(s['action'] == 'hold_touch' for s in c['steps'])]
+            route_check = min(routes, key=lambda c: (c["category"] != "start", len(c["steps"]))) \
+                if probe and routes else None
             if route_check and check.get('viewport') == 'desktop':
                 # Only an artifact exposure probe: a mouse route is not evidence
                 # for a requested touch or keyboard gameplay requirement.

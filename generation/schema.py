@@ -64,6 +64,12 @@ FRACTION_POINT = obj(
     }
 )
 KEY = obj({"action": {"enum": ["press", "key_down", "key_up"]}, "key": string(minLength=1, maxLength=40)})
+HOLD_TOUCH = obj({
+    **deepcopy(POINT['properties']),
+    'action': {'enum': ['hold_touch']},
+    'ms': {'type': 'integer', 'minimum': 1, 'maximum': 3000,
+           'description': 'Real finger held on the target, then released. Counts toward the total wait budget.'},
+})
 WAIT = obj({"action": {"enum": ["wait"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 10000}})
 BLUR = obj({"action": {"enum": ["blur"]}})
 RESIZE = obj({"action": {"enum": ["resize"]}, "viewport": {"enum": ["mobile", "landscape", "desktop"]}})
@@ -101,7 +107,7 @@ CHECK_SCHEMA = obj(
         "requirement": string(minLength=8, maxLength=500),
         "viewport": {"enum": ["mobile", "landscape", "desktop"],
                      "description": "INITIAL screen of this check. Copy the same requirement ID's frozen viewport exactly. Rotation uses resize steps; it never changes this initial viewport."},
-        "steps": array({"anyOf": [POINT, FRACTION_POINT, KEY, WAIT, BLUR, RESIZE]}, maxItems=30),
+        "steps": array({"anyOf": [POINT, FRACTION_POINT, HOLD_TOUCH, KEY, WAIT, BLUR, RESIZE]}, maxItems=30),
         "observation": OBSERVATION,
         "expect": obj(
             {

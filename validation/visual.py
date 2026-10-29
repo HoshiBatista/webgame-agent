@@ -98,7 +98,7 @@ def capture(browser, html, checks, facts, artifact_hash, environment):
                 i
                 for i, s in enumerate(steps)
                 if s["action"]
-                in {"tap", "click", "tap_fraction", "click_fraction", "press", "key_down", "key_up"}
+                in {"tap", "click", "hold_touch", "tap_fraction", "click_fraction", "press", "key_down", "key_up"}
             )
             observation, expect = route["observation"], route["expect"]
             before = (

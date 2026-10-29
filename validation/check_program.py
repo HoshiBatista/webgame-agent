@@ -81,6 +81,12 @@ class CheckProgram:
         if not meaningful:
             return None
         index = meaningful[-1]
+        if steps[index]['action'] == 'hold_touch':
+            # Keep elapsed time identical: a timer-only effect must not be
+            # mistaken for a response to holding the finger on a control.
+            return {**check, 'steps': [({'action': 'wait', 'ms': s['ms']} if i == index else s)
+                                       for i, s in enumerate(steps)],
+                    '_without_input': True, '_omitted': [index]}
         omitted = {index}
         if steps[index]["action"] == "key_down":
             # Omit only the first matching release of this measured key press.
@@ -205,10 +211,13 @@ def compile_check(check, *, timer_outcome=False):
                 return result(issue.code, 'steps.' + issue.field, issue.message)
             if step['expect']['operator'] in RELATIVE:
                 return result('invalid_check', 'steps.expect', 'Промежуточное условие требует абсолютное сравнение; относительное оставьте финальному checkpoint.')
-        if kind in {'click','tap'} and ((step.get('x') is None) != (step.get('y') is None)
+        if kind == 'hold_touch' and (check['viewport'] == 'desktop' or type(step.get('ms')) is not int
+                                     or not 1 <= step['ms'] <= 3000):
+            return result('invalid_check', 'steps', 'Удержание касания требует сенсорный экран и длительность 1–3000 мс.')
+        if kind in {'click','tap', 'hold_touch'} and ((step.get('x') is None) != (step.get('y') is None)
                                       or not step.get('selector') and step.get('x') is None):
             return result('invalid_pointer', 'steps', 'Укажите selector или обе координаты действия.')
-        if kind in {'click', 'tap', 'click_fraction', 'tap_fraction'}:
+        if kind in {'click', 'tap', 'hold_touch', 'click_fraction', 'tap_fraction'}:
             if any(v is not None and not numeric(v) for v in (step.get('x'), step.get('y'))):
                 return result('invalid_pointer', 'steps', 'Координаты должны быть конечными числами.')
         if kind in {'click_fraction', 'tap_fraction'} and (

@@ -165,7 +165,7 @@ def collect(frame, check, step_index, before, after, state_script):
         result["observation_skips"] = []
         result["observations"] = observation_catalog(frame, check, state_script, result["observation_skips"])
         step = result.get("step") or {}
-        if step.get("selector") and step.get("action") in {"click", "tap", "click_fraction", "tap_fraction"}:
+        if step.get("selector") and step.get("action") in {"click", "tap", "hold_touch", "click_fraction", "tap_fraction"}:
             result["input_probe"] = frame.evaluate(INPUT_TARGET, step)
         observation = check.get("observation") or {}
         if observation.get("source") == "state":
