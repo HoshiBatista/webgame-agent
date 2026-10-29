@@ -787,11 +787,14 @@ def run(payload):
                             keyboardOnly:!matchMedia('(pointer:coarse)').matches,
                             audioQuality:'not_listened',audienceFit:'not_independently_verified'} : {unavailable:true};
                         }''')
-                    # A verified outcome can replace its previously observed
-                    # playing field with a result screen. Never infer this from
-                    # the category alone, or borrow another scenario's scene.
+                    # An outcome or a visibly verified return to the start menu
+                    # can replace the playing field observed in this scenario.
+                    # A state flag alone cannot prove that a restart shows a UI.
+                    menu_restart = check.get('category') == 'restart' and (
+                        check.get('observation', {}).get('source') in {'text', 'text_number'})
                     finished_scene = fact.get('scene_surface') and (
-                        probe or check.get('category') == 'outcome' and fact.get('comparison') is True)
+                        probe or (check.get('category') == 'outcome' or menu_restart)
+                        and fact.get('comparison') is True)
                     if not visible_scene(surface) and not finished_scene:
                         # A broken selector or a pre-start page is not proof that
                         # the implementation lacks a scene. Keep real defects hard.

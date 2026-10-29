@@ -95,6 +95,56 @@ def test_result_screen_can_hide_a_scene_seen_in_the_same_scenario():
     assert not any(f['code'] == 'canvas_missing' for f in result['findings'])
 
 
+def restart_game_and_checks(*, never_visible=False, broken=False):
+    html, checks = game_and_checks(never_visible=never_visible)
+    html = html.replace('<script>', '<button id="replay" hidden>Новая партия</button><script>')
+    html = html.replace('result.hidden=false;', "result.hidden=false;document.querySelector('#replay').hidden=false;")
+    html = html.replace('</script>', '''
+    window.ready=false;
+    document.querySelector('#replay').onclick=()=>{
+      result.hidden=true;document.querySelector('#replay').hidden=true;
+      start.hidden=HIDE_START;count.textContent='0';window.ready=true;
+    };</script>'''.replace('HIDE_START', 'true' if broken else 'false'))
+    restart = deepcopy(checks[-1])
+    restart.update(id='restart', category='restart', requirement='Вернуться к началу новой партии')
+    restart['steps'].append({'action': 'click', 'selector': '#replay', 'x': None, 'y': None})
+    restart.update(observation={'source': 'text', 'selector': '#start'},
+                   expect={'operator': 'eq', 'value': 'Начать'})
+    if broken:
+        restart.update(observation={'source': 'state', 'path': 'ready'},
+                       expect={'operator': 'eq', 'value': True})
+    return html, checks + [restart]
+
+
+@pytest.mark.browser
+def test_restart_can_return_to_visible_start_menu_after_a_real_party():
+    html, checks = restart_game_and_checks()
+    original = deepcopy(checks)
+    report = validate(html, checks, artifact_hash=sha256(html))
+    fact = next(f for f in report['facts'] if f['id'] == 'restart')
+    assert report['status'] == 'passed' and all(report['gates'].values()), report
+    assert checks == original and fact['status'] == 'passed'
+    assert fact['comparison'] is True
+    assert not any(c['visible'] for c in fact['surface']['canvases'])
+    assert any(c['visible'] for c in fact['scene_surface']['canvases'])
+    missing_restart = deepcopy(checks)
+    missing_restart[-1]['steps'].pop()
+    baseline = validate(html, missing_restart, artifact_hash=sha256(html))
+    unreturned = next(f for f in baseline['facts'] if f['id'] == 'restart')
+    assert unreturned.get('comparison') is not True and unreturned['status'] != 'passed', baseline
+    assert any(f.get('check_id') == 'restart' for f in baseline['findings'])
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize('never_visible,broken', [(True, False), (False, True)])
+def test_restart_does_not_excuse_an_absent_scene_or_blank_menu(never_visible, broken):
+    html, checks = restart_game_and_checks(never_visible=never_visible, broken=broken)
+    report = validate(html, checks, artifact_hash=sha256(html))
+    fact = next(f for f in report['facts'] if f['id'] == 'restart')
+    assert report['status'] == 'failed' and fact['status'] == 'failed', report
+    assert any(f['code'] == 'canvas_missing' and f.get('check_id') == 'restart' for f in report['findings'])
+
+
 @pytest.mark.browser
 @pytest.mark.parametrize('never_visible,category', [(True, 'outcome'), (False, 'control')])
 def test_result_label_does_not_excuse_missing_scene_or_disappearing_control(never_visible, category):
