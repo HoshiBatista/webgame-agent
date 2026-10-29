@@ -228,10 +228,6 @@ svg {
   background: var(--soft);
   color: var(--ink);
 }
-.icon-button.sound-button {
-  min-width: 48px;
-  min-height: 48px;
-}
 .text-button {
   border: 0;
   background: none;
@@ -1746,7 +1742,7 @@ svg {
   }
   &:is(:hover, :focus-visible) > span {
     background: var(--accent);
-    color: var(--accent-text);
+    color: #28303f;
     transform: translateY(-3px);
   }
   &:focus-visible {
@@ -1988,7 +1984,10 @@ svg {
   padding: 2px 0;
 }
 .like-button.liked {
-  color: var(--accent-text);
+  color: var(--ink);
+  svg {
+    color: var(--accent);
+  }
 }
 .game-author {
   display: flex;
@@ -2987,10 +2986,20 @@ svg {
   color: #fff9ec;
 }
 .fullscreen-toolbar > span {
+  flex: 1;
+  min-width: 0;
   font-size: var(--text-small);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.fullscreen-toolbar > .icon-button {
+  width: 44px;
+  height: 44px;
+  color: #fff9ec;
+  &:hover:not(:disabled) {
+    background: #ffffff1a;
+  }
 }
 .fullscreen-toolbar > .button {
   background: #f8f5eb;

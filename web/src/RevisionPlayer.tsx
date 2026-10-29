@@ -3,6 +3,7 @@ import { ArrowDownToLine, ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { errorText, request } from './api';
 import { Brand, ErrorNotice, PhonePreview, Spinner } from './components';
+import { useSoundPreference } from './useSoundPreference';
 import type { Revision } from './types';
 
 /** A private player shell. Only the isolated child frame executes generated code. */
@@ -10,6 +11,7 @@ export default function RevisionPlayer() {
   const { id } = useParams();
   const [revision, setRevision] = useState<Revision | null>(null);
   const [error, setError] = useState('');
+  const [soundMuted, setSoundMuted] = useSoundPreference();
   const [mobileFullscreen] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   useEffect(() => {
     let alive = true;
@@ -43,7 +45,6 @@ export default function RevisionPlayer() {
       {revision ? (
         <main>
           <div className="public-game-title">
-            <span className="eyebrow">ЛИЧНЫЙ ПРОСМОТР · ВЕРСИЯ {revision.number}</span>
             <h1>{revision.title}</h1>
           </div>
           <div className="public-preview">
@@ -52,6 +53,8 @@ export default function RevisionPlayer() {
               artifactKey={revision.artifact_hash}
               title={revision.title}
               forceFullscreen={mobileFullscreen}
+              muted={soundMuted}
+              onMutedChange={() => setSoundMuted((value) => !value)}
               badge={revision.accepted ? 'Сохранённая версия' : 'Кандидат — ещё не принят'}
             />
           </div>
