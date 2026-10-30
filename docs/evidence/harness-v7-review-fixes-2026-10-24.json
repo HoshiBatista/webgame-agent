@@ -1,0 +1,74 @@
+{
+  "baseline_manifest": ".data/harness-v7-review-fixes-20261024/manifest.json",
+  "baseline_manifest_sha256": "dc83773955b8e6418eda8aa61902b46de74ec4cf6f8ad03e6f76687548f99224",
+  "model_inference_performed": false,
+  "gpu_server_changes": false,
+  "deployment_performed": false,
+  "user_processes_restarted": false,
+  "preserved_sources": {
+    "generation/providers/codex.py": "49257a0dcc3569d6b0952fa95ec1e2b29fbb9b0873fe51acb7487d09e55ddb1d",
+    "generation/providers/relay.py": "e8e04e873515df5b0323e52b8678cba76a4a0af630d9709b57b3f8349ba0a9da",
+    "generation/providers/vllm.py": "7d35a09752ecaa6f046188e7b3029ea1d51a925a120b891aa515ec1501b0b81c",
+    "scripts/live_eval.py": "439a10868caa88a436b4cc30ff7f86b6d64173b55b8fde40f80c40d264d227ea"
+  },
+  "checks": {
+    "backend": {
+      "passed": true,
+      "summary": "519 passed, 62 deselected in 56.77s",
+      "log": ".data/harness-v7-review-fixes-20261024/backend-final.log"
+    },
+    "native_browser": {
+      "passed": true,
+      "summary": "59 passed, 159 deselected in 163.96s (0:02:43)",
+      "log": ".data/harness-v7-review-fixes-20261024/browser.log"
+    },
+    "docker": {
+      "passed": true,
+      "summary": "16 passed, 63 deselected in 101.48s (0:01:41)",
+      "log": ".data/harness-v7-review-fixes-20261024/docker.log"
+    },
+    "original_review_reproductions": {
+      "passed": true,
+      "summary": "7 passed in 10.13s",
+      "log": ".data/harness-v7-review-fixes-20261024/original-review-cases.log"
+    },
+    "ruff": {
+      "passed": true,
+      "summary": "All checks passed"
+    },
+    "mypy": {
+      "passed": true,
+      "summary": "No issues found in 33 source files"
+    },
+    "django": {
+      "passed": true,
+      "summary": "System check identified no issues"
+    },
+    "migrations": {
+      "passed": true,
+      "summary": "No changes detected"
+    },
+    "diff_whitespace": {
+      "passed": true,
+      "summary": "Passed"
+    }
+  },
+  "review": {
+    "method": "Manual second pass over fix diff plus original counterexamples and new regression tests; no second agent",
+    "resolved": [
+      "R1 desktop surface after Start",
+      "R2 selector failure does not authorize source repair",
+      "R3 unsent direct-provider reservation recovery",
+      "R4 explicit truncation"
+    ],
+    "remaining_actionable_findings": []
+  },
+  "docker": {
+    "test_image": "gameforge-mini-validator:harness-v7-review",
+    "base_image_id": "sha256:2fd7064bce682ba437f892b1f838efe8f7487b0a957e7121c391bc5d70e3adc9",
+    "dependencies_changed": false,
+    "source_only_build": true,
+    "full_offline_build": "cache miss for apt layer; network intentionally disabled",
+    "owned_container_removed": "4aa0ad2ca9f6b8125c2b7554cb0085c63cdd97c95c7a30512b91171f95d18436"
+  }
+}

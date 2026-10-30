@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-25",
+  "remote_base": "cb3ba3a",
+  "local_feature_commits": [
+    "92dcb9b",
+    "fc9e587",
+    "1ea30ec"
+  ],
+  "merge": "Preserve remote versioned harness and beeGame UI while integrating generation quality, waiting games and safe chat titles.",
+  "checks": {
+    "backend": {
+      "passed": 555,
+      "deselected": 64,
+      "command": "pytest -m 'not browser and not live'",
+      "database": "PostgreSQL 18"
+    },
+    "frontend": {
+      "passed": 108,
+      "command": "npm test --prefix web"
+    },
+    "ruff": "passed",
+    "mypy": "passed, 33 modules",
+    "django_check": "passed",
+    "migration_check": "No changes detected",
+    "frontend_lint": "passed",
+    "frontend_build": "passed"
+  },
+  "migration": "0011_chat_titles",
+  "model_calls": 0,
+  "browser_live": "not rerun after merge"
+}

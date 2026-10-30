@@ -1,0 +1,24 @@
+[Unit]
+Description=Passive LLM proxy network diagnostics (no remote probes)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/llm-diagnostics/network_sampler.py
+Restart=on-failure
+RestartSec=10
+UMask=0077
+LogsDirectory=llm-diagnostics
+LogsDirectoryMode=0700
+MemoryMax=64M
+CPUQuota=5%
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+# WireGuard status needs CAP_NET_ADMIN; commands only read local kernel state.
+CapabilityBoundingSet=CAP_NET_ADMIN
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

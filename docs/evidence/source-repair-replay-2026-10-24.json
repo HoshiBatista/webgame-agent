@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-24",
+  "scope": "Deterministic replay of three exact stored v4 creation replies, not new model quality or A/B measurement",
+  "new_model_calls": 0,
+  "rows": [
+    {
+      "case": "grid",
+      "source_run_id": "b58bb4d6-2af9-44e5-960e-ff1a2c1fd45f",
+      "source_invocation_id": "567d5e3d-ea2b-46c1-a0d1-72324d2fdbf5",
+      "response_sha256": "6933b24ebe41f3ade59f12f3e868134649e5b5736ea86273b1ac930d5c2ff606",
+      "v4": {
+        "outcome": "candidate",
+        "artifact_hash": "352e2555a9c50f727ae7d4f0bf7a65495ba0eb4cdf32a669116bda4b000e7e08",
+        "source_bytes": 29
+      },
+      "v5": {
+        "outcome": "rejected",
+        "code": "incomplete_sources"
+      }
+    },
+    {
+      "case": "snake",
+      "source_run_id": "384fbd9a-6a7c-411d-9226-d90a8add488d",
+      "source_invocation_id": "99538d10-fc9d-4d4d-a993-bbb433136472",
+      "response_sha256": "3c727a655ae4311cd995d2210df92663e5bb4be64afa9dd2128e737bb946b217",
+      "v4": {
+        "outcome": "candidate",
+        "artifact_hash": "c7a8fcf2bc2df3c05410c6398f741ab8c8138eafeec64b97151b037181719dc2",
+        "source_bytes": 9769
+      },
+      "v5": {
+        "outcome": "candidate",
+        "artifact_hash": "c7a8fcf2bc2df3c05410c6398f741ab8c8138eafeec64b97151b037181719dc2",
+        "source_bytes": 9769
+      },
+      "module_repair": {
+        "version": 1,
+        "max_bytes": 12288,
+        "files": {
+          "game.js": "f6bcd64ba02c1462d8a9b72ba2c3d56ee060587eb10c41ff5212fe91ea684dab"
+        }
+      }
+    },
+    {
+      "case": "memory",
+      "source_run_id": "24259dc9-ce21-45c0-a6c1-b553a4dc8a61",
+      "source_invocation_id": "a03e8b7f-be1f-4d35-8bbb-61d12518cad5",
+      "response_sha256": "606333963de1820791758a3af62e285bf6cc690c422dd9fda9a5ad5ca3f63971",
+      "v4": {
+        "outcome": "candidate",
+        "artifact_hash": "311f4afafcd4da6f18878463098806044f60bf74fb3bceb029c6ad987913deb6",
+        "source_bytes": 26
+      },
+      "v5": {
+        "outcome": "rejected",
+        "code": "incomplete_sources"
+      }
+    }
+  ]
+}

@@ -1,0 +1,2711 @@
+{
+  "date": "2026-10-29",
+  "baseline_head": "45c8684",
+  "authorization": "User: Да, до 12 вызовов / 60 минут; new combined Lite/Pro pilot, one full and compact game per model",
+  "limits": {
+    "max_calls": 12,
+    "max_seconds": 3600
+  },
+  "started_at": 1793220574.3506932,
+  "submission_deadline": 1793223574.3506932,
+  "hard_deadline": 1793224174.3506932,
+  "closed_at": 1793223308.957417,
+  "unused_calls_closed": 1,
+  "calls_used": 11,
+  "operations": [
+    {
+      "kind": "pro-full",
+      "prompt": "Сделай бродилку для новичков",
+      "run_id": "8e023dc4-c7a4-4152-a145-573d6100349b",
+      "status": "failed",
+      "calls": 3,
+      "elapsed_seconds": 629.675232,
+      "metrics": {
+        "model_calls": 3,
+        "check_seconds": 132.69,
+        "model_seconds": 496.35581,
+        "queue_seconds": 0.121623,
+        "total_seconds": 629.675232,
+        "packaging_seconds": 0.02458154084160924
+      },
+      "error": {
+        "code": "validator_unavailable",
+        "message": "Проверка не завершена."
+      },
+      "candidate_revision": "37d4992f-26fd-4f41-ae52-69e5032d62cb",
+      "result_revision": null,
+      "invocations": [
+        {
+          "id": "4527b728-44d1-40cc-9303-cdb81cec0233",
+          "attempt": 1,
+          "state": "settled",
+          "elapsed_seconds": 60.330114,
+          "usage": {
+            "input_tokens": 2885,
+            "output_tokens": 2392,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.029690",
+          "sent_at": "2026-10-28T20:49:34.730941+00:00",
+          "finished_at": "2026-10-28T20:50:35.065939+00:00",
+          "operation": "plan",
+          "error": null,
+          "output_characters": 0,
+          "response_sha256": "8b31d3b6fff6a8042e1af48b5629102edcbad211e3176898696b8a06de78de77"
+        },
+        {
+          "id": "89db284e-e38e-40c7-9643-9e0d0fc9da06",
+          "attempt": 2,
+          "state": "settled",
+          "elapsed_seconds": 265.934642,
+          "usage": {
+            "input_tokens": 9998,
+            "output_tokens": 14589,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.165886",
+          "sent_at": "2026-10-28T20:50:35.198603+00:00",
+          "finished_at": "2026-10-28T20:55:01.138198+00:00",
+          "operation": "create",
+          "error": "invalid_assets",
+          "output_characters": 21653,
+          "response_sha256": "82e0a0e3691ef25ab4faafc3796620a16faa64602700547b94fd29f6167e8db6",
+          "assets": {
+            "bytes": 4378,
+            "graphics": 3,
+            "sounds": 3,
+            "notes": 24
+          }
+        },
+        {
+          "id": "b0181f34-c2a8-4265-a311-98826198b57e",
+          "attempt": 3,
+          "state": "settled",
+          "elapsed_seconds": 170.091054,
+          "usage": {
+            "input_tokens": 10039,
+            "output_tokens": 13378,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.153858",
+          "sent_at": "2026-10-28T20:55:01.205783+00:00",
+          "finished_at": "2026-10-28T20:57:51.306475+00:00",
+          "operation": "create",
+          "error": null,
+          "output_characters": 21318,
+          "response_sha256": "07f8713ece919873a8b1bf8c0340cb7f913b51dad2f87c3721a4c0eadfaaf619",
+          "assets": {
+            "bytes": 4849,
+            "graphics": 3,
+            "sounds": 4,
+            "notes": 30
+          }
+        }
+      ]
+    },
+    {
+      "kind": "lite-full",
+      "prompt": "Сделай бродилку для новичков",
+      "run_id": "3ea7f499-2e4a-4143-915d-4cb8e49d6d25",
+      "status": "needs_attention",
+      "calls": 3,
+      "elapsed_seconds": 839.690832,
+      "metrics": {
+        "model_calls": 3,
+        "check_seconds": 0,
+        "model_seconds": 839.297993,
+        "queue_seconds": 0.165068,
+        "total_seconds": 839.690832
+      },
+      "error": {
+        "code": "plan_without_game",
+        "message": "Остались проблемы применения или проверки."
+      },
+      "candidate_revision": null,
+      "result_revision": null,
+      "invocations": [
+        {
+          "id": "dd871033-d27b-4c8d-a6a1-fac9d987d0da",
+          "attempt": 1,
+          "state": "settled",
+          "elapsed_seconds": 95.376251,
+          "usage": {
+            "input_tokens": 1085,
+            "output_tokens": 1393,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "sent_at": "2026-10-28T21:03:12.853395+00:00",
+          "finished_at": "2026-10-28T21:04:48.234051+00:00",
+          "operation": "plan",
+          "error": null,
+          "output_characters": 0,
+          "response_sha256": "f92589725409fa925679d7477e9ccb1539fdbca8f9bf52e890783f0e62dd4997"
+        },
+        {
+          "id": "b5c8e023-0f98-4542-823f-bdb152a457e6",
+          "attempt": 2,
+          "state": "settled",
+          "elapsed_seconds": 395.962143,
+          "usage": {
+            "input_tokens": 4390,
+            "output_tokens": 6520,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "sent_at": "2026-10-28T21:04:48.295580+00:00",
+          "finished_at": "2026-10-28T21:11:24.261498+00:00",
+          "operation": "create",
+          "error": "invalid_assets",
+          "output_characters": 13062,
+          "response_sha256": "d2cad420797c009efbbd4ea12d152fcdc8f88a0eeb1ad266d612385ea2c67471"
+        },
+        {
+          "id": "84f512ca-7cc3-44f2-908f-e7f6766c6ac5",
+          "attempt": 3,
+          "state": "settled",
+          "elapsed_seconds": 347.959599,
+          "usage": {
+            "input_tokens": 4442,
+            "output_tokens": 5885,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "sent_at": "2026-10-28T21:11:24.326119+00:00",
+          "finished_at": "2026-10-28T21:17:12.291571+00:00",
+          "operation": "create",
+          "error": "invalid_assets",
+          "output_characters": 13570,
+          "response_sha256": "520488f7b2f1caedc5f74b4f82ee735b7d7f2429b19b8bde59b9815d8608e9fe"
+        }
+      ]
+    },
+    {
+      "kind": "pro-compact",
+      "prompt": "Сделай игру на память для семейного отдыха",
+      "run_id": "47cb4c2f-5075-45b3-9a0b-a770e2c77b37",
+      "status": "unknown",
+      "calls": 2,
+      "elapsed_seconds": 86.670333,
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 0,
+        "model_seconds": 86.356714,
+        "queue_seconds": 0.157889,
+        "total_seconds": 86.670333
+      },
+      "error": {
+        "code": "codex_turn_failed",
+        "message": "Codex не передал завершённый ответ. Новый результат не применён."
+      },
+      "candidate_revision": null,
+      "result_revision": null,
+      "invocations": [
+        {
+          "id": "35894da6-03c6-42af-b878-883c21588ca5",
+          "attempt": 1,
+          "state": "settled",
+          "elapsed_seconds": 78.471038,
+          "usage": {
+            "input_tokens": 2887,
+            "output_tokens": 2674,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.032514",
+          "sent_at": "2026-10-28T21:23:55.945603+00:00",
+          "finished_at": "2026-10-28T21:25:14.421626+00:00",
+          "operation": "plan",
+          "error": null,
+          "output_characters": 0,
+          "response_sha256": "b7a054e12fc6a0827f5b043cc0a629f30ec60980e1e4c73a158372bb445fa377"
+        },
+        {
+          "id": "15d61ddf-19cf-49e7-950d-b815e582a29d",
+          "attempt": 2,
+          "state": "unknown",
+          "elapsed_seconds": 7.885676,
+          "usage": null,
+          "cost_usd": null,
+          "sent_at": "2026-10-28T21:25:14.499259+00:00",
+          "finished_at": "2026-10-28T21:25:22.394140+00:00",
+          "operation": "create",
+          "error": "codex_turn_failed",
+          "output_characters": 0,
+          "response_sha256": null
+        }
+      ]
+    },
+    {
+      "kind": "lite-compact",
+      "prompt": "Сделай игру на память для семейного отдыха",
+      "run_id": "00b56b31-2f6f-402e-a520-5dbefeef0bf0",
+      "status": "needs_attention",
+      "calls": 3,
+      "elapsed_seconds": 579.683929,
+      "metrics": {
+        "model_calls": 3,
+        "check_seconds": 2.483,
+        "model_seconds": 576.821586,
+        "queue_seconds": 0.030404,
+        "total_seconds": 579.683929,
+        "packaging_seconds": 0.023393250070512295
+      },
+      "error": {
+        "code": "repair_exhausted",
+        "message": "Остались проблемы применения или проверки."
+      },
+      "candidate_revision": "3688a778-a216-40c2-8ec2-e66e50962444",
+      "result_revision": null,
+      "invocations": [
+        {
+          "id": "30102f79-dbc3-4d49-9b0f-77e872a429c7",
+          "attempt": 1,
+          "state": "failed",
+          "elapsed_seconds": 102.874576,
+          "usage": {
+            "input_tokens": 1103,
+            "output_tokens": 1523,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "sent_at": "2026-10-28T21:25:25.197861+00:00",
+          "finished_at": "2026-10-28T21:27:08.075469+00:00",
+          "operation": "plan",
+          "error": "invalid_plan",
+          "output_characters": 0,
+          "response_sha256": null
+        },
+        {
+          "id": "03f64e66-1e26-457f-84b9-10848b92e8b8",
+          "attempt": 2,
+          "state": "settled",
+          "elapsed_seconds": 77.922542,
+          "usage": {
+            "input_tokens": 1137,
+            "output_tokens": 1293,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "sent_at": "2026-10-28T21:27:08.162710+00:00",
+          "finished_at": "2026-10-28T21:28:26.088920+00:00",
+          "operation": "plan",
+          "error": null,
+          "output_characters": 0,
+          "response_sha256": "d74c60078ee52f9233e19aea547b01ecf52abe99ab52b6ed69137d6d89e46c95"
+        },
+        {
+          "id": "8a0f6f09-533d-4bf9-80fc-79a9913dc3d9",
+          "attempt": 3,
+          "state": "settled",
+          "elapsed_seconds": 396.024468,
+          "usage": {
+            "input_tokens": 4089,
+            "output_tokens": 6589,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "sent_at": "2026-10-28T21:28:26.145796+00:00",
+          "finished_at": "2026-10-28T21:35:02.175289+00:00",
+          "operation": "create",
+          "error": null,
+          "output_characters": 6330,
+          "response_sha256": "b14e0cc4002201fc47ce5552f18aa98251579716ea256c0b25990398333d1dae",
+          "assets": {
+            "bytes": 4205,
+            "graphics": 4,
+            "sounds": 4,
+            "notes": 16
+          }
+        }
+      ]
+    }
+  ],
+  "amendments": [
+    {
+      "at": 1793221326.346613,
+      "reason": "Accept a declared trusted player script by attaching its generated data locally; no extra inference for packaging. First Pro/full already settled with 3 calls. All limits/deadlines unchanged.",
+      "changed_sources": [
+        "generation/experience.py"
+      ],
+      "calls_already_used": 3
+    },
+    {
+      "at": 1793222626.077239,
+      "reason": "Full media is a typed top-level assets object; landscape scenario compiler fixed; compact unchanged assets rejected. No active calls, six calls already used; original deadlines and budget retained.",
+      "changed_sources": [
+        "generation/artifacts.py",
+        "generation/compact.py",
+        "generation/experience.py",
+        "generation/prompts.py",
+        "generation/providers/fake.py",
+        "generation/schema.py",
+        "generation/source_policy.py",
+        "validation/check_program.py"
+      ],
+      "calls_already_used": 6
+    }
+  ],
+  "source_sha256": {
+    "gameforge/__init__.py": "8974a9c493587f508e73f358876ade4f3ab0369012b29ffb14280dbe30f721ce",
+    "gameforge/celery.py": "296d774f24c1582fb7b02e76280d630fe6fdff1c558fb78cf54258208bca766b",
+    "gameforge/preview_settings.py": "a3d81aa446013e1808d17d629b1ff0cf8cfed787f64267ed948025cf2c08050c",
+    "gameforge/preview_urls.py": "65828ceb754302488bef3e89b29a2d4f1666096a237448806c90cddce26f66a4",
+    "gameforge/settings.py": "ed25bbf2abee19bbd91b423a29ba727abecb2703b7aa4861bfd9c53cfe4ad1af",
+    "gameforge/urls.py": "3591df0a05cf999625ad997dd0415dc4dc37ae772041cb0a76e0072ed547a0c9",
+    "gameforge/wsgi.py": "a03e229b602d603f73c8363f92f952b645977b005d21ad5aa8adcfeee655e58e",
+    "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+    "generation/artifacts.py": "96df893628a476b09ae367c853faa5586eb5d48b2995c2aca1f111001b946084",
+    "generation/audiences.py": "4e67b3aec06107f1d728c82e4a9762bf65d05fde7383c6c50f7bf19808fc1099",
+    "generation/check_repair.py": "bc775cd697342b353f160ff39288c19dbf846b7b64cb864516fc4266a3fc1dfe",
+    "generation/code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+    "generation/compact.py": "289d275ced875771b47c9508fd6c7228067a99d527110a6b649e5daffe613908",
+    "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+    "generation/experience.py": "5b0ee9afab3b3616ce930bc2798e644d9ce286df2dd59a61b5cdb535cd7e0e52",
+    "generation/feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+    "generation/feedback_image.py": "dabff2ed5bf85edfe26105b62597d3a67c117f3793f2f7ee9139edc873791609",
+    "generation/helpers.py": "221a7b812ee3b594bc899cf305a4a9d86b13f4b01eb7e0ad4550b0b0c8b9bd65",
+    "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+    "generation/patch_repair.py": "98689669d7eaad898591da44049c3b0749c2e9d4be757b149a0ec815ab9ea73d",
+    "generation/planning.py": "d0b94dda91e7142e2f670801cf29e4af874b8c185f8f61f45b8410bba4341e96",
+    "generation/preference_extraction.py": "d8f8af76d3b6b0c03daa1946eb836cd425a2f48da1570f4137dab24beaa2a733",
+    "generation/presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+    "generation/preview.py": "333c78ce119a4a80374e3ed902dd8b45aebd0dad8111090754f7f1a138d93890",
+    "generation/prompts.py": "e141b0bfa4c560fc0ddb54185f78f5fba4edc4eb1bbbb4e48cdf6917e3dad0af",
+    "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+    "generation/providers/codex.py": "8f5131c4e64a7c3816ed0f80e488ac23065aa416c3f408535fe07abaf51c34e3",
+    "generation/providers/codex_api.py": "845be070335a3999e9b268d6a452de1d986c995bbe90b41475b3a91d8dc2d3cd",
+    "generation/providers/fake.py": "66cd1c759527213ee71e9486eb83f47bdd5be6d8ff918b70d43f8770d9c49590",
+    "generation/providers/relay.py": "c1054f4b873be1d6db64ec9ff930a02aaa3fdea843ec62f79e2714bdd74bc3bd",
+    "generation/providers/vllm.py": "1ac02553528ce9fa4dec8e644acc0908b958ac91d421d7be328e47f539124427",
+    "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+    "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+    "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+    "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+    "generation/requirements.py": "8111d65d87a40faffc7495d894c910d4338cfa324bfe5906d10944eefc1f5ba2",
+    "generation/runtime/compact-v2.css": "8f3c4738b6d47e18574d15717510aeb019c738676594a4d5444cd09abaab75ae",
+    "generation/runtime/compact-v2.js": "a1ad3e68251ef3b8f60cfd7c55f68d0c4ab78b16851f072caf09548236584201",
+    "generation/runtime/experience-v1.js": "f29c8115d0488fd1443ae253e8dc1bcd7c02231863b4b693ea118c3e62e3eb2e",
+    "generation/runtime/motion-v1.js": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11",
+    "generation/runtime/preview_audio.js": "d5f8515fda53154d389b8126e4846383fd395e167373c78cc850cf824f5db04e",
+    "generation/schema.py": "caa1f38ce813eb0d1b17cd665d4b21dc20672f0f9cfee97aafb114290f63cd15",
+    "generation/service.py": "09b355ceffb38df00be82572c4c1fd4ceb923130d9893ad2adf40ac565c7194e",
+    "generation/source_map.py": "6475586bd819a057fb7c7080d37328137354cc0a1eabfd3f0c6407bf227d2ec5",
+    "generation/source_policy.py": "abdf8ddef3d31787398dd42942523918ccea9022b83ca90e5a29a75f4c3ea201",
+    "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+    "generation/visual.py": "91100a1d6e0b1d0739c4d9742cd61f93d86448382d7d30a9dca080ec94142aaf",
+    "scripts/evaluation.py": "0cbfc027cce1e93f3a3d397f4dcea786381868305fa79c90608109c0898db2a1",
+    "scripts/live_eval.py": "a373b8c53061e1762a119ca2a63ba7422911a6703cdcb762f2f4d9984284622b",
+    "studio/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "studio/acceptance.py": "21198c51b78c0bf83f8fcfa09c2363ac4ee5d35aaf61c36e100bd67ec49e2df6",
+    "studio/admin.py": "7aed6780229fa906855b17ddec8dba3eec7a30de2dc61ac99663c50e9ad01179",
+    "studio/apps.py": "3b799f88cee5f25cd0ed00f7e715facd8c560c54dc7a84b27268f12d6e238cdd",
+    "studio/auth.py": "156171851964cb56c0fcf1cb86f2c6d4ea5e19d7e743be20521ca08ab73d8c8b",
+    "studio/capacity.py": "7946ae41f8f3d45a610e426001a4f1c5fb718a3f12ca2495c672eafc9d492224",
+    "studio/check_repair.py": "e4b76235d52c15ba432fae4508a32afb82b4f937b6bf3fb7d661a4faf702afbc",
+    "studio/checks_create.py": "d535bf4111f4887c3f056a1cb480c93f2556d299ac5fb85b1a106437458571ce",
+    "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+    "studio/feedback.py": "48b3602a87033f2acc1e931623f07f643de7675c63b31c12e22c46b084e7fe9d",
+    "studio/feedback_tasks.py": "cda7c0cb534eef88cc8af042238d26f5cc2e7cbde5f4aa667009e1fbfdb330ab",
+    "studio/management/commands/bootstrap.py": "2ffcd1150dc8489588815819f6672368a699f95bf781e1347209bde2bd14f5c5",
+    "studio/management/commands/diagnose_invocation.py": "0a7a3eb727ec0236cbcdc9d23259d3b3293f373588b6f4769cd6daff38959539",
+    "studio/management/commands/export_codex_catalog.py": "a7254b097d4b1463d2cfcd5d520ade94381e1ae2404bc0c4a13ea1b634400cff",
+    "studio/management/commands/reconcile_invocation.py": "37424c2c10ffa44d23519a45da1bc644bfebeae53851fbe7818cdf344fb0f470",
+    "studio/management/commands/recover_saved_response.py": "488f62a3d2140e17f595e9fe688a4acaebbda3f3a535c1c11d8c5004c4e22d91",
+    "studio/management/commands/refresh_codex_api_catalog.py": "10c07ccf00e5527c39abeaee2531efb7822287bdf3631ebc5d0a590b2ffcfde9",
+    "studio/management/commands/retire_games.py": "9509f57c347ba7ea15b98ea14ffaf58e03750ea02564907d243da5547c8c8d8c",
+    "studio/migrations/0001_initial.py": "122d5fbe3bae50e8bb788a5f20d691c77ac1ece29d942ca86d70e4b52602f060",
+    "studio/migrations/0002_run_private_diagnostics.py": "305943c6660a35fae17badad3c938915263ccda7ef51c802462e253f0b6e08d4",
+    "studio/migrations/0003_checkreport_validation_run.py": "5a314036637178f07bfae4d0b22a11900431b794fdcb5fb4ecba2745e11d16db",
+    "studio/migrations/0004_invocation_provider_metadata.py": "4f8fff4fd09a93c0cceea09f03671e4a62c1946a804aef2e8e3826f5f93e01ea",
+    "studio/migrations/0005_saved_response_recovery.py": "0904f5eebb3bd693caf634cc0bbce8d6374a6772510777d9c7917b445428a2e6",
+    "studio/migrations/0006_run_repair_limit.py": "9c02de32fcf1bc8e921f11520ebd33c5c759105aaddeb9c3b72ecd44a4256317",
+    "studio/migrations/0007_model_profiles.py": "d13fa89bee52a6cba2f2be8b2ffdbd0f091b26624efe3b0c2999ef3495951c50",
+    "studio/migrations/0008_completion_policy.py": "aa031946521cf4e3aa7bb4c3f4fa82c965f744e70fa18b217cd03abc228259f1",
+    "studio/migrations/0009_run_call_budget.py": "25c1fabc819b83cc298e7002bbdf9273e208956e677023b3aa4ebc0adb070ef5",
+    "studio/migrations/0010_check_review_required.py": "1765ffe86596a1ba814667b66529262f474cddff83c25a3b704877d3570e4b6e",
+    "studio/migrations/0011_chat_titles.py": "01b3ab3ea4f7986549ed44261c656860fcb2a033bc848bfbd64f78c0677118a0",
+    "studio/migrations/0011_explicit_edit_source.py": "4fd78aca2eb2f1b5ece8aea6ef6e5a65e8b9229e5eef2858d24f3f704cb22a39",
+    "studio/migrations/0012_compact_generation_profile.py": "524f31820d16865d7f8a98cee83bbb0e1d9cdc4dbf1edc555917889f737df563",
+    "studio/migrations/0013_merge_titles_and_compact.py": "9e3407c339bb36c94a9a68475f239ec99d0eb2c20d6076cab5b97b28c8950173",
+    "studio/migrations/0014_generation_strategy.py": "50ba4ac5670d58d2866b8cfa641e99755bdb113266959861bfa61184679df389",
+    "studio/migrations/0015_revision_requirement_manifest_run_policy_snapshot_and_more.py": "4675c14d8ea696595305d4f3f0af84f89f7cb8c20ec189531f9038db88a2bc21",
+    "studio/migrations/0016_checkreport_visual_evidence_revision_helper_manifest_and_more.py": "581d766c431cbd772dcf3951efdcbb21cf0ddead0ec7ce7a65b667e19dc65ce4",
+    "studio/migrations/0017_publication_unavailable_at_and_more.py": "1d724e4cc073c2dcda8233dc106d4311e6026e3d8954daa882e674198788311c",
+    "studio/migrations/0018_personal_templates.py": "df7197c92e47e9b35d5f92fdf85e58aae91922ad181e728ef12360c7fb3f560e",
+    "studio/migrations/0019_remove_preference_suggest_templates.py": "7750251410a8a43c7c926685003a0f63b48a385d48e5bc85619f153a09f3c5ae",
+    "studio/migrations/0020_template_title_60.py": "e077b0dd507ace799128d053d82c2784e5ddc039e669dd8be3d334643cec21bc",
+    "studio/migrations/0021_pro_default.py": "d9685569ab92fde4c176bfcd62084dd2ccab751aa5381799c71c90ed4ab9f7bf",
+    "studio/migrations/0022_feedback_preferences.py": "6acae1020e963749c14e7ff352a7f24ed53435f05c0ea7ead2641ecbf98dc877",
+    "studio/migrations/0023_independent_validation_tasks.py": "887132ab76ff7235785828c1c72b021d22d10686991bb01ec117401a22412c38",
+    "studio/migrations/0024_validation_run_fence.py": "42c8879be6ca6e717ce02748e41d105967a975d30d65c751e53552b93cc43d91",
+    "studio/migrations/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "studio/model_profiles.py": "1cbbe3bb4c4df11f8c2767d5b6696598bba3d29b7312852825531bc28a82e2c8",
+    "studio/models.py": "a4365ac12940b7636a284dec21359e3978fe470bef2b94b5cb50a77f94c04e46",
+    "studio/patch_repair.py": "019ad85b44a742331432b44a1529eae76dc102f171dc11d2c7802453cec9f2dd",
+    "studio/preferences.py": "f2dc795a9f47fb07c8030595c41472fa937186499534bbf1a15c2d6bbd196906",
+    "studio/recovery.py": "daae00c0bec95ed6cb494479dad3a70544e31dfc1aeca298a771b0b797abfe78",
+    "studio/replies.py": "23c6625e1e19e27a24d4fcf77067985fcad0b6747397fe6e2f9e278e6efe804a",
+    "studio/serialization.py": "18cee2964b27b519de11dccda22dfc5f5e13b7de4aefbed58fdafaf267a57254",
+    "studio/services.py": "3138fb4245b6660b6aba0232b8e12998f41a2bf5903937f3f3e0340a70635ece",
+    "studio/tasks.py": "11df66d26bdc59dd2299967722855293d00d466e49c28d3b02969bae26224cca",
+    "studio/template_views.py": "a54eb9d37b62059812ea3e6454c81501983722325414fe79e7ffb963c3e54a94",
+    "studio/titles.py": "942c2883af4ce502e080ca97dbe5dfe0d4592f55924069da126adfb38085fdc8",
+    "studio/validation_tasks.py": "1ab15335fdeed67012e807d0e31611ab185aef13ba080710088ecf6375378ee6",
+    "studio/views.py": "a6a40e123c5f4bead002298716127ba8769ddd4135aee1bba711b14695328210",
+    "studio/visual.py": "d28641a00cd66fab448838c176df3c437342364cf2cbba48d910311708c1548a",
+    "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+    "validation/check_program.py": "109cd1555075882993511cba52d160ab04989ce00585acaf7c7658fb0fec7a2b",
+    "validation/checks.py": "aab4b7dded7d87eed462b4b5d67de87880e17c7047c1ffbcc772ec7855a03fef",
+    "validation/contracts.py": "f2c1a860d5f37e9b5dd79268ecda05722283e2044f8443bbd2f2b3e3ce9147c7",
+    "validation/criteria.py": "c1462548e1a35283700c89eb30f10a59c24ae7b0ca4da4aa9001207e99a9a7fe",
+    "validation/daemon.py": "36a28bb3cf62a407a7057b1976c10cf942c04c41ee8ce7e0127e29c501f73af0",
+    "validation/diagnostics.py": "022860ab562c397bcc10f7012d71a984b06e504492faea54c7873336cae7772e",
+    "validation/evidence.py": "1f547d2a91650ea0ed97c629df5cdb2e05585d1c12dd023fbdeaf16947467471",
+    "validation/native.py": "b1ad6c5d4e131953273be65ea3eafc3b763d2c6589271e431d43b135a9b75d42",
+    "validation/protocol.py": "eacf983eb63e8bab002c93ce704a88e64ad24cec4363f7d8856052aed6cc29b4",
+    "validation/runner.py": "7b0ffe60a1eff8a76569c7f82b5bd4fecf90da896f3ea101a834f2d30f235143",
+    "validation/service.py": "82deb5833d5f7ec5a9801af8a0a705511359cced353770b1fad63ead1b9b8f2c",
+    "validation/suites.py": "37661811928926fdd990251e7842c6f7f90af811ba2730ede5fb3a8a07445b71",
+    "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd",
+    "validation/visual.py": "ef11f4ee619a334c8f6a3baf1174bebfbbc0dc0c70b483c9021e873ff72af871",
+    "web/src/AccountMenu.tsx": "9ad1ccb9d9e6140c0e1c3f0117a5ae44a19acfbd6f824139b10664429e3a6f39",
+    "web/src/ActionMenu.tsx": "9a8505d1c3a197bc8cc47709b252e8e6466b75d2c1108f458198c5d145f31272",
+    "web/src/App.test.tsx": "72b239cfe3210a091544aedace0c3cfc5575b3fcd3c304614c2753fa3f27422e",
+    "web/src/App.tsx": "e797ab24c3587015ac2341471f8e8996ac35c2ff2aa8003fe477b87dedc8831e",
+    "web/src/AudienceSelector.tsx": "258fce3e8a6f2e3d3ce7cb51d6db2eb0a8edde640db0aeae738ebccfe5bff4af",
+    "web/src/CharacterCount.tsx": "2200c9765af59f7efcf40024f17851f01bb44230f035b2f7cc29487d57699a49",
+    "web/src/ChatMenu.tsx": "279f592eddf64b77bd797be5dfe7f4c9e3948a585153cc34425dd0948fe865f4",
+    "web/src/ChatTitleSidebar.test.tsx": "9c6f15141b1f5ae0dae4cd4de246b1a04ff615e71e0685593e476e2e68a44ddc",
+    "web/src/Feed.test.tsx": "68527b67ca98afed32b2b7c55ebe054e1d525bf59694fc0b65774536362d3492",
+    "web/src/Feed.tsx": "8d92d33801e5eb2ecbdf416165cf006973a4162ab4adcff3d69e6279f0e383ca",
+    "web/src/Landing.tsx": "d34c59d8d95da5ef0b17d4229b1982aadf39ee761f02912bf26a48ca67caaa1d",
+    "web/src/Login.tsx": "76985c72ee3e5c5e895f4c892af7bbfdb651d9af37e1beb20df69e28d818b47f",
+    "web/src/ModelSelector.test.tsx": "6e13ba593605969841b6234658c383f580eef8b471339e03fc821efa3193d4ce",
+    "web/src/ModelSelector.tsx": "5450b0296b118dc7148f0d158156cd812c0b8f91a159528eecd45b2b0e89d95f",
+    "web/src/Preferences.test.tsx": "26e55d38369ae1583097bde950e569580cda8f660ef7afc593efd941deae3580",
+    "web/src/Preferences.tsx": "e2bf113ae43fab9623c2891ee6dc85a7ea4fa990ac3f29944ce11b28f4f19249",
+    "web/src/PublicGame.test.tsx": "72b38b566eb3098f55e3dfad2a6c26cda61a770bd796db83b9809921d04d2f01",
+    "web/src/PublicGame.tsx": "cd58216ca7d0fdb6fc40f607b461218f0722f4fd276bdc1d205d0e00bee1cc7b",
+    "web/src/RevisionPlayer.test.tsx": "dd641b044fc915eec036d4152413cac9ff32c50fe4674333ae69e0aea5c40d37",
+    "web/src/RevisionPlayer.tsx": "085ec89d30f7ea69ae5a4b83575a8d511dd07ea414c1097475b610db1389c8cd",
+    "web/src/RunMessage.test.tsx": "a4be9bc1c1f986a4118d9860402ef32b873fcb25aecb6d9d69b358566d3a6e80",
+    "web/src/RunMessage.tsx": "8f1a7f4a6eed120bd7f882d458d76b7946849d4c379723960951e8046da96a76",
+    "web/src/Studio.test.tsx": "8b429696d74acf05e22c4004c90a7a3472c2313bdd2871e28c139ffd307531bd",
+    "web/src/Studio.tsx": "95a6159843bfe3f729cf2c0a7561250ad2e024f6b417c920eef16141ee3828ff",
+    "web/src/TemplatePicker.tsx": "5777be950e8badc4895c2351aeeae34a9e01efad56acbd9bb5d42b05e02c3277",
+    "web/src/Templates.test.tsx": "7c5141317090c21dc28ba2cd315b934241d89a1c020f2b24cf1f31f2b3f7dbc2",
+    "web/src/Templates.tsx": "7ede085eca59004ab9c15400420821896ef77e8898f1ef78a9a063e0099498e3",
+    "web/src/ValidationControls.test.tsx": "d9096b56fcbe912d01a7bc3677155385c6bef6c2b270ec005ccd73941c0147a1",
+    "web/src/ValidationControls.tsx": "136a63bbc58dc1ba1aa573634d99081aa708826510adbe35048d7f4990259cc6",
+    "web/src/api.test.ts": "7bad5440c633aa238cc0ab6a99b3ca28585ff9fccbe2e9dc5a043c425706d183",
+    "web/src/api.ts": "62d8b1bec73d2ee6659fc0ccac6f9f190e35d9437c573361504bd37b158e6825",
+    "web/src/components.test.tsx": "c86ab16b78f462f9755df61e8c49e8892e9bad7e04a7adcefcfb65a9de15fc10",
+    "web/src/components.tsx": "01764212ea19c7788eb40d3226d212b4d771f7facc72ab7227616f139f84a76d",
+    "web/src/context.tsx": "4d05d410fef9da196e1aacfffbc62462946fbd04ee7bfd6dc55167d3715f0f89",
+    "web/src/main.tsx": "7b99d0aa434844ebb8ea1ba0ed4ec9ca3735d904a36b7d44cb01149466951d81",
+    "web/src/styles.scss": "26eedfd19defd3f9f753578ac40d03acea458ee92a2fb17f4f72cde7e893b503",
+    "web/src/test-setup.ts": "c4e33c89ae522d79faf5409c5f60b9df8da378fb1094f161d9b4b733e2a6aa98",
+    "web/src/textLimits.ts": "78de584f4ccdaa61beda94f7cc9316d2ac32782e92a019a0ca3e829745f233e4",
+    "web/src/theme.test.tsx": "beb2cb6600c0b567fd61f41c6b25b7fd303d91834c2b6686bbadf5d549387d94",
+    "web/src/theme.tsx": "b806cd24c0d51b809cfe27a9d28b84156a3cb5671592816e021f4d45e0c636cd",
+    "web/src/types.ts": "da982885e0afa9f99f18dff9a91475d48e8295a2057e3f6a15cff6feb9373129",
+    "web/src/useSavedChat.test.tsx": "471fb4a4d7e810f3be793c9e56e5b804b34bc6a4d77042493e70c4fb7c4bb0ba",
+    "web/src/useSavedChat.ts": "c5f8d16d0dbba3f8147921770d4ffa90ed89c047af61a47e30871b3d1a23764f",
+    "web/src/useSoundPreference.test.ts": "6e0f6a32143b63ea73ec5a07e228d104e03490efa210e263d7cd2073453093b7",
+    "web/src/useSoundPreference.ts": "a95ee28d58d51b5e54ecdcaec159c49d0c6bf954c4b0f27f958eaf98776236d7",
+    "web/src/webview.test.tsx": "da8569ffdef9c18ea49163ea0bc0f868508822f513db7ef576ab7e3d81dd9581",
+    "web/src/webview.ts": "f87f92e5301d9e770ff373281ad4180c4ffa62d571e2b6e6f9a7f7790936e461"
+  },
+  "local_only": true,
+  "gpu_admin_access": false,
+  "limitations": [
+    "One game per profile/model; different prompts and audience versus earlier pilots, not controlled A/B.",
+    "Sources changed twice between completed runs; preceding failed runs were not rewritten.",
+    "Audio signal and SVG use do not prove pleasant music, artistic quality or audience fit.",
+    "No physical phone or WebView tested.",
+    "Full typed-assets fix has offline regression coverage, but no new full live run after the fix."
+  ],
+  "pro_full_independent": {
+    "status": "passed",
+    "artifact_hash": "7d38763d8f75cc391b5e406a14a3f0ebf4257e92490f0f803584c1806f0fe2a4",
+    "environment": "mini-browser-v1:7fa4ca6f0fbe8272e0bb946392446161c35ab31054cac3d4f9fe98c2c4a796e6:145.0.7632.6:native-darwin:b1ad6c5d4e131953273be65ea3eafc3b763d2c6589271e431d43b135a9b75d42",
+    "elapsed_seconds": 5.551,
+    "gates": {
+      "syntax": true,
+      "runtime": true,
+      "surface": true
+    },
+    "findings": [],
+    "facts": [
+      {
+        "id": "independent_start",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": "playing",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 16,
+          "voicesPlayed": 2,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "independent_touch",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": 70.0,
+        "after": 106.0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 28,
+          "voicesPlayed": 3,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.0495893731713295,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "independent_keyboard",
+        "status": "passed",
+        "viewport": "desktop",
+        "before": 70.0,
+        "after": 106.0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 28,
+          "voicesPlayed": 3,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.014120165258646011,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "independent_finish",
+        "status": "passed",
+        "viewport": "desktop",
+        "before": null,
+        "after": "won",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 409,
+          "voicesPlayed": 10,
+          "activeVoices": 7,
+          "musicPlaying": false,
+          "muted": false,
+          "state": "running",
+          "peak": 0.3486091196537018,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "independent_restart",
+        "status": "passed",
+        "viewport": "desktop",
+        "before": null,
+        "after": "playing",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 409,
+          "voicesPlayed": 12,
+          "activeVoices": 9,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.3952702283859253,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "independent_resize",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": 106.0,
+        "after": 106.0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 118,
+          "voicesPlayed": 3,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.08638934791088104,
+          "audioError": "",
+          "layout": {
+            "width": 844,
+            "height": 390,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      }
+    ]
+  },
+  "pro_full_recovered_first": {
+    "status": "passed",
+    "artifact_hash": "bdffc2a7fb481010bda0c1c5b3dea92aeb821206bd94679be68ef7fb0bb5f640",
+    "environment": "mini-browser-v1:e1615f2eda854d0930b5b93c1234fd859887d3ce33f4d03557340322b334fa21:145.0.7632.6:native-darwin:b1ad6c5d4e131953273be65ea3eafc3b763d2c6589271e431d43b135a9b75d42",
+    "elapsed_seconds": 21.915,
+    "gates": {
+      "syntax": true,
+      "runtime": true,
+      "surface": true
+    },
+    "findings": [],
+    "facts": [
+      {
+        "id": "R01",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": true,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 6,
+          "voicesPlayed": 0,
+          "activeVoices": 0,
+          "musicPlaying": false,
+          "muted": false,
+          "state": "locked",
+          "peak": 0,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R02",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": "Нажимай стрелки: иди вправо к круглому огоньку.",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 9,
+          "voicesPlayed": 2,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R03",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": "2",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 15,
+          "voicesPlayed": 3,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.06826087087392807,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R04",
+        "status": "passed",
+        "viewport": "desktop",
+        "before": null,
+        "after": "1",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 21,
+          "voicesPlayed": 3,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.042450498789548874,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R05",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": 1.0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 84,
+          "voicesPlayed": 6,
+          "activeVoices": 5,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.1186632439494133,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R06",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": 3.0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 528,
+          "voicesPlayed": 16,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.11568395048379898,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R07",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": true,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 872,
+          "voicesPlayed": 26,
+          "activeVoices": 1,
+          "musicPlaying": false,
+          "muted": false,
+          "state": "running",
+          "peak": 0.05402863025665283,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "R08",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": 0.0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 881,
+          "voicesPlayed": 28,
+          "activeVoices": 3,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.03501398488879204,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "X01",
+        "status": "passed",
+        "viewport": "desktop",
+        "before": "2",
+        "after": "2",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 84,
+          "voicesPlayed": 3,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.06084848940372467,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "X02",
+        "status": "passed",
+        "viewport": "desktop",
+        "before": "2",
+        "after": "2",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 81,
+          "voicesPlayed": 3,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.06084848940372467,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "X03",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": "3",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 3,
+          "graphicsErrors": [],
+          "drawCalls": 282,
+          "voicesPlayed": 9,
+          "activeVoices": 4,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.10283923894166946,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      }
+    ]
+  },
+  "lite_compact_independent": {
+    "status": "failed",
+    "artifact_hash": "e1f683c64e63e1036c9449efdfc87efc2b97b7fc7d46a0489a3f71f14ed0a65e",
+    "environment": "mini-browser-v1:7fa4ca6f0fbe8272e0bb946392446161c35ab31054cac3d4f9fe98c2c4a796e6:145.0.7632.6:native-darwin:b1ad6c5d4e131953273be65ea3eafc3b763d2c6589271e431d43b135a9b75d42",
+    "elapsed_seconds": 3.672,
+    "gates": {
+      "syntax": true,
+      "runtime": true,
+      "surface": true
+    },
+    "findings": [
+      {
+        "code": "missing_effects",
+        "message": "Нужны проверки начала, управления и победы либо поражения конкретной игры."
+      },
+      {
+        "code": "incomplete_checks",
+        "message": "Нужны проверки начала, управления и исхода."
+      },
+      {
+        "code": "effect_mismatch",
+        "check_id": "keyboard",
+        "message": "Не подтверждено: keyboard проверяет реальное действие"
+      }
+    ],
+    "facts": [
+      {
+        "id": "start",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": "play",
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 4,
+          "graphicsErrors": [],
+          "drawCalls": 0,
+          "voicesPlayed": 1,
+          "activeVoices": 1,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "touch",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": 0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 4,
+          "graphicsErrors": [],
+          "drawCalls": 0,
+          "voicesPlayed": 2,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.009507213719189167,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "keyboard",
+        "status": "failed",
+        "viewport": "desktop",
+        "before": null,
+        "after": -1,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 4,
+          "graphicsErrors": [],
+          "drawCalls": 0,
+          "voicesPlayed": 1,
+          "activeVoices": 1,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.008316387422382832,
+          "audioError": "",
+          "layout": {
+            "width": 1280,
+            "height": 800,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": true,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "resize",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": 0,
+        "after": 0,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 4,
+          "graphicsErrors": [],
+          "drawCalls": 0,
+          "voicesPlayed": 2,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.0030962133314460516,
+          "audioError": "",
+          "layout": {
+            "width": 844,
+            "height": 390,
+            "orientation": "landscape",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      },
+      {
+        "id": "restart",
+        "status": "passed",
+        "viewport": "mobile",
+        "before": null,
+        "after": -1,
+        "player_experience": {
+          "version": 1,
+          "graphicsReady": 4,
+          "graphicsErrors": [],
+          "drawCalls": 0,
+          "voicesPlayed": 2,
+          "activeVoices": 2,
+          "musicPlaying": true,
+          "muted": false,
+          "state": "running",
+          "peak": 0.019672075286507607,
+          "audioError": "",
+          "layout": {
+            "width": 390,
+            "height": 844,
+            "orientation": "portrait",
+            "toolbar": 64,
+            "safe": {
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "left": 0
+            }
+          },
+          "keyboardOnly": false,
+          "audioQuality": "not_listened",
+          "audienceFit": "not_independently_verified"
+        }
+      }
+    ]
+  },
+  "pro_compact_failure": {
+    "state": "unknown",
+    "receipt_hash": "37c8cff093ebdf0759567700a1a969bd1372f847868eb599c1aa060ae4c25e3a",
+    "error": {
+      "code": "codex_turn_failed",
+      "outcome_unknown": true
+    },
+    "usage": null,
+    "inference_submitted": true
+  },
+  "pro_queue_resume": {
+    "host": "72.56.101.64",
+    "at": "2026-10-28T21:34:03Z",
+    "reason": "The pilot Pro compact create returned unknown/codex_turn_failed and fenced the shared queue. No queued, preparing or running jobs existed.",
+    "backup": "/data/backup-assets-pilot-20261028T213403Z.sqlite3",
+    "backup_integrity": "ok",
+    "resumed": true,
+    "jobs_before_and_after": {
+      "cancelled": 2,
+      "completed": 75,
+      "unknown": 1
+    },
+    "usage_before_and_after": {
+      "input_tokens": 790532,
+      "output_tokens": 342800,
+      "submitted_without_known_usage": 2
+    },
+    "active_jobs_before_and_after": 0,
+    "worker_online": true,
+    "terminal_jobs_retried": false,
+    "server_code_changed": false,
+    "gpu_access": false
+  },
+  "pro_baseline": [
+    {
+      "case": "adventure",
+      "profile": "full",
+      "run": {
+        "id": "8770bcdb-5027-4a6d-9a85-6856ab833f95",
+        "status": "succeeded",
+        "attempts": 2,
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "created_at": "2026-10-26T13:47:17.018126+00:00",
+        "finished_at": "2026-10-26T13:51:17.823228+00:00",
+        "candidate_revision_id": "fb7d27c5-5ad9-42a0-8695-0376c3007bc0",
+        "result_revision_id": "fb7d27c5-5ad9-42a0-8695-0376c3007bc0"
+      },
+      "independent_evidence": {
+        "artifact_hash": "eb9c3bfd5349c583a244db95bcf2298bc7f396ad74a3ad6b951e7810eb8a4a45",
+        "environment": "mini-browser-v1:f207998b0d25fa3f1286f9256fa10b38ba3527fc533c6ea8d657d4d6531765f0:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+        "method": "Actual mouse/touch/keyboard; HUD and rendered-pixel observations. No clock, RNG, source or game-state modification. Full win/loss/replay routes.",
+        "report_sha256": "2e3f06c78ac911a2c3cbe2029406e213416b9da25e022481f1a10e3b719ec34e",
+        "adapter_sha256": "7a4d9352aafde1adc9e171335e73362c703d5896f23b14dcc484f26f797ae1b8",
+        "common_sha256": "80bee352f2b1465407daee485a5d428189257bcc78bbabbf21fa92b5d3387b00",
+        "results": [
+          {
+            "variant": "mobile",
+            "initial": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "first_input": {
+              "direction": "left",
+              "before": {
+                "steps": "40",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "4",
+                "note": "Доставьте письма и вернитесь к лодке.",
+                "phase": "В пути"
+              },
+              "after": {
+                "steps": "39",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "3",
+                "note": "Шаг по городку.",
+                "phase": "В пути"
+              }
+            },
+            "final": {
+              "steps": "14",
+              "letters": "3",
+              "tide": "Низкая",
+              "until": "2",
+              "note": "Лодка отчаливает — все письма доставлены!",
+              "phase": "Победа"
+            },
+            "reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "rapid": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "resumed": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "loss": {
+              "steps": "0",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Ходы закончились. Попробуйте снова.",
+              "phase": "Поражение"
+            },
+            "loss_reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "loss_and_replay": true,
+            "resize_preserves_progress": true,
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 1
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 354,
+                  "height": 354,
+                  "box": {
+                    "x": 18,
+                    "y": 248.4375,
+                    "width": 354,
+                    "height": 354,
+                    "top": 248.4375,
+                    "right": 372,
+                    "bottom": 602.4375,
+                    "left": 18
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 75.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 128.5,
+                    "bottom": 815,
+                    "left": 75.5
+                  }
+                },
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 137.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 190.5,
+                    "bottom": 815,
+                    "left": 137.5
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 199.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 252.5,
+                    "bottom": 815,
+                    "left": 199.5
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 261.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 314.5,
+                    "bottom": 815,
+                    "left": 261.5
+                  }
+                }
+              ]
+            },
+            "motion_distinct_target_x": 19,
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.400000000000091,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-welcome.jpg",
+                "sha256": "b2267622c367f70e86ae3f2dd69e75cebfee0bee77b3623cdafe39c190fada58"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-initial.jpg",
+                "sha256": "3104a232a8cf33c771cb60d02dc22dfb914b6eed06a91bd7a1025c2cb358d009"
+              },
+              "after-motion": {
+                "file": "independent-presentation-mobile-after-motion.jpg",
+                "sha256": "4818dc3941bda12fbcbb8976626cbd03cdfdc1b55a724ba23538b0ea21042c6e"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-win.jpg",
+                "sha256": "2bc02518fd1dde260bc4776d3602afdec78c851e152cf155a2124ded2f9df6c0"
+              }
+            },
+            "drift": {
+              "outside_endpoint_bounds": 7,
+              "x_range": [
+                51.5,
+                137.43820224719101
+              ],
+              "y_range": [
+                9.695652173913043,
+                181.12941176470588
+              ],
+              "after": {
+                "steps": "34",
+                "letters": "0",
+                "tide": "Высокая",
+                "until": "2",
+                "note": "Течение снесло на мостки: −2 хода!",
+                "phase": "В пути"
+              }
+            }
+          },
+          {
+            "variant": "desktop",
+            "initial": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "first_input": {
+              "direction": "left",
+              "before": {
+                "steps": "40",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "4",
+                "note": "Доставьте письма и вернитесь к лодке.",
+                "phase": "В пути"
+              },
+              "after": {
+                "steps": "39",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "3",
+                "note": "Шаг по городку.",
+                "phase": "В пути"
+              }
+            },
+            "final": {
+              "steps": "14",
+              "letters": "3",
+              "tide": "Низкая",
+              "until": "2",
+              "note": "Лодка отчаливает — все письма доставлены!",
+              "phase": "Победа"
+            },
+            "reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "rapid": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "resumed": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "loss": {
+              "steps": "0",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Ходы закончились. Попробуйте снова.",
+              "phase": "Поражение"
+            },
+            "loss_reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "loss_and_replay": true,
+            "resize_preserves_progress": true,
+            "geometry": {
+              "viewport": {
+                "width": 1280,
+                "height": 800,
+                "dpr": 1
+              },
+              "document": {
+                "width": 1280,
+                "height": 800
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 566,
+                  "height": 566,
+                  "box": {
+                    "x": 356.84375,
+                    "y": 117.6875,
+                    "width": 566.3125,
+                    "height": 566.3125,
+                    "top": 117.6875,
+                    "right": 923.15625,
+                    "bottom": 684,
+                    "left": 356.84375
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 520.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 573.5,
+                    "bottom": 769,
+                    "left": 520.5
+                  }
+                },
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 582.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 635.5,
+                    "bottom": 769,
+                    "left": 582.5
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 644.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 697.5,
+                    "bottom": 769,
+                    "left": 644.5
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 706.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 759.5,
+                    "bottom": 769,
+                    "left": 706.5
+                  }
+                }
+              ]
+            },
+            "motion_distinct_target_x": 21,
+            "observer_cadence_ms": {
+              "samples": 109,
+              "median": 8.299999999999955,
+              "max": 10.599999999999909,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-desktop-welcome.jpg",
+                "sha256": "57bc2922145ae0a89e795f06d81b8b0abe2fd0db69985e4fb701e3e8404c62ca"
+              },
+              "initial": {
+                "file": "independent-presentation-desktop-initial.jpg",
+                "sha256": "c2721de4c190f825a28c0dc26af109dd74c26363ccbe0bba34ea2f8b2f888950"
+              },
+              "after-motion": {
+                "file": "independent-presentation-desktop-after-motion.jpg",
+                "sha256": "64a60275f2e76eb068ca9b89f3f32d80ae224ff8aea0380ab87acc90fa4eb9c8"
+              },
+              "win": {
+                "file": "independent-presentation-desktop-win.jpg",
+                "sha256": "50dd5be0182d2bf77e30308d3f40963703df53ba6413e86bafd3e7cf0b660bfd"
+              }
+            },
+            "drift": {
+              "outside_endpoint_bounds": 7,
+              "x_range": [
+                81.51282051282051,
+                219.51054852320675
+              ],
+              "y_range": [
+                13.863247863247864,
+                289.8270042194093
+              ],
+              "after": {
+                "steps": "34",
+                "letters": "0",
+                "tide": "Высокая",
+                "until": "2",
+                "note": "Течение снесло на мостки: −2 хода!",
+                "phase": "В пути"
+              }
+            }
+          },
+          {
+            "variant": "mobile-reduced-dpr2",
+            "initial": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "first_input": {
+              "direction": "left",
+              "before": {
+                "steps": "40",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "4",
+                "note": "Доставьте письма и вернитесь к лодке.",
+                "phase": "В пути"
+              },
+              "after": {
+                "steps": "39",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "3",
+                "note": "Шаг по городку.",
+                "phase": "В пути"
+              }
+            },
+            "final": {
+              "steps": "14",
+              "letters": "3",
+              "tide": "Низкая",
+              "until": "2",
+              "note": "Лодка отчаливает — все письма доставлены!",
+              "phase": "Победа"
+            },
+            "reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "rapid": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "resumed": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "loss": {
+              "steps": "0",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Ходы закончились. Попробуйте снова.",
+              "phase": "Поражение"
+            },
+            "loss_reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "loss_and_replay": true,
+            "resize_preserves_progress": true,
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 2
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 708,
+                  "height": 708,
+                  "box": {
+                    "x": 18,
+                    "y": 248.4375,
+                    "width": 354,
+                    "height": 354,
+                    "top": 248.4375,
+                    "right": 372,
+                    "bottom": 602.4375,
+                    "left": 18
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 75.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 128.5,
+                    "bottom": 815,
+                    "left": 75.5
+                  }
+                },
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 137.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 190.5,
+                    "bottom": 815,
+                    "left": 137.5
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 199.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 252.5,
+                    "bottom": 815,
+                    "left": 199.5
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 261.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 314.5,
+                    "bottom": 815,
+                    "left": 261.5
+                  }
+                }
+              ]
+            },
+            "motion_distinct_target_x": 2,
+            "observer_cadence_ms": {
+              "samples": 109,
+              "median": 8.300000000000011,
+              "max": 9.100000000000136,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-reduced-dpr2-welcome.jpg",
+                "sha256": "8557e4e9b62681a649cd0ceb43093a54a7c65fd723c2e09867f24b0ce7d97ba4"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-reduced-dpr2-initial.jpg",
+                "sha256": "df47c410d5f45c117b2d9ff235fd1f226e9d508f9f674a45d63e795871e5e6f4"
+              },
+              "after-motion": {
+                "file": "independent-presentation-mobile-reduced-dpr2-after-motion.jpg",
+                "sha256": "d3846d1f4fe9a07a116e384eeeec3f9066597e299a9c33cd857809b53a59261d"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-reduced-dpr2-win.jpg",
+                "sha256": "f48129d18166491346083652c94855ce5f2aa2b404d1421ecf49dc8bbb649184"
+              }
+            },
+            "drift": {
+              "outside_endpoint_bounds": 0,
+              "x_range": [
+                196.03015075376885,
+                274.9514066496164
+              ],
+              "y_range": [
+                284.0854271356784,
+                362.61636828644504
+              ],
+              "after": {
+                "steps": "34",
+                "letters": "0",
+                "tide": "Высокая",
+                "until": "2",
+                "note": "Течение снесло на мостки: −2 хода!",
+                "phase": "В пути"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case": "memory",
+      "profile": "compact",
+      "run": {
+        "id": "7da1632a-927a-403f-9a3a-a074ee5cd662",
+        "status": "succeeded",
+        "attempts": 2,
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "created_at": "2026-10-26T13:59:04.552434+00:00",
+        "finished_at": "2026-10-26T14:01:23.435304+00:00",
+        "candidate_revision_id": "e94eae72-1470-4a42-ad9d-c9e738ede27b",
+        "result_revision_id": "e94eae72-1470-4a42-ad9d-c9e738ede27b"
+      },
+      "independent_evidence": {
+        "artifact_hash": "77472e76420db9604fae38b9b0bfb6ac41244037f789f38b6c76038cb218000a",
+        "environment": "mini-browser-v1:97ff5e507cb2fbe21424c07639bb690a4c738492e94d3019a6ae84bd84af2051:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+        "method": "Actual mouse/touch input; pair search uses match counters only, no hidden deck access. Read-only target-color pixels sampled during card flip. No source/state/clock/RNG mutation.",
+        "report_sha256": "f9eb14155acf563d2ee5d06c2d9e6a0ea2a4f1dd0696f27e9e6e1ddbf675d098",
+        "adapter_sha256": "1da12708ae17e0d39e2090baa5258b38b849f248e7f47037e932329558b2f813",
+        "common_sha256": "80bee352f2b1465407daee485a5d428189257bcc78bbabbf21fa92b5d3387b00",
+        "results": [
+          {
+            "variant": "mobile",
+            "initial": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "one": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "two": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_third": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_mismatch": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 1
+            },
+            "final": {
+              "phase": "won",
+              "matched": 4,
+              "openCount": 0,
+              "turns": 4
+            },
+            "reset": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "resumed": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 16,
+            "motion_pixel_count_range": [
+              0,
+              14912
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.300000000000182,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 1
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 374,
+                  "height": 598,
+                  "box": {
+                    "x": 8,
+                    "y": 90.796875,
+                    "width": 374,
+                    "height": 598.390625,
+                    "top": 90.796875,
+                    "right": 382,
+                    "bottom": 689.1875,
+                    "left": 8
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Начать / ещё",
+                  "id": "",
+                  "box": {
+                    "x": 129.15625,
+                    "y": 788,
+                    "width": 131.671875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 260.828125,
+                    "bottom": 836,
+                    "left": 129.15625
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-welcome.jpg",
+                "sha256": "affe2ff1ff1b0adae5a74ed6715762165cd2f6cddf424c1ad427d07a42e80cad"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-initial.jpg",
+                "sha256": "e17dec12c92914dfef373bcf014ca78f15fb3e0497ddcfc3c397056f050e0bf6"
+              },
+              "one-open": {
+                "file": "independent-presentation-mobile-one-open.jpg",
+                "sha256": "be0e4072fd38110651ad99535288dedff7fdb00f9efb36ec9b8cd92d3bd6b64a"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-win.jpg",
+                "sha256": "29d29321dbea897d897df6cbb8b007989cdffde4b7d054f6728ead5cbbee8599"
+              }
+            }
+          },
+          {
+            "variant": "desktop",
+            "initial": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "one": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "two": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_third": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_mismatch": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 1
+            },
+            "final": {
+              "phase": "won",
+              "matched": 4,
+              "openCount": 0,
+              "turns": 4
+            },
+            "reset": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "resumed": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 16,
+            "motion_pixel_count_range": [
+              0,
+              21858
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.299999999999955,
+              "max": 9.400000000000091,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 1280,
+                "height": 800,
+                "dpr": 1
+              },
+              "document": {
+                "width": 1280,
+                "height": 800
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 450,
+                  "height": 720,
+                  "box": {
+                    "x": 415,
+                    "y": 8,
+                    "width": 450,
+                    "height": 720,
+                    "top": 8,
+                    "right": 865,
+                    "bottom": 728,
+                    "left": 415
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Начать / ещё",
+                  "id": "",
+                  "box": {
+                    "x": 574.15625,
+                    "y": 744,
+                    "width": 131.671875,
+                    "height": 48,
+                    "top": 744,
+                    "right": 705.828125,
+                    "bottom": 792,
+                    "left": 574.15625
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-desktop-welcome.jpg",
+                "sha256": "3664c7c03d181024d0f1cd18c74b11bfd070eadcebd63df88e883180ff01ee58"
+              },
+              "initial": {
+                "file": "independent-presentation-desktop-initial.jpg",
+                "sha256": "f9185be6a61886860836e027bf75179ac20cfcff6e7b2f48ff46f2a284d98432"
+              },
+              "one-open": {
+                "file": "independent-presentation-desktop-one-open.jpg",
+                "sha256": "88c40102540ef607097a16720bb65a94f3c9389e0c995bbf8aaf0e4f65130c6d"
+              },
+              "win": {
+                "file": "independent-presentation-desktop-win.jpg",
+                "sha256": "48af08d639a5857c04dfa3ec9f84b46a3374cd0a05d4bea776e514f9535210ab"
+              }
+            }
+          },
+          {
+            "variant": "mobile-reduced-dpr2",
+            "initial": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "one": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "two": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_third": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_mismatch": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 1
+            },
+            "final": {
+              "phase": "won",
+              "matched": 4,
+              "openCount": 0,
+              "turns": 4
+            },
+            "reset": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "resumed": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 2,
+            "motion_pixel_count_range": [
+              0,
+              61277
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.200000000000045,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 2
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 748,
+                  "height": 1197,
+                  "box": {
+                    "x": 8,
+                    "y": 90.796875,
+                    "width": 374,
+                    "height": 598.390625,
+                    "top": 90.796875,
+                    "right": 382,
+                    "bottom": 689.1875,
+                    "left": 8
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Начать / ещё",
+                  "id": "",
+                  "box": {
+                    "x": 129.15625,
+                    "y": 788,
+                    "width": 131.671875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 260.828125,
+                    "bottom": 836,
+                    "left": 129.15625
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-reduced-dpr2-welcome.jpg",
+                "sha256": "633c02772fa6841e0df9964d2a4be4fa4bdfd3ac2bc4502ba96dbb6dbf9a3766"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-reduced-dpr2-initial.jpg",
+                "sha256": "5553a9f22038393e22b4aafbc452388d18a0ad5adbdcca49e299207a1647a686"
+              },
+              "one-open": {
+                "file": "independent-presentation-mobile-reduced-dpr2-one-open.jpg",
+                "sha256": "fc6ac87978160038ef45567109df58cf17ce0a6dd090df29c389b5a5dfb3c32e"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-reduced-dpr2-win.jpg",
+                "sha256": "892836a1250740671604739d8333daf9cc632ef9f1ecaf9ba4a7149790c1255b"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "pro_baseline_decisions": [
+    {
+      "case": "adventure",
+      "kind": "full-r1",
+      "run_id": "8770bcdb-5027-4a6d-9a85-6856ab833f95",
+      "status": "succeeded",
+      "verdict": "playable",
+      "revision_verdicts": {
+        "fb7d27c5-5ad9-42a0-8695-0376c3007bc0": "playable"
+      },
+      "calls": 2,
+      "reserved_ceiling": 2,
+      "inherited_candidate": false,
+      "first_candidate_seconds": 237.22368597984314,
+      "decision_seconds": 240.80510187149048,
+      "first_playable_seconds": 237.22368597984314,
+      "calls_after_playable": 0
+    },
+    {
+      "case": "memory",
+      "kind": "compact-r1",
+      "run_id": "7da1632a-927a-403f-9a3a-a074ee5cd662",
+      "status": "succeeded",
+      "verdict": "playable",
+      "revision_verdicts": {
+        "e94eae72-1470-4a42-ad9d-c9e738ede27b": "playable"
+      },
+      "calls": 2,
+      "reserved_ceiling": 2,
+      "inherited_candidate": false,
+      "first_candidate_seconds": 134.5312740802765,
+      "decision_seconds": 138.88286995887756,
+      "first_playable_seconds": 134.5312740802765,
+      "calls_after_playable": 0
+    }
+  ],
+  "delivery_source_sha256": {
+    "gameforge/__init__.py": "8974a9c493587f508e73f358876ade4f3ab0369012b29ffb14280dbe30f721ce",
+    "gameforge/celery.py": "296d774f24c1582fb7b02e76280d630fe6fdff1c558fb78cf54258208bca766b",
+    "gameforge/preview_settings.py": "a3d81aa446013e1808d17d629b1ff0cf8cfed787f64267ed948025cf2c08050c",
+    "gameforge/preview_urls.py": "65828ceb754302488bef3e89b29a2d4f1666096a237448806c90cddce26f66a4",
+    "gameforge/settings.py": "ed25bbf2abee19bbd91b423a29ba727abecb2703b7aa4861bfd9c53cfe4ad1af",
+    "gameforge/urls.py": "3591df0a05cf999625ad997dd0415dc4dc37ae772041cb0a76e0072ed547a0c9",
+    "gameforge/wsgi.py": "a03e229b602d603f73c8363f92f952b645977b005d21ad5aa8adcfeee655e58e",
+    "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+    "generation/artifacts.py": "1254bf99dc1956c5f4cb4845897063ba96e8fc2f5a33ca93e7d8cfea2ff09681",
+    "generation/audiences.py": "4e67b3aec06107f1d728c82e4a9762bf65d05fde7383c6c50f7bf19808fc1099",
+    "generation/check_repair.py": "bc775cd697342b353f160ff39288c19dbf846b7b64cb864516fc4266a3fc1dfe",
+    "generation/code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+    "generation/compact.py": "289d275ced875771b47c9508fd6c7228067a99d527110a6b649e5daffe613908",
+    "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+    "generation/experience.py": "9d9e00fa36c6f58edf29207dda79dd29582468028f282fa5dbd65ce67ed013ee",
+    "generation/feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+    "generation/feedback_image.py": "dabff2ed5bf85edfe26105b62597d3a67c117f3793f2f7ee9139edc873791609",
+    "generation/helpers.py": "221a7b812ee3b594bc899cf305a4a9d86b13f4b01eb7e0ad4550b0b0c8b9bd65",
+    "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+    "generation/patch_repair.py": "71ba0da7775322926cf32f3bff594e2585c7850f7e7521a3a25610520f6599c3",
+    "generation/planning.py": "d0b94dda91e7142e2f670801cf29e4af874b8c185f8f61f45b8410bba4341e96",
+    "generation/preference_extraction.py": "d8f8af76d3b6b0c03daa1946eb836cd425a2f48da1570f4137dab24beaa2a733",
+    "generation/presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+    "generation/preview.py": "333c78ce119a4a80374e3ed902dd8b45aebd0dad8111090754f7f1a138d93890",
+    "generation/prompts.py": "e141b0bfa4c560fc0ddb54185f78f5fba4edc4eb1bbbb4e48cdf6917e3dad0af",
+    "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+    "generation/providers/codex.py": "8f5131c4e64a7c3816ed0f80e488ac23065aa416c3f408535fe07abaf51c34e3",
+    "generation/providers/codex_api.py": "845be070335a3999e9b268d6a452de1d986c995bbe90b41475b3a91d8dc2d3cd",
+    "generation/providers/fake.py": "66cd1c759527213ee71e9486eb83f47bdd5be6d8ff918b70d43f8770d9c49590",
+    "generation/providers/relay.py": "c1054f4b873be1d6db64ec9ff930a02aaa3fdea843ec62f79e2714bdd74bc3bd",
+    "generation/providers/vllm.py": "1ac02553528ce9fa4dec8e644acc0908b958ac91d421d7be328e47f539124427",
+    "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+    "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+    "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+    "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+    "generation/requirements.py": "8111d65d87a40faffc7495d894c910d4338cfa324bfe5906d10944eefc1f5ba2",
+    "generation/runtime/compact-v2.css": "8f3c4738b6d47e18574d15717510aeb019c738676594a4d5444cd09abaab75ae",
+    "generation/runtime/compact-v2.js": "51c715b475aa082ff5165ca6d2a3199adca267e539eee78ed76174055b08b2b0",
+    "generation/runtime/experience-v1.js": "d63f526258f365b1e775cfe53eccb130344a20302ac11dd73bc4b56d563b1624",
+    "generation/runtime/motion-v1.js": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11",
+    "generation/runtime/preview_audio.js": "d5f8515fda53154d389b8126e4846383fd395e167373c78cc850cf824f5db04e",
+    "generation/schema.py": "caa1f38ce813eb0d1b17cd665d4b21dc20672f0f9cfee97aafb114290f63cd15",
+    "generation/service.py": "09b355ceffb38df00be82572c4c1fd4ceb923130d9893ad2adf40ac565c7194e",
+    "generation/source_map.py": "6475586bd819a057fb7c7080d37328137354cc0a1eabfd3f0c6407bf227d2ec5",
+    "generation/source_policy.py": "abdf8ddef3d31787398dd42942523918ccea9022b83ca90e5a29a75f4c3ea201",
+    "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+    "generation/visual.py": "91100a1d6e0b1d0739c4d9742cd61f93d86448382d7d30a9dca080ec94142aaf",
+    "scripts/evaluation.py": "0cbfc027cce1e93f3a3d397f4dcea786381868305fa79c90608109c0898db2a1",
+    "scripts/live_eval.py": "a373b8c53061e1762a119ca2a63ba7422911a6703cdcb762f2f4d9984284622b",
+    "studio/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "studio/acceptance.py": "21198c51b78c0bf83f8fcfa09c2363ac4ee5d35aaf61c36e100bd67ec49e2df6",
+    "studio/admin.py": "7aed6780229fa906855b17ddec8dba3eec7a30de2dc61ac99663c50e9ad01179",
+    "studio/apps.py": "3b799f88cee5f25cd0ed00f7e715facd8c560c54dc7a84b27268f12d6e238cdd",
+    "studio/auth.py": "156171851964cb56c0fcf1cb86f2c6d4ea5e19d7e743be20521ca08ab73d8c8b",
+    "studio/capacity.py": "7946ae41f8f3d45a610e426001a4f1c5fb718a3f12ca2495c672eafc9d492224",
+    "studio/check_repair.py": "e4b76235d52c15ba432fae4508a32afb82b4f937b6bf3fb7d661a4faf702afbc",
+    "studio/checks_create.py": "d535bf4111f4887c3f056a1cb480c93f2556d299ac5fb85b1a106437458571ce",
+    "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+    "studio/feedback.py": "48b3602a87033f2acc1e931623f07f643de7675c63b31c12e22c46b084e7fe9d",
+    "studio/feedback_tasks.py": "cda7c0cb534eef88cc8af042238d26f5cc2e7cbde5f4aa667009e1fbfdb330ab",
+    "studio/management/commands/bootstrap.py": "2ffcd1150dc8489588815819f6672368a699f95bf781e1347209bde2bd14f5c5",
+    "studio/management/commands/diagnose_invocation.py": "0a7a3eb727ec0236cbcdc9d23259d3b3293f373588b6f4769cd6daff38959539",
+    "studio/management/commands/export_codex_catalog.py": "a7254b097d4b1463d2cfcd5d520ade94381e1ae2404bc0c4a13ea1b634400cff",
+    "studio/management/commands/reconcile_invocation.py": "37424c2c10ffa44d23519a45da1bc644bfebeae53851fbe7818cdf344fb0f470",
+    "studio/management/commands/recover_saved_response.py": "488f62a3d2140e17f595e9fe688a4acaebbda3f3a535c1c11d8c5004c4e22d91",
+    "studio/management/commands/refresh_codex_api_catalog.py": "10c07ccf00e5527c39abeaee2531efb7822287bdf3631ebc5d0a590b2ffcfde9",
+    "studio/management/commands/retire_games.py": "9509f57c347ba7ea15b98ea14ffaf58e03750ea02564907d243da5547c8c8d8c",
+    "studio/migrations/0001_initial.py": "122d5fbe3bae50e8bb788a5f20d691c77ac1ece29d942ca86d70e4b52602f060",
+    "studio/migrations/0002_run_private_diagnostics.py": "305943c6660a35fae17badad3c938915263ccda7ef51c802462e253f0b6e08d4",
+    "studio/migrations/0003_checkreport_validation_run.py": "5a314036637178f07bfae4d0b22a11900431b794fdcb5fb4ecba2745e11d16db",
+    "studio/migrations/0004_invocation_provider_metadata.py": "4f8fff4fd09a93c0cceea09f03671e4a62c1946a804aef2e8e3826f5f93e01ea",
+    "studio/migrations/0005_saved_response_recovery.py": "0904f5eebb3bd693caf634cc0bbce8d6374a6772510777d9c7917b445428a2e6",
+    "studio/migrations/0006_run_repair_limit.py": "9c02de32fcf1bc8e921f11520ebd33c5c759105aaddeb9c3b72ecd44a4256317",
+    "studio/migrations/0007_model_profiles.py": "d13fa89bee52a6cba2f2be8b2ffdbd0f091b26624efe3b0c2999ef3495951c50",
+    "studio/migrations/0008_completion_policy.py": "aa031946521cf4e3aa7bb4c3f4fa82c965f744e70fa18b217cd03abc228259f1",
+    "studio/migrations/0009_run_call_budget.py": "25c1fabc819b83cc298e7002bbdf9273e208956e677023b3aa4ebc0adb070ef5",
+    "studio/migrations/0010_check_review_required.py": "1765ffe86596a1ba814667b66529262f474cddff83c25a3b704877d3570e4b6e",
+    "studio/migrations/0011_chat_titles.py": "01b3ab3ea4f7986549ed44261c656860fcb2a033bc848bfbd64f78c0677118a0",
+    "studio/migrations/0011_explicit_edit_source.py": "4fd78aca2eb2f1b5ece8aea6ef6e5a65e8b9229e5eef2858d24f3f704cb22a39",
+    "studio/migrations/0012_compact_generation_profile.py": "524f31820d16865d7f8a98cee83bbb0e1d9cdc4dbf1edc555917889f737df563",
+    "studio/migrations/0013_merge_titles_and_compact.py": "9e3407c339bb36c94a9a68475f239ec99d0eb2c20d6076cab5b97b28c8950173",
+    "studio/migrations/0014_generation_strategy.py": "50ba4ac5670d58d2866b8cfa641e99755bdb113266959861bfa61184679df389",
+    "studio/migrations/0015_revision_requirement_manifest_run_policy_snapshot_and_more.py": "4675c14d8ea696595305d4f3f0af84f89f7cb8c20ec189531f9038db88a2bc21",
+    "studio/migrations/0016_checkreport_visual_evidence_revision_helper_manifest_and_more.py": "581d766c431cbd772dcf3951efdcbb21cf0ddead0ec7ce7a65b667e19dc65ce4",
+    "studio/migrations/0017_publication_unavailable_at_and_more.py": "1d724e4cc073c2dcda8233dc106d4311e6026e3d8954daa882e674198788311c",
+    "studio/migrations/0018_personal_templates.py": "df7197c92e47e9b35d5f92fdf85e58aae91922ad181e728ef12360c7fb3f560e",
+    "studio/migrations/0019_remove_preference_suggest_templates.py": "7750251410a8a43c7c926685003a0f63b48a385d48e5bc85619f153a09f3c5ae",
+    "studio/migrations/0020_template_title_60.py": "e077b0dd507ace799128d053d82c2784e5ddc039e669dd8be3d334643cec21bc",
+    "studio/migrations/0021_pro_default.py": "d9685569ab92fde4c176bfcd62084dd2ccab751aa5381799c71c90ed4ab9f7bf",
+    "studio/migrations/0022_feedback_preferences.py": "6acae1020e963749c14e7ff352a7f24ed53435f05c0ea7ead2641ecbf98dc877",
+    "studio/migrations/0023_independent_validation_tasks.py": "887132ab76ff7235785828c1c72b021d22d10686991bb01ec117401a22412c38",
+    "studio/migrations/0024_validation_run_fence.py": "42c8879be6ca6e717ce02748e41d105967a975d30d65c751e53552b93cc43d91",
+    "studio/migrations/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "studio/model_profiles.py": "1cbbe3bb4c4df11f8c2767d5b6696598bba3d29b7312852825531bc28a82e2c8",
+    "studio/models.py": "a4365ac12940b7636a284dec21359e3978fe470bef2b94b5cb50a77f94c04e46",
+    "studio/patch_repair.py": "019ad85b44a742331432b44a1529eae76dc102f171dc11d2c7802453cec9f2dd",
+    "studio/preferences.py": "f2dc795a9f47fb07c8030595c41472fa937186499534bbf1a15c2d6bbd196906",
+    "studio/recovery.py": "daae00c0bec95ed6cb494479dad3a70544e31dfc1aeca298a771b0b797abfe78",
+    "studio/replies.py": "23c6625e1e19e27a24d4fcf77067985fcad0b6747397fe6e2f9e278e6efe804a",
+    "studio/serialization.py": "18cee2964b27b519de11dccda22dfc5f5e13b7de4aefbed58fdafaf267a57254",
+    "studio/services.py": "3138fb4245b6660b6aba0232b8e12998f41a2bf5903937f3f3e0340a70635ece",
+    "studio/tasks.py": "11df66d26bdc59dd2299967722855293d00d466e49c28d3b02969bae26224cca",
+    "studio/template_views.py": "a54eb9d37b62059812ea3e6454c81501983722325414fe79e7ffb963c3e54a94",
+    "studio/titles.py": "942c2883af4ce502e080ca97dbe5dfe0d4592f55924069da126adfb38085fdc8",
+    "studio/validation_tasks.py": "1ab15335fdeed67012e807d0e31611ab185aef13ba080710088ecf6375378ee6",
+    "studio/views.py": "a6a40e123c5f4bead002298716127ba8769ddd4135aee1bba711b14695328210",
+    "studio/visual.py": "d28641a00cd66fab448838c176df3c437342364cf2cbba48d910311708c1548a",
+    "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+    "validation/check_program.py": "109cd1555075882993511cba52d160ab04989ce00585acaf7c7658fb0fec7a2b",
+    "validation/checks.py": "aab4b7dded7d87eed462b4b5d67de87880e17c7047c1ffbcc772ec7855a03fef",
+    "validation/contracts.py": "f2c1a860d5f37e9b5dd79268ecda05722283e2044f8443bbd2f2b3e3ce9147c7",
+    "validation/criteria.py": "c1462548e1a35283700c89eb30f10a59c24ae7b0ca4da4aa9001207e99a9a7fe",
+    "validation/daemon.py": "36a28bb3cf62a407a7057b1976c10cf942c04c41ee8ce7e0127e29c501f73af0",
+    "validation/diagnostics.py": "022860ab562c397bcc10f7012d71a984b06e504492faea54c7873336cae7772e",
+    "validation/evidence.py": "1f547d2a91650ea0ed97c629df5cdb2e05585d1c12dd023fbdeaf16947467471",
+    "validation/native.py": "b1ad6c5d4e131953273be65ea3eafc3b763d2c6589271e431d43b135a9b75d42",
+    "validation/protocol.py": "eacf983eb63e8bab002c93ce704a88e64ad24cec4363f7d8856052aed6cc29b4",
+    "validation/runner.py": "7b0ffe60a1eff8a76569c7f82b5bd4fecf90da896f3ea101a834f2d30f235143",
+    "validation/service.py": "82deb5833d5f7ec5a9801af8a0a705511359cced353770b1fad63ead1b9b8f2c",
+    "validation/suites.py": "37661811928926fdd990251e7842c6f7f90af811ba2730ede5fb3a8a07445b71",
+    "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd",
+    "validation/visual.py": "ef11f4ee619a334c8f6a3baf1174bebfbbc0dc0c70b483c9021e873ff72af871",
+    "web/src/AccountMenu.tsx": "9ad1ccb9d9e6140c0e1c3f0117a5ae44a19acfbd6f824139b10664429e3a6f39",
+    "web/src/ActionMenu.tsx": "9a8505d1c3a197bc8cc47709b252e8e6466b75d2c1108f458198c5d145f31272",
+    "web/src/App.test.tsx": "72b239cfe3210a091544aedace0c3cfc5575b3fcd3c304614c2753fa3f27422e",
+    "web/src/App.tsx": "e797ab24c3587015ac2341471f8e8996ac35c2ff2aa8003fe477b87dedc8831e",
+    "web/src/AudienceSelector.tsx": "258fce3e8a6f2e3d3ce7cb51d6db2eb0a8edde640db0aeae738ebccfe5bff4af",
+    "web/src/CharacterCount.tsx": "2200c9765af59f7efcf40024f17851f01bb44230f035b2f7cc29487d57699a49",
+    "web/src/ChatMenu.tsx": "279f592eddf64b77bd797be5dfe7f4c9e3948a585153cc34425dd0948fe865f4",
+    "web/src/ChatTitleSidebar.test.tsx": "9c6f15141b1f5ae0dae4cd4de246b1a04ff615e71e0685593e476e2e68a44ddc",
+    "web/src/Feed.test.tsx": "68527b67ca98afed32b2b7c55ebe054e1d525bf59694fc0b65774536362d3492",
+    "web/src/Feed.tsx": "8d92d33801e5eb2ecbdf416165cf006973a4162ab4adcff3d69e6279f0e383ca",
+    "web/src/Landing.tsx": "d34c59d8d95da5ef0b17d4229b1982aadf39ee761f02912bf26a48ca67caaa1d",
+    "web/src/Login.tsx": "76985c72ee3e5c5e895f4c892af7bbfdb651d9af37e1beb20df69e28d818b47f",
+    "web/src/ModelSelector.test.tsx": "6e13ba593605969841b6234658c383f580eef8b471339e03fc821efa3193d4ce",
+    "web/src/ModelSelector.tsx": "5450b0296b118dc7148f0d158156cd812c0b8f91a159528eecd45b2b0e89d95f",
+    "web/src/Preferences.test.tsx": "26e55d38369ae1583097bde950e569580cda8f660ef7afc593efd941deae3580",
+    "web/src/Preferences.tsx": "e2bf113ae43fab9623c2891ee6dc85a7ea4fa990ac3f29944ce11b28f4f19249",
+    "web/src/PublicGame.test.tsx": "72b38b566eb3098f55e3dfad2a6c26cda61a770bd796db83b9809921d04d2f01",
+    "web/src/PublicGame.tsx": "cd58216ca7d0fdb6fc40f607b461218f0722f4fd276bdc1d205d0e00bee1cc7b",
+    "web/src/RevisionPlayer.test.tsx": "dd641b044fc915eec036d4152413cac9ff32c50fe4674333ae69e0aea5c40d37",
+    "web/src/RevisionPlayer.tsx": "085ec89d30f7ea69ae5a4b83575a8d511dd07ea414c1097475b610db1389c8cd",
+    "web/src/RunMessage.test.tsx": "a4be9bc1c1f986a4118d9860402ef32b873fcb25aecb6d9d69b358566d3a6e80",
+    "web/src/RunMessage.tsx": "8f1a7f4a6eed120bd7f882d458d76b7946849d4c379723960951e8046da96a76",
+    "web/src/Studio.test.tsx": "8b429696d74acf05e22c4004c90a7a3472c2313bdd2871e28c139ffd307531bd",
+    "web/src/Studio.tsx": "95a6159843bfe3f729cf2c0a7561250ad2e024f6b417c920eef16141ee3828ff",
+    "web/src/TemplatePicker.tsx": "5777be950e8badc4895c2351aeeae34a9e01efad56acbd9bb5d42b05e02c3277",
+    "web/src/Templates.test.tsx": "7c5141317090c21dc28ba2cd315b934241d89a1c020f2b24cf1f31f2b3f7dbc2",
+    "web/src/Templates.tsx": "7ede085eca59004ab9c15400420821896ef77e8898f1ef78a9a063e0099498e3",
+    "web/src/ValidationControls.test.tsx": "d9096b56fcbe912d01a7bc3677155385c6bef6c2b270ec005ccd73941c0147a1",
+    "web/src/ValidationControls.tsx": "136a63bbc58dc1ba1aa573634d99081aa708826510adbe35048d7f4990259cc6",
+    "web/src/api.test.ts": "7bad5440c633aa238cc0ab6a99b3ca28585ff9fccbe2e9dc5a043c425706d183",
+    "web/src/api.ts": "62d8b1bec73d2ee6659fc0ccac6f9f190e35d9437c573361504bd37b158e6825",
+    "web/src/components.test.tsx": "c86ab16b78f462f9755df61e8c49e8892e9bad7e04a7adcefcfb65a9de15fc10",
+    "web/src/components.tsx": "01764212ea19c7788eb40d3226d212b4d771f7facc72ab7227616f139f84a76d",
+    "web/src/context.tsx": "4d05d410fef9da196e1aacfffbc62462946fbd04ee7bfd6dc55167d3715f0f89",
+    "web/src/main.tsx": "7b99d0aa434844ebb8ea1ba0ed4ec9ca3735d904a36b7d44cb01149466951d81",
+    "web/src/styles.scss": "26eedfd19defd3f9f753578ac40d03acea458ee92a2fb17f4f72cde7e893b503",
+    "web/src/test-setup.ts": "c4e33c89ae522d79faf5409c5f60b9df8da378fb1094f161d9b4b733e2a6aa98",
+    "web/src/textLimits.ts": "78de584f4ccdaa61beda94f7cc9316d2ac32782e92a019a0ca3e829745f233e4",
+    "web/src/theme.test.tsx": "beb2cb6600c0b567fd61f41c6b25b7fd303d91834c2b6686bbadf5d549387d94",
+    "web/src/theme.tsx": "b806cd24c0d51b809cfe27a9d28b84156a3cb5671592816e021f4d45e0c636cd",
+    "web/src/types.ts": "da982885e0afa9f99f18dff9a91475d48e8295a2057e3f6a15cff6feb9373129",
+    "web/src/useSavedChat.test.tsx": "471fb4a4d7e810f3be793c9e56e5b804b34bc6a4d77042493e70c4fb7c4bb0ba",
+    "web/src/useSavedChat.ts": "c5f8d16d0dbba3f8147921770d4ffa90ed89c047af61a47e30871b3d1a23764f",
+    "web/src/useSoundPreference.test.ts": "6e0f6a32143b63ea73ec5a07e228d104e03490efa210e263d7cd2073453093b7",
+    "web/src/useSoundPreference.ts": "a95ee28d58d51b5e54ecdcaec159c49d0c6bf954c4b0f27f958eaf98776236d7",
+    "web/src/webview.test.tsx": "da8569ffdef9c18ea49163ea0bc0f868508822f513db7ef576ab7e3d81dd9581",
+    "web/src/webview.ts": "f87f92e5301d9e770ff373281ad4180c4ffa62d571e2b6e6f9a7f7790936e461"
+  },
+  "post_pilot_fixes": [
+    "Unchanged fragment correction clears proposed assets",
+    "Exact app-owned resources do not consume the 20 game-file budget",
+    "Physical key codes preserve logical key event values",
+    "Invalid draw arguments/asset IDs fail with a concrete error instead of hiding graphics"
+  ],
+  "offline_verification": {
+    "backend_passed": 1089,
+    "frontend_passed": 147,
+    "media_targeted_passed": 42,
+    "ruff": "passed",
+    "mypy": "6 modules passed",
+    "frontend_lint": "passed",
+    "frontend_build": "passed",
+    "browser_timeout_repeated_successfully": true,
+    "browser_timeout_repeat_seconds": 5.42
+  },
+  "independent_playable": 1,
+  "automatically_completed": 0,
+  "total_games": 4
+}

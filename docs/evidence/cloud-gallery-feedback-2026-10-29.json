@@ -1,0 +1,293 @@
+{
+  "date": "2026-10-29",
+  "host": "212.57.126.215",
+  "revision": "c9cb7e56481478a0cb6682a0c3337f09d1581dc9",
+  "previous_revision": "ba680b82d0318e89e5e8ea84cf4ee3e03d07438c",
+  "source_archive_sha256": "e9a3450020a661a6089395dfc2c6234ce25183e65325b45b84cd7d26db92f4a9",
+  "server": {
+    "revision": "c9cb7e56481478a0cb6682a0c3337f09d1581dc9",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 32,
+      "CheckReport": 21,
+      "Feedback": 3,
+      "FeedbackProcessing": 1,
+      "Invocation": 141,
+      "Like": 2,
+      "Message": 142,
+      "Outbox": 73,
+      "Preference": 3,
+      "PromptTemplate": 3,
+      "Publication": 2,
+      "Revision": 18,
+      "Run": 73,
+      "RunEvent": 746,
+      "User": 4,
+      "ValidationRequest": 2,
+      "ValidationTask": 2
+    },
+    "all_other_existing_records_preserved": true,
+    "approved_preference_correction": {
+      "user": "tester2",
+      "preference_id": "2",
+      "before_hash": "c750111d90449c3acb99a5fbf973a13beee1a5baa3ee3757aab007c9d7d6aef7",
+      "after_hash": "854dc4c90224f77b0b43734cae426747062d809c6e7e96ef761bd663049bdfef",
+      "added_note": "Поддержка горизонтального положения телефона.",
+      "previous_notes_preserved": true,
+      "original_review_and_model_receipt_preserved": true,
+      "model_calls": 0
+    },
+    "unknown_preserved": 5,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_application_image": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:4cc4fbab85e919da9d7a9d48f7380223d2dc73bded350ff716d46f968aabe74a",
+        "image_tag": "gameforge-mini:cloud-c9cb7e5-20261029"
+      },
+      "preview": {
+        "image_id": "sha256:4cc4fbab85e919da9d7a9d48f7380223d2dc73bded350ff716d46f968aabe74a",
+        "image_tag": "gameforge-mini:cloud-c9cb7e5-20261029"
+      },
+      "worker": {
+        "image_id": "sha256:4cc4fbab85e919da9d7a9d48f7380223d2dc73bded350ff716d46f968aabe74a",
+        "image_tag": "gameforge-mini:cloud-c9cb7e5-20261029"
+      },
+      "beat": {
+        "image_id": "sha256:4cc4fbab85e919da9d7a9d48f7380223d2dc73bded350ff716d46f968aabe74a",
+        "image_tag": "gameforge-mini:cloud-c9cb7e5-20261029"
+      },
+      "validator": {
+        "image_id": "sha256:f4837905c0777a0ece5d6833d3dd6e5ed3e220ac8853374dfd4999870b3a125e",
+        "image_tag": "gameforge-mini-validator:cloud-ba680b8-20261029",
+        "unchanged": true
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-c9cb7e5-20261028T222857Z.dump",
+    "backup_sha256": "b8e73137f3ddf774ee8a9ef5c5e230ff53dae1a90a6f51c7d1c179b2abdd55e5",
+    "validator_isolation_verified": true,
+    "app_private_socket_read_only": true
+  },
+  "backend": {
+    "legacy_reviews_restored": 2,
+    "full_review_roundtrip": true,
+    "settings_model_snapshotted": [
+      "pro",
+      "lite"
+    ],
+    "save_does_not_call_model_or_broker": true,
+    "append_preserves_existing_notes": true,
+    "repeated_save_and_stars_no_duplicate_job": true,
+    "server_limit_3000": true,
+    "temporary_fixtures_rolled_back": true,
+    "persistent_record_counts_unchanged": true,
+    "simulated_model_calls": 2,
+    "real_model_calls": 0
+  },
+  "browser": {
+    "revision": "c9cb7e56481478a0cb6682a0c3337f09d1581dc9",
+    "https_verified": true,
+    "assets_exact": 22,
+    "viewports": [
+      {
+        "browser": "chromium",
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "theme": "light",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 844,
+        "height": 390,
+        "theme": "light",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 320,
+        "height": 568,
+        "theme": "dark",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 844,
+        "height": 390,
+        "theme": "dark",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "height": 1000,
+        "theme": "dark",
+        "whole_covers": true,
+        "no_hover_iframes": true,
+        "real_publications": 2,
+        "three_viewports_fit": true,
+        "frame_preserved": true,
+        "sound_and_escape": true,
+        "focus_restored": true,
+        "tester2_note_visible": true,
+        "preferences_unchanged_by_browser": true,
+        "page_errors": [],
+        "http_writes": [
+          "login",
+          "logout"
+        ]
+      }
+    ],
+    "http_mutations": "Existing tester login/logout only",
+    "model_calls": 0,
+    "physical_ios": false
+  },
+  "http": {
+    "https_verified": true,
+    "health_http": 200,
+    "assets_exact": 22,
+    "guest_private_api_denied": true,
+    "model_calls": 0,
+    "http_mutations": 0
+  },
+  "final_health": {
+    "run_count": 73,
+    "invocation_count": 141,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0024": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "c9cb7e56481478a0cb6682a0c3337f09d1581dc9",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "review_complete": true,
+  "cloud_screenshots_reviewed": true,
+  "real_model_calls": 0,
+  "limitations": [
+    "No new live-model preference extraction experiment.",
+    "No physical iPhone test.",
+    "Viewport modes do not repair responsiveness of existing game code."
+  ],
+  "separate_codex_worker_modified": false,
+  "gpu_host_accessed": false
+}

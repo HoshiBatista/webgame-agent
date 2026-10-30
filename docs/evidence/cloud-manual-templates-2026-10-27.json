@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-27",
+  "revision": "f9a2cad0f83c3ee4c699c7c41b16678882743b6b",
+  "change": "Manual template selection only; removed settings checkbox, automatic fetch/open state, API preference and database column via migration 0019. Existing templates and draft insertion preserved.",
+  "server": {
+    "revision": "f9a2cad0f83c3ee4c699c7c41b16678882743b6b",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 26,
+      "CheckReport": 1,
+      "Feedback": 0,
+      "Invocation": 109,
+      "Like": 0,
+      "Message": 108,
+      "Outbox": 56,
+      "Preference": 1,
+      "PromptTemplate": 3,
+      "Publication": 0,
+      "Revision": 1,
+      "Run": 56,
+      "RunEvent": 575,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged_except_removed_preference": true,
+    "unknown_preserved": 5,
+    "visible_chats": 1,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [
+      "0019_remove_preference_suggest_templates"
+    ],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:12fc747dfbab75dc50ea783e9ccdda91badea654c196fdd9af8784e53a3d70d7",
+        "image_tag": "gameforge-mini:cloud-f9a2cad-20261027"
+      },
+      "preview": {
+        "image_id": "sha256:12fc747dfbab75dc50ea783e9ccdda91badea654c196fdd9af8784e53a3d70d7",
+        "image_tag": "gameforge-mini:cloud-f9a2cad-20261027"
+      },
+      "worker": {
+        "image_id": "sha256:12fc747dfbab75dc50ea783e9ccdda91badea654c196fdd9af8784e53a3d70d7",
+        "image_tag": "gameforge-mini:cloud-f9a2cad-20261027"
+      },
+      "beat": {
+        "image_id": "sha256:12fc747dfbab75dc50ea783e9ccdda91badea654c196fdd9af8784e53a3d70d7",
+        "image_tag": "gameforge-mini:cloud-f9a2cad-20261027"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-f9a2cad-20261027T171448Z.dump",
+    "backup_sha256": "447f724cca9a3ae2dc00276f22afa3fe54be2e3f965c075eba39140487843540"
+  },
+  "browser": {
+    "revision": "f9a2cad0f83c3ee4c699c7c41b16678882743b6b",
+    "https_verified": true,
+    "html_and_assets_exact": true,
+    "asset_count": 6,
+    "health": "ok",
+    "guest_chats_and_templates_denied": true,
+    "browser": [
+      {
+        "width": 1440,
+        "templates_dialog": "passed",
+        "description_limit_3000": "passed",
+        "preferences": "passed",
+        "suggestion_checkbox_removed": true,
+        "no_automatic_template_request": true,
+        "manual_picker": "passed",
+        "pro_selectable": true,
+        "composer_enabled": "passed",
+        "horizontal_overflow": false
+      },
+      {
+        "width": 390,
+        "templates_dialog": "passed",
+        "description_limit_3000": "passed",
+        "preferences": "passed",
+        "suggestion_checkbox_removed": true,
+        "no_automatic_template_request": true,
+        "manual_picker": "passed",
+        "pro_selectable": true,
+        "composer_enabled": "passed",
+        "horizontal_overflow": false
+      }
+    ],
+    "login_logout": "passed",
+    "page_errors": [],
+    "mutations": [
+      "/api/login/",
+      "/api/logout/"
+    ],
+    "model_calls": 0,
+    "chats_created": 0
+  },
+  "checks": {
+    "backend_personal_content": 6,
+    "frontend": 122,
+    "production_build": "passed",
+    "frontend_lint": "passed",
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_drift": "none",
+    "review": "No blocking findings in removal, manual picker flow or migration preservation."
+  },
+  "local": {
+    "restarted": true,
+    "migrations_applied": [
+      "0015",
+      "0016",
+      "0017",
+      "0018",
+      "0019"
+    ],
+    "backup": ".data/manual-templates-release/local-before-0019-20261027T171320Z.dump",
+    "backup_sha256": "46dfe24c025e2f2e2728b15a86354ed358c7622f9a77f6e03484eddd61b0a3ec",
+    "backup_toc_verified": true,
+    "frontend_matches_build": true
+  },
+  "model_calls": 0,
+  "gpu_connections": 0,
+  "new_chats": 0
+}

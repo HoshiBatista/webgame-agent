@@ -1,0 +1,66 @@
+{
+  "scope": "Real Django API and PostgreSQL 18; static accepted revision fixtures, no model calls or generated game execution.",
+  "profiles": [
+    {
+      "profile": "desktop",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "theme": "light",
+      "default_name": true,
+      "prompt_title": true,
+      "manual_name_persisted": true,
+      "sidebar_updated": true,
+      "late_result_preserves_manual_title": true,
+      "draft_survives_completion": null,
+      "no_horizontal_overflow": true,
+      "page_errors": []
+    },
+    {
+      "profile": "mobile",
+      "viewport": [
+        320,
+        740
+      ],
+      "theme": "dark",
+      "default_name": true,
+      "prompt_title": true,
+      "manual_name_persisted": true,
+      "sidebar_updated": true,
+      "late_result_preserves_manual_title": true,
+      "draft_survives_completion": true,
+      "no_horizontal_overflow": true,
+      "page_errors": []
+    }
+  ],
+  "model_invocations": 0,
+  "date": "2026-10-25",
+  "postgresql_version": "18.6",
+  "backend_tests": {
+    "passed": 216,
+    "deselected": 12,
+    "command": "pytest -m 'not browser and not live'"
+  },
+  "frontend_tests": {
+    "passed": 58,
+    "files": 9,
+    "command": "npm test --prefix web"
+  },
+  "checks": {
+    "migrate": "passed on temporary database",
+    "makemigrations": "No changes detected",
+    "ruff": "passed",
+    "mypy": "passed, 16 modules",
+    "django_check": "passed",
+    "frontend_build": "passed",
+    "frontend_lint": "passed",
+    "python_build": "passed"
+  },
+  "limitations": [
+    "No real model generation or generated game execution",
+    "No physical WebView",
+    "Observed existing SSE 406; completion observed through polling"
+  ],
+  "local_artifacts": ".data/chat-title-ui/"
+}

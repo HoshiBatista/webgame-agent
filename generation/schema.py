@@ -1,0 +1,369 @@
+"""The same bounded, declarative contract drives providers and browser checks."""
+
+from copy import deepcopy
+
+from jsonschema import Draft202012Validator
+
+from validation.checks import EXPERIENCE_FIELDS
+from validation.contracts import suite_findings
+
+from .errors import ContractError
+from .experience import SCHEMA as ASSET_SCHEMA
+
+
+def obj(properties):
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": list(properties),
+        "additionalProperties": False,
+    }
+
+
+def string(**kwargs):
+    return {"type": "string", **kwargs}
+
+
+def array(items, **kwargs):
+    return {"type": "array", "items": items, **kwargs}
+
+
+POINT = obj(
+    {
+        "action": {"enum": ["click", "tap"]},
+        "selector": {
+            "type": ["string", "null"],
+            "description": "Target element. With x=y=null, click its center.",
+        },
+        "x": {
+            "type": ["number", "null"],
+            "description": "Horizontal CSS pixels from the displayed element's top-left, or viewport if selector=null. Never normalized 0..1; null centers the element.",
+        },
+        "y": {
+            "type": ["number", "null"],
+            "description": "Vertical CSS pixels from the displayed element's top-left, or viewport if selector=null. Never normalized 0..1; null centers the element.",
+        },
+    }
+)
+FRACTION_POINT = obj(
+    {
+        "action": {"enum": ["click_fraction", "tap_fraction"]},
+        "selector": string(minLength=1, maxLength=200),
+        "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Fraction of the displayed element width, from its left edge.",
+        },
+        "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Fraction of the displayed element height, from its top edge.",
+        },
+    }
+)
+KEY = obj({"action": {"enum": ["press", "key_down", "key_up"]}, "key": string(minLength=1, maxLength=40)})
+HOLD_TOUCH = obj({
+    **deepcopy(POINT['properties']),
+    'action': {'enum': ['hold_touch']},
+    'ms': {'type': 'integer', 'minimum': 1, 'maximum': 3000,
+           'description': 'Real finger held on the target, then released. Counts toward the total wait budget.'},
+})
+WAIT = obj({"action": {"enum": ["wait"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 10000}})
+BLUR = obj({"action": {"enum": ["blur"]}})
+RESIZE = obj({"action": {"enum": ["resize"]}, "viewport": {"enum": ["mobile", "landscape", "desktop"]}})
+OBSERVATION = {
+    "anyOf": [
+        obj({"source": {"enum": ["text"]}, "selector": string(minLength=1, maxLength=200)}),
+        obj(
+            {
+                "source": {"enum": ["attribute"]},
+                "selector": string(minLength=1, maxLength=200),
+                "attribute": string(minLength=1, maxLength=80),
+            }
+        ),
+        obj(
+            {
+                "source": {"enum": ["state"]},
+                "path": string(
+                    pattern=r"^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\.\d+)*$",
+                    maxLength=200,
+                    description="Read-only path from window through own data properties only. No getters, inherited properties, functions, or self-reported test results. Optional alternative to DOM text/attributes; no prescribed state names.",
+                ),
+            }
+        ),
+    ]
+}
+OBSERVATION['anyOf'].append(obj({
+    'source': {'enum': ['experience']},
+    'field': {'enum': sorted(EXPERIENCE_FIELDS),
+              'description': 'Numbers: effectsPlayed, voicesPlayed, graphicsReady (loaded graphic COUNT), drawCalls. Booleans: musicPlaying, muted. Strings: state, audioError. Match expectation type; graphicsReady is never boolean.'},
+}))
+CHECK_SCHEMA = obj(
+    {
+        "id": string(pattern=r"^[a-zA-Z0-9_-]+$", minLength=1, maxLength=80),
+        "category": {"enum": ["start", "control", "outcome", "regression"]},
+        "requirement": string(minLength=8, maxLength=500),
+        "viewport": {"enum": ["mobile", "landscape", "desktop"],
+                     "description": "INITIAL screen of this check. Copy the same requirement ID's frozen viewport exactly. Rotation uses resize steps; it never changes this initial viewport."},
+        "steps": array({"anyOf": [POINT, FRACTION_POINT, HOLD_TOUCH, KEY, WAIT, BLUR, RESIZE]}, maxItems=30),
+        "observation": OBSERVATION,
+        "expect": obj(
+            {
+                "operator": {
+                    "enum": ["eq", "not_eq", "gte", "lte", "contains", "changed", "unchanged", "increased", "decreased", "visible"]
+                },
+                "value": {"type": ["string", "number", "boolean", "null"]},
+            }
+        ),
+    }
+)
+DESIGN = obj(
+    {
+        "summary": string(maxLength=1000),
+        "visual": string(
+            maxLength=1200,
+            description="Concrete spatial plan before code: rule-imposed vs flexible geometry; usable CSS width/height after controls on phone and desktop; actual interactive/drawn field dimensions and object/cell size (approximate values or formulas); shared drawing/input/resize mapping. Canvas element size or a claim of filling it is not evidence of useful play space. Preserve geometry required by the rules.",
+        ),
+        "controls": array(string(maxLength=200), maxItems=12),
+        "outcome": string(maxLength=500),
+    }
+)
+RESPONSE_SCHEMA = obj(
+    {
+        "status": {"enum": ["ok", "scope_refusal", "unchanged"]},
+        "operation": {"enum": ["create", "edit", "repair"]},
+        "title": string(maxLength=120),
+        "design": DESIGN,
+        "base_revision": {"type": ["string", "null"]},
+        "files": array(
+            obj({"path": string(maxLength=120), "content": string(maxLength=300000)}), maxItems=20
+        ),
+        "patches": array(
+            obj(
+                {
+                    "path": string(maxLength=120),
+                    "file_hash": {"type": ["string", "null"]},
+                    "old_text": string(maxLength=100000),
+                    "new_text": string(maxLength=100000),
+                }
+            ),
+            maxItems=80,
+        ),
+        "checks": array(CHECK_SCHEMA, maxItems=12),
+        # Keep the player-facing review after the implementation in the wire order.
+        "message": string(maxLength=2000),
+    }
+)
+
+
+# The application supports the current contract only.
+CHECK_SCHEMA["properties"]["observation"]["anyOf"].extend([
+    obj({"source": {"enum": ["text_number"]}, "selector": string(minLength=1, maxLength=200)}),
+    obj({"source": {"enum": ["attribute_number"]}, "selector": string(minLength=1, maxLength=200),
+         "attribute": string(minLength=1, maxLength=80)}),
+])
+ABSOLUTE_EXPECT = deepcopy(CHECK_SCHEMA['properties']['expect'])
+ABSOLUTE_EXPECT['properties']['operator']['enum'] = ['eq', 'not_eq', 'gte', 'lte', 'contains', 'visible']
+CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
+    obj({"action": {"enum": ["checkpoint"]}}),
+    {**obj({"action": {"enum": ["wait_for"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 3000}}),
+     "description": "At most once, only the LAST step. Poll the final observation/expect, not a fixed pause. Use wait for an intermediate pause."},
+    obj({"action": {"enum": ["await_condition", "assert"]},
+         "ms": {"type": "integer", "minimum": 0, "maximum": 3000},
+         "observation": CHECK_SCHEMA['properties']['observation'],
+         "expect": ABSOLUTE_EXPECT}),
+])
+CHECK_SCHEMA["properties"]["category"]["enum"].append("restart")
+APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
+APPLICATION_SCHEMA["properties"]["checks"]["items"] = CHECK_SCHEMA
+EXACT_PATCH = deepcopy(RESPONSE_SCHEMA["properties"]["patches"]["items"])
+MODULE_REPLACEMENT = obj({
+    "action": {"enum": ["replace_module"]},
+    "path": string(maxLength=120),
+    "file_hash": string(pattern="^[0-9a-f]{64}$"),
+    "content": string(maxLength=12288),
+})
+APPLICATION_SCHEMA["properties"]["patches"]["items"] = {"anyOf": [EXACT_PATCH, MODULE_REPLACEMENT]}
+# The application accepts fixtures without media; current model requests below
+# require one typed object instead of JSON encoded inside a file string.
+APPLICATION_SCHEMA['properties']['assets'] = {'anyOf': [deepcopy(ASSET_SCHEMA), {'type':'null'}]}
+CONTRACT_VERSION = 9
+
+CHECK_REPAIR_SCHEMA = obj({
+    "status": {"enum": ["ok", "unchanged"]},
+    "operation": {"enum": ["check_repair"]},
+    "base_revision": string(minLength=1),
+    "artifact_hash": string(pattern="^[0-9a-f]{64}$"),
+    "checks_hash": string(pattern="^[0-9a-f]{64}$"),
+    "message": string(minLength=1, maxLength=2000),
+    "checks": array(CHECK_SCHEMA, maxItems=12),
+})
+
+
+def response_schema(request):
+    """One current operation contract; unsupported games are retired, not reinterpreted."""
+    if request.get('response_completion'):
+        from .response_completion import reply_schema
+
+        return reply_schema(request)
+    if request.get("operation") == "extract_preferences":
+        from .preference_extraction import SCHEMA
+
+        return deepcopy(SCHEMA)
+    version = request.get("generation_contract", {}).get("pipeline_version", CONTRACT_VERSION)
+    if version != CONTRACT_VERSION:
+        raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
+    if request.get("patch_repair"):
+        from .lite import enabled as lite_enabled
+        from .patch_repair import reply_schema as patch_reply_schema
+
+        if request.get("operation") != "edit":
+            raise ContractError("operation_mismatch", "Исправление фрагментов доступно только для доработки.")
+        return patch_reply_schema(request["patch_repair"], files=request.get('files') if lite_enabled(request) else None)
+    if request.get("operation") in {"visual_review", "visual_patch"}:
+        from .visual import PATCH_SCHEMA, REVIEW_SCHEMA
+
+        return deepcopy(REVIEW_SCHEMA if request["operation"] == "visual_review" else PATCH_SCHEMA)
+    if request.get("operation") == "plan":
+        from .planning import schema as plan_schema
+
+        return plan_schema(request)
+    if request.get("generation_profile") == "compact":
+        from .compact import wire_schema
+
+        return wire_schema(request)
+    if request.get("operation") == "check_repair" and request.get("check_repair"):
+        from validation.suites import MAX_SAVED_CHECKS
+
+        from .lite import constrain_checks
+        from .lite import enabled as lite_enabled
+
+        result = deepcopy(CHECK_REPAIR_SCHEMA)
+        if request['check_repair'].get('max_checks') == MAX_SAVED_CHECKS:
+            result['properties']['checks']['maxItems'] = MAX_SAVED_CHECKS
+        return constrain_checks(result, request) if lite_enabled(request) else result
+    schema = deepcopy(RESPONSE_SCHEMA)
+    schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
+    operation = request.get("operation", "create")
+    if operation not in {"create", "edit", "repair"}:
+        raise ContractError("operation_mismatch", "Неизвестная операция генерации.")
+    props = schema["properties"]
+    from .experience import enabled
+
+    if enabled(request):
+        message = props.pop('message')
+        props['assets'] = {'anyOf': [deepcopy(ASSET_SCHEMA), {'type':'null'}]}
+        props['message'] = message
+        schema['required'].append('assets')
+    props["operation"] = {"enum": [operation]}
+    if operation == "create":
+        props["status"] = {"enum": ["ok", "scope_refusal"]}
+        props["base_revision"] = {"type": "null"}
+        props["patches"]["maxItems"] = 0
+    else:
+        props["base_revision"] = {"type": "string", "minLength": 1}
+        props["files"]["maxItems"] = 0
+        if operation == "repair":
+            props["checks"]["maxItems"] = 0
+            allowed = request.get("module_repair", {}).get("files", {})
+            if allowed:
+                replacement = deepcopy(MODULE_REPLACEMENT)
+                replacement["properties"]["path"] = {"enum": sorted(allowed)}
+                props["patches"] = {"anyOf": [array(deepcopy(EXACT_PATCH), maxItems=80),
+                                               array(replacement, minItems=1, maxItems=1)]}
+    from .lite import constrain_checks
+    from .lite import enabled as lite_enabled
+
+    return constrain_checks(schema, request) if lite_enabled(request) else schema
+
+
+def validate_response(response, *, operation=None, schema=None, defer_check_errors=False):
+    if isinstance(response, dict) and operation is not None and "operation" in response and response["operation"] != operation:
+        raise ContractError("operation_mismatch", "Ответ изменил вид операции. Используйте operation из запроса.")
+    errors = sorted(
+        Draft202012Validator(schema or APPLICATION_SCHEMA).iter_errors(response), key=lambda e: str(list(e.path))
+    )
+    if errors:
+        error = errors[0]
+        raise ContractError(
+            "invalid_schema",
+            f"Ответ не соответствует формату в {'.'.join(map(str, error.path))}: {error.message[:500]}",
+        )
+    if operation is not None and response["operation"] != operation:
+        raise ContractError(
+            "operation_mismatch",
+            "Ответ изменил вид операции. Используйте operation из текущего запроса приложения.",
+        )
+    if response["operation"] in {"visual_review", "visual_patch", "extract_preferences"}:
+        return
+    if response["operation"] == "plan":
+        from .planning import validate_plan
+
+        validate_plan(response)
+        return
+    if response["operation"] == "check_repair":
+        if response["status"] == "unchanged":
+            if response["checks"]:
+                raise ContractError("invalid_unchanged", "Ответ без изменений должен содержать checks=[].")
+        elif not defer_check_errors:
+            validate_checks(response["checks"])
+        return
+    if response["status"] == "scope_refusal":
+        if not response["message"].strip() or response["files"] or response["patches"] or response.get('assets') is not None:
+            raise ContractError("invalid_refusal", "Отказ должен объяснять ограничение и не изменять игру.")
+        return
+    if response["status"] == "unchanged":
+        if (
+            response["operation"] not in {"edit", "repair"}
+            or not response["base_revision"]
+            or not response["message"].strip()
+            or any(response[name] for name in ("files", "patches", "checks"))
+            or response.get('assets') is not None
+        ):
+            raise ContractError(
+                "invalid_unchanged",
+                "Ответ «без изменений» требует существующей базовой версии, объяснения и пустых files/patches/checks.",
+            )
+        return
+    if response['operation'] == 'repair' and response.get('assets') is not None:
+        raise ContractError('assets_locked', 'Ремонт кода сохраняет ассеты; верните assets=null.')
+    partial = response["operation"] in {"edit", "repair"} and response["base_revision"] is not None
+    if not defer_check_errors:
+        validate_checks(response["checks"], require_complete=not partial)
+    if not response["title"].strip():
+        raise ContractError("missing_title", "Модель не предложила название игры.")
+
+
+def validate_checks(checks, *, require_complete=True):
+    if not isinstance(checks, list):
+        raise ContractError("invalid_check", "Набор сценариев должен быть списком.")
+    from validation.suites import MAX_SAVED_CHECKS
+
+    if len(checks) > MAX_SAVED_CHECKS:
+        raise ContractError(
+            "too_many_checks", "Набор накопленных сценариев превышает 48. Требуется явный пересмотр условий."
+        )
+    from validation.check_program import envelope
+
+    try:
+        for offset in range(0, len(checks), 12):
+            envelope(checks[offset:offset + 12])
+    except (ValueError, TypeError) as exc:
+        raise ContractError("invalid_check", "Набор сценариев превышает ограничения размера или структуры.") from exc
+    ids = set()
+    for check in checks:
+        error = next(Draft202012Validator(CHECK_SCHEMA).iter_errors(check), None)
+        if error:
+            raise ContractError("invalid_check", f"Неверная проверка: {error.message[:300]}")
+        if check["id"] in ids:
+            raise ContractError("duplicate_check", "Идентификаторы проверок должны быть уникальны.")
+        ids.add(check["id"])
+        from validation.check_program import compile_check
+
+        issue = compile_check(check).issue
+        if issue:
+            raise ContractError(issue.code, f"{check['id']} / {issue.field}: {issue.message}")
+    if require_complete and (findings := suite_findings(checks)):
+        raise ContractError(findings[0]["code"], findings[0]["message"])

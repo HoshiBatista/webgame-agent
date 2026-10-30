@@ -1,875 +1,777 @@
-# Prompt2Play Target Architecture
+# Архитектура быстрых мини-игр
 
-## Status and scope
+28 октября 2026 года. **Архитектура конкурсной версии, ветка `mini-games`.**
+Объём задают [требования](requirements.ru.md), порядок — [план](development-plan.md).
+Фактические ограничения проверки и ремонта перечислены в [сверке с ML-планом](source-review.ru.md).
+Этапы ниже — серверные проверки и ограниченные ремонты, а не полноценная декомпозиция
+модельной генерации на независимые модули.
 
-This document defines the target architecture for turning a natural-language
-request into a validated, playable, revisioned HTML5 game. It is optimized for
-four outcomes, in order:
+**Текущий контракт v9 (planning 2, checks policy 9, runtime 2):** полный и экспериментальный компактный профили. Компактный
+профиль использует один сгенерированный модуль правил и встроенные в экспорт общие
+утилиты Canvas/ввода. Run закрепляет профиль/формат; Codex продолжает поддерживать
+полные исходники и может редактировать компактную игру в её собственном формате.
 
-1. high playable-delivery rate;
-2. safe handling of generated code;
-3. reproducible validation and repair; and
-4. fast product iteration without an early microservice burden.
+Наблюдения встроенного плеера имеют строгие типы: graphicsReady — количество
+загруженных изображений, не boolean. Prompt/schema описывают это явно, а ошибка
+вложенного assert/await_condition называет конкретное поле и необходимый тип.
+Неверное ожидание не преобразуется в более слабое и не разрешает ремонт игры.
 
-The target is not a promise to deploy every component on day one. The product
-starts as a modular monolith and extracts only the execution boundary that must
-be isolated for security. [ADR 0001](adr/0001-target-architecture.md) records the
-system-level decisions, and
-[ADR 0002](adr/0002-generation-harness.md) fixes the generation-harness
-boundary. [The landscape review](research/landscape.md) explains the external
-systems and research behind them.
+Числовые `gte`/`lte` поддерживаются в финальном наблюдении и промежуточных условиях
+обоих профилей. Они позволяют ждать пересечения координаты движущимся объектом,
+не угадывая миллисекунды и не требуя попадания в точное значение между кадрами.
+Порог и наблюдение должны быть конечными числами; boolean не становится числом.
+Подготовка маршрута остаётся до checkpoint, итог и проверка влияния ввода не ослабляются.
 
-## Architectural thesis
+Перед первым наблюдением или вводом браузер выполняет 50 мс начальной раскладки.
+Обычный запуск и обе ветви причинного сравнения получают одинаковый интервал:
+замороженные диагностические часы иначе не запускали начальные requestAnimationFrame
+и давали другую геометрию кнопок. Положение элементов и игровой результат не
+подменяются; постоянное перекрытие кнопки по-прежнему отклоняется. Версия реализации
+входит в identity среды, старый отчёт не выдаётся за результат новой проверки.
 
-A good game generator is not primarily a code-completion system. It is a
-revision system with an executable specification and a browser playtester.
+При ремонте полного набора сценариев актуальный отчёт с успешными обязательными
+gates закрепляет уже прошедшие сценарии. Они копируются из исходного набора;
+предложенные моделью изменения их шагов/ожиданий не применяются и отмечаются в
+метаданных квитанции. Изменение их ID/условия/категории/viewport отвергается.
+Неуспешные сценарии проходят прежнюю строгую проверку; изменённый набор по-прежнему
+требует явного обзора, исходный ответ и исходные проверки остаются сохранены.
 
-Prompt2Play therefore follows these rules:
+P4–P5 закрепляют RequirementManifest и снимки предпочтений/политик до исходников.
+Код и сценарии не могут ослаблять обещания, но модельный замысел не является
+независимым доказательством понимания запроса. Смена политики блокирует новые
+отправки; ранее отправленные ответы продолжают получать и учитывать.
+Эксперимент `lite_code_then_checks` (выключен по умолчанию) отделяет код от создания
+сценариев обязательными gates, сохраняя лимит 4/5 и источник каждой проверки.
+[Реализация, ограничения и порядок выпуска](generation-improvement-p4-p5-implementation.ru.md).
 
-- **Explicit workflow, not an agent swarm.** Stages, inputs, budgets, retries,
-  and terminal states are application-owned.
-- **One harness invocation, one candidate.** The generation harness performs a
-  single bounded attempt. The persisted workflow decides whether to validate,
-  repair, regenerate, or stop.
-- **Constrain before generating.** A versioned template supplies lifecycle,
-  input, resize, audio, persistence, and test hooks. The model fills game-specific
-  hooks rather than rebuilding infrastructure.
-- **Test behavior, not source shape.** Every game exposes a deterministic test
-  bridge and is also exercised through real pointer, touch, and keyboard input.
-- **Immutable revisions.** Every generation and repair creates a new,
-  content-addressed revision with provenance and evidence.
-- **Generated code is hostile.** Generation, validation, and preview are separate
-  trust zones with no ambient credentials.
-- **Strong defaults, escape hatches later.** Canvas2D is the initial profile;
-  locally bundled Phaser can be added for mechanics that justify it. Arbitrary
-  frameworks and remote runtime dependencies are not accepted.
+P6–P8: `GameForgeMotion` v1 — закреплённая локальная библиотека числовых переходов,
+в compact через `api.motion`, в full по явному подключению. Игровые правила отдельны.
+Эксперимент Pro `visual_review → visual_patch` включается флагом только для новых Run
+и использует общий лимит вызовов. После игровых gates собираются шесть обычных кадров;
+одна проверенная контактная таблица поступает Codex. Независимые проверки, точные
+привязки и неизменные требования ограничивают правку. Регрессия/недоступная повторная
+съёмка возвращают прежнюю игру; unknown не повторяется. [Ревью и выпуск](generation-improvement-p6-p8-implementation.ru.md).
 
-## System context
+Пользовательское сообщение содержит точные source_revision_id/hash показанной игры,
+включая непринятый черновик. Run.source_revision отделена от Run.base_revision,
+которая остаётся принятой базой для проверки конкурентного изменения. Исходный замысел
+хранится отдельно от новой ограниченной правки.
 
-```text
-                                      ┌─────────────────────────────┐
-                                      │ Model and asset providers   │
-                                      └──────────────▲──────────────┘
-                                                     │ typed requests
-                                                     │ and responses
-┌──────────────┐  HTTPS/SSE   ┌──────────────────────┴──────────────┐
-│ Creator web │◄─────────────►│ Control plane                       │
-│ application │               │ API + DB-backed workflow state      │
-└──────┬───────┘               └──────┬──────────┬──────────┬──────┘
-       │ sandboxed iframe             │ metadata │ tasks    │ artifacts
-       ▼                              ▼          ▼          ▼
-┌──────────────┐              ┌────────────┐ ┌─────────┐ ┌──────────────┐
-│ Preview      │              │ PostgreSQL │ │ Redis   │ │ Persistent   │
-│ origin       │              │ + outbox   │ │ broker  │ │ filesystem   │
-└──────────────┘              └────────────┘ └────┬────┘ └──────┬───────┘
-                                                 │ Celery tasks │ read-only mount
-                                                 └───────┬──────┘
-                                                         ▼
-                                                ┌──────────────────┐
-                                                │ Execution plane  │
-                                                │ Playwright in an │
-                                                │ isolated sandbox │
-                                                └──────────────────┘
+Существующая Invocation обрабатывается раньше решения по старому кандидату. Истёкший
+срок новых отправок не запрещает получить уже отправленный receipt; неизвестный
+прямой вызов не повторяется автоматически. Ремонт не меняет требования и сценарии,
+а check_repair не меняет код. Принятие изменённых моделью сценариев требует человека.
+
+Браузер записывает независимые syntax/load/surface receipts; компактный профиль также
+требует регистрации/отрисовки модуля и доступных объявленных кнопок. Произвольное
+перекрытие модельного selector остаётся неопределённостью сценария. Для control/outcome
+есть отдельный запуск с пропуском последнего полезного ввода; совпадающее утверждение
+не доказывает эффект. Наблюдение, созданное самим вводом, проверяется с учётом его
+доказанного отсутствия в контрольном запуске, без вызова getters.
+
+После подтверждённого исхода игровая сцена может смениться итогом. Аналогично,
+restart допускает возврат к видимому начальному меню: Canvas должен быть реально
+наблюдён в том же сценарии, а конечное текстовое наблюдение должно подтвердиться.
+Один флаг состояния, исчезновение поля при обычном ходе или игра, в которой поле
+ни разу не было видно, такого допуска не получают. Прежние checks остаются неизменны.
+
+Проверяющий контроллер требует artifact receipt для любого результата, кроме
+ошибки инфраструктуры. Клавиатурный ввод переводит фокус в iframe без клика по игре.
+Для control удерживаемый key_down должен находиться после checkpoint: тогда контрольный
+запуск исключает нажатие вместе с отпусканием. Для отдельной regression удержания
+или остановки граница может стоять после key_down либо key_up/blur соответственно.
+Маршрут с движением должен ждать наблюдаемую цель, а не угадывать расстояние по времени.
+Контрольный запуск сохраняет подготовку до checkpoint, учитывает отдельное отпускание
+клавиши и не признаёт собственную ошибку выполнения доказательством игрового эффекта.
+В ремонте после правки draft нетронутые модули определяются относительно выбранной
+`source_revision`, а не только принятой базы. Compact edit независимо объединяет
+наблюдения и probes по ID и проверяет ограничения уже объединённого manifest.
+
+Старые игровые контракты удаляются через retire_games только после обязательного
+backup; публикации остаются недоступными (HTTP 410), учёт вызовов/неизвестного
+расхода сохраняется. Подробности, миграции и ревью — в [отчёте v8](lite-v8-implementation.ru.md).
+
+## 1. Короткий путь
+
+```mermaid
+flowchart LR
+    U[Запрос и аудитория] --> API[Django: чат и запуск]
+    API --> Q[PostgreSQL + outbox / Celery + Redis]
+    Q --> D{Новое создание с планом?}
+    D -->|Pro, либо короткий compact Lite| B[Учтённый вызов планирования и сохранение замысла]
+    D -->|Full Lite или правка| G[Один вызов генерации или патча]
+    B --> G
+    G --> C[Неизменяемый кандидат]
+    C --> V[ValidationTask: gates и сценарии браузера]
+    V -->|Прошёл| R[Рабочая версия и история]
+    V -->|Исправимый дефект, лимит не исчерпан| F[До трёх точечных исправлений]
+    F --> C
+    V -->|Лимит попыток или внешняя ошибка| E[Сохранённый результат и объяснение]
+    R --> P[Предпросмотр / HTML / явная публикация]
 ```
 
-The control plane may share a codebase and deployment at first. The execution
-plane and preview origin must never share its privileges.
-
-## Planes and trust boundaries
-
-### Creator plane
-
-The web application provides prompt entry, a stage timeline, source and file
-inspection, validation findings, revision history, chat-based changes, and a
-sandboxed preview. Use React, TypeScript, and Vite when this plane is
-implemented; it needs a stateful editor experience but not a second server-side
-application framework.
-
-Server-to-client progress uses Server-Sent Events. Generation progress is
-one-way, reconnectable, and ordered, so WebSockets add no value initially.
-Commands such as cancel, repair, or revise remain ordinary authenticated HTTP
-requests.
-
-### Control plane
-
-The Python control plane contains:
-
-- a FastAPI HTTP boundary;
-- application use cases and authorization;
-- the explicit PostgreSQL-backed generation state machine;
-- Celery task dispatch through Redis;
-- Pydantic domain and transport contracts;
-- a provider-independent model gateway;
-- template and skill registries;
-- revision, artifact, and validation metadata; and
-- an event stream projected from persisted run state.
-
-Use PydanticAI behind the project-owned `ModelGateway` port for structured
-outputs, provider adapters, usage data, and typed tool calls. Application code
-must not import provider SDKs outside that adapter. The workflow remains ours;
-PydanticAI is not the global architecture and does not decide stage order.
-
-### Execution plane
-
-The execution plane is the only component that opens generated HTML in a real
-browser. It runs Playwright Chromium with:
-
-- an ephemeral, non-persistent browser context per validation attempt;
-- no cookies, credentials, extensions, downloads, granted permissions, or
-  reused browser profile;
-- service workers blocked;
-- external requests aborted and recorded;
-- desktop and mobile viewports;
-- strict navigation, action, CPU, memory, output, and total-run limits; and
-- a read-only artifact mount plus a separate evidence output directory.
-
-Browser request interception is useful evidence, but it is not the security
-boundary. The runner also needs network-namespace egress denial because browser
-features such as WebRTC do not necessarily obey offline emulation. Production
-runners use disposable OCI containers under gVisor or an equivalent
-microVM-backed service, run as non-root, and receive no application secrets.
-
-### Preview plane
-
-Validated artifacts are served from a dedicated origin that has no control-plane
-cookies. Private previews use short-lived, revision-scoped access; public games
-are copied into a separate public-artifact namespace.
-
-The editor embeds the preview with an iframe sandbox that grants scripts but
-does not grant same-origin identity, top navigation, popups, forms, downloads,
-or device permissions. The preview response sets a restrictive Content Security
-Policy. Network access is denied by default.
-
-Platform features such as saves, scores, or achievements use a versioned
-`postMessage` capability bridge. The host validates the origin, revision,
-message schema, rate, and capability grant. Generated code never receives a
-platform token.
-
-## Code organization
-
-Keep the Python control plane as a modular monolith with dependency direction
-toward the domain:
-
-```text
-src/prompt2play/
-├── domain/                 # Pure entities, value objects, policies, findings
-├── application/            # Use cases, workflow, ports, commands, queries
-├── contracts/              # Versioned Pydantic API and artifact schemas
-├── generation/             # Spec, planning, harness, templates, repair policy
-├── validation/             # Static rules and validation-plan construction
-├── adapters/
-│   ├── models/             # PydanticAI/provider adapters
-│   ├── persistence/        # PostgreSQL repositories
-│   ├── artifacts/          # Content-addressed filesystem store
-│   ├── tasks/              # Celery dispatch, routing, and task definitions
-│   └── runners/            # Client for the isolated browser runner
-├── api/                    # FastAPI routes, auth, SSE, transport mapping
-└── workers/                # Celery worker and maintenance entry points
-
-web/                        # React/TypeScript creator application
-game_templates/             # Versioned trusted runtimes and skills
-golden/                     # Prompts, rubrics, scenarios, expected thresholds
-tests/                      # Unit, contract, integration, security, end-to-end
-```
-
-Domain and application modules do not import FastAPI, SQL clients, provider
-SDKs, Playwright, or cloud SDKs. Ports make local-disk, fake-model, and in-process
-test implementations possible without changing use cases.
-
-Do not split the control plane into network services until independent scaling,
-ownership, release cadence, or a trust boundary makes the cost worthwhile.
-
-## Generation workflow
-
-### State machine
-
-```text
-ACCEPTED
-  └─► SPECIFYING
-        └─► PLANNING
-              └─► ASSET_PREPARING (optional)
-                    └─► GENERATING
-                    └─► COMMITTING
-                          └─► STATIC_VALIDATION
-                                └─► BROWSER_VALIDATION
-                                      └─► VISUAL_REVIEW
-                                            └─► PROMOTING ─► SUCCEEDED
-
-Retryable validation failure
-  └─► REPAIR_DECISION
-        ├─► REPAIRING ─► COMMITTING ─► STATIC_VALIDATION
-        ├─► REPLANNING ─► ASSET_PREPARING (optional) ─► GENERATING
-        ├─► REGENERATING ─► COMMITTING
-        └─► FAILED
-
-Any active state ─► CANCELLED | FAILED | EXPIRED
-```
-
-State transitions are persisted and idempotent. Each stage has a deadline,
-attempt policy, token and cost budget, structured input and output, and a stable
-idempotency key. Infrastructure retries do not consume a semantic repair
-attempt; a new model-produced patch does. A model turn or tool call is never a
-Celery workflow stage. It belongs to one bounded `GenerationAttempt` and is
-recorded as audit data only.
-
-### Stage 1: intake
-
-Validate identity, quota, prompt size, locale, requested capabilities, and
-content policy. Create `Project`, `GenerationRun`, and an immutable initial
-request. Return the run identifier immediately.
-
-### Stage 2: specification
-
-Transform the prompt into a `GameSpec` containing:
-
-- player goal and core loop;
-- game states and transitions;
-- entities, mechanics, scoring, progression, and failure conditions;
-- desktop and touch controls;
-- visual and audio direction;
-- viewport and performance constraints;
-- requested platform capabilities;
-- observable acceptance rubrics; and
-- deterministic test scenarios.
-
-The response is schema-constrained and validated. Missing product choices use
-documented defaults rather than another free-form model turn.
-
-### Stage 3: planning and template selection
-
-Classify the game by mechanics before visual theme. Select a versioned template
-profile and the smallest relevant set of skills. The initial profile is
-`canvas2d-arcade-v1`; later profiles may include grid, cards, narrative, and
-locally bundled Phaser.
-
-Produce a `BuildPlan` that maps every acceptance rubric to a game hook and a
-validation scenario. A requirement with no observable check is incomplete.
-
-The plan also declares required assets before generation. The application
-resolves curated assets or dispatches bounded asset jobs and commits their
-immutable manifests in the optional `ASSET_PREPARING` substage. The generation
-harness receives those assets read-only; it never waits synchronously for a
-nested Celery task. If a previously unknown asset is essential, the attempt
-returns a typed replan reason. Procedural or template-provided visuals remain
-the default fallback.
-
-### Stage 4: generation attempt
-
-Instantiate the trusted template, then allow model tools only for:
-
-- listing and reading the current workspace;
-- reading an allowlisted skill or template reference;
-- creating or patching normalized relative files;
-- inspecting and selecting from the prepared asset manifest; and
-- submitting metadata.
-
-There is no general shell tool. Trusted packaging steps are selected by the
-application, not written by the model. File count, individual size, total size,
-path, MIME type, and extension are checked on every write.
-
-The first attempt may create game-specific modules. Later attempts receive the
-specification, a compact file manifest, relevant source fragments, and typed
-findings; they return targeted patches rather than a complete replacement.
-
-One invocation of `GenerationHarness` owns exactly one initial, repair, or
-regeneration attempt and produces at most one `CandidateSubmission`. It neither
-advances the global workflow nor creates a `Revision`. The harness is detailed
-in [Generation harness](#generation-harness).
-
-### Stage 5: candidate commit
-
-An `ArtifactCommitter` closes the submitted staging workspace, canonicalizes
-paths and file metadata, verifies template integrity and quotas, calculates the
-bundle digest, and atomically promotes it to immutable storage. Because a POSIX
-rename and a PostgreSQL transaction cannot be one atomic transaction, commit is
-an explicit recoverable protocol: persist a fenced `PENDING` commit intent,
-idempotently rename the digest directory, then finalize the `Artifact` and
-immutable candidate `Revision` rows. A reconciler completes or rolls back stale
-intents. An object written without a finalized database reference is harmless
-and becomes eligible for grace-period garbage collection.
-
-A harness crash before submission leaves only an expiring staging workspace; a
-crash during commit is recoverable from the commit intent, revision metadata,
-and digest.
-
-Validation always consumes an immutable revision. Invalid revisions remain
-auditable but are never previewable or publishable.
-
-### Stage 6: release static validation
-
-Reject the artifact before browser execution when any of these fail:
-
-- manifest and schema validity;
-- required entry point and template version;
-- normalized paths and package limits;
-- all local resource references resolve;
-- no remote scripts, tracking, dynamic module import, or unapproved URLs;
-- no obvious navigation, popup, download, permission, or storage violations;
-- JavaScript parses and trusted template files retain their integrity; and
-- the test bridge and required hooks are present.
-
-Static analysis is a fast gate, not proof of safety or playability. The harness
-may call the same rule library in `quick` mode for immediate model feedback.
-Only the post-commit `release` mode writes authoritative findings or changes
-revision status. Quick checks may omit expensive rules but may not use different
-definitions for rules they share with release validation.
-
-### Stage 7: browser validation
-
-Run deterministic and black-box checks in this order:
-
-1. boot without page errors, failed resources, or prohibited network attempts;
-2. signal readiness within the deadline;
-3. render non-empty, changing content at desktop and mobile viewports;
-4. execute seeded bridge scenarios and verify state invariants;
-5. repeat critical actions through actual keyboard, pointer, and touch input;
-6. reach the required success or failure state and restart cleanly;
-7. check resize, pause/resume, audio opt-in, and bounded frame timing; and
-8. capture screenshots, console, network log, trace, and scenario results.
-
-Bridge tests establish mechanics. Black-box tests catch broken wiring between
-the bridge and the actual user surface. Both are required.
-
-Do not expose the complete validation corpus to the model. Hidden black-box and
-metamorphic scenarios vary legal action sequences and verify that observable
-rendered state changes consistently with bridge state. This reduces the chance
-of a generated game implementing a test-only bridge disconnected from its UI.
-
-Every run records its scenario seeds and the immutable runner-image, Chromium,
-Playwright, font-set, locale, timezone, device-scale, template, bridge, and
-validator versions. Deterministic state assertions must reproduce exactly.
-Screenshot and frame-timing checks use declared tolerances and are treated as
-environment-sensitive evidence rather than bit-for-bit universal truth.
-
-### Stage 8: visual and intent review
-
-Deterministic heuristics check blank frames, overflow, clipped controls,
-contrast, and layout at representative sizes. A vision-capable model may score
-rubric evidence for visual usability and intent alignment, but its judgment is
-advisory: it cannot waive a deterministic failure or security finding.
-
-### Stage 9: repair decision
-
-Normalize all failures to `Finding` values with code, severity, evidence,
-location, rubric, repair hint, and retryability. The application-owned
-`RepairPolicy` chooses the least expensive strategy that can plausibly address
-the root cause:
-
-- `LOCAL_PATCH` changes a small, bounded set of generated files;
-- `STRUCTURAL_REPAIR` may reorganize several game-specific modules;
-- `REPLAN` replaces an invalid build plan while retaining the specification;
-- `REGENERATE` creates an independent candidate from the trusted template; or
-- `STOP` records the failure as terminal.
-
-The model may suggest a strategy but cannot select it or consume another
-semantic attempt on its own. A minimum patch is preferred only for a genuinely
-local finding; it is not a universal repair rule.
-
-Default policy:
-
-- at most two semantic repairs for an MVP run;
-- no repair for policy violations that make the request ineligible;
-- rerun static checks after every write;
-- rerun affected scenarios first, then the full required suite; and
-- stop when the same finding survives two targeted patches.
-
-Each repair produces a child revision. Never mutate or hide the previous
-artifact.
-
-### Stage 10: promote; publish separately
-
-After all mandatory gates pass, atomically point the project at the exact
-validated revision and mark the generation run successful. Preview and
-publication are separate actions outside the run and never rebuild or
-recalculate the artifact. Publication copies only that digest through a
-stage-verify-rename operation in the public-artifact namespace.
-
-## Generation harness
-
-### Boundary and ownership
-
-`GenerationHarness` is a deterministic controller around a non-deterministic
-model. It executes one bounded attempt and returns data to the application use
-case. It does not import Celery, Redis, FastAPI, SQL, Playwright, provider SDKs,
-or concrete filesystem paths. In particular, it does not retry workflow stages,
-select the next repair strategy, create revisions, or publish artifacts.
-
-```text
-Celery task
-  └─► generation use case       owns claim, lease, cancellation, persistence
-        └─► GenerationHarness   owns one bounded model/tool loop
-              └─► CandidateSubmission
-        └─► ArtifactCommitter   owns canonicalization, digest, immutable revision
-              └─► validators   own release findings and evidence
-        └─► RepairPolicy        owns patch, replan, regenerate, or stop decision
-```
-
-The application passes ports into the harness for model calls, controlled draft
-operations, quick static feedback, budget accounting, cancellation, and audit
-events. An `EventSink` is diagnostic output, not workflow state; losing an
-individual token or tool-progress event cannot change correctness.
-
-### Attempt contract
-
-A versioned `HarnessRequest` contains only explicit inputs:
-
-- run, attempt, and current fenced-execution identifiers;
-- mode: `INITIAL`, `LOCAL_REPAIR`, `STRUCTURAL_REPAIR`, or `REGENERATE`;
-- immutable `GameSpec`, `BuildPlan`, and `TemplateSnapshot` references;
-- parent revision and normalized findings when applicable;
-- a versioned model and prompt policy;
-- an attempt budget plus the remaining run-wide budget; and
-- a newly allocated draft-workspace capability, not a host path.
-
-The result status is `SUBMITTED`, `REJECTED`, `BUDGET_EXHAUSTED`, `CANCELLED`,
-or `FAILED`. A submitted result contains a one-use `CandidateSubmission`
-reference, normalized changed-file metadata, usage totals, audit references,
-and a finish reason. It does not contain a final artifact digest or revision ID;
-those exist only after `ArtifactCommitter` succeeds.
-
-Every contract records `harness_protocol_version`, `tool_protocol_version`,
-`prompt_profile_version`, and `model_policy_version`. Unsupported versions fail
-closed rather than being interpreted approximately.
-
-### Controlled loop
-
-The harness is a small state machine, not a general autonomous agent:
-
-```text
-PREPARE_CONTEXT
-  └─► MODEL_TURN
-        ├─► VALIDATE_TOOL_CALL ─► EXECUTE_TOOL ─► ASSESS_PROGRESS ─┐
-        │                                                         └─► MODEL_TURN
-        ├─► QUICK_CHECK ─► MODEL_TURN
-        ├─► SUBMIT ─► SUBMITTED
-        └─► REJECTED | BUDGET_EXHAUSTED | CANCELLED | FAILED
-```
-
-Before every model call and tool operation, the controller checks cancellation,
-the absolute attempt deadline, the execution fence, and all remaining budgets.
-It detects repeated identical calls, no-op writes, repeated unchanged quick
-findings, and turns without measurable progress. A model cannot extend a
-budget, clear a finding, or declare the candidate validated.
-
-Allowed model tools are intentionally narrow:
-
-- `list_files` and bounded `read_file` for generated files;
-- `read_skill` for an allowlisted, immutable skill snapshot;
-- `create_game_file`, `patch_game_file`, and `delete_game_file` within the
-  generated namespace;
-- `inspect_manifest` without exposing host paths;
-- `list_assets` and `read_asset_metadata` for immutable prepared assets;
-- `run_quick_checks` using the shared static-rule library; and
-- `submit_candidate` once.
-
-There is no shell, process execution, arbitrary network access, package
-installation, database access, direct browser control, absolute path access, or
-write access to the trusted runtime. Tool results are bounded structured data.
-
-### Context and trust
-
-`ContextCompiler` preserves trust levels instead of concatenating everything
-into an undifferentiated prompt:
-
-| Input | Trust | Treatment |
-| --- | --- | --- |
-| System, safety, and tool policy | Trusted | Fixed instructions |
-| Template and bridge contract | Trusted | Immutable versioned instructions |
-| `GameSpec` and `BuildPlan` | Validated data | Structured data, never executable instructions |
-| Findings and evidence summaries | Validated data | Schema checked and size bounded |
-| User request | Untrusted | Delimited content |
-| Generated source and asset metadata | Untrusted | Delimited content, lazily loaded |
-
-The stable contract, acceptance rubrics, unresolved findings, and remaining
-budget are present on every model turn. Source files and skills are loaded only
-when relevant. Old tool output may be summarized, but required rubrics and
-security rules are never silently truncated. Token estimation occurs before
-dispatch; an input that cannot fit fails explicitly or uses a documented
-compaction policy.
-
-### Draft workspace
-
-`DraftWorkspace` is a capability-scoped virtual view over one staging
-directory. The model never receives its path. Operations normalize Unicode and
-relative paths before access, reject traversal, symlinks, hard-link escapes,
-devices, sockets, executable bits, disallowed extensions, and writes outside
-the generated namespace. Trusted runtime files are mounted or copied read-only
-and verified by digest at submission.
-
-Limits apply per operation and cumulatively to bytes read and written, file
-count, diff size, asset count, and output volume. File access uses APIs that do
-not follow links and avoids check-then-open races. Submission closes the
-workspace to further writes and creates a one-use capability for the committer.
-Abandoned workspaces retain a lease and are deleted after a grace period.
-
-### Budgets and model calls
-
-Budgets are multi-dimensional: model turns, tool calls, input and output
-tokens, estimated cost, wall time, files changed, bytes written, assets, and
-quick-check executions. A versioned policy derives attempt limits from template
-profile, specification complexity, repair mode, provider pricing, and the
-remaining run-wide ceiling. Every dimension also has a hard platform maximum.
-
-Each provider request reserves a `ModelInvocation` before network dispatch. It
-has a stable request fingerprint, execution fence, absolute deadline, status,
-provider request ID when available, usage, and response reference. A completed
-identical invocation can be replayed after worker failure. An in-flight call
-cannot always be deduplicated at the provider, so stale executions may still
-incur cost, but fencing prevents their output from being submitted. Such cost is
-measured separately as duplicate or abandoned spend.
-
-Cancellation is cooperative but deadline-bound. It prevents every new model or
-tool operation and attempts to cancel streaming provider calls. Provider
-timeouts must be substantially shorter than the Celery hard limit; revoking the
-Celery task is never the correctness mechanism.
-
-## Game artifact contract
-
-```text
-revision/
-├── index.html
-├── manifest.json
-├── src/                    # Generated game-specific modules
-├── runtime/                # Trusted, versioned template runtime
-└── assets/                 # Local, licensed or generated assets
-```
-
-The manifest includes schema version, entry point, template profile and digest,
-game metadata, controls, viewport policy, capabilities, file digests, asset
-license references, and the test-bridge version. Safe build provenance pins the
-template, bridge, tool protocol, and packaging versions. Full provenance is a
-private immutable sidecar that additionally records the harness, prompts, model
-policy, skill snapshot, provider invocations, parent revision, and validator
-suite. Validation summaries and evidence are also private sidecars because they
-are created after the bundle digest is fixed.
-
-Packaging may inline the bundle into one HTML file for export, but the editable
-source revision remains structured. An export is a separate content-addressed
-artifact linked to the source revision; publication never silently substitutes
-an export digest for the digest that passed validation.
-
-No artifact references a runtime CDN. Third-party runtime files are vendored,
-versioned, license-recorded, and integrity-checked by the template registry.
-The registry maintains an explicit compatibility matrix for template, bridge,
-tool, manifest, and validator versions. Existing revisions are not migrated in
-place. An upgrade that changes bytes creates a child revision and passes the
-current release gates again.
-
-## Executable game contract
-
-The trusted runtime exposes `window.__prompt2play` version 1:
-
-```typescript
-interface Prompt2PlayBridgeV1 {
-  schemaVersion: "1";
-  ready(): Promise<void>;
-  reset(seed: number): Promise<GameSnapshot>;
-  dispatch(action: GameAction): Promise<GameSnapshot>;
-  snapshot(): GameSnapshot;
-  capabilities(): readonly string[];
-}
-```
-
-`GameSnapshot` is JSON-serializable and contains only stable, player-observable
-state: phase, score, lives or health, level or wave, key entity positions, and
-declared objective progress. It must not expose DOM nodes, functions, clocks, or
-random generator internals.
-
-The template owns the bridge plumbing and seeded clock/random adapters. The
-generated implementation supplies typed hooks. Public games may retain the
-bridge because it grants no host capability; the platform bridge for saves and
-scores is a separate protocol.
-
-## Persistence model
-
-PostgreSQL is the source of truth for metadata:
-
-- `Project` — owner, title, visibility, current revision;
-- `Revision` — immutable parent link, spec, plan, artifact digest, status;
-- `GenerationRun` — request, budgets, current workflow state, terminal outcome;
-- `StageRun` — attempt, idempotency key, timing, input/output references;
-- `GenerationAttempt` — mode, parent, budget, execution fence, submission and
-  terminal outcome;
-- `ArtifactCommit` — fenced staging-to-digest intent and recovery status;
-- `AssetJob` — planned asset request, invocation, license, digest, and outcome;
-- `TaskExecution` — Celery task ID, queue, lease, delivery and retry metadata;
-- `OutboxEvent` — transactionally committed task or domain-event publication;
-- `ModelInvocation` — request fingerprint, execution fence, provider request,
-  status, usage, cost, latency, and response reference;
-- `ValidationRun` — environment, suite version, status, evidence prefix;
-- `Finding` — stable code, severity, rubric, evidence, resolution revision;
-- `Artifact` — digest, size, MIME manifest, storage location, retention; and
-- `Publication` — public slug, revision, moderation and lifecycle state.
-
-Large files, bundles, traces, screenshots, and logs live below a configured
-persistent filesystem root. Paths are digest-based and immutable. Database rows
-reference artifact IDs and normalized relative paths; they do not contain game
-bundles or expose host paths.
-
-The application accesses files only through an `ArtifactStore` port. Its first
-and target implementation is a content-addressed POSIX filesystem store:
-
-```text
-<artifact-root>/
-├── objects/sha256/ab/cd/<digest>/
-│   ├── index.html
-│   ├── manifest.json
-│   ├── src/
-│   ├── runtime/
-│   └── assets/
-├── private/<revision-id>/
-│   ├── provenance.json
-│   └── validation/<validation-id>/
-├── public/sha256/ab/cd/<digest>/
-├── staging/<write-id>/
-└── quarantine/<artifact-id>/
-```
-
-Writers build a complete candidate under a lease-owned `staging` directory. A
-one-use submission closes it to writes. The committer validates paths and
-digests, flushes the manifest, records the commit intent, and atomically renames
-the candidate into `objects` on the same filesystem. The rename and database
-finalization are independently idempotent and reconciled after crashes.
-Existing digest directories are never overwritten. Symlinks, hard-link escapes,
-devices, sockets, executable bits, absolute paths, traversal, and normalized or
-case-folded path collisions are rejected.
-
-The API and packaging workers receive read/write access only where required.
-Validation runners and the preview server mount completed objects read-only.
-The preview and public servers cannot read `private`, `staging`, or
-`quarantine`; publication copies the exact validated runtime object into the
-dedicated `public` namespace without its private sidecars.
-Filesystem quotas cover bytes, files, and inodes per project and globally. A
-Celery retention task deletes an immutable object only when PostgreSQL has no
-live reference and its grace period has elapsed. A separate sweep removes
-expired, unsubmitted staging workspaces only after their lease and grace period
-expire. The persistent volume has automated snapshots, off-host backups, and a
-tested restore procedure.
-
-The initial deployment keeps API and workers on one host with the artifact
-volume attached. If workers later span hosts, use a shared POSIX filesystem and
-retain the same `ArtifactStore` contract. Do not use Redis or PostgreSQL for
-binary artifact payloads.
-
-Celery is the task execution layer and Redis is its broker. PostgreSQL remains
-the workflow source of truth: every stage claims an expected state, records its
-result, and advances the run in one transaction. The transaction also writes an
-`OutboxEvent`; a dispatcher publishes the next Celery task and marks the event
-sent. Duplicate publication is safe because stage tasks are idempotent and use
-the run ID, stage, attempt, and expected state as their execution key.
-
-Every claim receives a monotonically increasing execution fence. Leases enable
-recovery but do not grant correctness by themselves: artifact submission,
-model-response acceptance, stage completion, and every other externally
-visible side effect compare the current fence. A task whose lease expired may
-finish local work, but it cannot commit stale output after a replacement has
-claimed the stage.
-
-Tasks carry identifiers and small commands only. Prompts, source bundles,
-screenshots, traces, and model responses stay in PostgreSQL or the artifact
-filesystem,
-not Redis messages or Celery results.
-
-Redis may provide a short-lived Celery result backend for operational status,
-plus cache and rate-limit data, but no product state depends on those keys.
-Cancellation is a durable flag in PostgreSQL that tasks check cooperatively;
-Celery revoke is only a best-effort optimization. A single Celery Beat instance
-drives outbox recovery, stale-stage reconciliation, retention, and health tasks.
-
-Use separate queues and worker pools:
-
-- `workflow` for lightweight state transitions and dispatch;
-- `models` for provider calls;
-- `assets` for image or audio jobs;
-- `validation` for isolated browser runs; and
-- `maintenance` for outbox, recovery, and retention work.
-
-Canvas chains and groups are allowed for small, bounded fan-out, but a Celery
-result graph is never the canonical workflow. Dynamic repair decisions always
-return through the persisted state machine.
-
-Baseline Celery policy:
-
-| Setting or rule | Baseline |
+Ручная «Проверить игру» адресует выбранную Revision/hash и создаёт ValidationTask
+без Run/Invocation/сообщений. Общий с автоматическим путём исполнитель сохраняет
+отчёт; только автоматический Run решает о ремонте/принятии. Ручная проверка не меняет
+текущую версию. Snapshot, fence/lease, idempotency aliases и сохранённые пакеты
+защищают результат от повторной доставки, отмены и перезапуска. Браузер один,
+health/control обслуживаются независимо; ожидание очереди и исполнение измеряются
+раздельно. [API, семантика ожиданий и ограничения](validation-v4-implementation.ru.md).
+
+После исчерпания сохранённого лимита повторная ошибка ведёт в E; бесконечной петли F нет.
+Pro/Sol сначала делает отдельный ограниченный замысел новой игры. По уточнению 30.10
+новая full Lite сразу создаёт игру: восстановлен путь до разделения стратегий и ядро
+инструкций из `1e36819`. Для compact Lite остаётся планирование запросов до 320 символов;
+длина — явная эвристика. Продолжения сохраняют прежнюю политику планирования.
+Игровой контракт, runtime и браузерная приёмка остаются текущими. Новая full Lite
+не закрепляет GameForgeExperience и не генерирует обязательный рецепт SVG/музыки.
+У доработок выбор следует исходной игре, у продолжений — сохранённому Run; ресурсы
+существующей игры сохраняются. Pro/compact по-прежнему получают полный каталог.
+`Run.generation_strategy`, `planning_required` и `game_plan` сохраняются в БД до следующего
+этапа. План не является Revision или доказательством приёмки. Его receipt и запись плана
+завершаются одной транзакцией; возобновление не повторяет полученный ответ. Продолжение
+наследует план, новая явная правка имеет приоритет над прежними дополнениями модели.
+
+Новые запросы планирования закрепляют `plan_provenance=1`. Требования различают
+`user` (точная цитата текущего запроса), `preference` (точная цитата одного элемента
+сохранённого `preferences_snapshot`) и `design` (добавление модели без цитаты).
+Однозначно ошибочная метка `user` заменяется на `preference`, только если цитата
+отсутствует в запросе и целиком присутствует в сохранённых пожеланиях. Текст плана
+не меняется; исходный receipt и журнал исправления сохраняются. Старые отправленные
+запросы не переосмысляются. Цитирование подтверждает источник, а не корректность
+толкования. Явный текущий запрос приоритетнее несовместимого общего пожелания.
+Ожидание свободного места провайдера отображается отдельным `waiting_capacity`;
+повторная доставка ожидания не создаёт событий и вызовов, получение уже отправленного
+receipt не блокируется новым ограничением вместимости.
+
+Проверки full поддерживают `hold_touch`: настоящее удержание одного пальца на
+экранном элементе 1–3000 мс с обязательным отпусканием. Длительность входит в общий
+лимит ожиданий; при проверке причинности действие заменяется паузой той же длины,
+поэтому автоматическое движение от таймера не доказывает управление. На desktop
+касание запрещено. Проверки не вызывают обработчики самой игры и не заменяют палец
+мышью. Это не проверка одновременного удержания нескольких пальцев.
+
+Максимум: один план + одно создание + до трёх исправлений. Общий пользовательский
+`model_call_limit` (1–5) и deadline ограничивают **все** отправки. При лимите 1 после
+планирования сохраняется только замысел с явным объяснением, что кода ещё нет.
+High у Pro относится к plan/create/repair, medium — к edit/check_repair. Lite сохраняет
+малый объём и прежний API-транспорт. Выбор стратегии не меняет формат артефакта:
+Pro редактирует full/compact в закреплённом формате. Разделены инструкции и контекст;
+очередь, бюджет, безопасность, патчи и приёмка общие.
+
+Pro получает ограниченные факты проверок и, при наличии, PNG/JPEG не более 512 КиБ
+из актуального отчёта своего кандидата. До записи запроса и при сборке Codex input
+проверяются hash/ID отчёта, тип и размер. Передаётся только data URL; изображения
+не дают доступ к хосту. Кадр не доказывает игровой эффект. Повторные Codex turn/start
+внутри одного Invocation, инструменты и произвольный агентный цикл не включены:
+цикл выполнения и обратной связи принадлежит приложению.
+
+По запросу владельца от 26.10 Pro также использует `presentation_policy=1`, которую
+приложение закрепляет в новом запросе до резервирования. Новый успешный Pro-план
+обязательно содержит `presentation.art_direction` и `presentation.motion`: конкретное
+художественное направление и описание видимого движения/отклика. Они сохраняются
+в game_plan, передаются реализации и ремонту, доступны в раскрываемом замысле игры.
+Требования охватывают цельную палитру/типографику/рисунок сцены, использование площади
+экрана, плавное движение и реакции на действия, переходы прогресса/финала/повтора.
+Это авторский бриф и инструкции, а не независимое доказательство красоты.
+
+В полном формате Canvas-анимации опираются на прошедшее время и один scheduler,
+в compact — на штатные update(dt)/render(ctx). Косметическая анимация отделена от
+правил и ввода; эффекты ограничены, resize и повтор сохраняют корректность состояния.
+Явные стилевые пожелания, статичность и prefers-reduced-motion имеют приоритет.
+Локальная правка/ремонт сохраняет оформление без несвязанного редизайна; check_repair
+по-прежнему не получает разрешения реализовывать графику или анимацию.
+
+Маркер политики сохраняется в Invocation.request и request_profile. Его отсутствие
+означает прежнюю зафиксированную схему/инструкцию уже сохранённого запроса: новые
+обязательные поля не переинтерпретируют старый receipt. Это сохранение состояния
+вызовов; политика оформления сама по себе не меняет контракт артефакта или модель Codex. Lite не получает этот бриф.
+Для новой политики художественные результаты и плавность ещё не измерены живой моделью:
+один screenshot или изменение пикселей не являются проверкой анимации.
+
+Полный ответ проходит узкую нормализацию известных пустых метаданных и алиаса статуса,
+затем строгую валидацию. Нормализация не меняет исходники, действия проверок или ограничения.
+Invocation сохраняет исходный raw_response отдельно от канонического response; публичная
+сериализация их не раскрывает. Восстановление старого invalid_schema выполняет локальная
+команда recover_saved_response: новый Run с allow_model_calls=false и сохранённым кандидатом.
+Очередь проверяет его обычным изолированным валидатором, но не может вызвать LLM даже после
+ошибки или рестарта. Исходный Invocation, usage, стоимость и неудачный Run не переписываются.
+Нет цепочки спецификатора, критика и исследователя. После сохранённого замысла модель
+возвращает код и небольшие проверочные сценарии. Ответ не должен содержать длинную
+исследовательскую переписку. Проверки исполнения не измеряют привлекательность игры
+и не доказывают полноту реализации замысла: это отдельная оценка живых результатов.
+
+29.10: подтверждённый terminal `max_output_tokens` от Pro API получает отдельный
+`response_output_limit`. Если full/create оборвался внутри files после полных assets,
+checks и design, разрешено одно учитываемое дозавершение в прежнем лимите Run.
+Приложение разбирает только целые JSON-значения и целые элементы files, проверяет их
+схему и сохраняет неизменными. Модель возвращает отсутствующие поля и оставшиеся
+файлы целиком через узкую схему с hash исходного ответа; она не дописывает сырую
+JSON-строку и не заменяет сохранённые файлы. Сборка проходит исходный полный контракт,
+приём исходников и обычные браузерные проверки. Нового обязательного этапа нет.
+Исходный failed Invocation/raw/usage остаётся неизменным, новая квитанция хранит
+фрагмент ответа, собранный результат и журнал происхождения. Дубликаты/невалидные
+целые значения не исправляются автоматически, неполные исходники не выдаются за игру.
+Unknown, отмена, неизвестный расход, иная операция или повторный обрыв не разрешают
+такой вызов. Одна попытка на цепочку; ошибка дозавершения не запускает полную
+перегенерацию. Явное продолжение пользователем после обновления может принять
+текущую политику только для этого пути: неизменные запрос/план/пожелания/требования,
+тот же helper catalog и подтверждённая квитанция. Старый Run не переписывается;
+переход политики фиксируется отдельным событием нового Run.
+
+Уточнение ответов от 30.10: общий prompt для full/compact и пользовательских исходов
+требует короткого нетехнического `message` до 1000 символов без общего ограничения
+числа предложений. Ответ объясняет, что создано/изменено, какую проблему исправили
+и как это влияет на игру. Ограничение 1–2 предложения относится только к итогу
+самопроверки, следующему за объяснением работы, а не к объёму самого осмотра.
+Create/edit/repair/visual_patch получают краткий осмотр итоговой игры в том же вызове:
+правила, управление, исход, повтор игры и доступность управления на телефоне/ПК.
+Нового этапа, вызова или поля нет; `message` перенесён после исходников/правок в
+порядке полей схемы, инструкция также требует его последним. Это осмотр, не исполнение.
+Сервис дополняет текст результатом проверок только при passed/accept/gates_passed,
+совпадении сохранённых сценариев и hash игры в отчёте выбранной версии. HTTP-чтение
+не запускает валидатор. Сообщение другой версии или этапа ремонта сценариев не
+подменяет итог игры. Ручное подтверждение названо отдельно. Частые признаки кода,
+технических терминов и неподтверждённых гарантий заменяют весь модельный текст
+нейтральным ответом; это защитная эвристика, не полная языковая классификация.
+Исходные ответы и диагностика остаются приватными. Если сохранённого сообщения
+нет, интерфейс выводит подготовленное публичное сообщение, а не внутреннюю ошибку.
+История сообщений не переписывается. Изменение prompt входит в существующий снимок
+политики: отправленные ответы учитываются, новые вызовы старой политики блокируются.
+
+В полном профиле `design.visual` модель до кода рассчитывает полезную сцену для телефона и ПК:
+геометрические ограничения из запроса, доступную область после управления, размеры
+самого поля/объектов и преобразование координат. Расчёт проходит через всю цепочку
+контейнеров до отрисовки; размеры DOM Canvas и однотонный фон не считаются размером
+игрового поля. Рисование, ввод, размещение объектов и игровые границы согласованы.
+Приоритет — полезная площадь сцены и читаемость, а не большие заголовки и декоративные
+подписи. Длинные инструкции уходят в начало/справку; текстовые механики сохраняются.
+Свободные размеры адаптируются к обеим сторонам доступной области, фиксированная
+правилами геометрия сохраняется и масштабируется без искажений. Общего шаблона HUD,
+универсального процента площади и обязательного bridge у полного профиля нет. Это уточнение того же
+модельного ответа (до 1200 символов `visual`), без новых этапов, runtime или миграций.
+Проверки механик по-прежнему обязательны и не являются художественной приёмкой;
+качество компоновки проверяется отдельными живыми испытаниями.
+
+При невозможном для мини-игры запросе приложение объясняет границу объёма и предлагает
+краткий вариант; не сокращает явно запрошенную функцию молча. Не требуется обходиться
+одним жанром: правила и механики генерируются, общими остаются инфраструктура и инструменты.
+
+## 2. Стек и границы процессов
+
+- Django/DRF: сессии, права, чаты, сообщения, версии, публикации, запуск и состояния.
+- PostgreSQL **18+**: источник истины. Celery/Redis: доставка работы, не хранилище версий.
+- React/TypeScript/SCSS: интерфейс по F01–F14, Vite для сборки.
+- Model runner: единственная роль с доступом к провайдеру. В локальном режиме — доверенный
+  процесс пользователя с Codex-login; в серверном — worker с доступом к relay/vLLM.
+  Для закрытого стенда разрешён отдельный вход Codex с явным списком пользователей Pro.
+- Validation controller передаёт конкретный кандидат в браузерный sandbox. Процесс,
+  исполняющий игру, не получает доступ к БД, Redis, кодовой базе платформы и секретам.
+- nginx: единая внешняя точка входа с отдельными virtual hosts для приложения и preview.
+
+Одна кодовая база backend, без FastAPI/SQLAlchemy рядом с Django и без собственного
+AI HTTP-микросервиса поверх очереди. Контейнерное разделение ролей оправдано изоляцией,
+а не стремлением разбить продукт на сервисы. Только образ проверки содержит Chromium.
+Контейнер проверки готов заранее; Chromium запускается для конкретного отчёта, контекст
+каждого сценария чистый. Общего browser pool пока нет; его необходимость определяется
+замерами накладного времени, а не обещанием в документации.
+
+Миграции и bootstrap администратора выполняются init-командой при запуске, не при сборке
+образа. Пароль берётся из runtime environment, не из Dockerfile/ARG. Повторный запуск
+не перезаписывает пароль существующей учётной записи. Уникальность username проверяется
+на уровне БД по нормализованному регистру, включая одновременные запросы создания.
+
+## 3. Что хранится
+
+| Сущность | Назначение |
 | --- | --- |
-| Task and result serialization | JSON only; never accept pickle |
-| Long-task acknowledgement | `acks_late` with idempotent side effects |
-| Worker loss | Reject and redeliver after the visibility lease |
-| Long-task prefetch | One task per available worker process |
-| Task duration | Per-queue soft and hard limits |
-| Redis visibility timeout | Greater than the largest hard task limit |
-| Result retention | Short TTL; results are operational, not canonical |
-| Broker payload | IDs, stage, attempt, expected state, trace context |
-| Concurrent redelivery | Lease plus monotonic execution fence on every commit |
-| Scheduled recovery | One Celery Beat scheduler plus idempotent jobs |
+| User / Preference | Django-пользователь, модель по умолчанию, компактные явные предпочтения качества; прежнее поле темы не управляет новым клиентом |
+| Chat / Message | Одна игра, её запросы/ответы, владелец и текущая рабочая версия |
+| Run | create/edit/repair, базовая версия, состояние, провайдер, attempt, отмена, журнал |
+| Invocation | Отправленный запрос, ответ/ошибка, usage, latency, состояние доставки |
+| Revision | Неизменяемые исходники, parent, экспорт, hashes, краткая карточка игры |
+| CheckReport | Проверенные эффекты, браузерные факты, ошибки и точный hash кандидата |
+| Publication | Владелец, публичное название, UUID и собственная ссылка на выбранную Revision |
+| Like / Feedback | Один лайк пользователя на публикацию; оценка и причины по своему чату |
 
-## API surface
+Сохранённая публикация и ремиксы удерживают артефакт независимо от существования чата.
+Удаление чата прекращает его задания, но не каскадно уничтожает опубликованные снимки.
+Удаление чата мягкое: история и финансовые записи сохраняются; автоматический сборщик
+артефактов и политика долгосрочного удаления персональных данных сейчас не реализованы.
 
-Initial versioned endpoints:
+Один активный меняющий запуск на чат. Другие чаты независимы; их лимит одновременности
+зависит от провайдера. Два редактирования одной версии не применяются молча друг поверх друга.
 
-```text
-POST   /v1/projects
-GET    /v1/projects/{project_id}
-POST   /v1/projects/{project_id}/runs
-GET    /v1/runs/{run_id}
-GET    /v1/runs/{run_id}/events       # SSE, resumable with event ID
-POST   /v1/runs/{run_id}/cancel
-POST   /v1/revisions/{revision_id}/revise
-GET    /v1/revisions/{revision_id}
-POST   /v1/revisions/{revision_id}/preview-token
-POST   /v1/revisions/{revision_id}/publish
-```
+Новый чат получает «Новая игра». Первый запрос задаёт короткое имя из текста
+(1–3 слова, до 48 символов, без вызова модели); сохранённый кандидат уточняет имя
+по названию игры с тем же ограничением. Ручное имя не сокращается.
+`Chat.title_is_custom` защищает имя, выбранное пользователем через создание или PATCH:
+оно не заменяется поздним результатом, в том числе при ручном подтверждении кандидата.
+Переименование и принятие результата блокируют ту же строку Chat. Имя публикации,
+название и исходники Revision не меняются. Миграция `0011_chat_titles` сохраняет все прежние
+непустые имена как пользовательские: надёжных данных об их происхождении нет.
 
-Mutating requests accept an idempotency key. External identifiers are opaque.
-API responses expose artifact and evidence references, never internal paths,
-provider secrets, raw workflow payloads, or sandbox coordinates.
+## 4. Создание и точечное редактирование
 
-## Reliability and backpressure
+Рабочий формат — небольшой набор обычных HTML/CSS/JS-файлов и необязательный JSON
+параметров/уровней. Для первой версии достаточно `index.html`, `styles.css`, `game.js`;
+не требовать файл, если он не нужен. Нет обязательного игрового runtime или npm-сборки
+на каждую игру. Начальный профиль — обычный Canvas2D; WebGL допустим по запросу.
 
-- API admission enforces per-user concurrency, token, storage, and cost quotas.
-- Provider calls have timeouts, cancellation, retry classification, and circuit
-  breakers. A fallback model is allowed only when its capabilities satisfy the
-  stage contract and provenance records the change.
-- Each model call is reserved before dispatch with a request fingerprint and
-  execution fence. Reuse completed identical responses where policy permits;
-  measure provider calls abandoned by a stale worker as duplicate spend.
-- Celery tasks are idempotent; artifact writes use digest keys and conditional
-  creation. Workers acknowledge long tasks after completion and may therefore
-  execute a task more than once after failure.
-- Work queues are separated by trust and resource profile: orchestration, model,
-  assets, and browser validation.
-- Long-running worker pools use a prefetch multiplier of one, explicit soft and
-  hard time limits, and a Redis visibility timeout comfortably above the hard
-  limit. Task and result serializers accept JSON only.
-- Redis uses a dedicated database or instance, TLS and authentication in
-  production, `noeviction`, AOF persistence, replication or managed failover,
-  and broker-specific key prefixes. Large payloads never enter the broker.
-- A recovery sweep republishes unsent outbox events and safely reclaims expired
-  stage leases. Any replacement claim increments the execution fence. Celery
-  Beat runs as a singleton to avoid duplicate schedules.
-- Long stages renew their lease with the current fence. Loss of database
-  connectivity stops new model calls and commits; it never causes a worker to
-  assume that its old lease is still authoritative.
-- Validation capacity controls generation admission so completed code does not
-  accumulate indefinitely while waiting for scarce browsers.
-- Every terminal failure returns structured findings and the last safe revision.
+Результат `create` содержит исходники, название при его отсутствии, краткий замысел,
+управление, исход игры и сценарии основных проверок. Имя провайдера не входит в схему игры.
+Визуальный подход включает палитру, композицию и обратную связь действий, но не отдельный
+многостраничный дизайн-план. Допустимы общие helpers; нельзя выдавать готовую змейку по
+условию `genre == snake` вместо генерации.
 
-## Observability and evaluation
+Результат `edit` содержит `base_revision`, список изменений и ожидаемый эффект.
+Первый формат патча — точные замены `{path, old_text, new_text}` с hash исходного файла;
+JSON-параметры меняются такими же точными заменами. Отдельного typed-path редактора нет.
+Каждый `old_text` должен совпасть ровно один раз.
+Все изменения сначала проверяются на копии, затем применяются атомарно. Новые локальные
+файлы разрешены для запрошенной небольшой функции. Путь вне игры, несовпавшая версия,
+неоднозначная замена и незавершённый ответ не применяются.
 
-Instrument API, workflow, model, artifact, and validation operations with
-OpenTelemetry. A trace follows one run across every plane. Record:
+Нет fallback «патч не получился — перепиши всю игру». Модель получает короткую причину
+конфликта и актуальный фрагмент в пределах оставшейся попытки. Не делать fuzzy replace
+с риском изменить соседнюю механику. Для простого цвета/размера/скорости сохраняются
+байты нетронутых модулей; для двух уровней разрешены изменения данных и связанного кода.
+Размер diff измеряется, но не служит универсальным процентным запретом на обоснованную правку.
 
-- stage and end-to-end latency;
-- success and failure by stable finding code;
-- first-pass and post-repair playable rate;
-- repair yield and repeated-finding rate;
-- token use and estimated cost by stage, model, and template;
-- browser queue time and sandbox resource use; and
-- quality score by golden prompt and rubric.
+Для отклонённого edit приложение выдаёт `patch_repair`: UUID/hash исходной версии,
+hash сохранённого ответа и индексы всех ошибочных/пересекающихся фрагментов. Следующий
+ответ содержит только исправления этих индексов в тех же файлах. Корректные патчи,
+название, design и checks восстанавливаются из сохранённого ответа; вся комбинация
+снова проходит атомарное применение. Неудачная коррекция не расширяет разрешение
+на нетронутые индексы. Этот шаг занимает обычную попытку из общего лимита, действует
+для full/compact и обоих транспортов Codex. Сохранённый receipt можно обработать
+после перезапуска без нового вызова; неизвестный результат не повторяется.
 
-Do not attach full prompts, generated source, screenshots, or model responses to
-telemetry by default. Store sensitive evidence under the project's retention
-and access policy.
+Create не создаёт кандидата из пустых/комментарийных исходников и отсутствующих
+ресурсов. Семантически неполный checks сохраняет комплектный код. Разрешённый ремонт
+одного JS/CSS/JSON-файла ограничен 12 КиБ и точным hash; соседние файлы сохраняются.
+Компактный профиль защищает runtime/HTML/CSS от модельных правок, разрешая edit только
+точными заменами game.js и repair в одном выбранном приложением формате.
 
-The golden suite is a product asset, not just a test folder. Each case contains
-a prompt, normalized specification, rubrics, bridge scenarios, black-box
-actions, viewport matrix, and pass threshold. Start with:
+Семантическая ошибка checks при edit также сохраняет корректно применённый код
+и исходные сценарии в кандидате. Дубликаты не удаляются при слиянии наборов. Если
+унаследованный набор превышает 12 сценариев, исполнитель планирует пакеты до 12
+из сохранённого набора до 48, начиная с startup/mobile input/outcome. Неисполненные
+сценарии получают not_run, неполный отчёт не допускает автоматическое принятие. Исходный набор
+целиком остаётся в Revision/Invocation. Структурные ограничения ответа и лимиты
+компактного manifest остаются обязательными.
 
-- tap-to-jump runner;
-- grid puzzle;
-- space shooter;
-- card or turn-based game; and
-- touch-first drag-and-drop game.
+Сценарии изменяются отдельным check_repair с привязкой к базе/HTML/checks hash и
+исходной идентичности требований. Новый сценарный снимок не объявляет игру проверенной
+без независимого решения. Упаковка автономна, preview/download/publication используют
+одинаковые сохранённые байты. Старые контракты не переинтерпретируются как v9.
 
-Run the suite against every template, prompt, model, validator, and repair-policy
-change. Compare distributions and cost, not a single showcase game.
+При повторном ID одинаковые `(id, category, requirement, viewport)` представляют
+одно обещание; его сценарий пересоставляется с учётом всех исходных вариантов.
+Разные обещания с одним ID получают детерминированные уникальные ID. Связь каждого
+исходного индекса с новым ID сохраняется в `identity_repairs`. Уникальные обещания
+не удаляются ради лимита 12; если они не помещаются, код остаётся черновиком.
+Даже прошедший новые проверки результат требует подтверждения пользователя.
 
-## Security invariants
+Контекст правки: запрос, краткая карточка игры, текущая версия, актуальные исходники
+или связанные фрагменты, последний релевантный результат. Не передавать всю историю
+чата и прежние версии на каждом шаге. Для небольшой игры полный текущий код во **входе**
+допустим: требование M12 ограничивает ненужную переработку, а не чтение исходника.
+Общий prefix стабилен; провайдерская сессия — ускорение, не единственный источник состояния.
 
-These are architectural requirements, not optional hardening:
+Системный промпт состоит из общего ядра, правил коротких проверок и инструкций
+выбранной операции. Создание не получает правил применения патча; правка и исправление
+получают их вместе со своими полномочиями. Hash инструкций выбранной операции
+записывается в журнал отдельно от hash JSON-схемы. Ориентир 4–6 сценариев сохраняет
+обязательные эффекты и прежние регрессии; при необходимости разрешено до 12.
 
-1. Generated code never runs in the API or workflow process.
-2. A sandbox receives no provider, database, or platform secret and only a
-   read-only mount of the selected artifact.
-3. Network denial is enforced outside the browser process.
-4. Preview content has a separate origin and no application cookies.
-5. Model tools cannot execute arbitrary shell commands or escape the workspace.
-6. Artifact paths are normalized relative paths and symlink escapes are rejected.
-7. Template runtime files are digest-verified before and after generation.
-8. Every artifact and asset has provenance, size limits, and a retention policy.
-9. Vision or language-model judgments never override deterministic security
-   failures.
-10. Publishing requires the exact validated artifact digest; it never rebuilds
-    from mutable source.
-11. Every state-changing worker operation presents the current execution fence;
-    an expired worker cannot commit output.
-12. Untrusted prompt, source, findings, and asset metadata remain delimited data
-    and are never promoted into trusted model instructions.
+## 5. Проверка без возврата к прежней тяжёлой системе
 
-## Evolution plan
+Проверяем каждый новый кандидат один раз. Успех сохраняется по hash артефакта,
+версии проверок и профилю среды. Публикация тех же байтов не запускает модель/браузер повторно.
 
-### Phase 0 — deterministic vertical slice
+Базовые проверки: корректная упаковка и JavaScript, загрузка без блокирующих ошибок,
+локальные ресурсы, содержательная сцена, телефонный viewport, доступность управления,
+настоящее действие → ожидаемый эффект и осмысленный конечный исход по правилам игры.
+Пошаговая игра не обязана содержать таймер; запрещённый ход может правильно ничего не менять.
+Для удержания клавиши проверяются отпускание и потеря фокуса, если такое управление есть.
 
-- Domain contracts and fake model gateway.
-- Versioned harness request/result, draft-workspace, and candidate-submission
-  contracts with an in-process fake model.
-- One trusted Canvas2D template and one fixture game.
-- Local artifact store.
-- Static checks and Playwright validation on the developer machine.
-- Golden test for one runner game.
+Полный набор обязан включать `start` в мобильном viewport и `control` с реальным
+`tap`/`tap_fraction` без клавиатуры в этом сценарии. Отдельные desktop-сценарии
+дополняют мобильную проверку. Для новых игр с GameForgeExperience обязателен также
+`control` в desktop с `press`/`key_down` и без pointer-действий. Desktop имеет
+`has_touch=False`; viewport-профили 390×844, 844×390, 1280×800. Для размера без сценария
+исполняется один маршрут открытия сцены, а не все сценарии повторно. Перевод tap
+в click допустим только в таком desktop probe и не доказывает игровое управление.
+Отсутствие клавиатурного сценария — основание ремонта проверок, не кода; новый сценарий
+потребует подтверждения. Эти условия проверяют схема после объединения
+унаследованных сценариев, браузерный исполнитель и контроллер его отчёта.
+Для повторного раунда поддерживается категория `restart`: реальный ввод должен
+сбросить раунд и подтвердить возможность играть снова. Промпт требует такой сценарий
+при наличии повтора; наличие самой функции нельзя определить одной JSON-схемой.
 
-Exit criterion: the same fixture reproducibly passes specification-to-evidence
-without network or model credentials.
+Модель предлагает короткий план браузерных действий и наблюдений конкретной игры.
+Исполнитель использует реальные pointer/touch/key события. Для Canvas доступны явные
+дробные координаты элемента, обычные координаты остаются CSS-пикселями. В ответе правки
+можно вернуть только изменённые/новые сценарии: остальные наследуются, после объединения
+проверяется весь короткий набор и его полнота. Он записывает факты сам;
+`passed:true` из HTML, тестового bridge или ответа модели не является вердиктом.
+Нельзя заменять проверку клавиатуры внутренним `dispatch`, нажимать вслепую первую кнопку
+и считать любое изменение счётчика доказательством исправности.
 
-### Phase 1 — usable single-node product
+Наблюдение DOM/состояния допустимо для точных ожиданий. Универсальный `score/phase/lives`
+и тестовые кнопки не встраиваются. Тестовая подготовка/seed допустимы, но не должны
+подменять реальную механику или задавать успешный исход напрямую. Условия проверки
+хранятся с версией игры; малая правка наследует прежние эффекты и добавляет затронутый тест.
 
-- FastAPI, PostgreSQL, Redis, Celery workers, and the React creator UI.
-- Transactional outbox, fenced idempotent stage claims, and deadline-bound
-  cooperative cancellation.
-- Real provider through `ModelGateway`.
-- Two-repair workflow, SSE progress, revision history.
-- Separate local validation worker and dedicated preview origin.
-- Five golden prompts across desktop and mobile.
+Весь сформированный короткий набор выполняется целиком; отдельного отбора расширенных
+сценариев по графу зависимостей нет. Для мини-игры это дешевле отдельного графа зависимостей
+и нескольких приёмочных ролей. Заведомо плохие тесты/самоотчёты проверяются отрицательными fixtures
+самого генератора. Это повышает достоверность, но не доказывает отсутствие всех ошибок.
 
-Exit criterion: at least 80% of the fixed golden suite is playable after bounded
-repair, with every failure explained by structured findings.
+Полное прохождение всех уровней не входит в каждую генерацию. Если автоматизация не
+подтвердила обязательный эффект, показать конкретное непроверенное условие и дать
+проверить его человеку в безопасном preview. Не ставить зелёный статус и не публиковать
+как проверенную игру до подтверждения. В отчёте различать автоматическую и ручную проверку.
+Такой исход считается неполным автоматическим успехом в метриках, а не скрытым pass.
 
-### Phase 2 — production trust boundary
+В политике завершения 2 ошибка сценария/недостаток наблюдений завершает обработку
+без code repair. `unverified` с доказанными gates допускает ручную проверку;
+при отсутствии этих доказательств сохраняется `needs_attention`, без кнопки принятия.
+Обязательные gates выполняются даже при неверном selector. Ручное подтверждение
+привязано к hash кандидата, ID отчёта, версии проверяющей среды и неизменной рабочей базе.
+Ручная проверка создаёт ValidationTask без генерационного запуска; исходники не изменяются.
+Прежний Run recheck endpoint закрыт (410). Успешная перепроверка сохранённого кандидата
+сама не принимает игру; ручное принятие остаётся отдельным явно подтверждаемым действием.
+После одинаковых неудачных проверок автоматический ремонт прекращается; при доказанной
+регрессии возвращается кандидат с более полным сопоставимым набором проверенных эффектов.
 
-- Backed-up persistent artifact volume with enforced quotas and retention.
-- Managed or replicated Redis with AOF, no eviction, and queue-specific worker
-  pools and limits.
-- Outbox recovery, stale-stage reconciliation, load-based admission, and
-  independent scaling for model and validation workers.
-- Recovery and fault-injection tests for pending artifact commits, expired draft
-  workspaces, stale execution fences, and duplicate provider calls.
-- gVisor or microVM-backed ephemeral validation runners with egress denial.
-- Authentication, quotas, moderation, retention, and OpenTelemetry.
-- Signed private previews and explicit publication flow.
+Обычный дефект возвращается модели одним пакетом с местом ошибки и браузерными фактами.
+Автоматический repair наследует полный обязательный набор проверок без изменения.
+Если ошибочен сценарий, требуется отдельное решение приложения с независимым подтверждением
+эффекта; изменение одних тестов останавливается как needs_attention.
+Неудача инфраструктуры возвращается как проблема среды, а не просьба переписать игру.
+Общую платформу исправляет команда вне пользовательского задания.
 
-Exit criterion: process restarts do not lose runs, no sandbox has platform
-credentials, and load tests demonstrate backpressure rather than overload.
+Схема текущего контракта выбирается по сохранённым операции и профилю. Числовые
+наблюдения, checkpoint, bounded wait_for и unchanged поддерживают точные проверки
+движения/паузы. Диагностика содержит только факты игрового кадра, ограниченный каталог
+наблюдений и фрагмент вокруг точной UTF-16 колонки. Полный отчёт и исходный checks
+сохраняются; фокусный контекст модели ограничен. Seed/clock имеют отдельную идентичность.
 
-### Phase 3 — quality flywheel
+## 6. Сменный провайдер
 
-- Versioned skill and debug-knowledge registry.
-- Canvas, grid, cards, narrative, and Phaser template profiles.
-- Vision review, human feedback, A/B model and prompt evaluation.
-- Optional generated image and audio assets with license provenance.
-- Curated remixing and capability-based saves, scores, and leaderboards.
+Общий интерфейс: запрос create/patch, streaming progress, законченный результат,
+typed error, usage и cancel. Состояние версий, публикаций и проверок принадлежит приложению.
 
-Exit criterion: changes ship only when golden-suite playable rate, quality, cost,
-and latency remain within declared budgets.
+**Первый адаптер — локальный Codex App Server.** Один ephemeral thread/turn с JSON schema,
+progress, usage и отменой.
+`baseInstructions` задаёт короткий игровой контракт, `environments: []`, пустые runtime roots,
+выключенные shell/patch/MCP и безопасный каталог моделей обеспечивают режим без инструментов.
+Код генератора и другие проекты модели не доступны. CLI-профиль проверен на
+`0.163.0-alpha.10.2`; смена версии требует повторной проверки до платного запуска.
+Подробности — [контракт адаптера](../generation/README.md).
 
-## Deliberately deferred
+Скрытые request/stream retries отключены. Приложение сохраняет идентификаторы thread/turn,
+usage и время; число продуктовых вызовов не объявляется измерением внутренней реализации
+серверной модели. Этот режим только для доверенного локального оператора. Авторизация
+остаётся в Codex, не копируется в frontend, Git и Docker images. Общедоступное размещение
+использует API-провайдер. Закрытый стенд может использовать отдельный Codex-login только
+у worker с явным списком разрешённых аккаунтов; новые аккаунты не получают его автоматически.
 
-- 3D and world-model generation;
-- multiplayer and arbitrary game networking;
-- a general-purpose IDE or shell agent;
-- user-supplied packages or runtime CDN dependencies;
-- autonomous multi-agent swarms;
-- Kubernetes before the execution-plane or scale requirement exists; and
-- model fine-tuning before evaluation data demonstrates a repeatable gap.
+**Второй адаптер — vLLM на отдельном сервере.** Настраиваются base URL, model, ключ при
+наличии и параметры фактически установленной модели. Базовый контракт можно реализовать
+через Chat Completions; доступность streaming/schema/usage/cancel проверяется на реальном
+endpoint. Совместимость с OpenAI по названию не гарантирует одинаковые функции и качество.
+При отсутствии schema-режима допустим валидируемый JSON-ответ с явным ограничением возможностей.
+Не требовать Responses API, CLI tools, vision и vendor-specific reasoning от любой модели.
 
-These can become product directions later. None is required to prove the core
-prompt-to-playable loop.
+**Третий адаптер — `relay`, сохраняемая очередь для того же vLLM.** Два самостоятельных репозитория
+`llm-relay` и `llm-gpu-worker`: WSGI-реле с SQLite/WAL и отдельный исходящий GPU-исполнитель с локальным
+SQLite spool. Нагрузка модели не идёт через долгоживущее внешнее HTTP-соединение.
+Исполнитель получает задания по HTTPS, вызывает localhost vLLM, фиксирует результат на
+диск и повторяет его доставку до подтверждения хеша. Реле хранит payload, владельца,
+назначение исполнителя, отмену и receipt. Client/worker-токены имеют разные маршруты;
+в БД хранятся только их хеши. Модель, команды ОС и управление Docker через очередь не доступны.
+
+UUID Invocation и точный payload сохраняются в PostgreSQL до отправки. Реле отклоняет
+повтор того же UUID с другим payload, не перераспределяет назначение по таймауту и принимает
+идентичный receipt повторно. Временный обрыв переводит обработку GameForge в ожидание с тем
+же UUID. Перезапуск Celery возобновляет получение результата, не создаёт новую Invocation.
+Отмена доставляется отдельной фоновой задачей, включая отмену до потерянного подтверждения
+первого submit. Поздний ответ остаётся в учёте, но не применяется к отменённой игре.
+
+Авария GPU-исполнителя во время inference или потеря его spool оставляет неизвестный исход.
+Нельзя автоматически повторять такой вызов или удалять идентификаторы старых заданий.
+В этой версии один GPU-исполнитель, фиксированный список моделей/лимиты, доставка небольшого
+полного JSON. Файловая дозагрузка, управление моделями, горизонтальная GPU-очередь и
+автоматическое удаление истории не реализованы. [Установка и ограничения](relay-deployment.md).
+
+Проверено по [OpenAI Docs: вход](https://learn.chatgpt.com/docs/auth) и
+[неинтерактивный режим](https://learn.chatgpt.com/docs/non-interactive-mode): CLI умеет
+использовать сохранённую авторизацию, JSON events и schema результата. Профиль установленного адаптера и живой пилот дополнительно
+описаны в [отчёте испытаний](verification.md). Возможности API vLLM описаны в
+[официальной документации](https://docs.vllm.ai/en/stable/serving/online_serving/);
+конкретная конфигурация сервера команды пока неизвестна.
+
+## 7. Быстродействие, ошибки и учёт
+
+По умолчанию один create/patch и до трёх автоматических исправлений результата
+или его формата. GAMEFORGE_MAX_REPAIR_ATTEMPTS допускает 2 или 3; значение фиксируется
+в Run.max_repair_attempts при создании. Старые Run сохраняют прежний лимит.
+После упаковки Chromium сначала компилирует все классические скрипты без выполнения
+кода игры. При синтаксической ошибке игровые сценарии не запускаются. При успешном
+разборе выполняется полный прежний набор проверок. CheckReport.stages хранит этапы.
+Модель исправления получает максимум три причины с приоритетом синтаксиса, затем
+ошибок исполнения/сети, затем игровых эффектов. Полный отчёт остаётся в БД. Внутренние SDK retries не должны скрыто умножать этот цикл. Безопасный
+повтор до отправки и неоднозначный обрыв после отправки различаются.
+После исчерпания лимита исправлений — сохранить кандидат, причину и последнюю рабочую версию;
+явное «Продолжить исправление» использует их, не начинает генерацию заново.
+
+Цели времени — сигнал качества, не общий kill-таймер. Отмена доступна всегда.
+После cancel новый вызов не отправляется, поздний ответ не меняет выбранную версию.
+Транспортный guard отсутствия данных и watchdog изолированного браузера защищают
+от зависших операций, а не обрывают игру
+ровно через целевое время. Для очереди показываются очередь, фактический этап и задержка.
+
+PostgreSQL фиксирует запуск и outbox в одной транзакции. Celery получает ID, а не исходники
+и секреты. Захват имеет lease/fence; повторы доставки не создают второй результат.
+Подтверждённый ответ сохраняется до перехода; неизвестный исход вызова требует сверки.
+Нельзя обещать exactly-once для внешней модели без подтверждения от транспорта.
+
+Журнал связывает chat/run/invocation/revision, этапы, версии prompt/model, время, patch size,
+findings и расход. Приватный пакет диагностики хранит точный запрос, ответ, diff и screenshots
+с ограниченным доступом. Обычная телеметрия — без исходников и секретов.
+Input, cached input и output учитываются раздельно; отсутствующий usage — unknown, не ноль.
+API-эквивалент для подписки — оценка, не списание; у локальной модели может не быть цены.
+Если включён денежный предел, допуск и резерв считаются приложением; неизвестный расход
+не освобождается как «точно не потрачен». Предыдущая сложная ledger-система не переносится целиком.
+
+## 8. UI, публикации и безопасность
+
+Тема интерфейса управляется клиентом: `localStorage` хранит system/light/dark,
+по умолчанию system с подпиской на `prefers-color-scheme`. Смена темы не вызывает API
+и не зависит от сессии/серверного поля темы. В настройках модель сохраняется отдельным
+PATCH при выборе; форма сохранения отправляет только пожелания.
+Модель и тема находятся в отдельной карточке слева, пожелания — справа; на узком экране
+карточки идут друг под другом. Заголовок выровнен по их общему левому краю.
+Названия Lite/Pro не раскрывают провайдера в выборе модели. Расходы и синтетическая
+аналитика не показываются в настройках; серверный учёт сохраняется.
+
+Чаты перечислены как «Недавние» без счётчика. Переименование и удаление доступны
+через отдельное меню строки; имя открытого чата используется в заголовке вкладки.
+Ширина развернутого сайдбара и мобильной панели — 300 px. Свернутая ПК-панель — 81 px,
+все основные кнопки имеют размер 48×48. Список чатов вместе с «Недавними» плавно
+скрывается, сохраняя прокрутку; скрытый список исключён из фокуса и дерева доступности.
+В мобильной панели список всегда показан. Кнопка профиля высотой 48 px в обоих режимах,
+отступы сверху и снизу по 12 px (снизу учитывается safe area на mobile).
+Кнопка профиля открывает меню с username, разделителями, настройками и выходом.
+Меню профиля и чатов вынесены в общий ActionMenu: позиция измеряется и ограничивается
+viewport, Escape возвращает фокус, стрелки перемещают его между пунктами. Все четыре
+всплывающих меню используют единый стиль и анимацию с учётом reduced motion.
+Иконки сайта включают SVG, PNG/ICO fallback и Apple Touch Icon 180×180; корневые PNG/ICO
+маршруты обслуживаются явно перед SPA fallback.
+В шапке остаются модель и preview/fullscreen; версии, экспорт, публикация, оценка и
+восстановление доступны у поля ввода и продублированы у desktop-preview. Оценка стоит
+перед последней кнопкой публикации. Активное задание останавливается у поля ввода.
+Enter отправляет, Shift+Enter переносит строку; ввод IME не запускает отправку.
+Сообщение и время появляются сразу при отправке, до HTTP-ответов. Полученный Run и
+сохранённое сообщение заменяют локальное ожидание без дублей; секунды не зависят от polling.
+Итоговая длительность сохранённого запуска остаётся серверной. Новые ответы
+содержат пользовательское сообщение, без дублирующих run-карточек, ручного принятия
+и диагностических блоков. Внутренние проверки и API подтверждения сохраняются.
+По уточнению владельца публикация/оценка доступны выбранной сохранённой версии текущего
+контракта с непустым HTML, включая непринятый черновик. Они не меняют accepted/verification
+или рабочую версию. В ремиксе сохраняются исходные verification/accepted/checks_review_required.
+Права владельца, изоляция исполнения, CSRF и запрет устаревшего формата остаются обязательными.
+
+Кнопка «Опубликовать» создаёт снимок именно показанной Revision; «Опубликовано» открывает
+её существующую публикацию и изменение названия. Новая версия получает отдельную публикацию.
+POST повторной публикации возвращает существующую запись (200), не изменяя название или
+снимок. POST/PATCH/DELETE сериализуются блокировкой User; PATCH не может занять уже
+опубликованную тем же автором Revision (409). Старые дубли не удаляются автоматически,
+для повторного POST выбирается первая запись. Чтение по revision_id выполняется до лимита
+ленты в 100 записей; metadata Revision содержит собственную публикацию и последнюю оценку.
+Оценка отправляет revision_id выбранной версии, включая черновик; цель фиксируется при
+открытии окна. Переключение версий меняет состояние кнопок, обновление страницы сохраняет
+серверную оценку/публикацию. HTTP-чтения не запускают модель. Сохранение нового текста
+отзыва ставит отдельное фоновое задание, не ожидая модель или брокер в HTTP-запросе.
+
+Режимы аудитории everyone/gamers/children/seniors дополнены beginners/family/learning/relax
+с отдельными SVG. Кнопки идут одной строкой на любой ширине; при переполнении
+доступна нативная горизонтальная прокрутка. Кнопки листания занимают отдельные колонки
+32 px с отступом 6 px от ленты; режимы под ними не размещаются и не маскируются.
+Недоступная стрелка остаётся приглушённой, чтобы при достижении края лента не смещалась.
+ResizeObserver обновляет подсказки при изменении ширины и загрузке шрифта; выбранная
+кнопка и клавиатурный фокус остаются видимыми. Стрелки учитывают reduced motion,
+листать можно без изменения выбора и отправки запроса. Единый серверный каталог валидирует
+выбор и добавляет конкретные требования в планирование/создание/правку/ремонт. Требуется
+описать и реализовать адаптацию правил/темпа/инструкций/управления; явный запрос приоритетен.
+Каталог входит в снимок политики, аудитория закреплена в Run. Это гарантирует передачу
+режима модели, но не является независимым доказательством её семантического соблюдения.
+
+Корневой `/` зависит от авторизации: лендинг или лента. Маршруты чата и просмотра
+не требуют `/app`/`/studio`; API может иметь собственный `/api/`.
+При выходе закрытый интерфейс заменяется экраном ожидания в текущей теме до готовности
+анонимной сессии и маршрута лендинга. Запоздалые чтения/сохранения старой сессии игнорируются,
+включая CSRF-токен. Ответ logout содержит новую анонимную сессию.
+Сессия HttpOnly, SameSite=Lax, CSRF на мутации, проверка владельца каждого приватного объекта.
+Secure-cookie включается `DJANGO_SECURE_COOKIES=1` при размещении за HTTPS; локально используется HTTP.
+Fullscreen — управление оболочки с доступным выходом; не обязательная кнопка внутри игры.
+Он расширяет тот же iframe и сохраняет игровое состояние при входе и выходе.
+Макет телефона — оформление, а не доказательство WebView-совместимости.
+
+Feed доступен авторизованным пользователям, как в F. Внешний просмотр опубликованной
+игры по ссылке — отдельная read-only поверхность без приватного чата. Публикация всегда
+явная; новая рабочая версия не заменяет public revision без «Обновить».
+Ремикс копирует опубликованный снимок, а не последнюю неопубликованную работу автора.
+Лайк имеет уникальность `(user, publication)` и безопасен при повторе запроса.
+
+В ленте обложка показывает весь исходный кадр через object-fit: contain. Размытая
+декоративная копия заполняет фон; исходник не обрезается и не пересоздаётся. Повреждённая
+обложка заменяется нейтральным оформлением. Hover не запускает игру. По нажатию мышью,
+касанием или клавиатурой открывается один крупный dialog; закрытие удаляет iframe.
+Три логических viewport 390×844, 844×390 и 1280×800 масштабируются целиком по доступному
+месту; смена размера и mute сохраняют iframe/состояние. Это проверка размеров экрана,
+не эмуляция физического устройства или его типа ввода. Звук изначально выключен,
+скрытие вкладки также выключает его через существующий мост. Отдельная ссылка открывает
+публичный проигрыватель. Escape из sandbox передаёт доверенная preview-оболочка;
+родитель принимает только сообщение своего iframe с совпадающим artifact hash.
+Native dialog удерживает фокус; при закрытии он возвращается к исходной карточке.
+Новые кадры валидатора сохраняются в PNG без потерь до 512 КиБ. Более сложная сцена
+снимается в JPEG с качеством 90/75/60 до того же лимита; если даже последний кадр больше,
+он не прикладывается. MIME сохраняется вместе с кадром. Viewport, плотность пикселей,
+проверки игры и привязка к точной версии не меняются; дополнительного вызова модели нет.
+Существующие обложки не пересоздаются автоматически. При выпуске нужно обновить образ
+валидатора вместе с приложением; его implementation hash учитывает новый способ снимка.
+Сворачивание панели preview и fullscreen сохраняют тот же iframe и игровое состояние.
+Скрытый preview недоступен для фокуса. Выбор другой версии или уход из чата создаёт новый
+iframe; произвольное игровое состояние не сериализуется.
+Управляемый preview в чате и публичном проигрывателе получает доверенный audio-prelude только при выдаче
+`?audio_control=1`; исходные артефакты, hash и скачиваемый HTML не меняются.
+Скрытие preview/вкладки выключает звук. Web Audio проходит через общий GainNode,
+HTML-медиа учитывают собственное muted; команды сверяют окно/домен родителя и hash игры.
+Кнопки звука есть в desktop-preview, fullscreen и меню у поля ввода. На публичной странице
+«Попробовать» переключатель стоит рядом с fullscreen и доступен внутри полного экрана;
+его состояние сохраняется при входе/выходе без перезагрузки игры. CSP и sandbox сохранены.
+Выбор mute хранится в браузере и синхронизируется между открытыми проигрывателями;
+при недоступном хранилище переключение остаётся рабочим в текущем сеансе.
+Зона нажатия звука не меньше 48×48 CSS px.
+
+GameForgeExperience v1 включается в новые Runs через закреплённый helper_catalog.
+Модель возвращает типизированный объект assets вместе с реализацией в full и compact;
+game-assets.json сериализует приложение. Схема ограничивает SVG, инструменты, эффекты и ноты;
+ссылки, скрипты, DTD и внешние ресурсы в SVG запрещены. Приложение материализует
+gf-assets/*.svg, встраивает JSON до кода игры и добавляет неизменяемый helper.
+Общий синтез не содержит готового игрового контента: лишь осцилляторы/шум, огибающие,
+фильтр, ограничитель уровня, до 16 голосов и короткий планировщик нот. Нет отдельной
+генерации или загрузки WAV/MP3. Партитура хранится в снимке игры и проигрывается локально.
+Остановка музыки сохраняет эффект действия; скрытие вкладки останавливает источники
+и сохраняет позицию музыкального цикла. Mute меняет уровень плавно за 25 мс.
+Скачанный HTML имеет кнопку звука в правом верхнем углу; управляемый iframe скрывает
+её и использует кнопку оболочки. Full получает сведения о safe area и свободной зоне,
+compact переставляет управление сбоку в невысокой горизонтальной компоновке.
+
+bindInput обеспечивает Pointer Capture, физические клавиши независимо от раскладки,
+нативную активацию кнопки клавиатурой, независимые источники удержания, отпускание при
+blur/скрытии. Compact предоставляет ту же experience через api.experience. Правила,
+композиция, элементы игры и дополнительные способы ввода остаются в сгенерированном коде.
+При правках модель видит рецепт, но не байты helper и производных SVG. Full/compact assets=null
+сохраняет медиа; source repair требует null, check_repair сохраняет все исходные байты.
+Происхождение/хеш рецепта фиксируются в design.assets. Метрики браузера включают состояние
+аудиографа, загрузку картинок и компоновку, но не выдают прослушивание/оценку аудитории за факт.
+В ленте аватар автора имеет фиксированный размер 24×24 px. На публичной странице
+убрана строка «МАЛЕНЬКИЙ МИР ОТ …»; название игры и нижнее приглашение доработать сохранены.
+
+Sandbox игры: без сети и внутренних адресов, cookies, секретов, небезопасных mounts,
+доступа к Docker socket, навигации верхнего окна, downloads и permissions. Preview origin
+не получает cookie домена приложения. CSP/iframe и контейнерные ограничения дополняют друг
+друга. Regex не является защитой. При optional `postMessage` проверять окно-источник,
+идентичность версии, схему и лимиты; не доверять произвольному сообщению от игры.
+
+Отзывы пользователя влияют на preference context следующих генераций, но не переобучают модель.
+По запросу 28.10 полный Feedback сохраняется сразу. `selected_reasons` и `custom_reason`
+возвращаются с рейтингом для выбранной Revision, включая черновик; `feedback_rating` сохранён.
+Прежний объединённый список reasons читается без потерь: известные варианты становятся
+галочками, остальной текст — свободным полем. Старые отзывы автоматически не обрабатываются.
+Поле текста и шесть готовых вариантов видны до выбора звёзд и при любой оценке. Сохранение
+требует 1–5 звёзд; до пяти пожеланий суммарно, свой текст до 300 символов. Повтор того же
+отзыва и смена только рейтинга сохраняют прежнее задание; модель не анализирует звёзды.
+
+`FeedbackProcessing` — отдельный долговечный outbox и журнал одного вызова, без игрового
+Run/сообщений. Выбор модели/провайдера закрепляется из Preference при сохранении отзыва,
+не берётся из модели игры/клиентского тела и не подменяется при недоступности. Worker
+повторно проверяет допуск; dispatcher существующего Celery beat подбирает задания.
+Сырые причины больше не копируются в настройки. Модель получает только текущие пожелания,
+галочки и текст; контракт требует новые краткие общие пункты. По уточнению 29.10
+конкретные барьеры устройства, ориентации, чтения, доступности и способа ввода считаются
+повторно применимыми потребностями даже без слов «в следующих играх». Похвала в смешанном
+отзыве не скрывает такую потребность. Похвала сама по себе, локальные ошибки механики
+и правки только этой версии, смысловые повторы и противоречия исключаются.
+Противоречащие пункты пропускаются: ручной текст не заменяется даже просьбой из отзыва.
+Сервер проверяет схему, точную цитату-основание, длину/однострочность, буквальные повторы
+и общий объём; семантический отбор остаётся оценкой модели, а не доказанной гарантией.
+
+Задания одного аккаунта сериализованы: следующий анализ видит дополнения предыдущего.
+Точное содержимое и notes_version защищают применение: ручная правка/сброс, включая
+возврат прежнего текста, делают запоздавший ответ stale. Новая редакция отзыва отменяет
+применение старого ответа. Добавления только целые, после исходного текста, до лимита.
+Ошибка модели/брокера не удаляет Feedback. Состояние обработки возвращается в metadata.
+Запрос/UUID и резерв закрепляются до отправки; durable relay/Pro API получают тот же
+receipt, неопределённый прямой вызов не отправляется повторно. Отдельные поля расхода
+входят в общий budget_snapshot и общий лимит провайдера; нет скрытого бесплатного вызова.
+Сохранённый результат применяется после сбоя без новой генерации; fence/lease защищают
+двойного worker. Даже при удалении Feedback/User журнал расхода остаётся через SET_NULL.
+
+По уточнению 28.10 общие пожелания ограничены суммарно 3000 Unicode code points, включая пробелы и LF.
+Количество строк и длина отдельной строки не ограничиваются дополнительно. JSON-список
+`Preference.notes` сохранён для прежних данных и снимков генерации; редактор/API соединяют
+его через LF. Внутренние пустые строки и повторяющийся текст сохраняются. Длина проверяется
+до удаления краевых пробелов; клиент использует `Array.from(text).length`, сервер — `len`.
+Все исходные причины остаются в Feedback. Нехватка места отражается состоянием full,
+пустой отбор — unchanged; модель не обрезает прежние пожелания. Настройки и применение
+обработанного ответа используют блокировку Preference. Явный текущий запрос игры
+по-прежнему приоритетнее общих пожеланий.
+
+`PromptTemplate` — личный текстовый шаблон с owner, UUID, названием до 60 символов,
+описанием до 2500 и датами. `/api/templates/` и `/api/templates/:id/` требуют сессию,
+фильтруют записи по владельцу, защищают записи CSRF и возвращают 404 для чужого UUID.
+Это черновик запроса, не сохранённая игра/код и не публикация. CRUD/выбор не создают Run.
+Кнопка у поля ввода открывает поиск/выбор; текст дописывается после существующего черновика.
+Заголовок карточки заменяет надпись «Личный шаблон»: h2, одна строка и ellipsis, полный
+текст в title. Абзацы описания сохраняются; полный текст выбранного шаблона раскрывается
+по желанию. Миграция 0020 только расширяет поле title. Старые длинные описания/пожелания
+не обрезаются; шаблоны проверяются на 2500, общие пожелания на 3000. Новый Run требует сократить
+слишком длинные пожелания. Снимки прежних Run остаются неизменными. Лимит — продуктовое
+ограничение контекста, не доказанный способ предотвратить ошибки модели.
+Шаблоны загружаются при нажатии кнопки выбора; автоматического предложения в новом
+чате и отдельной настройки нет. Миграция 0018 добавляет таблицу шаблонов; миграция 0019
+удаляет прежний флаг предложения из Preference, сохраняя шаблоны, notes, чаты, игры
+и сведения о вызовах.
+
+
+### Выбор модели в клиенте (24.10.2026)
+
+Клиент отправляет `model_profile=pro|lite` при создании и продолжении Run.
+`Preference.model_profile` хранит пользовательский default; `Run.model_profile`,
+`provider` и `model` — неизменяемый снимок конкретного запуска. Сервер задаёт соответствие
+Pro → codex/gpt-6-sol, Lite → настроенный API. Client-supplied provider не используется.
+С 28.10 новые Preference создаются с `model_profile=pro`. Миграция 0021 меняет только
+прежние пустые предпочтения на Pro; явный Lite/Pro и существующие Run не переписываются.
+Новый запрос без профиля использует предпочтение аккаунта, пустое предпочтение — Pro.
+Клиентский default также Pro, даже если подключение временно недоступно: скрытого
+перехода на Lite нет. Пользователь может выбрать Lite и сохранить его для новых чатов.
+Режим fake по-прежнему не выбирает реального провайдера.
+Idempotency включает provider/profile; повтор с тем же ключом наследует сохранённый
+выбор даже после изменения настроек. Старые fingerprint поддерживаются без второго вызова.
+Продолжение может явно сменить профиль, сохраняя candidate/base и учет неизвестного расхода.
+Проверка доступа выполняется по фактическому provider внутри create_run до записи/schedule,
+включая legacy API и продолжения, а не по глобальному GAMEFORGE_PROVIDER. Pro требует
+включённого подключения и активного вошедшего пользователя; staff не нужен. Режим local
+сохраняет loopback host/peer и локальный APP_ORIGIN. Облачные Compose-конфигурации
+по умолчанию задают authenticated: HTTPS, совпадение host с APP_ORIGIN, любой активный
+аккаунт, включая созданный позднее. Прежний список ID в этом режиме игнорируется.
+Опциональный restricted дополнительно требует ID в списке; staff его не обходит.
+Гостям и неактивным аккаунтам доступ не предоставляется. Cloud app получает только
+экспортированные сведения о моделях; каталог авторизации монтируется исключительно worker.
+Публичный Lite не получает Codex-login.

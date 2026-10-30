@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-27",
+  "delivery": "P0-P3",
+  "baseline_head": "815f2b2af18059d8dcb8780ced405f7f0ea98f3c",
+  "baseline_file_count": 184,
+  "game_contract": 8,
+  "check_policy": 3,
+  "compact_runtime": 1,
+  "model_calls": 0,
+  "remote_changes": false,
+  "gpu_accessed": false,
+  "validator_hash": "06c383d5bce9fb72847bc56ae3e7cabf28444141a1c2c4ed51584e08097f5c2b",
+  "baseline_validator_hash": "d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0",
+  "tests": {
+    "backend": {
+      "passed": 741,
+      "log_sha256": "f94268f644c3e4eeb01b7645878a3255813b846e862e13bc9a934b3175e5a256"
+    },
+    "frontend": {
+      "passed": 113,
+      "log_sha256": "fd2d3d79bb259b100ef6574cc6279c91c6e90f3bf9b60b424d35a37e4900e98a"
+    },
+    "native_browser": {
+      "passed": 34,
+      "log_sha256": "874865b133ef1e5a5f70c389cff70eb8dc44c5faa34ece9affde3b7c43dd77a3"
+    },
+    "native_clock": {
+      "passed": 1,
+      "log_sha256": "0f5fbfa7be866e0ea77d22fd05235af56dcfa911cef028e8dc62da25832cfcdf"
+    },
+    "completion_browser": {
+      "passed": 2,
+      "log_sha256": "e64ee4c65cedab8836b37c6b1f2ce0e079a7933a96f7a3a44c19367b969aa7af"
+    },
+    "docker_browser": {
+      "passed": 50,
+      "log_sha256": "37ac5d2c45262d315e92c19131fc1dbde30672221e53b9b8adf529560afd0dc1"
+    },
+    "docker_clock": {
+      "passed": 1,
+      "log_sha256": "d4a121c4379cfec180efba9c76f62594fbd63bacb31cf78e2edc96382b92d373"
+    }
+  },
+  "ui_browser": [
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "checkboxRequired": true,
+      "conflictRefresh": true,
+      "exactReport": true,
+      "manualAccepted": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "checkboxRequired": true,
+      "conflictRefresh": true,
+      "exactReport": true,
+      "manualAccepted": true
+    },
+    {
+      "viewport": [
+        320,
+        568
+      ],
+      "checkboxRequired": true,
+      "conflictRefresh": true,
+      "exactReport": true,
+      "manualAccepted": true
+    }
+  ],
+  "replay": [
+    {
+      "case": "full-memory-revised",
+      "profile": "full",
+      "artifact_hash": "c2b09a9f9537b1cb9077d47b2239f576f4607c2217ae175d08da6981ebe9c102",
+      "checks_hash": "b4db8fb5216a0058254898eb5ba72f0b6bdbb994f121ebae86d5c65426b9e627",
+      "source_hash": "7cd2e4cd06cd993bb3d48749439133be1ec348f18ea341dd07e1e0b4439b9c1d",
+      "total_checks": 5,
+      "before": {
+        "status": "passed",
+        "codes": [],
+        "passed": 5
+      },
+      "after": {
+        "status": "passed",
+        "codes": [],
+        "passed": 5
+      }
+    },
+    {
+      "case": "compact-adventure-original",
+      "profile": "compact",
+      "artifact_hash": "423c06251374b13866d7366794febfd742b89a376267bdee25642e875b7fa247",
+      "checks_hash": "e99eda3b720ec5ea60d237642bb75ef13e706685673755c0c995dd9374f801c0",
+      "source_hash": "8dc1035221fbcb93c7f6589d083134f299e09b8dd6837ce434a71c4e9a1fc0f4",
+      "total_checks": 5,
+      "before": {
+        "status": "unverified",
+        "codes": [
+          "incomplete_checks",
+          "invalid_check",
+          "missing_mobile_start"
+        ],
+        "passed": 4
+      },
+      "after": {
+        "status": "unverified",
+        "codes": [
+          "incomplete_checks",
+          "missing_mobile_start"
+        ],
+        "passed": 5
+      }
+    },
+    {
+      "case": "compact-adventure-revised",
+      "profile": "compact",
+      "artifact_hash": "423c06251374b13866d7366794febfd742b89a376267bdee25642e875b7fa247",
+      "checks_hash": "b904d028a036c77ec5b841459efdf4344758bc919940e66bc71ac888b7ed4ce6",
+      "source_hash": "7e576a9b6a47e432b87ab6fed89f3b866072096cca1a13315f2fcf73bcb54b5d",
+      "total_checks": 6,
+      "before": {
+        "status": "unverified",
+        "codes": [
+          "invalid_check"
+        ],
+        "passed": 4
+      },
+      "after": {
+        "status": "passed",
+        "codes": [],
+        "passed": 6
+      }
+    },
+    {
+      "case": "compact-memory",
+      "profile": "compact",
+      "artifact_hash": "77472e76420db9604fae38b9b0bfb6ac41244037f789f38b6c76038cb218000a",
+      "checks_hash": "3efc858d5bba8e191ceb2b140a36b922285042ea33bf0cd1ce2662cd580aa0a8",
+      "source_hash": "c6b566f080ef933749150b396fb876e600bc55faeebbbd0b77e7fb9e9a9361ba",
+      "total_checks": 5,
+      "before": {
+        "status": "passed",
+        "codes": [],
+        "passed": 5
+      },
+      "after": {
+        "status": "passed",
+        "codes": [],
+        "passed": 5
+      }
+    },
+    {
+      "case": "full-memory-original",
+      "profile": "full",
+      "artifact_hash": "c2b09a9f9537b1cb9077d47b2239f576f4607c2217ae175d08da6981ebe9c102",
+      "checks_hash": "8926f714a97092c2bcdc8b3a719f0b8e795fdee3cfe06441f7a4a6e803661b15",
+      "source_hash": "5d4632fcd56da14ecd215f86f5919fd605aa08bbbc00564db904d6a40e49163e",
+      "total_checks": 5,
+      "before": {
+        "status": "unverified",
+        "codes": [
+          "effect_not_causal"
+        ],
+        "passed": 4
+      },
+      "after": {
+        "status": "unverified",
+        "codes": [
+          "effect_not_causal"
+        ],
+        "passed": 4
+      }
+    },
+    {
+      "case": "full-adventure",
+      "profile": "full",
+      "artifact_hash": "eb9c3bfd5349c583a244db95bcf2298bc7f396ad74a3ad6b951e7810eb8a4a45",
+      "checks_hash": "fecfe53ea895f585729d0e8dcae44c955c253cd9747baf2d0ab3625059dce15d",
+      "source_hash": "9747b4fc5693f5e60adb42e2e8646d43ec14fa7e8a86e9d1116792dbc7c66539",
+      "total_checks": 7,
+      "before": {
+        "status": "passed",
+        "codes": [],
+        "passed": 7
+      },
+      "after": {
+        "status": "passed",
+        "codes": [],
+        "passed": 7
+      }
+    }
+  ],
+  "replay_scope": "six saved revisions of four games; exact sources/checks preserved; no database writes; no fresh playthrough or generation",
+  "automatic_application_acceptance_measured": false,
+  "performance_benchmark": false,
+  "provider_and_settings_hashes_preserved": [
+    "gameforge/settings.py",
+    "generation/providers/__init__.py",
+    "generation/providers/codex.py",
+    "generation/providers/codex_api.py",
+    "generation/providers/fake.py",
+    "generation/providers/relay.py",
+    "generation/providers/vllm.py"
+  ],
+  "source_sha256": {
+    "generation/schema.py": "1a076645e138ae380e5f6b96f78f614f78a569762f43bc2480ad3d2b0a91039e",
+    "generation/feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+    "studio/acceptance.py": "54742a37a30f0eef5f93f03e9bf7e4e6b571ee55176776ccf6fd67492f7243c4",
+    "studio/replies.py": "d010d395de10140fe07928dda2a1be0494e7be73af539ff640eefc21364ae079",
+    "studio/tasks.py": "af323cde2424968f1a00d8a68c6f7d95cf054e91e477a3ddfe3ce83e9fbca6a5",
+    "validation/check_program.py": "234533fe2462158c6e681ff1bfd5c003090cdbae2cfec16d3b389262f8c7e4c6",
+    "validation/criteria.py": "c1462548e1a35283700c89eb30f10a59c24ae7b0ca4da4aa9001207e99a9a7fe",
+    "validation/checks.py": "68bda6a1db925fa9e046faa934dd06d99588b76f1e6e04ff35143f2560ab8c38",
+    "validation/contracts.py": "9d7f89a17196f4bf3ab6c1a2a4c9e67e5e72da571850bffaf1efc4fcd8986226",
+    "validation/runner.py": "31bcbe7401286420b6b7a467c120ddd2967a362143a018211ac8710b81cc6e99",
+    "validation/diagnostics.py": "022860ab562c397bcc10f7012d71a984b06e504492faea54c7873336cae7772e",
+    "validation/service.py": "af2b195100dcf1bc39efd96cd79a75d84a877be984970fb5ea804e35d81e3547",
+    "validation/native.py": "c03f6d06a5a62830861c6528f239025a17d2a10529acd0f60a702a6666975318",
+    "validation/daemon.py": "9e5a99c9611404f3e0fe12cd654f4c9b2c372ec7e62540885e5b383a2f4853f5",
+    "web/src/Studio.tsx": "3e4ab78b84655b538d81f44f5d27a1f01459386f58789b89377b4a5857632088",
+    "web/src/styles.scss": "2017534845baf0110619f025f7190496deecc8ea4dd612514ff070e131bdc954"
+  },
+  "review": "self-review with regression fixtures; no independent second agent",
+  "limitations": [
+    "natural-language request semantics not independently proven for production model proposals",
+    "OperatorCriterion is internal corpus-only; RequirementManifest remains P4",
+    "Proxy traps and all hidden nondeterminism cannot be proven absent",
+    "visual quality, compact redraw, substantive planning remain later deliveries",
+    "physical mobile/WebView and live model not tested",
+    "one Docker clock test returned infrastructure_error under concurrent test load; isolated replay and sequential regression passed; root cause not established"
+  ]
+}

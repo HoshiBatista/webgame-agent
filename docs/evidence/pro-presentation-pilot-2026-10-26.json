@@ -1,0 +1,3334 @@
+{
+  "started_at": 1793022436.942178,
+  "closed_at": 1793023286.821843,
+  "submission_deadline": 1793026936.942178,
+  "hard_deadline": 1793027836.942178,
+  "limits": {
+    "max_calls": 12,
+    "max_seconds": 5400
+  },
+  "authorization": "User: Да, до 12 вызовов / 90 минут; new Pro-only pilot, full/compact adventure and memory",
+  "controller_sha256": "40cd1dd72f0637af540f0a6c0f82f12f138e78f2f1545f2c3c46a8051c3ca03e",
+  "unused_calls_closed": 2,
+  "schema_version": 1,
+  "date": "2026-10-26",
+  "baseline_head": "1e36819",
+  "model": "gpt-6-sol",
+  "presentation_policy": 1,
+  "model_budget_duration_seconds": 849.8796648979187,
+  "source_sha256": {
+    "gameforge/__init__.py": "8974a9c493587f508e73f358876ade4f3ab0369012b29ffb14280dbe30f721ce",
+    "gameforge/celery.py": "296d774f24c1582fb7b02e76280d630fe6fdff1c558fb78cf54258208bca766b",
+    "gameforge/preview_settings.py": "a3d81aa446013e1808d17d629b1ff0cf8cfed787f64267ed948025cf2c08050c",
+    "gameforge/preview_urls.py": "65828ceb754302488bef3e89b29a2d4f1666096a237448806c90cddce26f66a4",
+    "gameforge/settings.py": "81a7e8f00b93c120919fc3ef1b5bd45c61b32a6ba151324ac2ddb038fd282513",
+    "gameforge/urls.py": "cae94082893ad39918a56b33c000c2bd9ff944676b6ca6652e52755ca6339672",
+    "gameforge/wsgi.py": "a03e229b602d603f73c8363f92f952b645977b005d21ad5aa8adcfeee655e58e",
+    "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+    "generation/artifacts.py": "79d4512c3627d94e6ebd3cfc72cb47662f14d201e9501a8d636a4216dbdc0660",
+    "generation/check_repair.py": "fe5c4696beb44f705ca828b03441e31e0c6556144d7d05a726571bb4054fcb33",
+    "generation/code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+    "generation/compact.py": "263238a9f772226702cbb341f97fc6cb26e1e3e026cac23d28d0f794b0f4475a",
+    "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+    "generation/feedback.py": "a2f50dbe5884098401f9e767b4ded877fe19e109bcc6d6ce422fea204e61ae48",
+    "generation/feedback_image.py": "780ca3761d04f580b5909c0072615b24d7d0379d106ee3ef4001e338ce7fdf26",
+    "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+    "generation/planning.py": "2b68b6570b02c2affad0416aa9763e08fd01ba64351f968509d9d48ea551d81c",
+    "generation/presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+    "generation/preview.py": "333c78ce119a4a80374e3ed902dd8b45aebd0dad8111090754f7f1a138d93890",
+    "generation/prompts.py": "5f42fac4fc2dcc4130f8d2f44a4478a9a32bba84cb11256c8353c1b8b4719571",
+    "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+    "generation/providers/codex.py": "8f5131c4e64a7c3816ed0f80e488ac23065aa416c3f408535fe07abaf51c34e3",
+    "generation/providers/fake.py": "0bbc04947fa846f050e43ad0e7addbad597d97f2a1624fd6ff3b766c7e29bbe3",
+    "generation/providers/relay.py": "c1054f4b873be1d6db64ec9ff930a02aaa3fdea843ec62f79e2714bdd74bc3bd",
+    "generation/providers/vllm.py": "1ac02553528ce9fa4dec8e644acc0908b958ac91d421d7be328e47f539124427",
+    "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+    "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+    "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+    "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+    "generation/runtime/compact-v1.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+    "generation/runtime/compact-v1.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+    "generation/runtime/preview_audio.js": "ce6c8f6a0f8e6e5b3b8975ca8b4ab3523032cfac6b68ed5de4b8d35a8be0f184",
+    "generation/schema.py": "ac9c0d3c551cd4e35ff2537ec828fb1f520559359746318bde077b275e501821",
+    "generation/service.py": "46e5e2822928a31df81ab37771ee5dcbda09ca02195b2d57d7223d7ca1b6ee9f",
+    "generation/source_map.py": "6475586bd819a057fb7c7080d37328137354cc0a1eabfd3f0c6407bf227d2ec5",
+    "generation/source_policy.py": "f8a7772f079362e3c924e55a3d79b73eabbb6f988450c0a45e009437dfa0c6b8",
+    "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+    "scripts/evaluation.py": "0cbfc027cce1e93f3a3d397f4dcea786381868305fa79c90608109c0898db2a1",
+    "scripts/live_eval.py": "a373b8c53061e1762a119ca2a63ba7422911a6703cdcb762f2f4d9984284622b",
+    "studio/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "studio/acceptance.py": "93a39d77971984572361401515a97b92fadc11db8743a73e51965f35198e6deb",
+    "studio/admin.py": "7aed6780229fa906855b17ddec8dba3eec7a30de2dc61ac99663c50e9ad01179",
+    "studio/apps.py": "3b799f88cee5f25cd0ed00f7e715facd8c560c54dc7a84b27268f12d6e238cdd",
+    "studio/auth.py": "156171851964cb56c0fcf1cb86f2c6d4ea5e19d7e743be20521ca08ab73d8c8b",
+    "studio/check_repair.py": "3e3466298ab0269379060330449fe0ec4b627dee721881b7e66956c15ed6597d",
+    "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+    "studio/management/commands/bootstrap.py": "2ffcd1150dc8489588815819f6672368a699f95bf781e1347209bde2bd14f5c5",
+    "studio/management/commands/diagnose_invocation.py": "b2f09e8a069d981c5da16665f7a5a2abcb55480d5210af996f960b30fb8e2a29",
+    "studio/management/commands/export_codex_catalog.py": "a7254b097d4b1463d2cfcd5d520ade94381e1ae2404bc0c4a13ea1b634400cff",
+    "studio/management/commands/reconcile_invocation.py": "37424c2c10ffa44d23519a45da1bc644bfebeae53851fbe7818cdf344fb0f470",
+    "studio/management/commands/recover_saved_response.py": "488f62a3d2140e17f595e9fe688a4acaebbda3f3a535c1c11d8c5004c4e22d91",
+    "studio/management/commands/retire_games.py": "28204f4c2bf7efe30102ef69fd6f3e0d69d3151ee19a4c29becebaef7f0fd867",
+    "studio/migrations/0001_initial.py": "122d5fbe3bae50e8bb788a5f20d691c77ac1ece29d942ca86d70e4b52602f060",
+    "studio/migrations/0002_run_private_diagnostics.py": "305943c6660a35fae17badad3c938915263ccda7ef51c802462e253f0b6e08d4",
+    "studio/migrations/0003_checkreport_validation_run.py": "5a314036637178f07bfae4d0b22a11900431b794fdcb5fb4ecba2745e11d16db",
+    "studio/migrations/0004_invocation_provider_metadata.py": "4f8fff4fd09a93c0cceea09f03671e4a62c1946a804aef2e8e3826f5f93e01ea",
+    "studio/migrations/0005_saved_response_recovery.py": "0904f5eebb3bd693caf634cc0bbce8d6374a6772510777d9c7917b445428a2e6",
+    "studio/migrations/0006_run_repair_limit.py": "9c02de32fcf1bc8e921f11520ebd33c5c759105aaddeb9c3b72ecd44a4256317",
+    "studio/migrations/0007_model_profiles.py": "d13fa89bee52a6cba2f2be8b2ffdbd0f091b26624efe3b0c2999ef3495951c50",
+    "studio/migrations/0008_completion_policy.py": "aa031946521cf4e3aa7bb4c3f4fa82c965f744e70fa18b217cd03abc228259f1",
+    "studio/migrations/0009_run_call_budget.py": "25c1fabc819b83cc298e7002bbdf9273e208956e677023b3aa4ebc0adb070ef5",
+    "studio/migrations/0010_check_review_required.py": "1765ffe86596a1ba814667b66529262f474cddff83c25a3b704877d3570e4b6e",
+    "studio/migrations/0011_chat_titles.py": "01b3ab3ea4f7986549ed44261c656860fcb2a033bc848bfbd64f78c0677118a0",
+    "studio/migrations/0011_explicit_edit_source.py": "4fd78aca2eb2f1b5ece8aea6ef6e5a65e8b9229e5eef2858d24f3f704cb22a39",
+    "studio/migrations/0012_compact_generation_profile.py": "524f31820d16865d7f8a98cee83bbb0e1d9cdc4dbf1edc555917889f737df563",
+    "studio/migrations/0013_merge_titles_and_compact.py": "9e3407c339bb36c94a9a68475f239ec99d0eb2c20d6076cab5b97b28c8950173",
+    "studio/migrations/0014_generation_strategy.py": "50ba4ac5670d58d2866b8cfa641e99755bdb113266959861bfa61184679df389",
+    "studio/migrations/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "studio/model_profiles.py": "bcdf1ffe8d7f1454d6e98d949ec8147c1565b8ff9eeb66c1bf31e685eeb4cb74",
+    "studio/models.py": "a335c7423b2aef14f69c61e8ce07112b2cf435516df90442aae98e8515cd62e7",
+    "studio/recovery.py": "15b8cd8c78395c0348dd7f6b72c1310c6d76f25192dd8ad375a5fc4fd198e9ed",
+    "studio/replies.py": "521b7da5ec8ed788d0892df59b27a8f50dedd368b056157ca25fb6a99b7d91da",
+    "studio/serialization.py": "42e9d20b2956693f9e31535a98ace503f5240056c98dfd0e0c55beebf5f94fb2",
+    "studio/services.py": "a5058e6d18312dc200ea6abaf4e786f87dcbfbeeeb0cf1c04dc2289bcc86b7ad",
+    "studio/tasks.py": "dfaba0008cb840a84d0e7d3c0eea1b8124383e5e45e642690e9e076625788cc2",
+    "studio/titles.py": "942c2883af4ce502e080ca97dbe5dfe0d4592f55924069da126adfb38085fdc8",
+    "studio/views.py": "ac3f7dedd465efe437192f80aa818c04e51adb09bfff595dc4dea1c42a1a2708",
+    "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+    "validation/checks.py": "7e6581b434a691f760708f95b7c29ed9afeb1d5ba89ee64e635846ad853461b6",
+    "validation/contracts.py": "c4272b4b85f43321ce711ce27a1ed7bdfa194e0f14aeb3274d20296da23b6348",
+    "validation/daemon.py": "d5147e7d25ed9b3d2681f0efe9b55fb1814064f7f661bb206d5027c9d9ccca4b",
+    "validation/diagnostics.py": "d659595501935c5967849c3189e247aa0fd6cecb088275b0df72eeab83800df7",
+    "validation/evidence.py": "ed971bdec55ed23f47940ab2cedb53586852fad2a767ef3a1e6b341a8a8d4b8a",
+    "validation/native.py": "3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+    "validation/protocol.py": "01c76424b763d989b0e49c7e9f49f1fd95c417bfce07117a5e5788f9210904bd",
+    "validation/runner.py": "3f4c3e336ae573d5b34fe60cc24759c138c6c051de6a7df03cc3a98f66ee6fce",
+    "validation/service.py": "7f7b01b69acc93b77034270e6390f3d6f3892601a1a4364bd8996125f77b3090",
+    "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd",
+    "web/src/App.test.tsx": "828985de40f8d120645125b36fe7d50b41888c3a4a5666e5f96faaa310bd1123",
+    "web/src/App.tsx": "47d5293d183bea15800c212de44b528261f7522f14b01bc1e7ff34088a395b48",
+    "web/src/ChatMenu.tsx": "3d41946539febcdf2facd2c48f40e137b3aaf4c5b9dfdf78673bc24c11118b22",
+    "web/src/ChatTitleSidebar.test.tsx": "9c6f15141b1f5ae0dae4cd4de246b1a04ff615e71e0685593e476e2e68a44ddc",
+    "web/src/Feed.test.tsx": "68527b67ca98afed32b2b7c55ebe054e1d525bf59694fc0b65774536362d3492",
+    "web/src/Feed.tsx": "8d92d33801e5eb2ecbdf416165cf006973a4162ab4adcff3d69e6279f0e383ca",
+    "web/src/Landing.tsx": "d34c59d8d95da5ef0b17d4229b1982aadf39ee761f02912bf26a48ca67caaa1d",
+    "web/src/Login.tsx": "4254ff18c917e687fc6ef6cf39dfba34c0785db770faff7d01da6f22f4c92645",
+    "web/src/ModelSelector.test.tsx": "eb42dd92359dc41ba4bc9ffeded52e1273ba42e087601d4917fe200e6114398d",
+    "web/src/ModelSelector.tsx": "06e3ab79c2197cad51e7506edb24caeafdd2c847a4b311aa55c7faa9d374a25c",
+    "web/src/Preferences.test.tsx": "10649daa0a700bbcef7b3b1bda948094c747cf44bf2e205ec3e2de32f7485c8f",
+    "web/src/Preferences.tsx": "9edeaa9f709fed925597b23b81b7a744b0fc7b634174cdacdbb00573aafe48b5",
+    "web/src/PublicGame.tsx": "f08b14af15d2ffe1efa4cd528d64afd8e546bf139eca4551f03b7755c64aa1d6",
+    "web/src/RevisionPlayer.test.tsx": "dd641b044fc915eec036d4152413cac9ff32c50fe4674333ae69e0aea5c40d37",
+    "web/src/RevisionPlayer.tsx": "085ec89d30f7ea69ae5a4b83575a8d511dd07ea414c1097475b610db1389c8cd",
+    "web/src/RunMessage.test.tsx": "a4be9bc1c1f986a4118d9860402ef32b873fcb25aecb6d9d69b358566d3a6e80",
+    "web/src/RunMessage.tsx": "8f1a7f4a6eed120bd7f882d458d76b7946849d4c379723960951e8046da96a76",
+    "web/src/Studio.test.tsx": "ab888a78f3df1b6093f018ff70d1b3964939e5b681c984ea3851a94c4331dfe1",
+    "web/src/Studio.tsx": "d356d507f504e2a3be3e8eb972511c2baf0d6e661ad8f2e5ca07d3d5d064336d",
+    "web/src/api.test.ts": "7bad5440c633aa238cc0ab6a99b3ca28585ff9fccbe2e9dc5a043c425706d183",
+    "web/src/api.ts": "62d8b1bec73d2ee6659fc0ccac6f9f190e35d9437c573361504bd37b158e6825",
+    "web/src/components.test.tsx": "c86ab16b78f462f9755df61e8c49e8892e9bad7e04a7adcefcfb65a9de15fc10",
+    "web/src/components.tsx": "91b42cc685dbdba95e51f47da548707c4b0c049ce3e5f15911206dd0b2dd54a8",
+    "web/src/context.tsx": "4d05d410fef9da196e1aacfffbc62462946fbd04ee7bfd6dc55167d3715f0f89",
+    "web/src/main.tsx": "7b99d0aa434844ebb8ea1ba0ed4ec9ca3735d904a36b7d44cb01149466951d81",
+    "web/src/styles.scss": "04d701244b139368d4ba9cbea2a4451194bb5a9908994d39c64d9751d7c590ba",
+    "web/src/test-setup.ts": "c4e33c89ae522d79faf5409c5f60b9df8da378fb1094f161d9b4b733e2a6aa98",
+    "web/src/theme.test.tsx": "beb2cb6600c0b567fd61f41c6b25b7fd303d91834c2b6686bbadf5d549387d94",
+    "web/src/theme.tsx": "b806cd24c0d51b809cfe27a9d28b84156a3cb5671592816e021f4d45e0c636cd",
+    "web/src/types.ts": "38b189758400145340188434a52b4d91f34d058db4cf75c73850e9125ecbf79c",
+    "web/src/useSavedChat.test.tsx": "471fb4a4d7e810f3be793c9e56e5b804b34bc6a4d77042493e70c4fb7c4bb0ba",
+    "web/src/useSavedChat.ts": "9018b4cea3619b95c35979dd79834612a5e6e474ac5f59458bd3545cbd8fb6d2",
+    "web/src/webview.test.tsx": "da8569ffdef9c18ea49163ea0bc0f868508822f513db7ef576ab7e3d81dd9581",
+    "web/src/webview.ts": "f87f92e5301d9e770ff373281ad4180c4ffa62d571e2b6e6f9a7f7790936e461"
+  },
+  "source_archive_sha256": "00cba61b58842797ccbe2e299c2896c620ad417ea76d2eb1bcbd85c01b089f77",
+  "summary": {
+    "counts": {
+      "operations": 4,
+      "automatic": 2,
+      "playable": 4,
+      "broken": 0,
+      "unverified": 0,
+      "unreviewed": 0,
+      "playable_not_accepted": 2,
+      "false_acceptances": 0,
+      "unknown_usage": 0
+    },
+    "tokens": {
+      "input_tokens": 49565,
+      "output_tokens": 39904
+    },
+    "remaining_calls": 2,
+    "results": [
+      {
+        "case": "adventure",
+        "kind": "full-r1",
+        "run_id": "8770bcdb-5027-4a6d-9a85-6856ab833f95",
+        "status": "succeeded",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "fb7d27c5-5ad9-42a0-8695-0376c3007bc0": "playable"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 237.22368597984314,
+        "decision_seconds": 240.80510187149048,
+        "first_playable_seconds": 237.22368597984314,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "full-r1",
+        "run_id": "4220684f-308c-4df4-a424-9f8a57b7a1ea",
+        "status": "unverified",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "f755b434-ef73-4e79-b8dd-137564486d49": "playable",
+          "546c73aa-96a2-4109-8ca2-954e1b8bfe75": "playable"
+        },
+        "calls": 3,
+        "reserved_ceiling": 3,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 223.75455689430237,
+        "decision_seconds": 283.0248498916626,
+        "first_playable_seconds": 223.75455689430237,
+        "calls_after_playable": 1
+      },
+      {
+        "case": "adventure",
+        "kind": "compact-r1",
+        "run_id": "cbc8c928-9554-419f-b1ca-bdb1f7937669",
+        "status": "unverified",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "5e88b124-87ed-4404-8fca-f0ab96b2ba0e": "playable",
+          "e619f65b-078a-4077-9be9-eb1eff3786e8": "playable"
+        },
+        "calls": 3,
+        "reserved_ceiling": 3,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 141.57723712921143,
+        "decision_seconds": 175.79093217849731,
+        "first_playable_seconds": 141.57723712921143,
+        "calls_after_playable": 1
+      },
+      {
+        "case": "memory",
+        "kind": "compact-r1",
+        "run_id": "7da1632a-927a-403f-9a3a-a074ee5cd662",
+        "status": "succeeded",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "e94eae72-1470-4a42-ad9d-c9e738ede27b": "playable"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 134.5312740802765,
+        "decision_seconds": 138.88286995887756,
+        "first_playable_seconds": 134.5312740802765,
+        "calls_after_playable": 0
+      }
+    ],
+    "skipped_edits": [],
+    "note": "Unreviewed/uncertain outcomes remain in the denominator. Application status is not an independent verdict.",
+    "unused_calls_closed": 2
+  },
+  "operations": [
+    {
+      "case": "adventure",
+      "generation_profile": "full",
+      "prompt": "Сделай бродилку",
+      "criteria": {
+        "start": "Есть понятное начало, персонаж, игровая цель и читаемая сцена",
+        "control": "Реальный ввод перемещает персонажа и меняет игровой процесс",
+        "outcome": "Реальная игра достигает объявленного финала либо поражения",
+        "mobile": "Игровое управление доступно касанием и помещается на телефоне"
+      },
+      "run": {
+        "id": "8770bcdb-5027-4a6d-9a85-6856ab833f95",
+        "status": "succeeded",
+        "attempts": 2,
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "created_at": "2026-10-26T13:47:17.018126+00:00",
+        "finished_at": "2026-10-26T13:51:17.823228+00:00",
+        "candidate_revision_id": "fb7d27c5-5ad9-42a0-8695-0376c3007bc0",
+        "result_revision_id": "fb7d27c5-5ad9-42a0-8695-0376c3007bc0"
+      },
+      "game_plan": {
+        "visual": "Миниатюрный городок из бумажных домиков и мостков, где положение воды легко считывается с первого взгляда.",
+        "outcome": "Победа — доставить все три письма и вернуться к лодке до исчерпания ходов. При неудаче карта сразу доступна для повторной попытки; на победном экране показаны оставшиеся ходы, чтобы захотелось найти более короткий маршрут.",
+        "summary": "«Почта во время прилива» — бродилка по затопленному городку. Разнесите три письма и вернитесь к лодке до конца смены.",
+        "core_loop": "Перемещайтесь по соседним клеткам стрелками или касанием, выбирайте маршрут к следующему дому и следите за приливом. Длинные мостки безопасны; мелководье даёт короткий путь, пока вода низкая.",
+        "mechanics": [
+          "Каждые четыре хода вода поднимается или опускается. Состояние прилива и число ходов до смены всегда видны.",
+          "Если прилив застал героя на мелководье, его относит к последней сухой клетке и снимает два хода. Так можно рискнуть ради короткого пути, но нельзя застрять.",
+          "Письма можно доставить в любом порядке. Бутылка на боковой дорожке добавляет четыре хода к запасу, если потратить время на её поиск."
+        ],
+        "assumptions": [
+          "Выбраны затопленный городок, клеточная карта и управление стрелками или касанием.",
+          "Для короткой партии выбраны три доставки, лимит в 40 ходов и прилив с циклом в четыре хода.",
+          "Добавлена необязательная бутылка с запасом ходов."
+        ],
+        "progression": "На одной небольшой карте сначала открывается простой путь к ближайшему дому, затем маршруты расходятся: оставшиеся адреса требуют выбирать между обходом и проходом по мелководью. Стартового запаса в 40 ходов достаточно для безопасного маршрута.",
+        "presentation": {
+          "motion": "Герой плавно переходит на соседнюю клетку; вручение письма сопровождается коротким раскрытием конверта и отметкой дома. При смене прилива линия воды заметно поднимается или опускается, а перед подъёмом мелководье мигает один раз. Возврат на мостки показан коротким сносом течением; на финише лодка отчаливает и уступает место кнопке повтора. В режиме уменьшенного движения перемещения и смены состояний происходят сразу, с ясными цветными и текстовыми отметками.",
+          "art_direction": "Плоские силуэты бумажных домиков цвета тёплого крема стоят над тёмно-синей водой; коралловые почтовые ящики отмечают цели, бирюзовые клетки — мелководье. Мостки и дома разделены мягкими тенями, чтобы высота читалась без текста. На мобильном экране карта занимает центр, крупный счётчик ходов и индикатор прилива — верхнюю полосу, краткая подсказка по управлению — низ."
+        }
+      },
+      "calls": [
+        {
+          "id": "ee99d86f-cc51-4915-8ad4-0b5d90102dc3",
+          "operation": "plan",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1672,
+            "output_tokens": 1496,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:47:17.383195+00:00",
+          "sent_at": "2026-10-26T13:47:17.389301+00:00",
+          "finished_at": "2026-10-26T13:48:04.452856+00:00",
+          "elapsed_seconds": 47.05478512495756,
+          "reasoning_effort": "high",
+          "schema_sha256": "1a0a4c0b2259b481f27c70d8346ed8078e3392fe97ca6d26e75ec94212272137",
+          "prompt_sha256": "bfdf84d3a931d7b6b7354393aa581681a79ce92795b2c6e7b951fd8ef1a00737",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        },
+        {
+          "id": "76db43b8-2256-424e-93f0-624c6dace2a1",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5584,
+            "output_tokens": 10901,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:48:04.495116+00:00",
+          "sent_at": "2026-10-26T13:48:04.499640+00:00",
+          "finished_at": "2026-10-26T13:51:14.093897+00:00",
+          "elapsed_seconds": 189.5719279171899,
+          "reasoning_effort": "high",
+          "schema_sha256": "5aae868a1afebc3bfd702db41e6d25cd5d193b11e20664c639d96361bf8c1be5",
+          "prompt_sha256": "109ea7f73c5a89142b31b836f8f62f1a46e45646742158e6cfc8cb0ee20dead9",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        }
+      ],
+      "revisions": [
+        {
+          "id": "fb7d27c5-5ad9-42a0-8695-0376c3007bc0",
+          "artifact_hash": "eb9c3bfd5349c583a244db95bcf2298bc7f396ad74a3ad6b951e7810eb8a4a45",
+          "verification": "automatic",
+          "created_at": "2026-10-26T13:51:14.241812+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "8d0582757fcaac54c056059b7cfd03f748ed6b8b0bb9049d77a20f29994a0189",
+              "bytes": 13426
+            },
+            "index.html": {
+              "sha256": "a95f3e89b4507e519c5a37ad123a3363bd542f457cf086912b9c190e5d572154",
+              "bytes": 2588
+            },
+            "styles.css": {
+              "sha256": "d95c3f91f48b30c87c1fdb5b0704b64699e5292fc673064f99ccb7acac7a97f8",
+              "bytes": 3578
+            }
+          },
+          "report": {
+            "id": 189,
+            "status": "passed",
+            "facts": [
+              {
+                "id": "begin-mobile",
+                "status": "passed",
+                "requirement": "Начало смены открывает карту и активную партию.",
+                "detail": null,
+                "after": "В пути"
+              },
+              {
+                "id": "touch-step",
+                "status": "passed",
+                "requirement": "Касание соседней клетки действительно тратит ход.",
+                "detail": null,
+                "after": 39.0
+              },
+              {
+                "id": "tide-drift",
+                "status": "passed",
+                "requirement": "Прилив на мелководье сносит на сухую клетку и отнимает два дополнительных хода.",
+                "detail": null,
+                "after": 34.0
+              },
+              {
+                "id": "bottle",
+                "status": "passed",
+                "requirement": "Бутылка на боковом маршруте добавляет четыре хода.",
+                "detail": null,
+                "after": 38.0
+              },
+              {
+                "id": "no-diagonal",
+                "status": "passed",
+                "requirement": "Касание несоседней клетки не расходует ходы.",
+                "detail": null,
+                "after": 40.0
+              },
+              {
+                "id": "deliver-and-return",
+                "status": "passed",
+                "requirement": "Три письма и возвращение к лодке дают победу.",
+                "detail": null,
+                "after": "Победа"
+              },
+              {
+                "id": "replay",
+                "status": "passed",
+                "requirement": "Повтор после победы сбрасывает доставки и ходы; новая партия снова управляется.",
+                "detail": null,
+                "after": 39.0
+              }
+            ],
+            "findings": []
+          }
+        }
+      ],
+      "source_preserved_during_check_repair": false,
+      "independent_evidence": {
+        "artifact_hash": "eb9c3bfd5349c583a244db95bcf2298bc7f396ad74a3ad6b951e7810eb8a4a45",
+        "environment": "mini-browser-v1:f207998b0d25fa3f1286f9256fa10b38ba3527fc533c6ea8d657d4d6531765f0:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+        "method": "Actual mouse/touch/keyboard; HUD and rendered-pixel observations. No clock, RNG, source or game-state modification. Full win/loss/replay routes.",
+        "report_sha256": "2e3f06c78ac911a2c3cbe2029406e213416b9da25e022481f1a10e3b719ec34e",
+        "adapter_sha256": "7a4d9352aafde1adc9e171335e73362c703d5896f23b14dcc484f26f797ae1b8",
+        "common_sha256": "80bee352f2b1465407daee485a5d428189257bcc78bbabbf21fa92b5d3387b00",
+        "results": [
+          {
+            "variant": "mobile",
+            "initial": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "first_input": {
+              "direction": "left",
+              "before": {
+                "steps": "40",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "4",
+                "note": "Доставьте письма и вернитесь к лодке.",
+                "phase": "В пути"
+              },
+              "after": {
+                "steps": "39",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "3",
+                "note": "Шаг по городку.",
+                "phase": "В пути"
+              }
+            },
+            "final": {
+              "steps": "14",
+              "letters": "3",
+              "tide": "Низкая",
+              "until": "2",
+              "note": "Лодка отчаливает — все письма доставлены!",
+              "phase": "Победа"
+            },
+            "reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "rapid": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "resumed": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "loss": {
+              "steps": "0",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Ходы закончились. Попробуйте снова.",
+              "phase": "Поражение"
+            },
+            "loss_reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "loss_and_replay": true,
+            "resize_preserves_progress": true,
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 1
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 354,
+                  "height": 354,
+                  "box": {
+                    "x": 18,
+                    "y": 248.4375,
+                    "width": 354,
+                    "height": 354,
+                    "top": 248.4375,
+                    "right": 372,
+                    "bottom": 602.4375,
+                    "left": 18
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 75.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 128.5,
+                    "bottom": 815,
+                    "left": 75.5
+                  }
+                },
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 137.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 190.5,
+                    "bottom": 815,
+                    "left": 137.5
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 199.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 252.5,
+                    "bottom": 815,
+                    "left": 199.5
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 261.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 314.5,
+                    "bottom": 815,
+                    "left": 261.5
+                  }
+                }
+              ]
+            },
+            "motion_distinct_target_x": 19,
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.400000000000091,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-welcome.jpg",
+                "sha256": "b2267622c367f70e86ae3f2dd69e75cebfee0bee77b3623cdafe39c190fada58"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-initial.jpg",
+                "sha256": "3104a232a8cf33c771cb60d02dc22dfb914b6eed06a91bd7a1025c2cb358d009"
+              },
+              "after-motion": {
+                "file": "independent-presentation-mobile-after-motion.jpg",
+                "sha256": "4818dc3941bda12fbcbb8976626cbd03cdfdc1b55a724ba23538b0ea21042c6e"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-win.jpg",
+                "sha256": "2bc02518fd1dde260bc4776d3602afdec78c851e152cf155a2124ded2f9df6c0"
+              }
+            },
+            "drift": {
+              "outside_endpoint_bounds": 7,
+              "x_range": [
+                51.5,
+                137.43820224719101
+              ],
+              "y_range": [
+                9.695652173913043,
+                181.12941176470588
+              ],
+              "after": {
+                "steps": "34",
+                "letters": "0",
+                "tide": "Высокая",
+                "until": "2",
+                "note": "Течение снесло на мостки: −2 хода!",
+                "phase": "В пути"
+              }
+            }
+          },
+          {
+            "variant": "desktop",
+            "initial": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "first_input": {
+              "direction": "left",
+              "before": {
+                "steps": "40",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "4",
+                "note": "Доставьте письма и вернитесь к лодке.",
+                "phase": "В пути"
+              },
+              "after": {
+                "steps": "39",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "3",
+                "note": "Шаг по городку.",
+                "phase": "В пути"
+              }
+            },
+            "final": {
+              "steps": "14",
+              "letters": "3",
+              "tide": "Низкая",
+              "until": "2",
+              "note": "Лодка отчаливает — все письма доставлены!",
+              "phase": "Победа"
+            },
+            "reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "rapid": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "resumed": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "loss": {
+              "steps": "0",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Ходы закончились. Попробуйте снова.",
+              "phase": "Поражение"
+            },
+            "loss_reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "loss_and_replay": true,
+            "resize_preserves_progress": true,
+            "geometry": {
+              "viewport": {
+                "width": 1280,
+                "height": 800,
+                "dpr": 1
+              },
+              "document": {
+                "width": 1280,
+                "height": 800
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 566,
+                  "height": 566,
+                  "box": {
+                    "x": 356.84375,
+                    "y": 117.6875,
+                    "width": 566.3125,
+                    "height": 566.3125,
+                    "top": 117.6875,
+                    "right": 923.15625,
+                    "bottom": 684,
+                    "left": 356.84375
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 520.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 573.5,
+                    "bottom": 769,
+                    "left": 520.5
+                  }
+                },
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 582.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 635.5,
+                    "bottom": 769,
+                    "left": 582.5
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 644.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 697.5,
+                    "bottom": 769,
+                    "left": 644.5
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 706.5,
+                    "y": 722,
+                    "width": 53,
+                    "height": 47,
+                    "top": 722,
+                    "right": 759.5,
+                    "bottom": 769,
+                    "left": 706.5
+                  }
+                }
+              ]
+            },
+            "motion_distinct_target_x": 21,
+            "observer_cadence_ms": {
+              "samples": 109,
+              "median": 8.299999999999955,
+              "max": 10.599999999999909,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-desktop-welcome.jpg",
+                "sha256": "57bc2922145ae0a89e795f06d81b8b0abe2fd0db69985e4fb701e3e8404c62ca"
+              },
+              "initial": {
+                "file": "independent-presentation-desktop-initial.jpg",
+                "sha256": "c2721de4c190f825a28c0dc26af109dd74c26363ccbe0bba34ea2f8b2f888950"
+              },
+              "after-motion": {
+                "file": "independent-presentation-desktop-after-motion.jpg",
+                "sha256": "64a60275f2e76eb068ca9b89f3f32d80ae224ff8aea0380ab87acc90fa4eb9c8"
+              },
+              "win": {
+                "file": "independent-presentation-desktop-win.jpg",
+                "sha256": "50dd5be0182d2bf77e30308d3f40963703df53ba6413e86bafd3e7cf0b660bfd"
+              }
+            },
+            "drift": {
+              "outside_endpoint_bounds": 7,
+              "x_range": [
+                81.51282051282051,
+                219.51054852320675
+              ],
+              "y_range": [
+                13.863247863247864,
+                289.8270042194093
+              ],
+              "after": {
+                "steps": "34",
+                "letters": "0",
+                "tide": "Высокая",
+                "until": "2",
+                "note": "Течение снесло на мостки: −2 хода!",
+                "phase": "В пути"
+              }
+            }
+          },
+          {
+            "variant": "mobile-reduced-dpr2",
+            "initial": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "first_input": {
+              "direction": "left",
+              "before": {
+                "steps": "40",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "4",
+                "note": "Доставьте письма и вернитесь к лодке.",
+                "phase": "В пути"
+              },
+              "after": {
+                "steps": "39",
+                "letters": "0",
+                "tide": "Низкая",
+                "until": "3",
+                "note": "Шаг по городку.",
+                "phase": "В пути"
+              }
+            },
+            "final": {
+              "steps": "14",
+              "letters": "3",
+              "tide": "Низкая",
+              "until": "2",
+              "note": "Лодка отчаливает — все письма доставлены!",
+              "phase": "Победа"
+            },
+            "reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "rapid": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "resumed": {
+              "steps": "36",
+              "letters": "0",
+              "tide": "Высокая",
+              "until": "4",
+              "note": "Прилив! Вода поднялась.",
+              "phase": "В пути"
+            },
+            "loss": {
+              "steps": "0",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Ходы закончились. Попробуйте снова.",
+              "phase": "Поражение"
+            },
+            "loss_reset": {
+              "steps": "40",
+              "letters": "0",
+              "tide": "Низкая",
+              "until": "4",
+              "note": "Доставьте письма и вернитесь к лодке.",
+              "phase": "В пути"
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "loss_and_replay": true,
+            "resize_preserves_progress": true,
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 2
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 708,
+                  "height": 708,
+                  "box": {
+                    "x": 18,
+                    "y": 248.4375,
+                    "width": 354,
+                    "height": 354,
+                    "top": 248.4375,
+                    "right": 372,
+                    "bottom": 602.4375,
+                    "left": 18
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 75.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 128.5,
+                    "bottom": 815,
+                    "left": 75.5
+                  }
+                },
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 137.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 190.5,
+                    "bottom": 815,
+                    "left": 137.5
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 199.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 252.5,
+                    "bottom": 815,
+                    "left": 199.5
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 261.5,
+                    "y": 768,
+                    "width": 53,
+                    "height": 47,
+                    "top": 768,
+                    "right": 314.5,
+                    "bottom": 815,
+                    "left": 261.5
+                  }
+                }
+              ]
+            },
+            "motion_distinct_target_x": 2,
+            "observer_cadence_ms": {
+              "samples": 109,
+              "median": 8.300000000000011,
+              "max": 9.100000000000136,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-reduced-dpr2-welcome.jpg",
+                "sha256": "8557e4e9b62681a649cd0ceb43093a54a7c65fd723c2e09867f24b0ce7d97ba4"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-reduced-dpr2-initial.jpg",
+                "sha256": "df47c410d5f45c117b2d9ff235fd1f226e9d508f9f674a45d63e795871e5e6f4"
+              },
+              "after-motion": {
+                "file": "independent-presentation-mobile-reduced-dpr2-after-motion.jpg",
+                "sha256": "d3846d1f4fe9a07a116e384eeeec3f9066597e299a9c33cd857809b53a59261d"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-reduced-dpr2-win.jpg",
+                "sha256": "f48129d18166491346083652c94855ce5f2aa2b404d1421ecf49dc8bbb649184"
+              }
+            },
+            "drift": {
+              "outside_endpoint_bounds": 0,
+              "x_range": [
+                196.03015075376885,
+                274.9514066496164
+              ],
+              "y_range": [
+                284.0854271356784,
+                362.61636828644504
+              ],
+              "after": {
+                "steps": "34",
+                "letters": "0",
+                "tide": "Высокая",
+                "until": "2",
+                "note": "Течение снесло на мостки: −2 хода!",
+                "phase": "В пути"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case": "memory",
+      "generation_profile": "full",
+      "prompt": "Сделай красивую маленькую игру на память: четыре закрытые карточки, две пары фруктов. Касанием открываем две карточки, одинаковые остаются открытыми, разные закрываются. Когда обе пары найдены — победа. Canvas, телефон и мышь, понятное начало.",
+      "criteria": {
+        "start": "Четыре закрытые карточки образуют две пары",
+        "control": "Совпадения остаются открыты; несовпадения закрываются",
+        "outcome": "Реальное открытие обеих пар даёт победу",
+        "mobile": "Карточки доступны касанием на телефоне"
+      },
+      "run": {
+        "id": "4220684f-308c-4df4-a424-9f8a57b7a1ea",
+        "status": "unverified",
+        "attempts": 3,
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "created_at": "2026-10-26T13:51:19.106754+00:00",
+        "finished_at": "2026-10-26T13:56:02.131604+00:00",
+        "candidate_revision_id": "546c73aa-96a2-4109-8ca2-954e1b8bfe75",
+        "result_revision_id": null
+      },
+      "game_plan": {
+        "visual": "Компактное поле 2×2 с крупными карточками и заметными состояниями закрытой, открытой и найденной пары.",
+        "outcome": "Когда открыты обе пары, появляется поздравление и кнопка «Ещё раз» для новой раскладки.",
+        "summary": "«Фруктовые пары»: найдите две пары среди четырёх закрытых карточек.",
+        "core_loop": "На экране начала показаны правила и кнопка «Играть». Игрок касанием или щелчком открывает две карточки и запоминает расположение фруктов.",
+        "mechanics": [
+          "Четыре карточки содержат две пары фруктов; их расположение перемешивается перед партией.",
+          "Совпавшие карточки остаются открытыми. Разные ненадолго показываются, затем закрываются; до этого третью карточку открыть нельзя."
+        ],
+        "assumptions": [
+          "Для двух пар выбраны клубника и лимон.",
+          "Перед каждой партией расположение карточек перемешивается.",
+          "Карточки различающейся пары остаются открытыми на короткое время для запоминания."
+        ],
+        "progression": "После первой найденной пары остаётся найти вторую. Время не ограничено, поэтому можно играть в своём темпе.",
+        "presentation": {
+          "motion": "При открытии карточка коротко переворачивается; совпавшая пара мягко подсвечивается, а различающаяся закрывается после паузы. После победы подсвечиваются все четыре карточки и появляется поздравление; «Ещё раз» возвращает к закрытой перемешанной раскладке. При уменьшенном движении перевороты и подсветка заменяются мгновенной сменой состояния с чёткой отметкой найденной пары.",
+          "art_direction": "Тёплый кремовый фон, коралловая клубника и солнечно-жёлтый лимон; тёмные контуры помогают различать фрукты не только по цвету. Крупный заголовок и короткая инструкция стоят над полем, кнопка — под ним. Карточки с округлыми углами и мягкими тенями образуют читаемую сетку 2×2, которая помещается на узком экране без мелких целей для касания."
+        }
+      },
+      "calls": [
+        {
+          "id": "62eed408-694c-4757-a27c-fdcc64745e95",
+          "operation": "plan",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1782,
+            "output_tokens": 624,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:51:19.196709+00:00",
+          "sent_at": "2026-10-26T13:51:19.216575+00:00",
+          "finished_at": "2026-10-26T13:51:38.723038+00:00",
+          "elapsed_seconds": 19.49991595814936,
+          "reasoning_effort": "high",
+          "schema_sha256": "1a0a4c0b2259b481f27c70d8346ed8078e3392fe97ca6d26e75ec94212272137",
+          "prompt_sha256": "bfdf84d3a931d7b6b7354393aa581681a79ce92795b2c6e7b951fd8ef1a00737",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        },
+        {
+          "id": "662cd854-c385-437e-901b-0bd3d77d6245",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5491,
+            "output_tokens": 10900,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:51:38.745574+00:00",
+          "sent_at": "2026-10-26T13:51:38.749051+00:00",
+          "finished_at": "2026-10-26T13:55:02.840980+00:00",
+          "elapsed_seconds": 204.0859867921099,
+          "reasoning_effort": "high",
+          "schema_sha256": "5aae868a1afebc3bfd702db41e6d25cd5d193b11e20664c639d96361bf8c1be5",
+          "prompt_sha256": "109ea7f73c5a89142b31b836f8f62f1a46e45646742158e6cfc8cb0ee20dead9",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        },
+        {
+          "id": "4e5b2848-9a78-42d7-b4f5-30f5bbacd038",
+          "operation": "check_repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 11621,
+            "output_tokens": 1849,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:55:13.923654+00:00",
+          "sent_at": "2026-10-26T13:55:13.933202+00:00",
+          "finished_at": "2026-10-26T13:55:51.003712+00:00",
+          "elapsed_seconds": 37.06344629195519,
+          "reasoning_effort": "medium",
+          "schema_sha256": "31cbecb31c0c33c606f889a72d192c2e7d9ab8bec98f311d00efab3d02a3e60c",
+          "prompt_sha256": "cc92e791e6332d3f18056be02202de443a46b044621217c663f7bc81ebd22169",
+          "preview_report_id": 190,
+          "preview_artifact_hash": "c2b09a9f9537b1cb9077d47b2239f576f4607c2217ae175d08da6981ebe9c102"
+        }
+      ],
+      "revisions": [
+        {
+          "id": "f755b434-ef73-4e79-b8dd-137564486d49",
+          "artifact_hash": "c2b09a9f9537b1cb9077d47b2239f576f4607c2217ae175d08da6981ebe9c102",
+          "verification": "none",
+          "created_at": "2026-10-26T13:55:02.861311+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "f570197bff5c24f9ce51f6d1021a2900de01ffb5b141db7f431a31002968b29a",
+              "bytes": 11378
+            },
+            "index.html": {
+              "sha256": "63ffc5d833504ac9cad3bc18fca1c80e86e05542bf8bab4ad972d5b0439d3472",
+              "bytes": 1409
+            },
+            "styles.css": {
+              "sha256": "b4a1af43046dd9cadd8b2f4687529b7c7ed68c6ad64c2c4399b1a8f4b0d29c89",
+              "bytes": 2214
+            }
+          },
+          "report": {
+            "id": 190,
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "mobile-start",
+                "status": "passed",
+                "requirement": "На телефоне понятное начало запускает игру с закрытыми карточками.",
+                "detail": null,
+                "after": "Выберите первую карточку."
+              },
+              {
+                "id": "mobile-reveal",
+                "status": "passed",
+                "requirement": "Касание карточки действительно открывает одну карту.",
+                "detail": null,
+                "after": 1.0
+              },
+              {
+                "id": "mismatch-lock",
+                "status": "passed",
+                "requirement": "Заведомо разные первые две карты закрываются после паузы; повторное касание той же карты не считается второй картой.",
+                "detail": null,
+                "after": 0.0
+              },
+              {
+                "id": "desktop-win",
+                "status": "unverified",
+                "requirement": "Мышью можно найти обе пары при любой допустимой перемешанной раскладке.",
+                "detail": null,
+                "after": 2.0
+              },
+              {
+                "id": "mobile-replay",
+                "status": "passed",
+                "requirement": "После настоящей победы «Ещё раз» создаёт свежую играбельную партию.",
+                "detail": null,
+                "after": 1.0
+              }
+            ],
+            "findings": [
+              {
+                "code": "effect_not_causal",
+                "message": "Проверка не отличает реальный ввод от контрольного запуска без последнего действия.",
+                "check_id": "desktop-win"
+              }
+            ]
+          }
+        },
+        {
+          "id": "546c73aa-96a2-4109-8ca2-954e1b8bfe75",
+          "artifact_hash": "c2b09a9f9537b1cb9077d47b2239f576f4607c2217ae175d08da6981ebe9c102",
+          "verification": "none",
+          "created_at": "2026-10-26T13:55:51.033256+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "f570197bff5c24f9ce51f6d1021a2900de01ffb5b141db7f431a31002968b29a",
+              "bytes": 11378
+            },
+            "index.html": {
+              "sha256": "63ffc5d833504ac9cad3bc18fca1c80e86e05542bf8bab4ad972d5b0439d3472",
+              "bytes": 1409
+            },
+            "styles.css": {
+              "sha256": "b4a1af43046dd9cadd8b2f4687529b7c7ed68c6ad64c2c4399b1a8f4b0d29c89",
+              "bytes": 2214
+            }
+          },
+          "report": {
+            "id": 191,
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "mobile-start",
+                "status": "passed",
+                "requirement": "На телефоне понятное начало запускает игру с закрытыми карточками.",
+                "detail": null,
+                "after": "Выберите первую карточку."
+              },
+              {
+                "id": "mobile-reveal",
+                "status": "passed",
+                "requirement": "Касание карточки действительно открывает одну карту.",
+                "detail": null,
+                "after": 1.0
+              },
+              {
+                "id": "mismatch-lock",
+                "status": "passed",
+                "requirement": "Заведомо разные первые две карты закрываются после паузы; повторное касание той же карты не считается второй картой.",
+                "detail": null,
+                "after": 0.0
+              },
+              {
+                "id": "desktop-win",
+                "status": "passed",
+                "requirement": "Мышью можно найти обе пары при любой допустимой перемешанной раскладке.",
+                "detail": null,
+                "after": 2.0
+              },
+              {
+                "id": "mobile-replay",
+                "status": "passed",
+                "requirement": "После настоящей победы «Ещё раз» создаёт свежую играбельную партию.",
+                "detail": null,
+                "after": 1.0
+              }
+            ],
+            "findings": [
+              {
+                "code": "check_suite_revised",
+                "message": "Исходники сохранены; модель изменила сценарии. Подтвердите исходные игровые условия вручную.",
+                "check_id": null
+              }
+            ]
+          }
+        }
+      ],
+      "source_preserved_during_check_repair": true,
+      "independent_evidence": {
+        "artifact_hash": "c2b09a9f9537b1cb9077d47b2239f576f4607c2217ae175d08da6981ebe9c102",
+        "environment": "mini-browser-v1:21e377903215401790a9246624d2d4c49069ded7ccebe2007dc99a2f54a90ded:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+        "method": "Actual inputs; adaptive pair search using displayed counters, no access to hidden deck. Rendered card-color pixels over time. No mutation of source/state/clock/RNG.",
+        "report_sha256": "ee74e2deb7631d7504016ba8dfe2b3a9c9de702bc7f810b0e5ae5a608e510ff3",
+        "adapter_sha256": "762ee108b08371e3b91c98f0342a982de9bf18c8d4df668feaf2f8a908d12b36",
+        "common_sha256": "80bee352f2b1465407daee485a5d428189257bcc78bbabbf21fa92b5d3387b00",
+        "results": [
+          {
+            "variant": "mobile",
+            "initial": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Выберите первую карточку."
+            },
+            "one": {
+              "found": "0",
+              "openCount": "1",
+              "status": "Открыта одна карточка. Где её пара?"
+            },
+            "two": {
+              "found": "0",
+              "openCount": "2",
+              "status": "Разные фрукты — запоминайте!"
+            },
+            "after_third": {
+              "found": "0",
+              "openCount": "2",
+              "status": "Разные фрукты — запоминайте!"
+            },
+            "after_mismatch": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Попробуйте ещё раз — выберите карточку."
+            },
+            "final": {
+              "found": "2",
+              "openCount": "0",
+              "status": "Ура! Обе пары найдены!"
+            },
+            "reset": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Выберите первую карточку."
+            },
+            "resumed": {
+              "found": "0",
+              "openCount": "1",
+              "status": "Открыта одна карточка. Где её пара?"
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "restart_pending_safe": true,
+            "keyboard_control": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 17,
+            "motion_pixel_count_range": [
+              0,
+              15447
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.300000000000182,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 1
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 358,
+                  "height": 358,
+                  "box": {
+                    "x": 16,
+                    "y": 281.625,
+                    "width": 358,
+                    "height": 358,
+                    "top": 281.625,
+                    "right": 374,
+                    "bottom": 639.625,
+                    "left": 16
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Заново ↻",
+                  "id": "action",
+                  "box": {
+                    "x": 103,
+                    "y": 651.625,
+                    "width": 184,
+                    "height": 52,
+                    "top": 651.625,
+                    "right": 287,
+                    "bottom": 703.625,
+                    "left": 103
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-welcome.jpg",
+                "sha256": "7cf0e73857df1c23fb874f93e254f80e1d9ff778a6264325244cc8c5afa2e406"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-initial.jpg",
+                "sha256": "1277ae992ab6a379fd2dcd8d5f43d713f2c4f1029b698f405b63c60de2897f66"
+              },
+              "one-open": {
+                "file": "independent-presentation-mobile-one-open.jpg",
+                "sha256": "1a913ffd6a48ee5738c48070191c2f0141fce57ea4a508f4270145a66e2e030b"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-win.jpg",
+                "sha256": "e8011d8d1c47ed2fcea723506c664e91ee668c060885600f5bd41097f0c040bb"
+              }
+            }
+          },
+          {
+            "variant": "desktop",
+            "initial": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Выберите первую карточку."
+            },
+            "one": {
+              "found": "0",
+              "openCount": "1",
+              "status": "Открыта одна карточка. Где её пара?"
+            },
+            "two": {
+              "found": "0",
+              "openCount": "2",
+              "status": "Разные фрукты — запоминайте!"
+            },
+            "after_third": {
+              "found": "0",
+              "openCount": "2",
+              "status": "Разные фрукты — запоминайте!"
+            },
+            "after_mismatch": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Попробуйте ещё раз — выберите карточку."
+            },
+            "final": {
+              "found": "2",
+              "openCount": "0",
+              "status": "Ура! Обе пары найдены!"
+            },
+            "reset": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Выберите первую карточку."
+            },
+            "resumed": {
+              "found": "0",
+              "openCount": "1",
+              "status": "Открыта одна карточка. Где её пара?"
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "restart_pending_safe": true,
+            "keyboard_control": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 18,
+            "motion_pixel_count_range": [
+              0,
+              28649
+            ],
+            "observer_cadence_ms": {
+              "samples": 109,
+              "median": 8.299999999999955,
+              "max": 9.300000000000011,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 1280,
+                "height": 800,
+                "dpr": 1
+              },
+              "document": {
+                "width": 1280,
+                "height": 800
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 480,
+                  "height": 480,
+                  "box": {
+                    "x": 400,
+                    "y": 197.015625,
+                    "width": 480,
+                    "height": 480,
+                    "top": 197.015625,
+                    "right": 880,
+                    "bottom": 677.015625,
+                    "left": 400
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Заново ↻",
+                  "id": "action",
+                  "box": {
+                    "x": 548,
+                    "y": 686.015625,
+                    "width": 184,
+                    "height": 52,
+                    "top": 686.015625,
+                    "right": 732,
+                    "bottom": 738.015625,
+                    "left": 548
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-desktop-welcome.jpg",
+                "sha256": "5a94bb4519ef388dac511efffd6e0aa4538f209098afb0ab2090832764e66024"
+              },
+              "initial": {
+                "file": "independent-presentation-desktop-initial.jpg",
+                "sha256": "b49e07e1065e07c8540ac8f1e3dd15e517b4b7e62b70dc8bc1b67b7337ac473d"
+              },
+              "one-open": {
+                "file": "independent-presentation-desktop-one-open.jpg",
+                "sha256": "82eddaae6f9134f2ddba6d8b4098f52afbfb4b3bf3172919edcd0311e78df79b"
+              },
+              "win": {
+                "file": "independent-presentation-desktop-win.jpg",
+                "sha256": "930858cf54601e95351dd337a225330fc832c62579d4d0c7dc02a9f751f8c26e"
+              }
+            }
+          },
+          {
+            "variant": "mobile-reduced-dpr2",
+            "initial": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Выберите первую карточку."
+            },
+            "one": {
+              "found": "0",
+              "openCount": "1",
+              "status": "Открыта одна карточка. Где её пара?"
+            },
+            "two": {
+              "found": "0",
+              "openCount": "2",
+              "status": "Разные фрукты — запоминайте!"
+            },
+            "after_third": {
+              "found": "0",
+              "openCount": "2",
+              "status": "Разные фрукты — запоминайте!"
+            },
+            "after_mismatch": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Попробуйте ещё раз — выберите карточку."
+            },
+            "final": {
+              "found": "2",
+              "openCount": "0",
+              "status": "Ура! Обе пары найдены!"
+            },
+            "reset": {
+              "found": "0",
+              "openCount": "0",
+              "status": "Выберите первую карточку."
+            },
+            "resumed": {
+              "found": "0",
+              "openCount": "1",
+              "status": "Открыта одна карточка. Где её пара?"
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "restart_pending_safe": true,
+            "keyboard_control": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 2,
+            "motion_pixel_count_range": [
+              0,
+              63585
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000068,
+              "max": 9.300000000000068,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 2
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "board",
+                  "width": 716,
+                  "height": 716,
+                  "box": {
+                    "x": 16,
+                    "y": 281.625,
+                    "width": 358,
+                    "height": 358,
+                    "top": 281.625,
+                    "right": 374,
+                    "bottom": 639.625,
+                    "left": 16
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Заново ↻",
+                  "id": "action",
+                  "box": {
+                    "x": 103,
+                    "y": 648.625,
+                    "width": 184,
+                    "height": 52,
+                    "top": 648.625,
+                    "right": 287,
+                    "bottom": 700.625,
+                    "left": 103
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-reduced-dpr2-welcome.jpg",
+                "sha256": "32608825dd3b1b191904077aa1d7c1bea0cfe0e245adccbc2e1526aca48d05a2"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-reduced-dpr2-initial.jpg",
+                "sha256": "31dc86a7de2963cf52a1c30a59472860a0448de2381a16b22154ce897106252e"
+              },
+              "one-open": {
+                "file": "independent-presentation-mobile-reduced-dpr2-one-open.jpg",
+                "sha256": "26acb63f52079a1042f5021a68b16e257c25b6b048f1cc36effee52ae2f5ec4d"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-reduced-dpr2-win.jpg",
+                "sha256": "3d88ab4f86212fa4fdf60a693b4a2d2af4040648d33940a780e944ebe2ee0b05"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case": "adventure",
+      "generation_profile": "compact",
+      "prompt": "Сделай бродилку",
+      "criteria": {
+        "start": "Есть понятное начало, персонаж, игровая цель и читаемая сцена",
+        "control": "Реальный ввод перемещает персонажа и меняет игровой процесс",
+        "outcome": "Реальная игра достигает объявленного финала либо поражения",
+        "mobile": "Игровое управление доступно касанием и помещается на телефоне"
+      },
+      "run": {
+        "id": "cbc8c928-9554-419f-b1ca-bdb1f7937669",
+        "status": "unverified",
+        "attempts": 3,
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "created_at": "2026-10-26T13:56:06.282770+00:00",
+        "finished_at": "2026-10-26T13:59:02.073702+00:00",
+        "candidate_revision_id": "e619f65b-078a-4077-9be9-eb1eff3786e8",
+        "result_revision_id": null
+      },
+      "game_plan": {
+        "visual": "Тёплый свет фонаря служит ориентиром среди холодного тумана; путь, цветы и искры различаются также по форме.",
+        "outcome": "После третьей искры игрок зажигает маяк и видит освещённый остров. Повторное прохождение меняет расположение цветов и срезов.",
+        "summary": "«Тропа к маяку» — бродилка по туманному острову: нужно найти три искры и зажечь маяк.",
+        "core_loop": "Игрок перемещается по клеткам, выбирает безопасный освещённый путь или короткий путь через туман, пополняет свет фонаря у цветов и ищет искру, ведущую в следующую область.",
+        "mechanics": [
+          "Движение по соседним клеткам кнопками направления или касанием соседней клетки.",
+          "Каждый шаг тратит заряд фонаря; в тумане расход выше, зато путь короче.",
+          "Светящиеся цветы восстанавливают заряд. Если он закончится, герой возвращается к последнему цветку без потери искр.",
+          "Собранная искра открывает проход в следующую область."
+        ],
+        "assumptions": [
+          "Выбраны островной маяк и поиск искр как тема бродилки.",
+          "Выбраны три короткие клеточные области, заряд фонаря и возврат без поражения.",
+          "Для повторного прохождения меняется расположение части объектов."
+        ],
+        "progression": "Три небольшие области постепенно предлагают более длинные обходы и заметные, но рискованные срезы. Заряд и возможные маршруты всегда видны игроку.",
+        "presentation": {
+          "motion": "Герой плавно переходит на соседнюю клетку, круг света сужается при расходе заряда, цветок мягко раскрывается при пополнении, а найденная искра подсвечивает проход. В финале луч маяка последовательно открывает берег; кнопка повтора появляется после короткой паузы. При уменьшении движения переходы и вспышки заменяются мгновенной сменой состояния с ясными подписями.",
+          "art_direction": "Плоские силуэты с эффектом бумажных слоёв: тёмно-синий берег, серо-голубой туман, янтарный фонарь и белые цветы с крупными лепестками. Крупные подписи и счётчик заряда сверху, игровое поле по центру, кнопки движения снизу; на узком экране весь ближайший маршрут остаётся различимым."
+        }
+      },
+      "calls": [
+        {
+          "id": "d2c5acd2-635f-4370-88d8-199d0630adf4",
+          "operation": "plan",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1672,
+            "output_tokens": 943,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:56:06.356779+00:00",
+          "sent_at": "2026-10-26T13:56:06.398713+00:00",
+          "finished_at": "2026-10-26T13:56:35.597036+00:00",
+          "elapsed_seconds": 29.188432540977374,
+          "reasoning_effort": "high",
+          "schema_sha256": "1a0a4c0b2259b481f27c70d8346ed8078e3392fe97ca6d26e75ec94212272137",
+          "prompt_sha256": "bfdf84d3a931d7b6b7354393aa581681a79ce92795b2c6e7b951fd8ef1a00737",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        },
+        {
+          "id": "7a4ab55b-09e5-4a5d-b3e8-df0ec598ddee",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4350,
+            "output_tokens": 6151,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:56:35.627638+00:00",
+          "sent_at": "2026-10-26T13:56:35.632014+00:00",
+          "finished_at": "2026-10-26T13:58:27.843384+00:00",
+          "elapsed_seconds": 112.20661441609263,
+          "reasoning_effort": "high",
+          "schema_sha256": "c4af29581a3d446b90c09a71d9a4f5e1320d5bb46222cd881f104e71d6268631",
+          "prompt_sha256": "190baa7838d68b17aa8d0786fe6b9ce68fa57ed362946eb4223588ba2582928d",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        },
+        {
+          "id": "58b86018-959d-4785-bdfd-3c3a39136f7f",
+          "operation": "check_repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 11187,
+            "output_tokens": 1180,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:58:32.748383+00:00",
+          "sent_at": "2026-10-26T13:58:32.761877+00:00",
+          "finished_at": "2026-10-26T13:58:57.352703+00:00",
+          "elapsed_seconds": 24.5824694999028,
+          "reasoning_effort": "medium",
+          "schema_sha256": "0e5c8d9316c831c1d17a8a9a4d9c4cce00a74b17c06715b3ed4302e40bd6e12f",
+          "prompt_sha256": "6474c449965990515bf1d4f0ec4868b9cb0e76e962cc7d14522f66b343529c01",
+          "preview_report_id": 192,
+          "preview_artifact_hash": "423c06251374b13866d7366794febfd742b89a376267bdee25642e875b7fa247"
+        }
+      ],
+      "revisions": [
+        {
+          "id": "5e88b124-87ed-4404-8fca-f0ab96b2ba0e",
+          "artifact_hash": "423c06251374b13866d7366794febfd742b89a376267bdee25642e875b7fa247",
+          "verification": "none",
+          "created_at": "2026-10-26T13:58:27.860007+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "c80e52d0d46d821cb22a1f098643427ae7dea0b61d86c9236c44c70b990e9330",
+              "bytes": 8537
+            },
+            "index.html": {
+              "sha256": "f612a3dad76d14b310b76ed3c9d4fd0e4f434fe0bc9da715bc46e8801d553882",
+              "bytes": 767
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "id": 192,
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start",
+                "status": "unverified",
+                "requirement": "При открытии видны остров и полный заряд фонаря.",
+                "detail": "Одна точка baseline допустима только для changed/increased/decreased.",
+                "after": null
+              },
+              {
+                "id": "flower",
+                "status": "passed",
+                "requirement": "Движение к цветку восстанавливает заряд после шага через туман.",
+                "detail": null,
+                "after": 12
+              },
+              {
+                "id": "beacon",
+                "status": "passed",
+                "requirement": "Искра открывает следующую область; три найденные искры зажигают маяк.",
+                "detail": null,
+                "after": "won"
+              },
+              {
+                "id": "shore",
+                "status": "passed",
+                "requirement": "Герой не может уйти с тропы в воду.",
+                "detail": null,
+                "after": 1
+              },
+              {
+                "id": "return",
+                "status": "passed",
+                "requirement": "Когда заряд иссякает, герой возвращается к последнему цветку.",
+                "detail": null,
+                "after": 1
+              }
+            ],
+            "findings": [
+              {
+                "code": "missing_mobile_start",
+                "message": "Проверьте понятное начало игры в мобильном viewport.",
+                "check_id": null
+              },
+              {
+                "code": "incomplete_checks",
+                "message": "Нужны проверки начала, управления и исхода.",
+                "check_id": null
+              },
+              {
+                "code": "invalid_check",
+                "message": "Одна точка baseline допустима только для changed/increased/decreased.",
+                "check_id": "start"
+              }
+            ]
+          }
+        },
+        {
+          "id": "e619f65b-078a-4077-9be9-eb1eff3786e8",
+          "artifact_hash": "423c06251374b13866d7366794febfd742b89a376267bdee25642e875b7fa247",
+          "verification": "none",
+          "created_at": "2026-10-26T13:58:57.387754+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "c80e52d0d46d821cb22a1f098643427ae7dea0b61d86c9236c44c70b990e9330",
+              "bytes": 8537
+            },
+            "index.html": {
+              "sha256": "f612a3dad76d14b310b76ed3c9d4fd0e4f434fe0bc9da715bc46e8801d553882",
+              "bytes": 767
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "id": 193,
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start",
+                "status": "unverified",
+                "requirement": "При открытии видны остров и полный заряд фонаря.",
+                "detail": "Одна точка baseline допустима только для changed/increased/decreased.",
+                "after": null
+              },
+              {
+                "id": "flower",
+                "status": "passed",
+                "requirement": "Движение к цветку восстанавливает заряд после шага через туман.",
+                "detail": null,
+                "after": 12
+              },
+              {
+                "id": "beacon",
+                "status": "passed",
+                "requirement": "Искра открывает следующую область; три найденные искры зажигают маяк.",
+                "detail": null,
+                "after": "won"
+              },
+              {
+                "id": "shore",
+                "status": "passed",
+                "requirement": "Герой не может уйти с тропы в воду.",
+                "detail": null,
+                "after": 1
+              },
+              {
+                "id": "return",
+                "status": "passed",
+                "requirement": "Когда заряд иссякает, герой возвращается к последнему цветку.",
+                "detail": null,
+                "after": 1
+              },
+              {
+                "id": "required_mobile_start",
+                "status": "unverified",
+                "requirement": "При открытии видны остров и полный заряд фонаря.",
+                "detail": "Одна точка baseline допустима только для changed/increased/decreased.",
+                "after": null
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "message": "Одна точка baseline допустима только для changed/increased/decreased.",
+                "check_id": "start"
+              },
+              {
+                "code": "invalid_check",
+                "message": "Одна точка baseline допустима только для changed/increased/decreased.",
+                "check_id": "required_mobile_start"
+              }
+            ]
+          }
+        }
+      ],
+      "source_preserved_during_check_repair": true,
+      "independent_evidence": {
+        "artifact_hash": "423c06251374b13866d7366794febfd742b89a376267bdee25642e875b7fa247",
+        "environment": "mini-browser-v1:f221e1ef559abaa67758aa0a082b4d1a13bfa1a72466a81b5450e89fa1f18130:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+        "method": "Actual input and rendered pixels; read-only declared plain state counters cross-checked against initial/win screenshots. No mutation of source, state, clock or RNG.",
+        "report_sha256": "d966042771ab658cf4fe20106134c68c9fef4010eeb98fa1cb00785be4e99221",
+        "adapter_sha256": "459a326a02d2ce29c147f942804f07db12913d76e9cab1ac4d8ba21e4d32171a",
+        "common_sha256": "80bee352f2b1465407daee485a5d428189257bcc78bbabbf21fa92b5d3387b00",
+        "results": [
+          {
+            "variant": "mobile",
+            "initial": {
+              "phase": "play",
+              "zone": 1,
+              "x": 0,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 0
+            },
+            "first_input": {
+              "direction": "right",
+              "before": {
+                "phase": "play",
+                "zone": 1,
+                "x": 0,
+                "y": 2,
+                "charge": 12,
+                "sparks": 0,
+                "respawns": 0,
+                "run": 0
+              },
+              "after": {
+                "phase": "play",
+                "zone": 1,
+                "x": 1,
+                "y": 2,
+                "charge": 11,
+                "sparks": 0,
+                "respawns": 0,
+                "run": 0
+              }
+            },
+            "final": {
+              "phase": "won",
+              "zone": 3,
+              "x": 5,
+              "y": 2,
+              "charge": 2,
+              "sparks": 3,
+              "respawns": 0,
+              "run": 0
+            },
+            "reset": {
+              "phase": "play",
+              "zone": 1,
+              "x": 0,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 1
+            },
+            "resumed": {
+              "phase": "play",
+              "zone": 1,
+              "x": 1,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 1
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "shore_blocks": true,
+            "charge_respawn": true,
+            "canvas_control": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_x": 42,
+            "observer_cadence_ms": {
+              "samples": 107,
+              "median": 8.300000000000068,
+              "max": 10.5,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 1
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 374,
+                  "height": 534,
+                  "box": {
+                    "x": 8,
+                    "y": 122.859375,
+                    "width": 374,
+                    "height": 534.28125,
+                    "top": 122.859375,
+                    "right": 382,
+                    "bottom": 657.140625,
+                    "left": 8
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 38.609375,
+                    "y": 788,
+                    "width": 48,
+                    "height": 48,
+                    "top": 788,
+                    "right": 86.609375,
+                    "bottom": 836,
+                    "left": 38.609375
+                  }
+                },
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 94.609375,
+                    "y": 788,
+                    "width": 48.1875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 142.796875,
+                    "bottom": 836,
+                    "left": 94.609375
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 150.796875,
+                    "y": 788,
+                    "width": 48,
+                    "height": 48,
+                    "top": 788,
+                    "right": 198.796875,
+                    "bottom": 836,
+                    "left": 150.796875
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 206.796875,
+                    "y": 788,
+                    "width": 48.1875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 254.984375,
+                    "bottom": 836,
+                    "left": 206.796875
+                  }
+                },
+                {
+                  "text": "Заново",
+                  "id": "",
+                  "box": {
+                    "x": 262.984375,
+                    "y": 788,
+                    "width": 88.390625,
+                    "height": 48,
+                    "top": 788,
+                    "right": 351.375,
+                    "bottom": 836,
+                    "left": 262.984375
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "initial": {
+                "file": "independent-presentation-mobile-initial.jpg",
+                "sha256": "c9f50c373a5adae0648300a08fdcf039f4022bdce109bd91b21a3d1e52a95fc1"
+              },
+              "after-motion": {
+                "file": "independent-presentation-mobile-after-motion.jpg",
+                "sha256": "5efff8152e5b3fe6e9992c22f50f65aa10e8e394803243db4039fc54e4f17a97"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-win.jpg",
+                "sha256": "43350d6b9283f21aa978889b0ec3c5bb0625f9b08fb1e2a3481fe02322a76786"
+              }
+            }
+          },
+          {
+            "variant": "desktop",
+            "initial": {
+              "phase": "play",
+              "zone": 1,
+              "x": 0,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 0
+            },
+            "first_input": {
+              "direction": "right",
+              "before": {
+                "phase": "play",
+                "zone": 1,
+                "x": 0,
+                "y": 2,
+                "charge": 12,
+                "sparks": 0,
+                "respawns": 0,
+                "run": 0
+              },
+              "after": {
+                "phase": "play",
+                "zone": 1,
+                "x": 1,
+                "y": 2,
+                "charge": 11,
+                "sparks": 0,
+                "respawns": 0,
+                "run": 0
+              }
+            },
+            "final": {
+              "phase": "won",
+              "zone": 3,
+              "x": 5,
+              "y": 2,
+              "charge": 2,
+              "sparks": 3,
+              "respawns": 0,
+              "run": 0
+            },
+            "reset": {
+              "phase": "play",
+              "zone": 1,
+              "x": 0,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 1
+            },
+            "resumed": {
+              "phase": "play",
+              "zone": 1,
+              "x": 1,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 1
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "shore_blocks": true,
+            "charge_respawn": true,
+            "canvas_control": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_x": 43,
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000068,
+              "max": 9.300000000000068,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 1280,
+                "height": 800,
+                "dpr": 1
+              },
+              "document": {
+                "width": 1280,
+                "height": 800
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 504,
+                  "height": 720,
+                  "box": {
+                    "x": 388,
+                    "y": 8,
+                    "width": 504,
+                    "height": 720,
+                    "top": 8,
+                    "right": 892,
+                    "bottom": 728,
+                    "left": 388
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 483.609375,
+                    "y": 744,
+                    "width": 48,
+                    "height": 48,
+                    "top": 744,
+                    "right": 531.609375,
+                    "bottom": 792,
+                    "left": 483.609375
+                  }
+                },
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 539.609375,
+                    "y": 744,
+                    "width": 48.1875,
+                    "height": 48,
+                    "top": 744,
+                    "right": 587.796875,
+                    "bottom": 792,
+                    "left": 539.609375
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 595.796875,
+                    "y": 744,
+                    "width": 48,
+                    "height": 48,
+                    "top": 744,
+                    "right": 643.796875,
+                    "bottom": 792,
+                    "left": 595.796875
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 651.796875,
+                    "y": 744,
+                    "width": 48.1875,
+                    "height": 48,
+                    "top": 744,
+                    "right": 699.984375,
+                    "bottom": 792,
+                    "left": 651.796875
+                  }
+                },
+                {
+                  "text": "Заново",
+                  "id": "",
+                  "box": {
+                    "x": 707.984375,
+                    "y": 744,
+                    "width": 88.390625,
+                    "height": 48,
+                    "top": 744,
+                    "right": 796.375,
+                    "bottom": 792,
+                    "left": 707.984375
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "initial": {
+                "file": "independent-presentation-desktop-initial.jpg",
+                "sha256": "9db8f53ae84473c0bddd957e2d8551d708f6acdaafa49c115d143b680864b63e"
+              },
+              "after-motion": {
+                "file": "independent-presentation-desktop-after-motion.jpg",
+                "sha256": "2fd8f2d33ef20a6ab9480feda902009a9f2ddd144c69252125efa51e954ac21e"
+              },
+              "win": {
+                "file": "independent-presentation-desktop-win.jpg",
+                "sha256": "b13adde3a82e9b773fe698c6f0cdaff568484957392ed71eb1ccc4d0b802b8f2"
+              }
+            }
+          },
+          {
+            "variant": "mobile-reduced-dpr2",
+            "initial": {
+              "phase": "play",
+              "zone": 1,
+              "x": 0,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 0
+            },
+            "first_input": {
+              "direction": "right",
+              "before": {
+                "phase": "play",
+                "zone": 1,
+                "x": 0,
+                "y": 2,
+                "charge": 12,
+                "sparks": 0,
+                "respawns": 0,
+                "run": 0
+              },
+              "after": {
+                "phase": "play",
+                "zone": 1,
+                "x": 1,
+                "y": 2,
+                "charge": 11,
+                "sparks": 0,
+                "respawns": 0,
+                "run": 0
+              }
+            },
+            "final": {
+              "phase": "won",
+              "zone": 3,
+              "x": 5,
+              "y": 2,
+              "charge": 2,
+              "sparks": 3,
+              "respawns": 0,
+              "run": 0
+            },
+            "reset": {
+              "phase": "play",
+              "zone": 1,
+              "x": 0,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 1
+            },
+            "resumed": {
+              "phase": "play",
+              "zone": 1,
+              "x": 1,
+              "y": 2,
+              "charge": 12,
+              "sparks": 0,
+              "respawns": 0,
+              "run": 1
+            },
+            "control": true,
+            "outcome": true,
+            "replay_playable": true,
+            "shore_blocks": true,
+            "charge_respawn": true,
+            "canvas_control": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_x": 2,
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 10.299999999999955,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 2
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 748,
+                  "height": 1069,
+                  "box": {
+                    "x": 8,
+                    "y": 122.859375,
+                    "width": 374,
+                    "height": 534.28125,
+                    "top": 122.859375,
+                    "right": 382,
+                    "bottom": 657.140625,
+                    "left": 8
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "↑",
+                  "id": "",
+                  "box": {
+                    "x": 38.609375,
+                    "y": 788,
+                    "width": 48,
+                    "height": 48,
+                    "top": 788,
+                    "right": 86.609375,
+                    "bottom": 836,
+                    "left": 38.609375
+                  }
+                },
+                {
+                  "text": "←",
+                  "id": "",
+                  "box": {
+                    "x": 94.609375,
+                    "y": 788,
+                    "width": 48.1875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 142.796875,
+                    "bottom": 836,
+                    "left": 94.609375
+                  }
+                },
+                {
+                  "text": "↓",
+                  "id": "",
+                  "box": {
+                    "x": 150.796875,
+                    "y": 788,
+                    "width": 48,
+                    "height": 48,
+                    "top": 788,
+                    "right": 198.796875,
+                    "bottom": 836,
+                    "left": 150.796875
+                  }
+                },
+                {
+                  "text": "→",
+                  "id": "",
+                  "box": {
+                    "x": 206.796875,
+                    "y": 788,
+                    "width": 48.1875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 254.984375,
+                    "bottom": 836,
+                    "left": 206.796875
+                  }
+                },
+                {
+                  "text": "Заново",
+                  "id": "",
+                  "box": {
+                    "x": 262.984375,
+                    "y": 788,
+                    "width": 88.390625,
+                    "height": 48,
+                    "top": 788,
+                    "right": 351.375,
+                    "bottom": 836,
+                    "left": 262.984375
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "initial": {
+                "file": "independent-presentation-mobile-reduced-dpr2-initial.jpg",
+                "sha256": "74176b597e5d89d4afac80ff1747936fd81f6dd122fc517377207ffb495cbb77"
+              },
+              "after-motion": {
+                "file": "independent-presentation-mobile-reduced-dpr2-after-motion.jpg",
+                "sha256": "e01f85c5de48c790aee8f71960913382be7e3d9f60eadbfa523215218a44b4d9"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-reduced-dpr2-win.jpg",
+                "sha256": "cb1111a4b00a2ab5317a7e25a44e1502b0e139fa15ed37e0a09ee88d46f551da"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "case": "memory",
+      "generation_profile": "compact",
+      "prompt": "Сделай красивую маленькую игру на память: четыре закрытые карточки, две пары фруктов. Касанием открываем две карточки, одинаковые остаются открытыми, разные закрываются. Когда обе пары найдены — победа. Canvas, телефон и мышь, понятное начало.",
+      "criteria": {
+        "start": "Четыре закрытые карточки образуют две пары",
+        "control": "Совпадения остаются открыты; несовпадения закрываются",
+        "outcome": "Реальное открытие обеих пар даёт победу",
+        "mobile": "Карточки доступны касанием на телефоне"
+      },
+      "run": {
+        "id": "7da1632a-927a-403f-9a3a-a074ee5cd662",
+        "status": "succeeded",
+        "attempts": 2,
+        "provider": "codex",
+        "model": "gpt-6-sol",
+        "created_at": "2026-10-26T13:59:04.552434+00:00",
+        "finished_at": "2026-10-26T14:01:23.435304+00:00",
+        "candidate_revision_id": "e94eae72-1470-4a42-ad9d-c9e738ede27b",
+        "result_revision_id": "e94eae72-1470-4a42-ad9d-c9e738ede27b"
+      },
+      "game_plan": {
+        "visual": "Тёплая фруктовая открытка с крупными карточками, легко различимыми на телефоне и при игре мышью.",
+        "outcome": "Победа достижима после открытия обеих пар; повторная партия меняет расположение фруктов.",
+        "summary": "«Фруктовые пары»: откройте четыре карточки и найдите две одинаковые пары фруктов.",
+        "core_loop": "Игрок нажимает на две закрытые карточки по очереди. Совпавшая пара остаётся открытой; несовпавшая ненадолго показывается и снова закрывается. Затем можно сделать следующую попытку.",
+        "mechanics": [
+          "На поле 2×2 лежат четыре закрытые карточки: по две с каждым фруктом.",
+          "Пока несовпавшие карточки закрываются, новые касания не принимаются.",
+          "После нахождения обеих пар появляется экран победы с кнопкой «Играть ещё». На новой партии карточки перемешиваются."
+        ],
+        "assumptions": [
+          "Выбраны яблоко и груша как два визуально различимых фрукта.",
+          "Несовпавшие карточки показываются около секунды перед закрытием.",
+          "При повторной игре расположение карточек перемешивается."
+        ],
+        "progression": "Перед началом короткая подсказка объясняет правило двух карточек и кнопку «Начать». В ходе партии открытые пары постепенно упрощают поиск оставшихся.",
+        "presentation": {
+          "motion": "При открытии карточка плавно переворачивается и показывает фрукт; совпавшая пара мягко подсвечивается, а несовпавшая после паузы закрывается. После второй пары появляется спокойное поздравление и кнопка повтора. При предпочтении уменьшенного движения перевороты и переход к победе заменяются мгновенной сменой изображения и чёткой подсветкой состояния.",
+          "art_direction": "Canvas в палитре сливочного фона, кораллового яблока, золотистой груши и тёмно-зелёного текста. Карточки с округлыми углами, крупными плоскими силуэтами фруктов и мягкими тенями расположены сеткой 2×2; едва заметные листья на фоне создают глубину, не отвлекая от поля. Заголовок крупнее короткой инструкции; на узком экране поле занимает центральную часть, а кнопка начала или повтора остаётся ниже него."
+        }
+      },
+      "calls": [
+        {
+          "id": "18d62cbd-fa3c-4190-9680-2658ab0db8cb",
+          "operation": "plan",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1782,
+            "output_tokens": 616,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:59:04.587257+00:00",
+          "sent_at": "2026-10-26T13:59:04.589914+00:00",
+          "finished_at": "2026-10-26T13:59:24.375130+00:00",
+          "elapsed_seconds": 19.780092833098024,
+          "reasoning_effort": "high",
+          "schema_sha256": "1a0a4c0b2259b481f27c70d8346ed8078e3392fe97ca6d26e75ec94212272137",
+          "prompt_sha256": "bfdf84d3a931d7b6b7354393aa581681a79ce92795b2c6e7b951fd8ef1a00737",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        },
+        {
+          "id": "5f97029d-2885-4611-9e96-18717dedaf0c",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4424,
+            "output_tokens": 5244,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "created_at": "2026-10-26T13:59:24.399428+00:00",
+          "sent_at": "2026-10-26T13:59:24.403481+00:00",
+          "finished_at": "2026-10-26T14:01:19.072055+00:00",
+          "elapsed_seconds": 114.66422595805489,
+          "reasoning_effort": "high",
+          "schema_sha256": "c4af29581a3d446b90c09a71d9a4f5e1320d5bb46222cd881f104e71d6268631",
+          "prompt_sha256": "190baa7838d68b17aa8d0786fe6b9ce68fa57ed362946eb4223588ba2582928d",
+          "preview_report_id": null,
+          "preview_artifact_hash": null
+        }
+      ],
+      "revisions": [
+        {
+          "id": "e94eae72-1470-4a42-ad9d-c9e738ede27b",
+          "artifact_hash": "77472e76420db9604fae38b9b0bfb6ac41244037f789f38b6c76038cb218000a",
+          "verification": "automatic",
+          "created_at": "2026-10-26T14:01:19.083708+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "03a015912a8e6cc59decdfe43fe3a7f320a50bdee0489f8611aee54ee2355793",
+              "bytes": 7490
+            },
+            "index.html": {
+              "sha256": "0c249dcc402c437f8f71aaf76af4abfe1478a1ab123fbd690c91e3d10c7eb603",
+              "bytes": 600
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "id": 194,
+            "status": "passed",
+            "facts": [
+              {
+                "id": "start",
+                "status": "passed",
+                "requirement": "Кнопка «Начать» открывает игровую партию.",
+                "detail": null,
+                "after": "playing"
+              },
+              {
+                "id": "reveal",
+                "status": "passed",
+                "requirement": "Касание закрытой карточки открывает её.",
+                "detail": null,
+                "after": 1
+              },
+              {
+                "id": "victory",
+                "status": "passed",
+                "requirement": "Две найденные пары приводят к победе.",
+                "detail": null,
+                "after": "won"
+              },
+              {
+                "id": "locked",
+                "status": "passed",
+                "requirement": "Во время показа несовпавшей пары третья карточка не открывается.",
+                "detail": null,
+                "after": 2
+              },
+              {
+                "id": "hide",
+                "status": "passed",
+                "requirement": "Несовпавшие карточки снова закрываются после короткой паузы.",
+                "detail": null,
+                "after": 0
+              }
+            ],
+            "findings": []
+          }
+        }
+      ],
+      "source_preserved_during_check_repair": false,
+      "independent_evidence": {
+        "artifact_hash": "77472e76420db9604fae38b9b0bfb6ac41244037f789f38b6c76038cb218000a",
+        "environment": "mini-browser-v1:97ff5e507cb2fbe21424c07639bb690a4c738492e94d3019a6ae84bd84af2051:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+        "method": "Actual mouse/touch input; pair search uses match counters only, no hidden deck access. Read-only target-color pixels sampled during card flip. No source/state/clock/RNG mutation.",
+        "report_sha256": "f9eb14155acf563d2ee5d06c2d9e6a0ea2a4f1dd0696f27e9e6e1ddbf675d098",
+        "adapter_sha256": "1da12708ae17e0d39e2090baa5258b38b849f248e7f47037e932329558b2f813",
+        "common_sha256": "80bee352f2b1465407daee485a5d428189257bcc78bbabbf21fa92b5d3387b00",
+        "results": [
+          {
+            "variant": "mobile",
+            "initial": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "one": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "two": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_third": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_mismatch": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 1
+            },
+            "final": {
+              "phase": "won",
+              "matched": 4,
+              "openCount": 0,
+              "turns": 4
+            },
+            "reset": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "resumed": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 16,
+            "motion_pixel_count_range": [
+              0,
+              14912
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.300000000000182,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 1
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 374,
+                  "height": 598,
+                  "box": {
+                    "x": 8,
+                    "y": 90.796875,
+                    "width": 374,
+                    "height": 598.390625,
+                    "top": 90.796875,
+                    "right": 382,
+                    "bottom": 689.1875,
+                    "left": 8
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Начать / ещё",
+                  "id": "",
+                  "box": {
+                    "x": 129.15625,
+                    "y": 788,
+                    "width": 131.671875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 260.828125,
+                    "bottom": 836,
+                    "left": 129.15625
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-welcome.jpg",
+                "sha256": "affe2ff1ff1b0adae5a74ed6715762165cd2f6cddf424c1ad427d07a42e80cad"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-initial.jpg",
+                "sha256": "e17dec12c92914dfef373bcf014ca78f15fb3e0497ddcfc3c397056f050e0bf6"
+              },
+              "one-open": {
+                "file": "independent-presentation-mobile-one-open.jpg",
+                "sha256": "be0e4072fd38110651ad99535288dedff7fdb00f9efb36ec9b8cd92d3bd6b64a"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-win.jpg",
+                "sha256": "29d29321dbea897d897df6cbb8b007989cdffde4b7d054f6728ead5cbbee8599"
+              }
+            }
+          },
+          {
+            "variant": "desktop",
+            "initial": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "one": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "two": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_third": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_mismatch": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 1
+            },
+            "final": {
+              "phase": "won",
+              "matched": 4,
+              "openCount": 0,
+              "turns": 4
+            },
+            "reset": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "resumed": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 16,
+            "motion_pixel_count_range": [
+              0,
+              21858
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.299999999999955,
+              "max": 9.400000000000091,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 1280,
+                "height": 800,
+                "dpr": 1
+              },
+              "document": {
+                "width": 1280,
+                "height": 800
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 450,
+                  "height": 720,
+                  "box": {
+                    "x": 415,
+                    "y": 8,
+                    "width": 450,
+                    "height": 720,
+                    "top": 8,
+                    "right": 865,
+                    "bottom": 728,
+                    "left": 415
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Начать / ещё",
+                  "id": "",
+                  "box": {
+                    "x": 574.15625,
+                    "y": 744,
+                    "width": 131.671875,
+                    "height": 48,
+                    "top": 744,
+                    "right": 705.828125,
+                    "bottom": 792,
+                    "left": 574.15625
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-desktop-welcome.jpg",
+                "sha256": "3664c7c03d181024d0f1cd18c74b11bfd070eadcebd63df88e883180ff01ee58"
+              },
+              "initial": {
+                "file": "independent-presentation-desktop-initial.jpg",
+                "sha256": "f9185be6a61886860836e027bf75179ac20cfcff6e7b2f48ff46f2a284d98432"
+              },
+              "one-open": {
+                "file": "independent-presentation-desktop-one-open.jpg",
+                "sha256": "88c40102540ef607097a16720bb65a94f3c9389e0c995bbf8aaf0e4f65130c6d"
+              },
+              "win": {
+                "file": "independent-presentation-desktop-win.jpg",
+                "sha256": "48af08d639a5857c04dfa3ec9f84b46a3374cd0a05d4bea776e514f9535210ab"
+              }
+            }
+          },
+          {
+            "variant": "mobile-reduced-dpr2",
+            "initial": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "one": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "two": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_third": {
+              "phase": "waiting",
+              "matched": 0,
+              "openCount": 2,
+              "turns": 1
+            },
+            "after_mismatch": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 1
+            },
+            "final": {
+              "phase": "won",
+              "matched": 4,
+              "openCount": 0,
+              "turns": 4
+            },
+            "reset": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 0,
+              "turns": 0
+            },
+            "resumed": {
+              "phase": "playing",
+              "matched": 0,
+              "openCount": 1,
+              "turns": 0
+            },
+            "control": true,
+            "third_card_blocked": true,
+            "mismatch_closes": true,
+            "outcome": true,
+            "replay_playable": true,
+            "resize_preserves_progress": true,
+            "motion_distinct_target_pixel_counts": 2,
+            "motion_pixel_count_range": [
+              0,
+              61277
+            ],
+            "observer_cadence_ms": {
+              "samples": 108,
+              "median": 8.300000000000011,
+              "max": 9.200000000000045,
+              "over_50ms": 0,
+              "note": "Canvas readback adds overhead; this is observer cadence in headless Chromium, not measured device FPS."
+            },
+            "geometry": {
+              "viewport": {
+                "width": 390,
+                "height": 844,
+                "dpr": 2
+              },
+              "document": {
+                "width": 390,
+                "height": 844
+              },
+              "canvases": [
+                {
+                  "id": "gf-canvas",
+                  "width": 748,
+                  "height": 1197,
+                  "box": {
+                    "x": 8,
+                    "y": 90.796875,
+                    "width": 374,
+                    "height": 598.390625,
+                    "top": 90.796875,
+                    "right": 382,
+                    "bottom": 689.1875,
+                    "left": 8
+                  }
+                }
+              ],
+              "buttons": [
+                {
+                  "text": "Начать / ещё",
+                  "id": "",
+                  "box": {
+                    "x": 129.15625,
+                    "y": 788,
+                    "width": 131.671875,
+                    "height": 48,
+                    "top": 788,
+                    "right": 260.828125,
+                    "bottom": 836,
+                    "left": 129.15625
+                  }
+                }
+              ]
+            },
+            "errors": [],
+            "screenshots": {
+              "welcome": {
+                "file": "independent-presentation-mobile-reduced-dpr2-welcome.jpg",
+                "sha256": "633c02772fa6841e0df9964d2a4be4fa4bdfd3ac2bc4502ba96dbb6dbf9a3766"
+              },
+              "initial": {
+                "file": "independent-presentation-mobile-reduced-dpr2-initial.jpg",
+                "sha256": "5553a9f22038393e22b4aafbc452388d18a0ad5adbdcca49e299207a1647a686"
+              },
+              "one-open": {
+                "file": "independent-presentation-mobile-reduced-dpr2-one-open.jpg",
+                "sha256": "fc6ac87978160038ef45567109df58cf17ce0a6dd090df29c389b5a5dfb3c32e"
+              },
+              "win": {
+                "file": "independent-presentation-mobile-reduced-dpr2-win.jpg",
+                "sha256": "892836a1250740671604739d8333daf9cc632ef9f1ecaf9ba4a7149790c1255b"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "preservation": {
+    "Chat": {
+      "before": 102,
+      "after": 106,
+      "old_rows_unchanged": true
+    },
+    "Revision": {
+      "before": 64,
+      "after": 70,
+      "old_rows_unchanged": true
+    },
+    "Run": {
+      "before": 152,
+      "after": 158,
+      "old_rows_unchanged": true
+    },
+    "Invocation": {
+      "before": 250,
+      "after": 260,
+      "old_rows_unchanged": true
+    }
+  },
+  "environment_unchanged": true,
+  "active_runs": 0,
+  "active_invocations": 0,
+  "accounting": {
+    "calls": 10,
+    "known_usage_calls": 10,
+    "states": {
+      "settled": 10
+    },
+    "operations": {
+      "plan": 4,
+      "create": 4,
+      "check_repair": 2
+    },
+    "all_prompts_and_schemas_match_frozen_code": true,
+    "all_steps_presentation_policy_1": true,
+    "no_additional_calls": true,
+    "unused_calls_closed": 2
+  },
+  "zero_inference_rechecks": [
+    {
+      "original_run": "4220684f-308c-4df4-a424-9f8a57b7a1ea",
+      "run_id": "b639050f-333e-4e70-8b25-c85b5bee92ea",
+      "status": "unverified",
+      "case": "memory",
+      "generation_profile": "full",
+      "model_calls": 0,
+      "same_candidate": true,
+      "error_code": "manual_verification"
+    },
+    {
+      "original_run": "cbc8c928-9554-419f-b1ca-bdb1f7937669",
+      "run_id": "a84e477f-dce4-4318-814d-556aade1a0ec",
+      "status": "unverified",
+      "case": "adventure",
+      "generation_profile": "compact",
+      "model_calls": 0,
+      "same_candidate": true,
+      "error_code": "manual_verification"
+    }
+  ],
+  "baseline": {
+    "file": "docs/evidence/strategy-pilot-2026-10-26.json",
+    "sha256": "a7da2f02e10532e21a6817e510cb57890b08fcc46559a2977d4aabfd190548aa",
+    "same_prompts_and_model": true,
+    "previous_pro_full": {
+      "runs": 4,
+      "model_calls": 9,
+      "playable": 3,
+      "broken": 0,
+      "automatic": 2,
+      "unknown": 1,
+      "median_terminal_seconds": 182.98884201049805,
+      "known_input_tokens": 31928,
+      "known_output_tokens": 32269
+    },
+    "current_pro_full": {
+      "runs": 2,
+      "playable": 2,
+      "automatic": 1,
+      "calls": 5,
+      "unknown": 0
+    },
+    "current_pro_compact": {
+      "runs": 2,
+      "playable": 2,
+      "automatic": 1,
+      "calls": 5,
+      "unknown": 0
+    },
+    "compact_has_no_prior_pro_comparison": true,
+    "motion_samples": [
+      {
+        "revision": "d3a2323f-668d-46da-bd06-4315064656a6",
+        "artifact_hash": "05a61a9deb2f72a85c3c4b9f95ff48c263925f175bb31e3a1dc40984c84ef3bc",
+        "evidence_sha256": "6f73205677726842ae51f1de79f80d372eae84377c713733bbfde217cf439696",
+        "results": [
+          {
+            "variant": "mobile",
+            "game": "adventure",
+            "distinct_target_centroids": [
+              31.9,
+              53.8
+            ],
+            "distinct_target_pixel_counts": [
+              52,
+              59
+            ],
+            "errors": []
+          },
+          {
+            "variant": "desktop",
+            "game": "adventure",
+            "distinct_target_centroids": [
+              71.2,
+              119.1
+            ],
+            "distinct_target_pixel_counts": [
+              337,
+              339
+            ],
+            "errors": []
+          }
+        ]
+      },
+      {
+        "revision": "d3bec938-f4dd-487e-8521-d06816f306a6",
+        "artifact_hash": "c165546ca1f76928e1510ee9fcfdee3c41a80964df431223a7e78a30e90023a6",
+        "evidence_sha256": "7f39967ebbb9fff75fa110a9cb7396c2025d61354cab0ba96703ccd5e26dc822",
+        "results": [
+          {
+            "variant": "mobile",
+            "game": "memory",
+            "distinct_target_centroids": [
+              93.3
+            ],
+            "distinct_target_pixel_counts": [
+              0,
+              22631
+            ],
+            "errors": []
+          },
+          {
+            "variant": "desktop",
+            "game": "memory",
+            "distinct_target_centroids": [
+              123.8
+            ],
+            "distinct_target_pixel_counts": [
+              0,
+              44601
+            ],
+            "errors": []
+          }
+        ]
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "motion-drift-overshoot",
+      "severity": "P2",
+      "case": "adventure",
+      "generation_profile": "full",
+      "summary": "При сносе течением персонаж на несколько кадров вылетает за границы правильной траектории.",
+      "evidence": "В обычном режиме на mobile и desktop по 7 наблюдённых кадров вне границ между мелководьем и сухой клеткой; при reduced motion — 0.",
+      "cause": "В move задаётся display.time=.3, но tick выбирает duration=.18 для этих различных конечных координат. Отрицательный t проходит в easing без нижнего ограничения.",
+      "recommendation": "Хранить длительность вместе с переходом, ограничить t диапазоном 0..1; проверить обычный шаг, снос, новый ввод во время движения и reduced motion."
+    },
+    {
+      "id": "card-rounded-corner-path",
+      "severity": "P2",
+      "case": "memory",
+      "generation_profile": "full",
+      "summary": "Слева от карточек и рамок остаются длинные лишние линии; форма нижнего угла повреждена.",
+      "evidence": "Видно на исходных и победных снимках mobile/desktop. В game.js:30 нижний левый угол использует управляющую точку (x,y) вместо (x,y+h).",
+      "cause": "Модель неверно реализовала обычный примитив roundRect.",
+      "recommendation": "Предпочитать штатный Canvas roundRect или проверенный общий примитив; визуальная проверка должна видеть итоговые карточки и эффекты."
+    },
+    {
+      "id": "compact-start-check-still-invalid",
+      "severity": "P1",
+      "case": "adventure",
+      "generation_profile": "compact",
+      "summary": "Играбельная compact-бродилка не завершилась автоматически из-за неверной комбинации checkpoint и eq в проверке начала.",
+      "evidence": "Check_repair сохранил эту комбинацию и добавил такую же mobile-проверку. Оба start остаются invalid_check после повторной проверки без inference.",
+      "cause": "Допустимость сочетаний действий и сравнений не обеспечена до запуска браузера; модель повторила ошибку вопреки полученной диагностике.",
+      "recommendation": "Типизированная семантическая компиляция сценариев и детерминированное исправление только доказанно эквивалентного представления, с неизменными требованиями и кодом."
+    }
+  ],
+  "visual_assessment": {
+    "method": "Human-readable visual assessment by the assistant from the saved actual browser frames; subjective, not an automatic score.",
+    "full_adventure": "Согласованные морская палитра, домики, мостки и персонаж. На телефоне заметны большие пустые промежутки вокруг квадратной карты; дефект сноса портит движение.",
+    "full_memory": "Выразительные фрукты и тёплая палитра, читаемые карточки и подписи. Геометрический дефект рамок мешает назвать оформление отполированным.",
+    "compact_adventure": "Согласованная ночная палитра, свет фонаря, контрастные пути и читаемые объекты. Механически простой маршрут допускает победу пятнадцатью движениями вправо.",
+    "compact_memory": "Чистые карточки, листовой орнамент, тени, согласованная палитра и правильный переворот; из четырёх вариантов наиболее цельное оформление.",
+    "plan_fidelity": "Описанные в планах эффекты реализованы не полностью: например, у full-бродилки вместо раскрытия конверта — кольцо, смена воды в основном меняет цвет. Бриф не является доказательством реализации.",
+    "minor_ux": "У compact остаётся общий внешний блок управления, визуально отдельный от Canvas; в карточках кнопка начала дублирует кнопку внутри сцены. Начальная compact-раскладка всегда APAP, случайность появляется после победы."
+  },
+  "limitations": [
+    "Four runs, one per case/profile, are exploratory; no statistical quality or causal improvement claim.",
+    "Native headless Chromium 145.0.7632.6, mobile 390x844, desktop 1280x800, and reduced-motion mobile DPR2; no physical phone or Beeline WebView.",
+    "Pixel observer samples prove intermediate rendered states, not stable FPS on a device; its Canvas readback adds overhead.",
+    "Screenshots and playability do not prove all planned animation effects or uniform art quality.",
+    "Generated game defects were retained as pilot evidence; no product code, game source, cloud deployment or GPU administration was changed during the pilot.",
+    "Basic playability is separate from visual correctness and automatic acceptance; two visual defects remain.",
+    "No manual acceptance or publication; both rechecks made zero model calls."
+  ],
+  "review_finished_at": 1793023738.870122,
+  "review_duration_seconds": 1301.927943944931
+}

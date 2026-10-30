@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Europe/Moscow",
+  "release": "bff3ee8998c38319933518c05da978f1112a868a",
+  "previous_release": "c39549d91f061c9a3160957904852ab9fffe61aa",
+  "release_path": "/opt/gameforge/releases/20261027-bff3ee8",
+  "source_archive_sha256": "47112906225547178cff5721514fcd96d9b5daa64ef28782d6e689249c0e3eca",
+  "server": {
+    "revision": "bff3ee8998c38319933518c05da978f1112a868a",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 23,
+      "CheckReport": 28,
+      "Feedback": 0,
+      "Invocation": 98,
+      "Like": 0,
+      "Message": 92,
+      "Outbox": 48,
+      "Preference": 1,
+      "Publication": 0,
+      "Revision": 26,
+      "Run": 48,
+      "RunEvent": 510,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "unknown_preserved": 4,
+    "visible_chats": 10,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:0a5c695df937a1968e3fc46e4a1d9306e33b36877bacfba842457fc0260d2fdf",
+        "image_tag": "gameforge-mini:cloud-bff3ee8-20261027"
+      },
+      "preview": {
+        "image_id": "sha256:0a5c695df937a1968e3fc46e4a1d9306e33b36877bacfba842457fc0260d2fdf",
+        "image_tag": "gameforge-mini:cloud-bff3ee8-20261027"
+      },
+      "worker": {
+        "image_id": "sha256:0a5c695df937a1968e3fc46e4a1d9306e33b36877bacfba842457fc0260d2fdf",
+        "image_tag": "gameforge-mini:cloud-bff3ee8-20261027"
+      },
+      "beat": {
+        "image_id": "sha256:0a5c695df937a1968e3fc46e4a1d9306e33b36877bacfba842457fc0260d2fdf",
+        "image_tag": "gameforge-mini:cloud-bff3ee8-20261027"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-bff3ee8-20261026T222445Z.dump",
+    "backup_sha256": "094716ca07ac63cb45623a97847ac1e1008aa3f081185176f4c413044f27cf9d"
+  },
+  "public_acceptance": {
+    "revision": "bff3ee8998c38319933518c05da978f1112a868a",
+    "origin": "https://212.57.126.215",
+    "http": {
+      "https_verified": true,
+      "html_and_assets_exact": true,
+      "asset_count": 6,
+      "guest_chats_denied": true,
+      "health": "ok"
+    },
+    "browser": {
+      "login_logout": "passed",
+      "settings_navigation": "passed",
+      "desktop_expanded_sidebar": 300,
+      "desktop_collapsed_sidebar": 81,
+      "profile_height_both_modes": 48,
+      "footer_with_padding": 72,
+      "stable_animation_frames": 55,
+      "chat_list_fades_and_is_inert": true,
+      "keyboard_tab_skips_hidden_chats": true,
+      "mobile_sidebar": 300,
+      "mobile_chat_list_and_menus": "passed",
+      "page_errors": [],
+      "mutations": [
+        "/api/login/",
+        "/api/logout/"
+      ]
+    },
+    "chats_created": 0,
+    "generation_submissions": 0,
+    "model_calls": 0
+  },
+  "checks": [
+    "Django check",
+    "migrate --check",
+    "Celery ping",
+    "full application record hashes before reopening ingress",
+    "preserved core container identities",
+    "public HTTPS exact HTML/assets",
+    "authenticated desktop/mobile browser smoke"
+  ],
+  "limitations": [
+    "Physical iOS not tested",
+    "No live model requests; generation quality not measured"
+  ]
+}

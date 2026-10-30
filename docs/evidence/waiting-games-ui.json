@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-25",
+  "scope": "Chromium UI smoke with controlled API responses and static preview; no generated game code or real model calls.",
+  "unit_tests": {
+    "command": "npm test --prefix web",
+    "passed": 51,
+    "files": 7
+  },
+  "build": {
+    "command": "npm run build --prefix web",
+    "status": "passed"
+  },
+  "lint": {
+    "command": "npm run lint --prefix web",
+    "status": "passed"
+  },
+  "profiles": [
+    {
+      "profile": "desktop-light",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "theme": "light",
+      "cards": 3,
+      "touch_input": false,
+      "no_horizontal_overflow": true,
+      "new_tab": true,
+      "opener_isolated": true,
+      "ready_result": "ready",
+      "mutation_requests": 0,
+      "page_errors": []
+    },
+    {
+      "profile": "desktop-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "theme": "dark",
+      "cards": 3,
+      "touch_input": false,
+      "no_horizontal_overflow": true,
+      "new_tab": true,
+      "opener_isolated": true,
+      "ready_result": "ready",
+      "mutation_requests": 0,
+      "page_errors": []
+    },
+    {
+      "profile": "mobile-light",
+      "viewport": [
+        390,
+        844
+      ],
+      "theme": "light",
+      "cards": 3,
+      "touch_input": true,
+      "no_horizontal_overflow": true,
+      "new_tab": true,
+      "opener_isolated": true,
+      "ready_result": "ready",
+      "mutation_requests": 0,
+      "page_errors": []
+    },
+    {
+      "profile": "mobile-dark",
+      "viewport": [
+        320,
+        740
+      ],
+      "theme": "dark",
+      "cards": 3,
+      "touch_input": true,
+      "no_horizontal_overflow": true,
+      "new_tab": true,
+      "opener_isolated": true,
+      "ready_result": "ready",
+      "mutation_requests": 0,
+      "page_errors": []
+    }
+  ],
+  "local_artifacts": ".data/waiting-games-ui/",
+  "unverified": [
+    "Live Django/Celery flow",
+    "Real model generation",
+    "Physical mobile WebView"
+  ]
+}

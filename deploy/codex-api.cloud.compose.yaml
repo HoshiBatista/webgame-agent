@@ -1,0 +1,33 @@
+# Third overlay, after cloud.compose.yaml. No Codex binary or login on this host.
+x-pro-api-environment: &pro-api-environment
+  GAMEFORGE_PRO_ENABLED: ${GAMEFORGE_PRO_ENABLED:-0}
+  GAMEFORGE_PRO_PROVIDER: codex_api
+  GAMEFORGE_CODEX_API_CONCURRENCY: ${GAMEFORGE_CODEX_API_CONCURRENCY:-2}
+  GAMEFORGE_PRO_ACCESS: ${GAMEFORGE_PRO_ACCESS:-authenticated}
+  GAMEFORGE_PRO_USER_IDS: ${GAMEFORGE_PRO_USER_IDS:-}
+  GAMEFORGE_CODEX_API_URL: ${GAMEFORGE_CODEX_API_URL:?Set the HTTPS origin}
+  GAMEFORGE_CODEX_API_CATALOG: /run/codex-api-catalog/catalog.json
+
+services:
+  app:
+    environment: *pro-api-environment
+    volumes:
+      - type: bind
+        source: ${GAMEFORGE_CODEX_API_CATALOG_HOST:?Set the non-secret catalog directory}
+        target: /run/codex-api-catalog
+        read_only: true
+        bind: {create_host_path: false}
+  worker:
+    environment:
+      <<: *pro-api-environment
+      GAMEFORGE_CODEX_API_KEY_FILE: /run/secrets/codex-api-key
+    volumes:
+      - type: bind
+        source: ${GAMEFORGE_CODEX_API_CATALOG_HOST}
+        target: /run/codex-api-catalog
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${GAMEFORGE_CODEX_API_KEY_HOST:?Set a private client token file}
+        target: /run/secrets/codex-api-key
+        read_only: true
+        bind: {create_host_path: false}

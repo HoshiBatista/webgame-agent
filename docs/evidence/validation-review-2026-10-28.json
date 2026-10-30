@@ -1,0 +1,239 @@
+{
+  "date": "2026-10-28",
+  "source_revision": "7118125",
+  "cloud_release": "ed354318ec0e66bdb36b158e306ad06f62eefe52",
+  "scope": {
+    "cloud_read_only": true,
+    "gpu_accessed": false,
+    "codex_worker_changed": false,
+    "real_model_calls": 0,
+    "product_code_changed": false
+  },
+  "cloud_snapshot": {
+    "captured_at": "2026-10-28T16:17:34.466Z",
+    "window_days": 3,
+    "run_count": 48,
+    "report_count": 16,
+    "report_status_counts": {
+      "unverified": 13,
+      "failed": 1,
+      "passed": 2
+    },
+    "report_controller_elapsed_seconds": {
+      "min": 33.816,
+      "median": 55.3835,
+      "max": 155.316
+    },
+    "warning": "Not a generation-success-rate sample: includes rechecks, repairs and copied reports; controller elapsed includes queue/transport time.",
+    "repeated_report_pair": {
+      "ids": [
+        74,
+        75
+      ],
+      "same_identity": true,
+      "same_findings": true,
+      "recheck_model_calls": 0
+    },
+    "oversized_suites": [
+      {
+        "report": 71,
+        "checks": 13,
+        "executed_facts": 12
+      },
+      {
+        "report": 76,
+        "checks": 14,
+        "executed_facts": 12
+      }
+    ],
+    "opposite_outcomes": {
+      "report": 75,
+      "checks": [
+        "R06",
+        "R07"
+      ],
+      "same_steps": true,
+      "same_observation": true
+    }
+  },
+  "cloud_identity_audit": [
+    {
+      "report": 63,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 64,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 65,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 66,
+      "accepted": true,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 67,
+      "accepted": true,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 68,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 69,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 70,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 71,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 72,
+      "accepted": false,
+      "matches_recorded_environment": false,
+      "matches_unavailable_environment": true
+    },
+    {
+      "report": 73,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 75,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 74,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 76,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    },
+    {
+      "report": 77,
+      "accepted": false,
+      "matches_recorded_environment": true,
+      "matches_unavailable_environment": false
+    }
+  ],
+  "cloud_container_log_summary": {
+    "app": {
+      "exit": 0,
+      "line_count": 5,
+      "error_lines": 0,
+      "known_codes": {},
+      "run_failures": []
+    },
+    "worker": {
+      "exit": 0,
+      "line_count": 17,
+      "error_lines": 0,
+      "known_codes": {},
+      "run_failures": []
+    },
+    "validator": {
+      "exit": 0,
+      "line_count": 1,
+      "error_lines": 0,
+      "known_codes": {},
+      "run_failures": []
+    }
+  },
+  "reproductions": {
+    "temporal_invariant": {
+      "wait_for": {
+        "status": "passed",
+        "elapsed": 3.403
+      },
+      "wait": {
+        "status": "failed",
+        "elapsed": 2.945
+      },
+      "scheduled_change_ms": 180,
+      "requested_window_ms": 500
+    },
+    "unsupported_key": {
+      "key": "ц",
+      "compiler_issue": "None",
+      "report_status": "failed",
+      "decision": "recheck",
+      "finding_codes": [
+        "browser_error"
+      ]
+    },
+    "edit_manifest": {
+      "previous_requirements": 1,
+      "amended_requirements": 0,
+      "scope": "user_amendment_unmapped"
+    },
+    "busy_probe": {
+      "healthy_before": true,
+      "probe_during_validation": "unavailable",
+      "probe_seconds": 10.002,
+      "healthy_after": true
+    },
+    "ui": {
+      "environment": "Temporary separate PostgreSQL database, actual production frontend and application handlers, native validator, fake labelled scene, provider forbidden",
+      "model_calls": 0,
+      "revision_count": 1,
+      "run_operations": [
+        "create",
+        "repair"
+      ],
+      "run_statuses": [
+        "needs_attention",
+        "succeeded"
+      ],
+      "user_message_count": 2,
+      "duplicated_user_content": true,
+      "check_button_after_success": false,
+      "manual_fixture_gameplay": "Three actual clicks reached visible Победа!",
+      "screenshot": "validation-review-ui-2026-10-28.jpg",
+      "legacy_local_button": "Offered action; API returned unsupported_game; no Run created"
+    }
+  },
+  "regression_suite": {
+    "command": ".venv/bin/pytest tests/test_check_semantics.py studio/tests/test_completion.py studio/tests/test_check_repair.py studio/tests/test_edit_recovery.py -m 'not browser and not live' --no-header",
+    "passed": 84,
+    "deselected": 16,
+    "elapsed_seconds": 11.87
+  },
+  "test_environment_notes": [
+    "Initial temporary UI fixture needed static asset routing adjustment; not a product defect.",
+    "Interactive assertions passed; first teardown encountered nested test-settings and open-connection cleanup errors. Temporary database was removed after verifying zero connections; corrected short lifecycle test passed in 1.84 seconds.",
+    "No cloud writes, no real-model pilot, no physical mobile/WebKit verification in this review."
+  ],
+  "plan": "../validation-review-and-plan-2026-10-28.ru.md"
+}

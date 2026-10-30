@@ -1,0 +1,215 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Europe/Moscow",
+  "gameforge_code_revision": "c39549d91f061c9a3160957904852ab9fffe61aa",
+  "codex_worker_code_revision": "e015a854166ccac5d88cf4d4194c289e3a2b5260",
+  "tests": {
+    "gameforge_passed": 717,
+    "gameforge_deselected": 89,
+    "gameforge_seconds": 105.38,
+    "worker_local_passed": 138,
+    "worker_local_seconds": 61.56,
+    "worker_linux_passed": 138,
+    "worker_linux_seconds": 57.23,
+    "worker_linux_network": "none",
+    "worker_linux_memory_mib": 512,
+    "worker_linux_production_mounts": false,
+    "ruff": "passed",
+    "worker_mypy": "11 modules passed",
+    "gameforge_capacity_mypy": "passed"
+  },
+  "review": {
+    "kind": "self_review",
+    "independent_agent": false,
+    "resolved": [
+      "count union of processing and durable waiting jobs",
+      "retrieve already admitted jobs after capacity reduction",
+      "recheck capacity before every new model step",
+      "retain budget and unresolved-outcome error precedence",
+      "pause prepared jobs before submit after drain or unknown",
+      "hold lifetime lock until every child exits"
+    ],
+    "open_blockers": []
+  },
+  "codex_worker_deployment": {
+    "code_revision": "e015a854166ccac5d88cf4d4194c289e3a2b5260",
+    "existing_records_preserved": true,
+    "before_counts": {
+      "clients": 3,
+      "events": 55,
+      "jobs": 11,
+      "output_checkpoints": 0
+    },
+    "after_counts": {
+      "clients": 3,
+      "events": 55,
+      "jobs": 11,
+      "output_checkpoints": 0
+    },
+    "concurrency": 2,
+    "backup_path_in_volume": "/data/backup-before-e015a85-20261026T213323Z.sqlite3",
+    "backup_sha256": "64fcb93b8ee559be8e0be6dc044952164bbd0102f34e7f181a3278b4c8c40577",
+    "images": {
+      "api": "sha256:a904610b290cc9aef815eb1b037ba9fda1ab9967be37da93cda436042841925a",
+      "executor": "sha256:a904610b290cc9aef815eb1b037ba9fda1ab9967be37da93cda436042841925a"
+    },
+    "model_calls_by_deployment": 0
+  },
+  "cloud_deployment": {
+    "revision": "c39549d91f061c9a3160957904852ab9fffe61aa",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 20,
+      "CheckReport": 16,
+      "Feedback": 0,
+      "Invocation": 82,
+      "Like": 0,
+      "Message": 74,
+      "Outbox": 39,
+      "Preference": 1,
+      "Publication": 0,
+      "Revision": 16,
+      "Run": 39,
+      "RunEvent": 421,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "new_migrations": [],
+    "unknown_preserved": 4,
+    "visible_chats": 7,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_secrets_preserved": true,
+    "relay_db_redis_container_identity_preserved": true,
+    "api_token_only_worker": true,
+    "pro_concurrency": 2,
+    "celery_threads": 4,
+    "images": {
+      "app": {
+        "image_id": "sha256:17f6533306daf094a52a52335f64ab1c882357dcc12193fff48c9af3a09afc7b",
+        "image_tag": "gameforge-mini:cloud-c39549d-20261027",
+        "running": true
+      },
+      "preview": {
+        "image_id": "sha256:17f6533306daf094a52a52335f64ab1c882357dcc12193fff48c9af3a09afc7b",
+        "image_tag": "gameforge-mini:cloud-c39549d-20261027",
+        "running": true
+      },
+      "worker": {
+        "image_id": "sha256:17f6533306daf094a52a52335f64ab1c882357dcc12193fff48c9af3a09afc7b",
+        "image_tag": "gameforge-mini:cloud-c39549d-20261027",
+        "running": true
+      },
+      "beat": {
+        "image_id": "sha256:17f6533306daf094a52a52335f64ab1c882357dcc12193fff48c9af3a09afc7b",
+        "image_tag": "gameforge-mini:cloud-c39549d-20261027",
+        "running": true
+      },
+      "validator": {
+        "image_id": "sha256:7b66ad6ffefddebda768f778cfc5a98411072374bf81bb0db03e6fda8dd7c4ac",
+        "image_tag": "gameforge-mini-validator:cloud-c39549d-20261027",
+        "running": true
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-c39549d-20261026T213510Z.dump",
+    "backup_sha256": "6d09a5ff7c4f511c23aaeb257d6a2cac570dd8102cdf66728ad742e6a3cbfd07"
+  },
+  "cloud_validator_fixture": {
+    "status": "passed",
+    "passed_facts": 3,
+    "artifact_hash": "31f5703a5c0f6a76ffffdb83cc04d6ef731771dc57e6f7c00fc090bbfefb1d9f",
+    "validator_hash": "d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0",
+    "validator_environment": "mini-browser-v1:d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "chats_created": 0,
+    "invocations_created": 0,
+    "real_model_calls": 0
+  },
+  "cloud_profiles": {
+    "1": {
+      "pro_available": true,
+      "lite_available": true
+    },
+    "2": {
+      "pro_available": true,
+      "lite_available": true
+    },
+    "999999": {
+      "pro_available": false,
+      "lite_available": true
+    }
+  },
+  "local_activation": {
+    "local_pro_limit": 2,
+    "lite_limit": 1,
+    "local_cli_limit": 1,
+    "profiles": [
+      {
+        "id": "pro",
+        "provider": "codex_api",
+        "model": "gpt-6-sol",
+        "available": true
+      },
+      {
+        "id": "lite",
+        "provider": "relay",
+        "model": "qwen38",
+        "available": true
+      }
+    ],
+    "records_preserved": true,
+    "record_counts": {
+      "Budget": 1,
+      "Chat": 106,
+      "CheckReport": 77,
+      "Feedback": 0,
+      "Invocation": 260,
+      "Like": 0,
+      "Message": 307,
+      "Outbox": 155,
+      "Preference": 1,
+      "Publication": 0,
+      "Revision": 70,
+      "Run": 158,
+      "RunEvent": 1438,
+      "User": 1
+    },
+    "codex_worker_health_for_local_owner": {
+      "active_jobs": 0,
+      "attention_required": false,
+      "concurrency": 2,
+      "draining": false,
+      "idle": true,
+      "jobs": {
+        "completed": 1
+      },
+      "protocol": 1,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 1700,
+        "output_tokens": 690,
+        "submitted_without_known_usage": 0
+      },
+      "worker_online": true,
+      "worker_seen": 1793050554.4562407
+    },
+    "real_model_calls_by_test": 0
+  },
+  "cloud_connection": {
+    "pro_limit": 2,
+    "lite_limit": 1,
+    "remote_concurrency": 2,
+    "remote_active_jobs": 0,
+    "remote_worker_online": true,
+    "remote_attention_required": false,
+    "catalog_age_seconds": 29.98,
+    "public_https_health": "ok"
+  },
+  "limits": {
+    "real_model_calls": 0,
+    "real_parallel_model_trial": false,
+    "real_gameplay_load_trial": false,
+    "gpu_accessed": false,
+    "local_codex_preserved": true,
+    "shared_remote_slots": 2
+  }
+}

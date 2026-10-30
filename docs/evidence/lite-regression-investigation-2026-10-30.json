@@ -1,0 +1,301 @@
+{
+  "date": "2026-10-30",
+  "scope": "Read-only cloud/history/code investigation; no new model calls, production changes or saved check reports.",
+  "cloud_release": "a2e4c79",
+  "validator_release": "d942174",
+  "cloud_flags": {
+    "GAMEFORGE_COMPACT_LITE_ENABLED": false,
+    "GAMEFORGE_LITE_CODE_THEN_CHECKS_ENABLED": false
+  },
+  "snake_runs": [
+    {
+      "id": "30a34e52-2788-4064-b4d0-f27fa51dd54e",
+      "created_at": "2026-10-29T22:49:30.528Z",
+      "finished_at": "2026-10-29T23:00:02.744Z",
+      "provider": "relay",
+      "model": "qwen38",
+      "generation_strategy": "lite",
+      "generation_profile": "full",
+      "planning_required": true,
+      "attempts": 5,
+      "status": "needs_attention",
+      "terminal_error": "repair_exhausted",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "plan",
+          "error_code": "invalid_plan",
+          "usage": {
+            "input_tokens": 1350,
+            "output_tokens": 773,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 60.953836
+        },
+        {
+          "attempt": 2,
+          "operation": "plan",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 1384,
+            "output_tokens": 877,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 53.917275
+        },
+        {
+          "attempt": 3,
+          "operation": "create",
+          "error_code": "duplicate_file",
+          "usage": {
+            "input_tokens": 4779,
+            "output_tokens": 2013,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 131.941498
+        },
+        {
+          "attempt": 4,
+          "operation": "create",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 4815,
+            "output_tokens": 4269,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 251.906316
+        },
+        {
+          "attempt": 5,
+          "operation": "repair",
+          "error_code": "no_changes",
+          "usage": {
+            "input_tokens": 7793,
+            "output_tokens": 1783,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 119.982155
+        }
+      ]
+    },
+    {
+      "id": "bfc0fa6e-f559-494d-9f79-fb5b71e3c7a6",
+      "created_at": "2026-10-29T23:08:41.308Z",
+      "finished_at": "2026-10-29T23:13:00.133Z",
+      "provider": "relay",
+      "model": "qwen38",
+      "generation_strategy": "lite",
+      "generation_profile": "full",
+      "planning_required": false,
+      "attempts": 4,
+      "status": "needs_attention",
+      "terminal_error": "repair_exhausted",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "error_code": "ambiguous_patch",
+          "usage": {
+            "input_tokens": 11165,
+            "output_tokens": 2178,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 150.396789
+        },
+        {
+          "attempt": 2,
+          "operation": "edit",
+          "error_code": "ambiguous_patch",
+          "usage": {
+            "input_tokens": 1905,
+            "output_tokens": 330,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 29.811967
+        },
+        {
+          "attempt": 3,
+          "operation": "edit",
+          "error_code": "ambiguous_patch",
+          "usage": {
+            "input_tokens": 1905,
+            "output_tokens": 305,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 23.806779
+        },
+        {
+          "attempt": 4,
+          "operation": "edit",
+          "error_code": "ambiguous_patch",
+          "usage": {
+            "input_tokens": 1905,
+            "output_tokens": 889,
+            "cached_input_tokens": 0
+          },
+          "elapsed_seconds": 53.865643
+        }
+      ]
+    },
+    {
+      "id": "a1582684-0b59-4594-9448-b08d2cb90776",
+      "created_at": "2026-10-30T00:05:35.497Z",
+      "finished_at": "2026-10-30T00:07:57.150Z",
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "planning_required": false,
+      "attempts": 1,
+      "status": "needs_attention",
+      "terminal_error": "check_review_required",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 17750,
+            "output_tokens": 4256,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "elapsed_seconds": 102.220973
+        }
+      ]
+    }
+  ],
+  "same_request_before_after": [
+    {
+      "invocation_id": "70902037-aaf3-405f-b951-23bc04bc2323",
+      "created_at": "2026-10-24T19:02:41.143Z",
+      "model": "qwen38",
+      "execution_limits": {
+        "context_window": 32768,
+        "max_output_tokens": 16384
+      },
+      "message_characters": {
+        "system": 5653,
+        "user": 232
+      },
+      "usage": {
+        "input_tokens": 1208,
+        "output_tokens": 3362,
+        "cached_input_tokens": 0
+      }
+    },
+    {
+      "invocation_id": "764056d1-9cd4-433a-a1c8-f4b59e293c9e",
+      "created_at": "2026-10-29T22:51:25.987Z",
+      "model": "qwen38",
+      "execution_limits": {
+        "context_window": 32768,
+        "max_output_tokens": 16384
+      },
+      "message_characters": {
+        "system": 14642,
+        "user": 5658
+      },
+      "usage": {
+        "input_tokens": 4779,
+        "output_tokens": 2013,
+        "cached_input_tokens": 0
+      }
+    },
+    {
+      "invocation_id": "6eae646b-8b89-40b8-a672-2a2bec7ad015",
+      "created_at": "2026-10-29T22:53:38.020Z",
+      "model": "qwen38",
+      "execution_limits": {
+        "context_window": 32768,
+        "max_output_tokens": 16384
+      },
+      "message_characters": {
+        "system": 14642,
+        "user": 5800
+      },
+      "usage": {
+        "input_tokens": 4815,
+        "output_tokens": 4269,
+        "cached_input_tokens": 0
+      }
+    }
+  ],
+  "response_schema_serialized_characters": {
+    "2026-10-24": 6168,
+    "2026-10-30": 13152
+  },
+  "confirmed_findings": [
+    {
+      "kind": "runtime",
+      "detail": "Full Lite source uses undeclared api.experience; cloud browser reports api is not defined. Shared experience guidance mentions both full and compact aliases."
+    },
+    {
+      "kind": "checks",
+      "detail": "All six Lite checks observe experience.state, the audio context state, instead of gameplay. Numeric increased is applied to a string; plan requirement IDs are not preserved."
+    },
+    {
+      "kind": "source_repair",
+      "detail": "The fifth create-run call receives api is not defined diagnostics and returns byte-identical game.js, rejected as no_changes."
+    },
+    {
+      "kind": "edit_recovery",
+      "detail": "Four edit calls fail atomic patch application. Correct original HTML with double quotes is present in prompt; model old_text uses single quotes. No source edits were applied."
+    },
+    {
+      "kind": "check_repair_capacity",
+      "detail": "Pro revision has eight checks with IDs different from six frozen requirements; combined fourteen exceed hard limit twelve."
+    },
+    {
+      "kind": "planning",
+      "detail": "A second cloud game, Spider solitaire, exhausted five plan calls: missing start category in calls 1,2,4,5; duplicate IDs in call 3. No code was generated."
+    }
+  ],
+  "cloud_browser_replay": {
+    "method": "Exact saved HTML and checks through validation.service.validate, no model, DB read-only, no report saved. No requirement-manifest assessment or additional media contract supplied; this is not full acceptance.",
+    "lite": {
+      "revision_id": "9ac807ec-2a50-4050-9ee2-58e22fc36610",
+      "artifact_hash": "0598448dc3088d26f119edff4f59020d02b3cb254774688c788f3a8e7abce896",
+      "status": "failed",
+      "gates": {
+        "syntax": true,
+        "runtime": false,
+        "surface": true
+      },
+      "passed_checks": 0,
+      "total_checks": 6,
+      "runtime_error": "api is not defined",
+      "seconds": 11.121
+    },
+    "pro": {
+      "revision_id": "0b582e80-7ef3-467c-99cb-ab1445484ade",
+      "artifact_hash": "4f725b5acd589c1142262d7e4710d4c80f7dbb4fcb6ffed46a7455a9d5846512",
+      "status": "unverified",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "passed_checks": 8,
+      "total_checks": 8,
+      "remaining_codes": [
+        "missing_keyboard_control",
+        "incomplete_checks"
+      ],
+      "seconds": 40.609
+    },
+    "local_attempt": "Native browser recheck timed out; not counted as game failure. Cloud replay used as evidence."
+  },
+  "limitations": [
+    "No live A/B model experiment; increased instruction burden is a supported hypothesis, not a measured causal effect.",
+    "Model alias and application output/context limits unchanged; actual GPU weights and server sampling defaults not inspected.",
+    "Old pilots already showed inconsistent Lite playability; successful examples do not establish a stable historical baseline."
+  ],
+  "recommended_order": [
+    "Isolate full/compact API and gameplay/audio observation guidance.",
+    "Give Lite a smaller explicit planning/implementation contract with required coverage encoded structurally.",
+    "Improve targeted repair diagnostics and exact source replacement without weakening hash checks.",
+    "Remove the check-repair dead end while preserving frozen requirements.",
+    "Compare old/current/fixed Lite harness on repeated identical tasks before rollout; do not blindly enable compact."
+  ]
+}

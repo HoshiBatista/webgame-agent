@@ -1,0 +1,15 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0}canvas{touch-action:none;width:300px;height:200px}</style>
+<button id="start">Start</button><button id="up">Up</button><button id="left">Left</button><button id="pause">Pause</button>
+<p id="status">ready</p><canvas width="300" height="200"></canvas>
+<script>
+const board=document.querySelector('canvas'),ctx=board.getContext('2d'),label=document.querySelector('#status');
+window.snake={x:150,y:100,dx:1,dy:0,active:false,paused:false};
+function draw(){ctx.fillStyle='#ddeeff';ctx.fillRect(0,0,300,200);ctx.fillStyle='#123';ctx.fillRect(snake.x,snake.y,10,10);}
+document.querySelector('#start').onclick=()=>{snake.active=true;label.textContent='playing';};
+document.querySelector('#up').onclick=()=>{snake.dx=0;snake.dy=-1;};
+document.querySelector('#left').onclick=()=>{snake.dx=-1;snake.dy=0;};
+document.querySelector('#pause').onclick=()=>{snake.paused=!snake.paused;};
+setInterval(()=>{if(!snake.active||snake.paused)return;snake.x+=snake.dx*30;snake.y+=snake.dy*30;
+if(snake.x<0||snake.x>=290||snake.y<0||snake.y>=190){snake.active=false;label.textContent='lost';}draw();},200);draw();
+</script>

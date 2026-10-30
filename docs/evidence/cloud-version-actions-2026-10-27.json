@@ -1,0 +1,202 @@
+{
+  "date": "2026-10-27",
+  "revision": "f4edcde4128b54713893b2c898146b4a0b40f5e8",
+  "previous_revision": "f9a2cad0f83c3ee4c699c7c41b16678882743b6b",
+  "change": "Template headings and 60/2500 character limits, four additional audiences, publication and feedback for the selected saved version; includes player-focused replies from 7b8251c.",
+  "source_archive_sha256": "bd4848810c80be1315881d8868d59175fade12672599d1f7937f1af7ffe462af",
+  "server": {
+    "revision": "f4edcde4128b54713893b2c898146b4a0b40f5e8",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 26,
+      "CheckReport": 1,
+      "Feedback": 0,
+      "Invocation": 113,
+      "Like": 0,
+      "Message": 110,
+      "Outbox": 57,
+      "Preference": 1,
+      "PromptTemplate": 2,
+      "Publication": 0,
+      "Revision": 1,
+      "Run": 57,
+      "RunEvent": 592,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "unknown_preserved": 5,
+    "visible_chats": 1,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [
+      "0020_template_title_60"
+    ],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:34e3eae771bbee54d7828796bd36fd20ae00658d4eee155ed564adcfcb8357d0",
+        "image_tag": "gameforge-mini:cloud-f4edcde-20261027"
+      },
+      "preview": {
+        "image_id": "sha256:34e3eae771bbee54d7828796bd36fd20ae00658d4eee155ed564adcfcb8357d0",
+        "image_tag": "gameforge-mini:cloud-f4edcde-20261027"
+      },
+      "worker": {
+        "image_id": "sha256:34e3eae771bbee54d7828796bd36fd20ae00658d4eee155ed564adcfcb8357d0",
+        "image_tag": "gameforge-mini:cloud-f4edcde-20261027"
+      },
+      "beat": {
+        "image_id": "sha256:34e3eae771bbee54d7828796bd36fd20ae00658d4eee155ed564adcfcb8357d0",
+        "image_tag": "gameforge-mini:cloud-f4edcde-20261027"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-f4edcde-20261027T202654Z.dump",
+    "backup_sha256": "a455e53f7b6d50e0d3984bca67bc94d50c536938550c31c8636a175f2d3c6583"
+  },
+  "browser": {
+    "revision": "f4edcde4128b54713893b2c898146b4a0b40f5e8",
+    "https_verified": true,
+    "html_and_assets_exact": true,
+    "asset_count": 14,
+    "health": "ok",
+    "guest_chats_and_templates_denied": true,
+    "browser": [
+      {
+        "width": 1440,
+        "height": 1000,
+        "theme": "light",
+        "template_title_60": "passed",
+        "description_and_notes_2500_unicode": "passed",
+        "all_eight_audiences": "passed",
+        "manual_template_picker": "passed",
+        "horizontal_overflow": false,
+        "version_actions": "enabled_and_dialogs_bound_to_existing_versions"
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "theme": "dark",
+        "template_title_60": "passed",
+        "description_and_notes_2500_unicode": "passed",
+        "all_eight_audiences": "passed",
+        "manual_template_picker": "passed",
+        "horizontal_overflow": false,
+        "version_actions": "enabled_and_dialogs_bound_to_existing_versions"
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "theme": "light",
+        "template_title_60": "passed",
+        "description_and_notes_2500_unicode": "passed",
+        "all_eight_audiences": "passed",
+        "manual_template_picker": "passed",
+        "horizontal_overflow": false,
+        "version_actions": "enabled_and_dialogs_bound_to_existing_versions"
+      }
+    ],
+    "existing_test_game_versions": 1,
+    "login_logout": "passed",
+    "page_errors": [],
+    "mutations": [
+      "/api/login/",
+      "/api/logout/"
+    ],
+    "model_calls": 0,
+    "chats_created": 0,
+    "templates_changed": 0,
+    "publications_or_feedback_written": 0
+  },
+  "final_health": {
+    "run_count": 57,
+    "invocation_count": 113,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0020": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true
+  },
+  "local_before_rollout": {
+    "backend_tests": 921,
+    "frontend_tests": 129,
+    "targeted_frontend_after_final_layout_adjustment": 50,
+    "ruff": "passed",
+    "mypy_files": 46,
+    "frontend_lint": "passed",
+    "production_build": "passed",
+    "django_check": "passed",
+    "migration_drift": "none",
+    "browser": {
+      "viewports": [
+        {
+          "theme": "light",
+          "width": 1440,
+          "height": 1000,
+          "passed": true
+        },
+        {
+          "theme": "dark",
+          "width": 1024,
+          "height": 800,
+          "passed": true
+        },
+        {
+          "theme": "light",
+          "width": 390,
+          "height": 844,
+          "passed": true
+        },
+        {
+          "theme": "dark",
+          "width": 320,
+          "height": 568,
+          "passed": true
+        },
+        {
+          "theme": "light",
+          "width": 667,
+          "height": 375,
+          "passed": true
+        }
+      ],
+      "screenshots": [
+        "library-1440-light.png",
+        "composer-1440-light.png",
+        "library-390-light.png",
+        "composer-390-light.png",
+        "library-320-dark.png",
+        "composer-320-dark.png"
+      ],
+      "api": "real local HTTP/session/CSRF and temporary PostgreSQL",
+      "versions": "separate publications, edit title, exact feedback version, reload",
+      "model_calls": 0,
+      "gameplay": "UI fixture only",
+      "errors": []
+    },
+    "version_actions": "Real local HTTP/session/CSRF and temporary PostgreSQL: separate publications for versions, repeat returns the same publication, concurrent posts create once, title editing, selected-version feedback and reload."
+  },
+  "cloud_checks": {
+    "django_check": "passed",
+    "migrate_check": "passed",
+    "celery_ping": "passed",
+    "pro_catalog_refresh": "passed",
+    "backup_archive_toc": "passed",
+    "both_pro_and_lite_available": true
+  },
+  "review": "No blocking findings in the release, data preservation, deployed assets, forms or read-only cloud browser checks.",
+  "boundaries": [
+    "No cloud chats, templates, publications or ratings created; only login/logout sessions on the existing test account. Browser review was repeated to capture settled animation frames.",
+    "One existing game version was available for cloud read-only actions. Version switching, persistence and duplicate prevention were verified in local PostgreSQL tests.",
+    "Cloud data hashes were compared before reopening ingress; final Run/Invocation counts remain 57/113.",
+    "The application container has intentionally isolated networking; the public HTTPS preview check was run from the VPS host.",
+    "No live model calls, GPU connections or remote Codex Worker changes. No physical iOS test or live-model quality evaluation.",
+    "Local working database was not migrated or restarted during this rollout."
+  ],
+  "model_calls": 0,
+  "gpu_connections": 0,
+  "new_chats": 0
+}

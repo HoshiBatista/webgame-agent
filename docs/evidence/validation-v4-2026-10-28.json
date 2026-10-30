@@ -1,0 +1,146 @@
+{
+  "date": "2026-10-28",
+  "baseline": "7118125",
+  "scope": "first delivery: V0-V3 foundation and bounded V4 batching; not whole V0-V7",
+  "real_model_calls": 0,
+  "cloud_changed": false,
+  "gpu_accessed": false,
+  "codex_worker_changed": false,
+  "checks_policy": 4,
+  "game_contract": 9,
+  "tests": {
+    "backend_offline": {
+      "passed": 1047,
+      "deselected": 130,
+      "seconds": 95.2,
+      "log": "/tmp/gf-validation-final-full.log"
+    },
+    "final_targeted_backend": {
+      "passed": 24,
+      "deselected": 2,
+      "seconds": 6.7,
+      "log": "/tmp/gf-validation-last-regressions.log"
+    },
+    "isolated_native_corpus": {
+      "passed": 16,
+      "deselected": 80,
+      "seconds": 56.25,
+      "log": "/tmp/gf-validation-browser.log"
+    },
+    "final_targeted_native": {
+      "passed": 6,
+      "deselected": 22,
+      "seconds": 26.2,
+      "log": "/tmp/gf-validation-final-native.log"
+    },
+    "frontend": {
+      "passed": 145,
+      "files": 16,
+      "lint": "passed",
+      "typecheck": "passed",
+      "build": "passed"
+    },
+    "static": {
+      "ruff": "passed",
+      "mypy_generation_validation": "49 modules passed",
+      "django_check": "passed",
+      "makemigrations_check": "passed",
+      "migrate_check": "passed"
+    },
+    "note": "Suites overlap; do not sum counts. No real model, WebKit or physical device test."
+  },
+  "manual_ui": {
+    "browser": "embedded Chromium",
+    "fixture": "synthetic scene in separate pytest database",
+    "viewport_widths": [
+      320,
+      390,
+      1440
+    ],
+    "horizontal_overflow": false,
+    "js_warnings_or_errors": [],
+    "actions": [
+      "run check",
+      "reload",
+      "open completed report",
+      "fresh check",
+      "cancel"
+    ],
+    "after": {
+      "revisions": 1,
+      "runs": 1,
+      "messages": 2,
+      "model_calls": 0,
+      "validation_tasks": [
+        {
+          "status": "passed",
+          "origin": "manual",
+          "progress": {
+            "batch": 1,
+            "phase": "control_comparison",
+            "total": 3,
+            "batches": 1,
+            "check_id": "outcome",
+            "completed": 3
+          },
+          "timings": {
+            "queue_seconds": 0.002,
+            "total_seconds": 3.328,
+            "execution_seconds": 3.3
+          }
+        },
+        {
+          "status": "cancelled",
+          "origin": "manual",
+          "progress": {
+            "batch": 1,
+            "total": 3,
+            "batches": 1,
+            "completed": 0,
+            "scenario_ids": [
+              "start",
+              "tap",
+              "outcome"
+            ]
+          },
+          "timings": {}
+        }
+      ]
+    },
+    "screenshots": [
+      "validation-v4-ui-320-2026-10-28.png",
+      "validation-v4-ui-390-2026-10-28.png",
+      "validation-v4-ui-1440-2026-10-28.png",
+      "validation-v4-ui-cancel-2026-10-28.png"
+    ],
+    "cleanup": "tab closed, viewport reset, isolated test database dropped"
+  },
+  "local_update": {
+    "backup": {
+      "path": ".data/validation-v4-backup/before-0023-20261028T175834Z.dump",
+      "sha256": "d3261fdb6ad1e339ea0914c4543158e0c486efe5ddab44088219e1846d727589",
+      "bytes": 3087107,
+      "catalog_readable": true
+    },
+    "migrations": [
+      "0023_independent_validation_tasks",
+      "0024_validation_run_fence"
+    ],
+    "health_http": 200,
+    "worker_registered": true,
+    "active_runs": 0,
+    "active_calls": 0,
+    "historical_returned_receipts": 5
+  },
+  "remaining": [
+    "requirement/scenario ID split",
+    "explicit requirement deltas for mechanics changes",
+    "check_repair beyond 12 unique requirements",
+    "separate user repair actions",
+    "V5 route diagnostics",
+    "V6 real corpus performance",
+    "WebKit and container release checks",
+    "new-budget live pilot",
+    "cloud deployment"
+  ]
+}

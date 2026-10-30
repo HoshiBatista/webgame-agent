@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Europe/Moscow",
+  "release": "0d55d2d4fd1b06d5e9694f1ac554bef38562d203",
+  "previous_release": "bff3ee8998c38319933518c05da978f1112a868a",
+  "release_path": "/opt/gameforge/releases/20261027-0d55d2d",
+  "source_archive_sha256": "cc31033e9e9e25112b8e5ba33498e7a8fdeb59e5746c9c8f3db16363a70c1ca8",
+  "server": {
+    "revision": "0d55d2d4fd1b06d5e9694f1ac554bef38562d203",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 23,
+      "CheckReport": 31,
+      "Feedback": 0,
+      "Invocation": 101,
+      "Like": 0,
+      "Message": 96,
+      "Outbox": 50,
+      "Preference": 1,
+      "Publication": 0,
+      "Revision": 29,
+      "Run": 50,
+      "RunEvent": 528,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "unknown_preserved": 4,
+    "visible_chats": 10,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_validator_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:9a4ad40b69f974fd447280a9a70f56a6092a4773a581e83bc1ac63331dfd7210",
+        "image_tag": "gameforge-mini:cloud-0d55d2d-20261027"
+      },
+      "preview": {
+        "image_id": "sha256:9a4ad40b69f974fd447280a9a70f56a6092a4773a581e83bc1ac63331dfd7210",
+        "image_tag": "gameforge-mini:cloud-0d55d2d-20261027"
+      },
+      "worker": {
+        "image_id": "sha256:9a4ad40b69f974fd447280a9a70f56a6092a4773a581e83bc1ac63331dfd7210",
+        "image_tag": "gameforge-mini:cloud-0d55d2d-20261027"
+      },
+      "beat": {
+        "image_id": "sha256:9a4ad40b69f974fd447280a9a70f56a6092a4773a581e83bc1ac63331dfd7210",
+        "image_tag": "gameforge-mini:cloud-0d55d2d-20261027"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-0d55d2d-20261027T113142Z.dump",
+    "backup_sha256": "f19b89f84fa69f4e44112356ebf3813f03cac7f6a049d117d58eff469b48662c"
+  },
+  "public_acceptance": {
+    "revision": "0d55d2d4fd1b06d5e9694f1ac554bef38562d203",
+    "origin": "https://212.57.126.215",
+    "http": {
+      "https_verified": true,
+      "html_and_assets_exact": true,
+      "asset_count": 6,
+      "guest_chats_denied": true,
+      "health": "ok"
+    },
+    "browser": {
+      "viewports": [
+        {
+          "width": 1440,
+          "height": 900,
+          "version_count": 8,
+          "labels_short_unique": true,
+          "history_and_return": "passed",
+          "sound_before_copy": true
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "version_count": 8,
+          "labels_short_unique": true,
+          "history_and_return": "passed",
+          "sound_before_copy": true
+        }
+      ],
+      "login_logout": "passed",
+      "page_errors": [],
+      "mutations": [
+        "/api/login/",
+        "/api/logout/"
+      ]
+    },
+    "chats_created": 0,
+    "generation_submissions": 0,
+    "model_calls": 0
+  },
+  "profiles": {
+    "1": {
+      "pro_available": true,
+      "lite_available": true
+    },
+    "2": {
+      "pro_available": true,
+      "lite_available": true
+    },
+    "999999": {
+      "pro_available": false,
+      "lite_available": true
+    }
+  },
+  "provider_limits": {
+    "codex_api": 2,
+    "relay": 1,
+    "codex": 1
+  },
+  "checks": [
+    "110 frontend tests / 13 files",
+    "npm run lint --prefix web",
+    "npm run build --prefix web",
+    "Django check",
+    "migrate --check",
+    "Celery ping",
+    "full application record hashes before reopening ingress",
+    "preserved relay/db/redis/validator container identities",
+    "public HTTPS exact HTML/assets",
+    "authenticated desktop/mobile game menu and version selection",
+    "Pro/Lite availability and capacity without model requests"
+  ],
+  "limitations": [
+    "Physical iOS not tested",
+    "No live model requests; generation quality not measured",
+    "Existing check-confirmation, publication and feedback behavior unchanged"
+  ]
+}

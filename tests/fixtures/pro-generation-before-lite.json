@@ -1,0 +1,762 @@
+[
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "plan",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "3e54d3ad1fdb45eca3725a16d18450d5dc52e98c63aea0b24bdb367ea20f5037",
+    "schema_sha256": "b9c3b967160e67d8652c8e9e20e1db153d70647d04013cf5ccf9da7a5ae0be27"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "create",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "83510493411518a8f24cda96f5c9d127392423d924925f32a7c4422ee4a3a869",
+    "schema_sha256": "2dcb3cae3fb3b9096a4b814f7bf2492c31e6665c87bde5848c7a9e798e3fafdb"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "edit",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "cbb097bda5c3daba29c1447f6ec390cfc9273bea387af679dbafb7f011873cef",
+    "schema_sha256": "a4fc046eedbc0ec0003aafd268f28a3eacc6fa34ed97c044525f3e9196688cb7"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "module_repair": {
+        "files": {
+          "game.js": "6fe9b219f9a6924e1751edb90422e5c79f652b0545b439d5deb73e4dd4655e6a"
+        }
+      }
+    },
+    "messages_sha256": "523300c282008c42be712fba9868488b54807bbb4e05a70320f0b4a649da3b9b",
+    "schema_sha256": "95df18e52e751b3e460497f2849013957c1e9453eac2e3c05c78b9ee6234aabd"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "check_repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "check_repair": {
+        "artifact_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "checks_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requirements": []
+      }
+    },
+    "messages_sha256": "8e6d63d55a0d763bc9f8c054a27ba3173e63ee5d9afea927a1aa38eb0eed5654",
+    "schema_sha256": "fc4cc8bc8d014d69cfcfeb8a2215203df5de0ecfbf5135210abb2273a616e22c"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "plan",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "3e54d3ad1fdb45eca3725a16d18450d5dc52e98c63aea0b24bdb367ea20f5037",
+    "schema_sha256": "b9c3b967160e67d8652c8e9e20e1db153d70647d04013cf5ccf9da7a5ae0be27"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "create",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "996a05c48bc99e9259fede1cbcd7e2195369ee023e5908c11510186261f41fc8",
+    "schema_sha256": "dc4dff5a350c1eecb6a28430c97d1ea489060e23d96b5f0e7955fea40ac06c4e"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "edit",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "548f5cf6e4be07dbacaefdc80c2d64c967b7cd7c28eebca8a7110c0c99f813fe",
+    "schema_sha256": "0f6b10cd006f3b988014ea67d08acd7443faf17dbec4c120f765be404400bef0"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "module_repair": {
+        "files": {
+          "game.js": "6fe9b219f9a6924e1751edb90422e5c79f652b0545b439d5deb73e4dd4655e6a"
+        }
+      }
+    },
+    "messages_sha256": "1b2e7fd6c2fc5a2f47ff04d44a48713d3a96682a49af3caa5486b3c3f046725b",
+    "schema_sha256": "64f3fc3aa9b580ac85c9681e1f6447656bb77a40cf7bf779cbcaa6158d705d31"
+  },
+  {
+    "request": {
+      "provider": "codex",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "check_repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "check_repair": {
+        "artifact_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "checks_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requirements": []
+      }
+    },
+    "messages_sha256": "31759e66893bb4aaf8d3db6b9455c479556f2eabebcfe46a666205c34d9f5c39",
+    "schema_sha256": "380f1e6eb7929e268454c33d093c0a99a8538c3c770e6395bc4eaeae3f13a37b"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "plan",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "3e54d3ad1fdb45eca3725a16d18450d5dc52e98c63aea0b24bdb367ea20f5037",
+    "schema_sha256": "b9c3b967160e67d8652c8e9e20e1db153d70647d04013cf5ccf9da7a5ae0be27"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "create",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "83510493411518a8f24cda96f5c9d127392423d924925f32a7c4422ee4a3a869",
+    "schema_sha256": "2dcb3cae3fb3b9096a4b814f7bf2492c31e6665c87bde5848c7a9e798e3fafdb"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "edit",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "cbb097bda5c3daba29c1447f6ec390cfc9273bea387af679dbafb7f011873cef",
+    "schema_sha256": "a4fc046eedbc0ec0003aafd268f28a3eacc6fa34ed97c044525f3e9196688cb7"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "module_repair": {
+        "files": {
+          "game.js": "6fe9b219f9a6924e1751edb90422e5c79f652b0545b439d5deb73e4dd4655e6a"
+        }
+      }
+    },
+    "messages_sha256": "523300c282008c42be712fba9868488b54807bbb4e05a70320f0b4a649da3b9b",
+    "schema_sha256": "95df18e52e751b3e460497f2849013957c1e9453eac2e3c05c78b9ee6234aabd"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "full",
+      "operation": "check_repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "check_repair": {
+        "artifact_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "checks_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requirements": []
+      }
+    },
+    "messages_sha256": "8e6d63d55a0d763bc9f8c054a27ba3173e63ee5d9afea927a1aa38eb0eed5654",
+    "schema_sha256": "fc4cc8bc8d014d69cfcfeb8a2215203df5de0ecfbf5135210abb2273a616e22c"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "plan",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "3e54d3ad1fdb45eca3725a16d18450d5dc52e98c63aea0b24bdb367ea20f5037",
+    "schema_sha256": "b9c3b967160e67d8652c8e9e20e1db153d70647d04013cf5ccf9da7a5ae0be27"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "create",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "996a05c48bc99e9259fede1cbcd7e2195369ee023e5908c11510186261f41fc8",
+    "schema_sha256": "dc4dff5a350c1eecb6a28430c97d1ea489060e23d96b5f0e7955fea40ac06c4e"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "edit",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      }
+    },
+    "messages_sha256": "548f5cf6e4be07dbacaefdc80c2d64c967b7cd7c28eebca8a7110c0c99f813fe",
+    "schema_sha256": "0f6b10cd006f3b988014ea67d08acd7443faf17dbec4c120f765be404400bef0"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "module_repair": {
+        "files": {
+          "game.js": "6fe9b219f9a6924e1751edb90422e5c79f652b0545b439d5deb73e4dd4655e6a"
+        }
+      }
+    },
+    "messages_sha256": "1b2e7fd6c2fc5a2f47ff04d44a48713d3a96682a49af3caa5486b3c3f046725b",
+    "schema_sha256": "64f3fc3aa9b580ac85c9681e1f6447656bb77a40cf7bf779cbcaa6158d705d31"
+  },
+  {
+    "request": {
+      "provider": "codex_api",
+      "model": "gpt-6-sol",
+      "generation_strategy": "pro",
+      "generation_profile": "compact",
+      "operation": "check_repair",
+      "presentation_policy": 1,
+      "plan_provenance": 1,
+      "helper_catalog": {
+        "gf-motion-v1.js": {
+          "version": 1,
+          "sha256": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11"
+        },
+        "gf-experience-v1.js": {
+          "version": 1,
+          "sha256": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9"
+        }
+      },
+      "prompt": "Игра про сбор звёзд",
+      "game_request": "Игра про сбор звёзд",
+      "source_format": "string",
+      "files": {
+        "game.js": "const score=0;\n"
+      },
+      "base_revision": "test-base",
+      "game_plan": {
+        "summary": "Собрать три звезды"
+      },
+      "requirement_manifest": {
+        "requirements": []
+      },
+      "check_repair": {
+        "artifact_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "checks_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "requirements": []
+      }
+    },
+    "messages_sha256": "31759e66893bb4aaf8d3db6b9455c479556f2eabebcfe46a666205c34d9f5c39",
+    "schema_sha256": "380f1e6eb7929e268454c33d093c0a99a8538c3c770e6395bc4eaeae3f13a37b"
+  }
+]

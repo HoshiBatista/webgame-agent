@@ -1,0 +1,29 @@
+{
+  "measured_at": "2026-10-28",
+  "scope": "local fixture packaging only; not model latency or audio quality",
+  "iterations": 25,
+  "model_calls": 0,
+  "recipe_bytes": 831,
+  "measurements": {
+    "full_media_False": {
+      "median_ms": 2.17,
+      "p95_ms": 3.65,
+      "html_bytes": 1450
+    },
+    "full_media_True": {
+      "median_ms": 7.25,
+      "p95_ms": 9.16,
+      "html_bytes": 16986
+    },
+    "compact_media_False": {
+      "median_ms": 3.57,
+      "p95_ms": 4.65,
+      "html_bytes": 14648
+    },
+    "compact_media_True": {
+      "median_ms": 7.46,
+      "p95_ms": 8.44,
+      "html_bytes": 30103
+    }
+  }
+}

@@ -1,0 +1,638 @@
+{
+  "date": "2026-10-29",
+  "deployed_revision": "1cfd8916e04d18a8be242b29fd38792575065f14",
+  "new_pro_calls_this_work": 8,
+  "gpu_lite_touched": false,
+  "codex_worker_source_changed": false,
+  "saved_plans": {
+    "replays": [
+      {
+        "invocation_id": "bc452c5b-55a8-4416-bff0-3fe145c32335",
+        "retained_receipt_state": "failed",
+        "raw_sha256": "b09e949cc1229131881826ef577120ace4583ac83906069fe0940cc5247a4117",
+        "source_changes": [
+          {
+            "path": "plan.requirements.4.origin",
+            "from": "user",
+            "to": "preference"
+          }
+        ],
+        "other_fields_unchanged": true,
+        "invented_quote_rejected": true
+      },
+      {
+        "invocation_id": "55bcc96f-4e19-4201-b998-d3f788616fa9",
+        "retained_receipt_state": "failed",
+        "raw_sha256": "ad27d2b39b7d26363c70a79082368a13eaa15fffdddc2ae98187e1030bc82ad0",
+        "source_changes": [
+          {
+            "path": "plan.requirements.5.origin",
+            "from": "user",
+            "to": "preference"
+          }
+        ],
+        "other_fields_unchanged": true,
+        "invented_quote_rejected": true
+      },
+      {
+        "invocation_id": "260ba9d3-34e3-44e2-a548-fa7b152edfd6",
+        "retained_receipt_state": "failed",
+        "raw_sha256": "21a0ed8ce0be06b0f156d2c006340b558b9499ec8232070288be34354ff323e7",
+        "source_changes": [
+          {
+            "path": "plan.requirements.4.origin",
+            "from": "user",
+            "to": "preference"
+          }
+        ],
+        "other_fields_unchanged": true,
+        "invented_quote_rejected": true
+      },
+      {
+        "invocation_id": "dea3440f-e805-4db5-b785-df5042917b7e",
+        "retained_receipt_state": "failed",
+        "raw_sha256": "a69cdf9bfbf23a2e1bc25d69fd20f1fd6caa34f692c3bb22ddb3db16fe08f170",
+        "source_changes": [
+          {
+            "path": "plan.requirements.4.origin",
+            "from": "user",
+            "to": "preference"
+          }
+        ],
+        "other_fields_unchanged": true,
+        "invented_quote_rejected": true
+      }
+    ],
+    "model_calls": 0,
+    "records_modified": 0
+  },
+  "pilot": {
+    "additional_call_limit": 50,
+    "used": 24,
+    "reserved": 0,
+    "remaining_unreserved": 26,
+    "budget": {
+      "limit_usd": 75.0,
+      "spent_usd": 13.319951,
+      "reserved_usd": 0.0,
+      "unknown_usd": 50.24,
+      "available_usd": 11.440049
+    },
+    "runs": [
+      {
+        "run_id": "d6575ff7-4b21-42db-b8e9-4959a8ab60bb",
+        "key": "output-followup-20261029-tester2-original-2",
+        "status": "unverified",
+        "stage": "unverified",
+        "error_code": "manual_verification",
+        "calls": 4,
+        "max_calls": 5,
+        "revision_id": "37ccca00-9027-44cd-99f7-642ca4840fbd",
+        "accepted": false,
+        "report_status": "unverified",
+        "gates": true,
+        "findings": [
+          "effect_mismatch"
+        ],
+        "facts": [
+          {
+            "id": "R01",
+            "status": "passed"
+          },
+          {
+            "id": "R02",
+            "status": "failed"
+          },
+          {
+            "id": "R06",
+            "status": "passed"
+          },
+          {
+            "id": "R03",
+            "status": "passed"
+          },
+          {
+            "id": "R04",
+            "status": "passed"
+          },
+          {
+            "id": "R05",
+            "status": "passed"
+          },
+          {
+            "id": "R07",
+            "status": "passed"
+          },
+          {
+            "id": "R08",
+            "status": "passed"
+          }
+        ],
+        "operations": [
+          {
+            "id": "69b8d9e3-94d9-4be8-99b7-a89e66547aeb",
+            "operation": "plan",
+            "provenance": 1,
+            "completion": false,
+            "state": "settled",
+            "error_code": null,
+            "seconds": 67.819783,
+            "cost_usd": "0.029478",
+            "source_changes": null
+          },
+          {
+            "id": "57e7b6cc-f7e5-4e2a-9c49-eb90632eb6a0",
+            "operation": "create",
+            "provenance": null,
+            "completion": false,
+            "state": "failed",
+            "error_code": "response_output_limit",
+            "seconds": 397.953925,
+            "cost_usd": "0.175454",
+            "source_changes": null
+          },
+          {
+            "id": "51a9a327-f8b5-41e0-89de-20a82d0d4f8d",
+            "operation": "create",
+            "provenance": null,
+            "completion": true,
+            "state": "settled",
+            "error_code": null,
+            "seconds": 139.808669,
+            "cost_usd": "0.101940",
+            "source_changes": null
+          },
+          {
+            "id": "d9a98fe6-3949-4d3d-a86b-9370b863ad0e",
+            "operation": "check_repair",
+            "provenance": null,
+            "completion": false,
+            "state": "settled",
+            "error_code": null,
+            "seconds": 36.792951,
+            "cost_usd": "0.055582",
+            "source_changes": null
+          }
+        ]
+      },
+      {
+        "run_id": "8dc3817c-2988-4ffa-aa54-5bfb459590b0",
+        "key": "output-followup-20261029-tester2-one-level-1",
+        "status": "needs_attention",
+        "stage": "needs_attention",
+        "error_code": "plan_without_game",
+        "calls": 1,
+        "max_calls": 1,
+        "revision_id": null,
+        "accepted": null,
+        "report_status": null,
+        "gates": null,
+        "findings": [],
+        "facts": [],
+        "operations": [
+          {
+            "id": "379806a8-2d14-437f-8c8c-829869ff08c7",
+            "operation": "plan",
+            "provenance": 1,
+            "completion": false,
+            "state": "settled",
+            "error_code": null,
+            "seconds": 90.919569,
+            "cost_usd": "0.040818",
+            "source_changes": null
+          }
+        ]
+      },
+      {
+        "run_id": "c9b26af0-2eef-4b51-bf4d-9f5512ffc804",
+        "key": "output-followup-20261029-tester2-original-1",
+        "status": "unknown",
+        "stage": "unknown",
+        "error_code": "codex_turn_failed",
+        "calls": 3,
+        "max_calls": 5,
+        "revision_id": "6e29b024-ca04-44bb-91f2-63ef1d5aebe6",
+        "accepted": false,
+        "report_status": "unverified",
+        "gates": true,
+        "findings": [
+          "effect_mismatch",
+          "check_timeout"
+        ],
+        "facts": [
+          {
+            "id": "R01",
+            "status": "passed"
+          },
+          {
+            "id": "R02",
+            "status": "passed"
+          },
+          {
+            "id": "R07",
+            "status": "passed"
+          },
+          {
+            "id": "R03",
+            "status": "passed"
+          },
+          {
+            "id": "R04",
+            "status": "passed"
+          },
+          {
+            "id": "R05",
+            "status": "passed"
+          },
+          {
+            "id": "R06",
+            "status": "failed"
+          },
+          {
+            "id": "R08",
+            "status": "unverified"
+          }
+        ],
+        "operations": [
+          {
+            "id": "d333ff4f-edf4-448a-9ce9-bfa09e9a6053",
+            "operation": "plan",
+            "provenance": 1,
+            "completion": false,
+            "state": "settled",
+            "error_code": null,
+            "seconds": 85.00419,
+            "cost_usd": "0.031648",
+            "source_changes": null
+          },
+          {
+            "id": "1dbf999a-9ed8-42d6-b860-5a2991b19928",
+            "operation": "create",
+            "provenance": null,
+            "completion": false,
+            "state": "settled",
+            "error_code": null,
+            "seconds": 290.016316,
+            "cost_usd": "0.143532",
+            "source_changes": null
+          },
+          {
+            "id": "96d01fec-edad-4921-bb7d-9e71ccee9bfe",
+            "operation": "check_repair",
+            "provenance": null,
+            "completion": false,
+            "state": "unknown",
+            "error_code": "codex_turn_failed",
+            "seconds": 907.597429,
+            "cost_usd": "None",
+            "source_changes": null
+          }
+        ]
+      }
+    ]
+  },
+  "first_trial_unknown": {
+    "invocation_id": "96d01fec-edad-4921-bb7d-9e71ccee9bfe",
+    "state": "unknown",
+    "provider_terminal": "failed",
+    "provider_category": "other",
+    "usage_received": false,
+    "response_chars": 385340,
+    "whitespace_chars": 381090,
+    "raw_sha256": "abb0c0e2bec583e09cd45afe4045a3829c0a9f780e08727766f13b68038009df",
+    "reserve_usd_preserved": 6.28,
+    "same_job_retried": false
+  },
+  "review": {
+    "revision_id": "37ccca00-9027-44cd-99f7-642ca4840fbd",
+    "parent_id": "81f35b76-ec9d-4e47-801a-a7419003d41c",
+    "code_unchanged_by_check_repair": true,
+    "frozen_requirements_unchanged": true,
+    "checks_review_required": true,
+    "retained_passed_checks": {
+      "retained_passed_checks": []
+    },
+    "repair_raw_length": 4890,
+    "repair_whitespace_outside_strings": 0,
+    "review_status": "manual review and independent replay recorded; saved result not promoted",
+    "preference_snapshot_matches_tester2": true
+  },
+  "touch_diagnostic": {
+    "revision_id": "37ccca00-9027-44cd-99f7-642ca4840fbd",
+    "artifact_hash": "6b2db0677f5ef56b47e376f690a62c71d7d899ef9d28c258eabd9fe8c392279b",
+    "read_only_diagnostic": true,
+    "saved_reports_changed": false,
+    "model_calls": 0,
+    "results": [
+      {
+        "hold_ms": 650,
+        "status": "passed",
+        "before": 54.0,
+        "after": 200.0,
+        "failure_codes": [
+          "missing_effects",
+          "missing_mobile_start",
+          "missing_keyboard_control",
+          "incomplete_checks"
+        ],
+        "counterfactual_comparison": false,
+        "counterfactual_before": 54.0,
+        "counterfactual_after": 54.0
+      },
+      {
+        "hold_ms": 100,
+        "status": "passed",
+        "before": 54.0,
+        "after": 90.0,
+        "failure_codes": [
+          "missing_effects",
+          "missing_mobile_start",
+          "missing_keyboard_control",
+          "incomplete_checks"
+        ],
+        "counterfactual_comparison": false,
+        "counterfactual_before": 54.0,
+        "counterfactual_after": 54.0
+      }
+    ]
+  },
+  "full_read_only_replay": {
+    "revision_id": "37ccca00-9027-44cd-99f7-642ca4840fbd",
+    "artifact_hash": "6b2db0677f5ef56b47e376f690a62c71d7d899ef9d28c258eabd9fe8c392279b",
+    "status": "passed",
+    "gates": {
+      "syntax": true,
+      "runtime": true,
+      "surface": true
+    },
+    "facts": [
+      {
+        "id": "R01",
+        "status": "passed",
+        "before": null,
+        "after": "УРОВЕНЬ 1"
+      },
+      {
+        "id": "R02",
+        "status": "passed",
+        "before": 54.0,
+        "after": 196.0
+      },
+      {
+        "id": "R03",
+        "status": "passed",
+        "before": 54.0,
+        "after": 160.0
+      },
+      {
+        "id": "R04",
+        "status": "passed",
+        "before": null,
+        "after": 1.0
+      },
+      {
+        "id": "R05",
+        "status": "passed",
+        "before": null,
+        "after": 3.0
+      },
+      {
+        "id": "R06",
+        "status": "passed",
+        "before": null,
+        "after": "ФИНИШ"
+      },
+      {
+        "id": "R07",
+        "status": "passed",
+        "before": null,
+        "after": 1.0
+      },
+      {
+        "id": "R08",
+        "status": "passed",
+        "before": 0,
+        "after": 2
+      }
+    ],
+    "findings": [],
+    "elapsed_seconds": 64.488,
+    "environment": "mini-browser-v1:e0bc843703caa708d87f20ef0877f93798edfe677990159637b205940b5b69fa:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "read_only_replay": true,
+    "saved_reports_changed": false,
+    "checks_unchanged": true,
+    "model_calls": 0
+  },
+  "manual_browser": {
+    "game": "Кольца пути",
+    "revision_id": "37ccca00-9027-44cd-99f7-642ca4840fbd",
+    "screen_buttons_three_levels_and_victory": true,
+    "keyboard_three_levels_and_victory": true,
+    "replay_resets_level_and_score": true,
+    "mute_toggle": true,
+    "tested_dimensions": [
+      [
+        390,
+        844
+      ],
+      [
+        844,
+        390
+      ]
+    ],
+    "rotation_preserves_victory": true,
+    "console_errors": [],
+    "physical_iphone_tested": false,
+    "audio_quality": "not_listened",
+    "saved_run_promoted": false
+  },
+  "deployment": {
+    "server": {
+      "revision": "1cfd8916e04d18a8be242b29fd38792575065f14",
+      "preserved_counts": {
+        "Budget": 1,
+        "Chat": 74,
+        "CheckReport": 70,
+        "Feedback": 4,
+        "FeedbackProcessing": 2,
+        "Invocation": 259,
+        "Like": 3,
+        "Message": 238,
+        "Outbox": 121,
+        "Preference": 4,
+        "PromptTemplate": 3,
+        "Publication": 2,
+        "Revision": 64,
+        "Run": 121,
+        "RunEvent": 1340,
+        "User": 5,
+        "ValidationRequest": 51,
+        "ValidationTask": 51
+      },
+      "all_existing_records_preserved": true,
+      "unknown_preserved": 12,
+      "active_runs": 0,
+      "active_invocations": 0,
+      "configuration_preserved_except_image_tags": true,
+      "relay_db_redis_identity_preserved": true,
+      "new_migrations": [],
+      "model_calls": 0,
+      "images": {
+        "app": {
+          "image_id": "sha256:115bed19e8679d446a63111d4f469bac59e3da00eea3ff751914ebc36f07c0d7",
+          "image_tag": "gameforge-mini:cloud-1cfd891-20261029"
+        },
+        "preview": {
+          "image_id": "sha256:115bed19e8679d446a63111d4f469bac59e3da00eea3ff751914ebc36f07c0d7",
+          "image_tag": "gameforge-mini:cloud-1cfd891-20261029"
+        },
+        "worker": {
+          "image_id": "sha256:115bed19e8679d446a63111d4f469bac59e3da00eea3ff751914ebc36f07c0d7",
+          "image_tag": "gameforge-mini:cloud-1cfd891-20261029"
+        },
+        "beat": {
+          "image_id": "sha256:115bed19e8679d446a63111d4f469bac59e3da00eea3ff751914ebc36f07c0d7",
+          "image_tag": "gameforge-mini:cloud-1cfd891-20261029"
+        },
+        "validator": {
+          "image_id": "sha256:a43a12c59cf419196e425a6c0792f4983ba4262b1851758421260fdc1cb01522",
+          "image_tag": "gameforge-mini-validator:cloud-1cfd891-20261029"
+        }
+      },
+      "backup_path": "/opt/gameforge/backups/before-1cfd891-20261029T143132Z.dump",
+      "backup_sha256": "c2601ddcd37edbace23af6178453cf848af05b87f6f807a0a172a41775766d05",
+      "validator_isolation_verified": true,
+      "app_private_socket_read_only": true
+    },
+    "canary": [
+      {
+        "environment": "mini-browser-v1:e0bc843703caa708d87f20ef0877f93798edfe677990159637b205940b5b69fa:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+        "profiles": {
+          "full": {
+            "status": "passed",
+            "facts": 5,
+            "viewports": [
+              "mobile",
+              "landscape",
+              "desktop"
+            ],
+            "keyboard_only": true,
+            "generated_graphics_drawn": true,
+            "audio_voices_played": true,
+            "rotation_preserves_state": true,
+            "seconds": 23.182,
+            "audio_quality": "not_listened",
+            "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+          },
+          "compact": {
+            "status": "passed",
+            "facts": 6,
+            "viewports": [
+              "mobile",
+              "landscape",
+              "desktop"
+            ],
+            "keyboard_only": true,
+            "generated_graphics_drawn": true,
+            "audio_voices_played": true,
+            "rotation_preserves_state": true,
+            "seconds": 33.133,
+            "audio_quality": "not_listened",
+            "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+          }
+        },
+        "model_calls": 0,
+        "records_created": 0
+      },
+      {
+        "graphics_count_diagnostic": "passed",
+        "model_calls": 0
+      },
+      {
+        "frozen_initial_viewport": "passed",
+        "model_calls": 0
+      },
+      {
+        "response_completion": "passed",
+        "retained_files": 2,
+        "original_source_equal": true,
+        "original_checks_equal": true,
+        "browser_checks": 4,
+        "model_calls": 0
+      },
+      {
+        "real_held_touch": "passed",
+        "timer_false_positive_rejected": true,
+        "model_calls": 0
+      },
+      {
+        "canary_reused_from": "693b37fed0b7b7add8e06fb4df0ba24013d5d40a",
+        "validator_code_identical": true,
+        "validator_hash": "e0bc843703caa708d87f20ef0877f93798edfe677990159637b205940b5b69fa",
+        "change": "model output formatting instructions only",
+        "model_calls": 0
+      }
+    ],
+    "backend": {
+      "app_environment_probe": "mini-browser-v1:e0bc843703caa708d87f20ef0877f93798edfe677990159637b205940b5b69fa:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+      "manual_api_real_browser": "passed",
+      "idempotency": true,
+      "fresh_run": true,
+      "cancellation": true,
+      "no_autopromotion_or_generation": true,
+      "temporary_fixtures_rolled_back": true,
+      "persistent_records_unchanged": true,
+      "model_calls": 0
+    },
+    "http": {
+      "https_verified": true,
+      "health_http": 200,
+      "assets_exact": 22,
+      "guest_private_api_denied": true,
+      "model_calls": 0,
+      "http_mutations": 0
+    }
+  },
+  "final_health": {
+    "run_count": 122,
+    "invocation_count": 263,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0024": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "1cfd8916e04d18a8be242b29fd38792575065f14",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "pro_health": {
+    "active_jobs": 0,
+    "attention_required": false,
+    "concurrency": 2,
+    "draining": false,
+    "idle": true,
+    "jobs": {
+      "cancelled": 2,
+      "completed": 172,
+      "failed": 9,
+      "unknown": 7
+    },
+    "protocol": 1,
+    "status": "ok",
+    "usage": {
+      "input_tokens": 2114875,
+      "output_tokens": 998450,
+      "submitted_without_known_usage": 4
+    },
+    "worker_online": true,
+    "worker_seen": 1793285932.9469042
+  },
+  "limitations": [
+    "Initial final-game report 7/8; unchanged separate full replay 8/8. Timing sensitivity remains; first failure retained.",
+    "Model-proposed repaired checks remain review-required; no automatic promotion.",
+    "Older tester2 games were inspected, not rewritten.",
+    "An earlier test returned terminal failure without usage and retains its unknown reserve."
+  ]
+}

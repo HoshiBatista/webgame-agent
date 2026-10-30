@@ -1,0 +1,1292 @@
+{
+  "date": "2026-10-29",
+  "gameforge_code_revision": "d9421744541cb32a3780f26bfde3a8aff24d374f",
+  "pro_worker_code_revision": "b28f2e118b6fc25f672803e33c62b9e641cdaef7",
+  "authorization": {
+    "new_model_call_limit": 50,
+    "monetary_limit_before_usd": 75,
+    "monetary_limit_after_usd": 100
+  },
+  "model_calls_used": 28,
+  "known_trial_cost_usd": "1.931259",
+  "budget": {
+    "limit_usd": 100.0,
+    "spent_usd": 15.57939,
+    "reserved_usd": 0.0,
+    "unknown_usd": 50.24,
+    "available_usd": 34.18061
+  },
+  "budget_change": {
+    "before": {
+      "limit_usd": 75.0,
+      "spent_usd": 13.648131,
+      "reserved_usd": 0.0,
+      "unknown_usd": 50.24,
+      "available_usd": 11.111869
+    },
+    "after": {
+      "limit_usd": 100.0,
+      "spent_usd": 13.648131,
+      "reserved_usd": 0.0,
+      "unknown_usd": 50.24,
+      "available_usd": 36.111869
+    },
+    "authorization": "2026-10-29: +$25, up to 50 new Pro calls"
+  },
+  "new_unknown": 0,
+  "runs": [
+    {
+      "run_id": "0b71d0f9-fbfc-4583-8fa7-cd7551a7d937",
+      "chat_id": "47b66e08-78ac-4d71-b5d0-8146ed3a240d",
+      "key": "concurrency-review-20261029-pair-memory",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "8e9cd9df-42b0-4756-bd77-7d7a14839c93",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "R8",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "05b257b1-24f4-4e7f-a1ba-844c94876b5f",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 56.102959,
+          "error_code": null,
+          "cost_usd": "0.026458",
+          "usage": {
+            "input_tokens": 3599,
+            "output_tokens": 1926,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "84ec3aa4-25f0-4289-b33a-8eca0ac1c5f5",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 229.835406,
+          "error_code": null,
+          "cost_usd": "0.138986",
+          "usage": {
+            "input_tokens": 12488,
+            "output_tokens": 11401,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "757e6d3a-00b7-4768-833d-71c9aa6fda6e",
+      "chat_id": "7c221185-a1a4-41fb-9f34-f75dbb7e84ab",
+      "key": "concurrency-review-20261029-pair-grid",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "1535770b-8433-452d-bdec-c440605ece68",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "TTT_START_MOBILE",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_TOUCH_TURNS",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_WIN",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_KEYBOARD",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_DRAW",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_OCCUPIED",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_REPLAY",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_ORIENTATION",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_MUSIC",
+          "status": "passed"
+        },
+        {
+          "id": "TTT_MOVE_SOUND",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "4dff92c3-6a92-48b7-8ca7-d092c2ce3652",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 56.033064,
+          "error_code": null,
+          "cost_usd": "0.027378",
+          "usage": {
+            "input_tokens": 3619,
+            "output_tokens": 2014,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "bf80725e-b087-499f-9231-cd780950fa74",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 169.843221,
+          "error_code": null,
+          "cost_usd": "0.113772",
+          "usage": {
+            "input_tokens": 12716,
+            "output_tokens": 8834,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "2304ef0b-a96e-4f1e-be04-39f5eae76392",
+      "chat_id": "ea17ca6f-06e1-49d2-99e7-087f7b467b7a",
+      "key": "concurrency-review-20261029-four-memory",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "f26aa781-deea-4b15-85a1-9fe8dc6986a5",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "R8",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "9730922a-d297-44de-870c-a35900a6e52b",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 54.82163,
+          "error_code": null,
+          "cost_usd": "0.026688",
+          "usage": {
+            "input_tokens": 3599,
+            "output_tokens": 1949,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "5cfa57a4-7582-40bd-a8aa-e29f454b6da5",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 205.852945,
+          "error_code": null,
+          "cost_usd": "0.110579",
+          "usage": {
+            "input_tokens": 12514,
+            "output_tokens": 10237,
+            "cached_input_tokens": 9344,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "31e7e890-bb1e-459e-85ac-de84a892fd5a",
+      "chat_id": "5bb15eef-2007-4b7a-8127-c40d6ed9c6e5",
+      "key": "concurrency-review-20261029-four-movement",
+      "status": "unverified",
+      "stage": "unverified",
+      "calls": 5,
+      "max_calls": 5,
+      "error_code": "manual_verification",
+      "revision_id": "8c484eb5-b634-4c8d-af09-768dbc12a65c",
+      "accepted": false,
+      "report_status": "unverified",
+      "gates": true,
+      "findings": [
+        "invalid_check"
+      ],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "unverified"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "R8",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "122b640a-5a79-4b2a-8300-1dd26860af8a",
+          "operation": "plan",
+          "state": "failed",
+          "seconds": 78.641605,
+          "error_code": "invalid_plan",
+          "cost_usd": "0.036550",
+          "usage": {
+            "input_tokens": 3590,
+            "output_tokens": 2937,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "0a6a8359-ef71-49b2-9166-abfd8da9f672",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 62.267098,
+          "error_code": null,
+          "cost_usd": "0.024237",
+          "usage": {
+            "input_tokens": 3627,
+            "output_tokens": 2136,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "3c3b18a9-0646-45a3-aba3-fd7e9642b79d",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 205.656046,
+          "error_code": null,
+          "cost_usd": "0.110749",
+          "usage": {
+            "input_tokens": 12594,
+            "output_tokens": 10238,
+            "cached_input_tokens": 9344,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "31971636-130c-404e-b67a-cd571c7105c7",
+          "operation": "repair",
+          "state": "settled",
+          "seconds": 43.90432,
+          "error_code": null,
+          "cost_usd": "0.057028",
+          "usage": {
+            "input_tokens": 20694,
+            "output_tokens": 1564,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "f1cc14f8-042a-4625-ae48-6947b644336f",
+          "operation": "check_repair",
+          "state": "settled",
+          "seconds": 67.649383,
+          "error_code": null,
+          "cost_usd": "0.064566",
+          "usage": {
+            "input_tokens": 18908,
+            "output_tokens": 2675,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "02c817b7-1816-41b7-8561-52b961dc250a",
+      "chat_id": "8dd27782-0db7-4c97-a9ee-8d5599d514f9",
+      "key": "concurrency-review-20261029-four-clicker",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "2c689c1e-ddf6-4f6b-bc51-bbd79c40c82b",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "R8",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "e8e9c109-be99-4c37-ba9d-dd3dd2516484",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 54.763262,
+          "error_code": null,
+          "cost_usd": "0.022373",
+          "usage": {
+            "input_tokens": 3595,
+            "output_tokens": 1956,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "a03e1aa7-79a7-4682-b095-83591be3b2c0",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 188.118754,
+          "error_code": null,
+          "cost_usd": "0.118964",
+          "usage": {
+            "input_tokens": 12662,
+            "output_tokens": 9364,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "5219debc-d004-46dc-931c-fad530e4511a",
+      "chat_id": "11cdc374-d9fd-43f0-95ef-e4a748de2a4c",
+      "key": "concurrency-review-20261029-four-timing",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "ddb3da35-29fa-44fa-b3b1-e70dd1aa7dea",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R01",
+          "status": "passed"
+        },
+        {
+          "id": "R02",
+          "status": "passed"
+        },
+        {
+          "id": "R05",
+          "status": "passed"
+        },
+        {
+          "id": "R03",
+          "status": "passed"
+        },
+        {
+          "id": "R04",
+          "status": "passed"
+        },
+        {
+          "id": "R06",
+          "status": "passed"
+        },
+        {
+          "id": "R07",
+          "status": "passed"
+        },
+        {
+          "id": "R08",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "03eec2d0-f276-4202-85d0-cd614d00cbe6",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 84.386281,
+          "error_code": null,
+          "cost_usd": "0.034063",
+          "usage": {
+            "input_tokens": 3595,
+            "output_tokens": 3125,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "18abd4a4-1c16-4ade-88da-3ad4d9717c7c",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 202.208352,
+          "error_code": null,
+          "cost_usd": "0.123538",
+          "usage": {
+            "input_tokens": 12664,
+            "output_tokens": 9821,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "014a1ada-fd7a-4ded-bf52-faacdcfb9612",
+      "chat_id": "aecc1f4b-1325-4649-ae2e-4d77f8c9c213",
+      "key": "concurrency-review-20261029-guard-memory",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 3,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "b140e81b-59ac-447c-808e-72cf7c12b653",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R01",
+          "status": "passed"
+        },
+        {
+          "id": "R02",
+          "status": "passed"
+        },
+        {
+          "id": "R05",
+          "status": "passed"
+        },
+        {
+          "id": "R03",
+          "status": "passed"
+        },
+        {
+          "id": "R04",
+          "status": "passed"
+        },
+        {
+          "id": "R06",
+          "status": "passed"
+        },
+        {
+          "id": "R07",
+          "status": "passed"
+        },
+        {
+          "id": "R08",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "7ab27bd7-0216-4d50-866a-65f21d8679f5",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 57.344978,
+          "error_code": null,
+          "cost_usd": "0.021361",
+          "usage": {
+            "input_tokens": 3599,
+            "output_tokens": 1854,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "5464f89b-2f27-419a-bebb-e1db6fa12e79",
+          "operation": "create",
+          "state": "failed",
+          "seconds": 248.305457,
+          "error_code": "response_output_limit",
+          "cost_usd": "0.124919",
+          "usage": {
+            "input_tokens": 12514,
+            "output_tokens": 11671,
+            "cached_input_tokens": 9344,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "f63e2d73-f13c-441b-9b84-6a75bd41eaf5",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 77.500559,
+          "error_code": null,
+          "cost_usd": "0.086864",
+          "usage": {
+            "input_tokens": 20772,
+            "output_tokens": 4532,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "0da60a82-be84-47c6-9ae4-310c6ea90e81",
+      "chat_id": "e012362c-86b9-4538-bf1f-dd0d6b44d2ef",
+      "key": "concurrency-review-20261029-guard-grid",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "ce91951f-3863-4730-9c73-e81418eaaa3d",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "audio",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "d644f9ef-b1d7-42b0-95a9-6e045315107d",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 51.486365,
+          "error_code": null,
+          "cost_usd": "0.020078",
+          "usage": {
+            "input_tokens": 3619,
+            "output_tokens": 1906,
+            "cached_input_tokens": 3456,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "8ff081c4-7a47-4fe7-a399-1b1bb2362e3b",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 188.295759,
+          "error_code": null,
+          "cost_usd": "0.100071",
+          "usage": {
+            "input_tokens": 12455,
+            "output_tokens": 9198,
+            "cached_input_tokens": 9344,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "26152ff3-9c61-4634-b6f6-b01fabe75a79",
+      "chat_id": "90cfcc3a-97d3-49f7-a80b-fa45ace28400",
+      "key": "concurrency-review-20261029-guard-movement",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "3881f043-102d-403e-9dbb-053b4974e662",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R01",
+          "status": "passed"
+        },
+        {
+          "id": "R02",
+          "status": "passed"
+        },
+        {
+          "id": "R06",
+          "status": "passed"
+        },
+        {
+          "id": "R03",
+          "status": "passed"
+        },
+        {
+          "id": "R04",
+          "status": "passed"
+        },
+        {
+          "id": "R05",
+          "status": "passed"
+        },
+        {
+          "id": "R07",
+          "status": "passed"
+        },
+        {
+          "id": "R08",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "3d7144e2-c287-4764-87b5-926a630632cb",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 45.692308,
+          "error_code": null,
+          "cost_usd": "0.026300",
+          "usage": {
+            "input_tokens": 3590,
+            "output_tokens": 1912,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "3ba29ebe-c09a-4bb9-9ab5-cc09a738653a",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 200.159583,
+          "error_code": null,
+          "cost_usd": "0.107543",
+          "usage": {
+            "input_tokens": 12441,
+            "output_tokens": 9948,
+            "cached_input_tokens": 9344,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "ecbb310f-1c93-4df6-8d81-a597f21fb7b1",
+      "chat_id": "86da9caf-9384-4ceb-8c2e-8bede56ff19e",
+      "key": "concurrency-review-20261029-guard-clicker",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "6f7936d6-767a-49ad-a1cb-5807e07a23c7",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "R8",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "2303957a-cb43-4080-aa64-366ff84fd2f6",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 51.341148,
+          "error_code": null,
+          "cost_usd": "0.022423",
+          "usage": {
+            "input_tokens": 3595,
+            "output_tokens": 1961,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "84357181-c835-40a7-8b7d-0cbf4e702621",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 152.223702,
+          "error_code": null,
+          "cost_usd": "0.103606",
+          "usage": {
+            "input_tokens": 12628,
+            "output_tokens": 7835,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "a4c4510c-da23-45f3-8bf5-cd1a38dddfbc",
+      "chat_id": "c91ddefb-a559-44b8-874d-14750925f56c",
+      "key": "concurrency-review-20261029-guard-timing",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "679f83a7-b62e-422b-b5f8-69efb6e0c926",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "A1",
+          "status": "passed"
+        },
+        {
+          "id": "A2",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "41c4d87d-b16e-4a5f-a57e-a4b265455e17",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 90.235752,
+          "error_code": null,
+          "cost_usd": "0.021113",
+          "usage": {
+            "input_tokens": 3595,
+            "output_tokens": 1830,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "87161fe1-94a4-470f-9020-63d3007071a4",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 280.203065,
+          "error_code": null,
+          "cost_usd": "0.100105",
+          "usage": {
+            "input_tokens": 12507,
+            "output_tokens": 9191,
+            "cached_input_tokens": 9344,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    },
+    {
+      "run_id": "acdf299b-166d-4f55-888d-23bcfd78d1f5",
+      "chat_id": "44687abb-aaaf-4ba5-b718-e9355106eac6",
+      "key": "concurrency-review-20261029-final-movement",
+      "status": "succeeded",
+      "stage": "succeeded",
+      "calls": 2,
+      "max_calls": 5,
+      "error_code": null,
+      "revision_id": "ec420148-07da-44b9-b2c3-256d27c1c98d",
+      "accepted": true,
+      "report_status": "passed",
+      "gates": true,
+      "findings": [],
+      "facts": [
+        {
+          "id": "R1",
+          "status": "passed"
+        },
+        {
+          "id": "R2",
+          "status": "passed"
+        },
+        {
+          "id": "R6",
+          "status": "passed"
+        },
+        {
+          "id": "R3",
+          "status": "passed"
+        },
+        {
+          "id": "R4",
+          "status": "passed"
+        },
+        {
+          "id": "R5",
+          "status": "passed"
+        },
+        {
+          "id": "R7",
+          "status": "passed"
+        },
+        {
+          "id": "R8",
+          "status": "passed"
+        }
+      ],
+      "operations": [
+        {
+          "id": "28037720-7f12-4eaa-bd89-8da22bdd2fb9",
+          "operation": "plan",
+          "state": "settled",
+          "seconds": 61.535161,
+          "error_code": null,
+          "cost_usd": "0.027883",
+          "usage": {
+            "input_tokens": 3590,
+            "output_tokens": 2508,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "9b41d7bc-33bd-457b-b106-06ac7ad3a2c3",
+          "operation": "create",
+          "state": "settled",
+          "seconds": 194.044827,
+          "error_code": null,
+          "cost_usd": "0.133064",
+          "usage": {
+            "input_tokens": 12562,
+            "output_tokens": 10794,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "games": 12,
+    "automatic_success": 11,
+    "unverified_legacy_route": 1,
+    "last_six_runs_succeeded": true,
+    "final_run_calls": 2,
+    "final_run_facts_passed": 8,
+    "final_run_uses_numeric_threshold": true
+  },
+  "independent_saved_game_replay": {
+    "revision_id": "8c484eb5-b634-4c8d-af09-768dbc12a65c",
+    "artifact_hash": "62a40c6234709ab27fe0e41684f3cc39485296ba172255099943ae95848125dc",
+    "status": "passed",
+    "facts_passed": 8,
+    "only_operator_route_changed": true,
+    "source_and_original_checks_unchanged": true,
+    "persisted_run_status_unchanged": true,
+    "backend": "native_os_sandbox",
+    "model_calls": 0
+  },
+  "local_checks": {
+    "provider_concurrency_budget_feedback_pytest": 125,
+    "validation_check_repair_pytest": 137,
+    "compact_threshold_pytest": 44,
+    "ruff": "passed",
+    "mypy_modules": 51
+  },
+  "resource_observation": {
+    "samples": 39,
+    "interval_seconds": 10,
+    "max_running_observed": 4,
+    "max_memory_current_observed": 323350528,
+    "oom_kill_observed": 0,
+    "continuous_recording": false,
+    "hundred_parallel_live_calls_tested": false,
+    "post_guard_oom_kill": 0
+  },
+  "manual_browser_review": {
+    "memory": [
+      "desktop_start_and_mismatch",
+      "portrait_390x844",
+      "landscape_844x390"
+    ],
+    "grid": [
+      "desktop_full_win_sequence"
+    ],
+    "physical_iphone_tested": false,
+    "audio_quality_listened": false
+  },
+  "deployment": {
+    "server": {
+      "revision": "d9421744541cb32a3780f26bfde3a8aff24d374f",
+      "preserved_counts": {
+        "Budget": 1,
+        "Chat": 87,
+        "CheckReport": 90,
+        "Feedback": 4,
+        "FeedbackProcessing": 2,
+        "Invocation": 294,
+        "Like": 3,
+        "Message": 266,
+        "Outbox": 135,
+        "Preference": 4,
+        "PromptTemplate": 3,
+        "Publication": 2,
+        "Revision": 83,
+        "Run": 135,
+        "RunEvent": 1520,
+        "User": 5,
+        "ValidationRequest": 71,
+        "ValidationTask": 71
+      },
+      "all_existing_records_preserved": true,
+      "unknown_preserved": 12,
+      "active_runs": 0,
+      "active_invocations": 0,
+      "configuration_preserved_except_images_and_pro_concurrency": true,
+      "pro_concurrency": 100,
+      "relay_db_redis_identity_preserved": true,
+      "new_migrations": [],
+      "model_calls": 0,
+      "images": {
+        "app": {
+          "image_id": "sha256:e1cae7e678ff92d646082db7d2cfe495f5acaa6d8bcf01347ecea249118265eb",
+          "image_tag": "gameforge-mini:cloud-d942174-20261029"
+        },
+        "preview": {
+          "image_id": "sha256:e1cae7e678ff92d646082db7d2cfe495f5acaa6d8bcf01347ecea249118265eb",
+          "image_tag": "gameforge-mini:cloud-d942174-20261029"
+        },
+        "worker": {
+          "image_id": "sha256:e1cae7e678ff92d646082db7d2cfe495f5acaa6d8bcf01347ecea249118265eb",
+          "image_tag": "gameforge-mini:cloud-d942174-20261029"
+        },
+        "beat": {
+          "image_id": "sha256:e1cae7e678ff92d646082db7d2cfe495f5acaa6d8bcf01347ecea249118265eb",
+          "image_tag": "gameforge-mini:cloud-d942174-20261029"
+        },
+        "validator": {
+          "image_id": "sha256:d2f104b904b7de05db818010b95af2f749ef112744b91fe873d5ba2f60865f22",
+          "image_tag": "gameforge-mini-validator:cloud-d942174-20261029"
+        }
+      },
+      "backup_path": "/opt/gameforge/backups/before-d942174-20261029T170151Z.dump",
+      "backup_sha256": "a0791fbb6cbd1c126fbbdbe07a5d724dbf02d3275169c9e61002ecf339d727c6",
+      "validator_isolation_verified": true,
+      "app_private_socket_read_only": true
+    },
+    "canary": [
+      {
+        "environment": "mini-browser-v1:86b91d481bef51b0a9f5d025137f1eb2a31612ec5d1998386f65332dc1779333:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+        "profiles": {
+          "full": {
+            "status": "passed",
+            "facts": 5,
+            "viewports": [
+              "mobile",
+              "landscape",
+              "desktop"
+            ],
+            "keyboard_only": true,
+            "generated_graphics_drawn": true,
+            "audio_voices_played": true,
+            "rotation_preserves_state": true,
+            "seconds": 21.618,
+            "audio_quality": "not_listened",
+            "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+          },
+          "compact": {
+            "status": "passed",
+            "facts": 6,
+            "viewports": [
+              "mobile",
+              "landscape",
+              "desktop"
+            ],
+            "keyboard_only": true,
+            "generated_graphics_drawn": true,
+            "audio_voices_played": true,
+            "rotation_preserves_state": true,
+            "seconds": 29.554,
+            "audio_quality": "not_listened",
+            "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+          }
+        },
+        "model_calls": 0,
+        "records_created": 0
+      },
+      {
+        "graphics_count_diagnostic": "passed",
+        "model_calls": 0
+      },
+      {
+        "frozen_initial_viewport": "passed",
+        "model_calls": 0
+      },
+      {
+        "response_completion": "passed",
+        "retained_files": 2,
+        "original_source_equal": true,
+        "original_checks_equal": true,
+        "browser_checks": 4,
+        "model_calls": 0
+      },
+      {
+        "numeric_thresholds": "full",
+        "status": "passed",
+        "model_calls": 0
+      },
+      {
+        "numeric_thresholds": "compact",
+        "status": "passed",
+        "model_calls": 0
+      }
+    ],
+    "backend": {
+      "app_environment_probe": "mini-browser-v1:86b91d481bef51b0a9f5d025137f1eb2a31612ec5d1998386f65332dc1779333:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+      "manual_api_real_browser": "passed",
+      "idempotency": true,
+      "fresh_run": true,
+      "cancellation": true,
+      "no_autopromotion_or_generation": true,
+      "temporary_fixtures_rolled_back": true,
+      "persistent_records_unchanged": true,
+      "model_calls": 0
+    },
+    "http": {
+      "https_verified": true,
+      "health_http": 200,
+      "assets_exact": 22,
+      "guest_private_api_denied": true,
+      "model_calls": 0,
+      "http_mutations": 0
+    }
+  },
+  "final_health": {
+    "run_count": 136,
+    "invocation_count": 296,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0024": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "d9421744541cb32a3780f26bfde3a8aff24d374f",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "pro_final_status": {
+    "active_jobs": 0,
+    "attention_required": false,
+    "concurrency": 100,
+    "draining": false,
+    "free_bytes": 7190368256,
+    "idle": true,
+    "jobs": {
+      "cancelled": 2,
+      "completed": 213,
+      "failed": 10,
+      "unknown": 8
+    },
+    "memory_guard_enabled": true,
+    "protocol": 1,
+    "storage_bytes": 9658368,
+    "usage": {
+      "input_tokens": 2473023,
+      "output_tokens": 1218543,
+      "submitted_without_known_usage": 5
+    },
+    "worker_online": true,
+    "worker_seen": 1793293741.4700723
+  },
+  "gpu_server_accessed": false,
+  "private_game_sources_in_git": false
+}

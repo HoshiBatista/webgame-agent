@@ -1,0 +1,2668 @@
+{
+  "scope": "Bounded live Lite v6 diagnostic, two fixed creation triplets and two separate targeted source-preserving check-repair continuations. Not controlled A/B, physical WebView or OpenAI comparison.",
+  "profile": {
+    "id": "lite",
+    "name": "Lite",
+    "description": "Модель через API",
+    "provider": "relay",
+    "model": "qwen38",
+    "available": true,
+    "unavailable_reason": ""
+  },
+  "limits": {
+    "max_calls": 24,
+    "max_seconds": 5400
+  },
+  "started_at_epoch": 1792847381.6143181,
+  "closed_at_epoch": 1792851664.824424,
+  "closed_elapsed_seconds": 4283.210105895996,
+  "closure_reason": "fixed_sequence_complete_with_documented_pipeline_failures",
+  "calls": 16,
+  "unused_calls": 8,
+  "known_usage_calls": 16,
+  "unknown_or_missing_usage_calls": 0,
+  "active_invocations": 0,
+  "unknown_state_calls": 0,
+  "missing_usage_calls": 0,
+  "returned_unconsumed": 5,
+  "tokens": {
+    "input_tokens": 45015,
+    "output_tokens": 60008
+  },
+  "cost_note": "Local relay tariff is zero; not a measured GPU infrastructure cost. Existing account unknown liability is not a new pilot call.",
+  "fresh_first_run_to_last_local_decision_seconds": 3925.7675998210907,
+  "fresh_planned": 6,
+  "targeted_planned": 2,
+  "fresh_counts": {
+    "trials": 6,
+    "terminal_local": 6,
+    "automatic_accepted": 0,
+    "playable_saved": 2,
+    "broken_saved": 3,
+    "no_candidate": 1,
+    "premature_terminal": 4,
+    "application_consumed_all_replies": 2
+  },
+  "first_triplet": {
+    "trials": 3,
+    "terminal_local": 3,
+    "automatic_accepted": 0,
+    "playable_saved": 1,
+    "broken_saved": 1,
+    "no_candidate": 1,
+    "premature_terminal": 2,
+    "application_consumed_all_replies": 1
+  },
+  "replication": {
+    "trials": 3,
+    "terminal_local": 3,
+    "automatic_accepted": 0,
+    "playable_saved": 1,
+    "broken_saved": 2,
+    "no_candidate": 0,
+    "premature_terminal": 2,
+    "application_consumed_all_replies": 1
+  },
+  "targeted_counts": {
+    "trials": 2,
+    "terminal_local": 2,
+    "automatic_accepted": 0,
+    "playable_saved": 2,
+    "broken_saved": 0,
+    "no_candidate": 0,
+    "premature_terminal": 1,
+    "application_consumed_all_replies": 1
+  },
+  "provenance": {
+    "source_sha256": {
+      "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+      "generation/artifacts.py": "6625c7512baffa0a71615d5e30507119e94b4e454f18b2facdf8030f37cb621e",
+      "generation/check_repair.py": "fad95fca8e5576fcabc2ad7cd35f71f35016245d08ccddee6ade91102591c3dc",
+      "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+      "generation/feedback.py": "a4e8e8ea13ed372f176e275049c01c259e0688144740ac38d28d967fd7815c43",
+      "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+      "generation/prompts.py": "fc4b038fe27105fe43c20033e15b2f9659b04d9e6d1b446e7e69ce7127209e65",
+      "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+      "generation/providers/codex.py": "49257a0dcc3569d6b0952fa95ec1e2b29fbb9b0873fe51acb7487d09e55ddb1d",
+      "generation/providers/fake.py": "06f7e902eab646b706ab5985dca2098d7b55b628d70075965f4d8d109baf82ca",
+      "generation/providers/relay.py": "e8e04e873515df5b0323e52b8678cba76a4a0af630d9709b57b3f8349ba0a9da",
+      "generation/providers/vllm.py": "7d35a09752ecaa6f046188e7b3029ea1d51a925a120b891aa515ec1501b0b81c",
+      "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+      "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+      "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+      "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+      "generation/schema.py": "40b77667b01bf5ba0cbaa9b2d5a5f97292e60a3cd01edeefda4a86af5b3e65c5",
+      "generation/service.py": "eba862bfa1a6e997e0a7a0bddf687c7cac43592f44f38e95c48a16dd74c756c6",
+      "generation/source_map.py": "4bf21f3213211486f873fd0f7f5727ad054c43f89afeaf9c7a33b5ad5c9ca503",
+      "generation/source_policy.py": "dff66a8e57d4b89e4d7c4716f1ae0c9a26686ddb90ec49efe17d174befc44fe6",
+      "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+      "scripts/evaluation.py": "395066b67bb054202d98c3fa7d7e550efb47a48b2c170cd9ab02f805607a07ad",
+      "scripts/live_eval.py": "439a10868caa88a436b4cc30ff7f86b6d64173b55b8fde40f80c40d264d227ea",
+      "studio/acceptance.py": "bec10f6845e3512723e5d901743352b0d9c10578b8d545e413873c58a88ba554",
+      "studio/check_repair.py": "f1255e2236ea8eca6c040a70cf46ed425a1595ec828abdbf03af495fe57b14cb",
+      "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+      "studio/models.py": "8d849cc955e42c2235e33f5e836e4cedb3b26ab4f14e585df6bf864bfedf5a4c",
+      "studio/recovery.py": "82ba82e150d4c24f3faf5fc9c790f62fb204e876afbef37a7ddc8a3e496b2c98",
+      "studio/serialization.py": "8b15ff0554a20e2effbd5b430d22b71171a53c876e9183b8e6ff233949d1bd84",
+      "studio/services.py": "03a1fdd0db4eea09a7ed57c7301abb38ced5a06ecb07a80af35d14bf66503ca9",
+      "studio/tasks.py": "4fd64523aa3309d49b6310c7ec0445884b80782bd9d8c9295e3d3ac2cf1578c0",
+      "studio/views.py": "8a264eea0f8096c078d5dfa75652cde6b21cba225746401d9afbf2e8b00feaa5",
+      "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+      "validation/checks.py": "b5b8e64a2bae062e220775633f983be0c23281152c9b5ba11537a2609d3b07a7",
+      "validation/contracts.py": "17a45a4410535d1fb96fa6dcd4a4bb37232ffe1ff5f52dfbc57a4a28e432c8d6",
+      "validation/daemon.py": "d5147e7d25ed9b3d2681f0efe9b55fb1814064f7f661bb206d5027c9d9ccca4b",
+      "validation/native.py": "3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+      "validation/protocol.py": "01c76424b763d989b0e49c7e9f49f1fd95c417bfce07117a5e5788f9210904bd",
+      "validation/runner.py": "353719a7488b43b500bb4a44bd7ae1ea867ddcbd101fdbf097367b27684bd9ad",
+      "validation/service.py": "ba628ad38c8fe810b22de977011d7d02a3b9eb724735b4ce372696cd776ed52f",
+      "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd"
+    },
+    "weight_revision": "Not exposed by the relay API; model alias only",
+    "sampling_defaults": "Provider defaults; inspect captured request for explicit values"
+  },
+  "provenance_rechecked": true,
+  "baseline": {
+    "path": "lite-v5-pilot-2026-10-24.json",
+    "same_prompts_order": true,
+    "same_criteria": true,
+    "same_alias": true,
+    "calls": 16,
+    "closed_elapsed_seconds": 4277.969526767731,
+    "creation_counts": {
+      "trials": 6,
+      "terminal": 6,
+      "automatic": 0,
+      "selected_playable": 2,
+      "broken": 4,
+      "no_candidate": 0,
+      "unverified": 0,
+      "unreviewed": 0,
+      "false_acceptances": 0
+    },
+    "provider_adapters_unchanged": true,
+    "validator_sources_unchanged": true
+  },
+  "operations": [
+    {
+      "case": "grid",
+      "kind": "preflight_recheck",
+      "run_id": "c9b22085-56ee-4543-9992-5e76083e1f3d",
+      "source_run_id": "b5dc4caf-9a2f-4462-b460-c1278441525a",
+      "calls": 0,
+      "status": "needs_attention",
+      "error_code": "saved_response_validation",
+      "created_at": "2026-10-24T13:09:41.644155+00:00",
+      "finished_at": "2026-10-24T13:09:46.604613+00:00",
+      "can_confirm": false,
+      "max_model_calls": 4,
+      "model_call_deadline": null,
+      "selected_revision_id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+      "metrics": {
+        "model_calls": 0,
+        "check_seconds": 2.022,
+        "model_seconds": 0,
+        "queue_seconds": 0.334372,
+        "total_seconds": 4.960458
+      },
+      "invocations": [],
+      "revisions": [],
+      "source_revision": {
+        "id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+        "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+        "checks": [
+          {
+            "id": "start-ready",
+            "steps": [],
+            "expect": {
+              "value": "ready",
+              "operator": "eq"
+            },
+            "category": "start",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.phase",
+              "source": "state"
+            },
+            "requirement": "игра начинается в режиме ожидания первого хода"
+          },
+          {
+            "id": "place-X",
+            "steps": [
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "X",
+              "operator": "changed"
+            },
+            "category": "control",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.board",
+              "source": "state"
+            },
+            "requirement": "касание клетки ставит крестик"
+          },
+          {
+            "id": "place-O",
+            "steps": [
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "O",
+              "operator": "changed"
+            },
+            "category": "control",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.board",
+              "source": "state"
+            },
+            "requirement": "следующий ход ставит нолик"
+          },
+          {
+            "id": "win-row",
+            "steps": [
+              {
+                "x": 0.17,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "X",
+              "operator": "eq"
+            },
+            "category": "outcome",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.winner",
+              "source": "state"
+            },
+            "requirement": "три в ряд дают победу"
+          },
+          {
+            "id": "draw",
+            "steps": [
+              {
+                "x": 0.17,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "draw",
+              "operator": "eq"
+            },
+            "category": "outcome",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.winner",
+              "source": "state"
+            },
+            "requirement": "заполненное поле без линий — ничья"
+          }
+        ],
+        "created_at": "2026-10-24T11:32:09.455633+00:00"
+      },
+      "selected_verdict": "playable",
+      "first_candidate_seconds": null,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 4.960458040237427,
+      "last_known_receipt_seconds": null,
+      "premature_terminal": false,
+      "application_consumed_all_replies": true
+    },
+    {
+      "case": "memory",
+      "kind": "preflight_recheck",
+      "run_id": "381da7a1-e3f5-4090-8389-b3851275c3f3",
+      "source_run_id": "f4daf92e-b0a8-4649-b56c-679134be61bb",
+      "calls": 0,
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "created_at": "2026-10-24T13:09:47.970359+00:00",
+      "finished_at": "2026-10-24T13:09:55.861369+00:00",
+      "can_confirm": true,
+      "max_model_calls": 4,
+      "model_call_deadline": null,
+      "selected_revision_id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+      "metrics": {
+        "model_calls": 0,
+        "check_seconds": 6.386,
+        "model_seconds": 0,
+        "queue_seconds": 0.039694,
+        "total_seconds": 7.89101
+      },
+      "invocations": [],
+      "revisions": [],
+      "source_revision": {
+        "id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+        "artifact_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+        "checks": [
+          {
+            "id": "ch_start",
+            "steps": [
+              {
+                "x": null,
+                "y": null,
+                "action": "click",
+                "selector": "#startBtn"
+              },
+              {
+                "ms": 150,
+                "action": "wait"
+              },
+              {
+                "x": 30,
+                "y": 60,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 150,
+                "action": "wait"
+              }
+            ],
+            "expect": {
+              "value": 0,
+              "operator": "increased"
+            },
+            "category": "start",
+            "viewport": "mobile",
+            "observation": {
+              "path": "moves",
+              "source": "state"
+            },
+            "requirement": "Открытие карточки увеличивает счётчик ходов"
+          },
+          {
+            "id": "ch_control",
+            "steps": [
+              {
+                "x": null,
+                "y": null,
+                "action": "click",
+                "selector": "#startBtn"
+              },
+              {
+                "ms": 150,
+                "action": "wait"
+              },
+              {
+                "x": 100,
+                "y": 200,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 250,
+                "action": "wait"
+              },
+              {
+                "x": 300,
+                "y": 200,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              }
+            ],
+            "expect": {
+              "value": 0,
+              "operator": "increased"
+            },
+            "category": "control",
+            "viewport": "mobile",
+            "observation": {
+              "path": "moves",
+              "source": "state"
+            },
+            "requirement": "Касание по закрытой карточке открывает её и считается ходом"
+          },
+          {
+            "id": "ch_outcome",
+            "steps": [
+              {
+                "x": null,
+                "y": null,
+                "action": "click",
+                "selector": "#startBtn"
+              },
+              {
+                "ms": 120,
+                "action": "wait"
+              },
+              {
+                "x": 30,
+                "y": 60,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 130,
+                "y": 190,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              },
+              {
+                "x": 30,
+                "y": 320,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 130,
+                "y": 450,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              },
+              {
+                "x": 230,
+                "y": 60,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 330,
+                "y": 190,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              },
+              {
+                "x": 230,
+                "y": 320,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 330,
+                "y": 450,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 2500,
+                "action": "wait_for"
+              }
+            ],
+            "expect": {
+              "value": "won",
+              "operator": "eq"
+            },
+            "category": "outcome",
+            "viewport": "mobile",
+            "observation": {
+              "path": "status",
+              "source": "state"
+            },
+            "requirement": "Найденные одинаковые карточки остаются открытыми и победа достигается"
+          }
+        ],
+        "created_at": "2026-10-24T11:49:47.043789+00:00"
+      },
+      "selected_verdict": "playable",
+      "first_candidate_seconds": null,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 7.89100980758667,
+      "last_known_receipt_seconds": null,
+      "premature_terminal": false,
+      "application_consumed_all_replies": true
+    },
+    {
+      "case": "grid",
+      "kind": "targeted_check_repair",
+      "run_id": "bf65178f-9d98-469c-8cca-6ec56760f5cf",
+      "source_run_id": "b5dc4caf-9a2f-4462-b460-c1278441525a",
+      "calls": 1,
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "created_at": "2026-10-24T13:09:57.169968+00:00",
+      "finished_at": "2026-10-24T13:11:48.940920+00:00",
+      "can_confirm": true,
+      "max_model_calls": 1,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "f49308e7-d003-4d57-83cf-b345401739bc",
+      "metrics": {
+        "model_calls": 1,
+        "check_seconds": 2.312,
+        "model_seconds": 107.895898,
+        "queue_seconds": 0.027526,
+        "total_seconds": 111.770952,
+        "packaging_seconds": 0.0065145830158144236
+      },
+      "invocations": [
+        {
+          "id": "1b042b15-0f2e-4764-8b2e-a18ec6cd9d2f",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 3641,
+            "output_tokens": 1567,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 107.895898,
+          "created_at": "2026-10-24T13:09:58.030981+00:00",
+          "sent_at": "2026-10-24T13:09:58.038595+00:00",
+          "finished_at": "2026-10-24T13:11:45.938241+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 2,
+            "pipeline_version": 6,
+            "reported_findings": 2,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 104.60699851065874,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok",
+          "bound_source_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+          "bound_checks_hash": "db0e177e119295edfebc110c1373e5e09b9a1f6cd3c6774a56add27f1ef4a482",
+          "locked_requirements": [
+            {
+              "id": "start-ready",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "игра начинается в режиме ожидания первого хода"
+            },
+            {
+              "id": "place-X",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "касание клетки ставит крестик"
+            },
+            {
+              "id": "place-O",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "следующий ход ставит нолик"
+            },
+            {
+              "id": "win-row",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "три в ряд дают победу"
+            },
+            {
+              "id": "draw",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "заполненное поле без линий — ничья"
+            }
+          ]
+        }
+      ],
+      "revisions": [
+        {
+          "id": "f49308e7-d003-4d57-83cf-b345401739bc",
+          "parent_id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+          "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+          "created_at": "2026-10-24T13:11:45.962239+00:00",
+          "accepted": false,
+          "verification": "none",
+          "application_check_counts": {
+            "passed": 0,
+            "facts": 5
+          },
+          "report_status": "unverified",
+          "finding_codes": [
+            "invalid_check"
+          ],
+          "assessment_action": "review",
+          "mandatory_gates_passed": true,
+          "checks_review_required": true,
+          "independent_verdict": "playable",
+          "independent_review": {
+            "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "New independent real pointer play at 390x844: occupied-cell, X-column win, input ignored after win, reset, full nine-move draw. Child has exact same source/HTML hash; actual win repeated on child. Separate real-touch native six-scenario suite on both. No source/state mutation.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Visible empty 3x3 Canvas; first real click places X."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "X/O alternate and repeated occupied-cell input is ignored; reset clears board."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Real X-column win announces Победил: X; further input ignored; separate nine-move game announces Ничья!."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Board and reset control fit 390x844 and respond at visible positions."
+              }
+            },
+            "screenshots": [
+              "f49308e7-d003-4d57-83cf-b345401739bc/manual-win.png",
+              "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff/manual-draw.png"
+            ]
+          },
+          "source_bytes_equal_parent": true,
+          "html_hash_equal_parent": true,
+          "title_equal_parent": true,
+          "design_equal_parent": true,
+          "independent_native": {
+            "status": "passed",
+            "passed": 6,
+            "total": 6
+          }
+        }
+      ],
+      "source_revision": {
+        "id": "82bb4c3f-2ecb-4dcd-a1eb-b5457b296eff",
+        "artifact_hash": "26dd1fc5f412a6891de9578088896556c6336fb6345171658c5a41ea4a5108f2",
+        "checks": [
+          {
+            "id": "start-ready",
+            "steps": [],
+            "expect": {
+              "value": "ready",
+              "operator": "eq"
+            },
+            "category": "start",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.phase",
+              "source": "state"
+            },
+            "requirement": "игра начинается в режиме ожидания первого хода"
+          },
+          {
+            "id": "place-X",
+            "steps": [
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "X",
+              "operator": "changed"
+            },
+            "category": "control",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.board",
+              "source": "state"
+            },
+            "requirement": "касание клетки ставит крестик"
+          },
+          {
+            "id": "place-O",
+            "steps": [
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "O",
+              "operator": "changed"
+            },
+            "category": "control",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.board",
+              "source": "state"
+            },
+            "requirement": "следующий ход ставит нолик"
+          },
+          {
+            "id": "win-row",
+            "steps": [
+              {
+                "x": 0.17,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "X",
+              "operator": "eq"
+            },
+            "category": "outcome",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.winner",
+              "source": "state"
+            },
+            "requirement": "три в ряд дают победу"
+          },
+          {
+            "id": "draw",
+            "steps": [
+              {
+                "x": 0.17,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.17,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.5,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.17,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.5,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              },
+              {
+                "x": 0.83,
+                "y": 0.83,
+                "action": "tap_fraction",
+                "selector": "#game"
+              }
+            ],
+            "expect": {
+              "value": "draw",
+              "operator": "eq"
+            },
+            "category": "outcome",
+            "viewport": "mobile",
+            "observation": {
+              "path": "state.winner",
+              "source": "state"
+            },
+            "requirement": "заполненное поле без линий — ничья"
+          }
+        ],
+        "created_at": "2026-10-24T11:32:09.455633+00:00"
+      },
+      "selected_verdict": "playable",
+      "first_candidate_seconds": 108.79227113723755,
+      "first_playable_candidate_seconds": 108.79227113723755,
+      "local_decision_seconds": 111.77095222473145,
+      "last_known_receipt_seconds": 108.76827311515808,
+      "premature_terminal": false,
+      "application_consumed_all_replies": true
+    },
+    {
+      "case": "memory",
+      "kind": "targeted_check_repair",
+      "run_id": "4b458644-2d8a-410e-a312-f51df6641e3a",
+      "source_run_id": "f4daf92e-b0a8-4649-b56c-679134be61bb",
+      "calls": 1,
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "created_at": "2026-10-24T13:11:49.243217+00:00",
+      "finished_at": "2026-10-24T13:12:04.942364+00:00",
+      "can_confirm": true,
+      "max_model_calls": 1,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+      "metrics": {
+        "model_calls": 1,
+        "check_seconds": 6.556,
+        "model_seconds": 0,
+        "queue_seconds": 0.033231,
+        "total_seconds": 15.699147
+      },
+      "invocations": [
+        {
+          "id": "3fc96c68-12cf-4ac5-9165-7a378f14e2ed",
+          "attempt": 1,
+          "state": "returned",
+          "usage": {
+            "input_tokens": 4489,
+            "output_tokens": 314,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 219.071443,
+          "created_at": "2026-10-24T13:11:57.263591+00:00",
+          "sent_at": "2026-10-24T13:11:57.269129+00:00",
+          "finished_at": "2026-10-24T13:15:36.345864+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 2,
+            "pipeline_version": 6,
+            "reported_findings": 3,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": true,
+          "provider_reported_inference_seconds": 20.842201506718993,
+          "local_run_finished_before_receipt": true,
+          "response_status": "unchanged",
+          "bound_source_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+          "bound_checks_hash": "45ec815c602e67205db4494b70b24e52f2a62887ce78cc2f8e33e3f4a3d6af23",
+          "locked_requirements": [
+            {
+              "id": "ch_start",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "Открытие карточки увеличивает счётчик ходов"
+            },
+            {
+              "id": "ch_control",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "Касание по закрытой карточке открывает её и считается ходом"
+            },
+            {
+              "id": "ch_outcome",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "Найденные одинаковые карточки остаются открытыми и победа достигается"
+            }
+          ]
+        }
+      ],
+      "revisions": [],
+      "source_revision": {
+        "id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+        "artifact_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+        "checks": [
+          {
+            "id": "ch_start",
+            "steps": [
+              {
+                "x": null,
+                "y": null,
+                "action": "click",
+                "selector": "#startBtn"
+              },
+              {
+                "ms": 150,
+                "action": "wait"
+              },
+              {
+                "x": 30,
+                "y": 60,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 150,
+                "action": "wait"
+              }
+            ],
+            "expect": {
+              "value": 0,
+              "operator": "increased"
+            },
+            "category": "start",
+            "viewport": "mobile",
+            "observation": {
+              "path": "moves",
+              "source": "state"
+            },
+            "requirement": "Открытие карточки увеличивает счётчик ходов"
+          },
+          {
+            "id": "ch_control",
+            "steps": [
+              {
+                "x": null,
+                "y": null,
+                "action": "click",
+                "selector": "#startBtn"
+              },
+              {
+                "ms": 150,
+                "action": "wait"
+              },
+              {
+                "x": 100,
+                "y": 200,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 250,
+                "action": "wait"
+              },
+              {
+                "x": 300,
+                "y": 200,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              }
+            ],
+            "expect": {
+              "value": 0,
+              "operator": "increased"
+            },
+            "category": "control",
+            "viewport": "mobile",
+            "observation": {
+              "path": "moves",
+              "source": "state"
+            },
+            "requirement": "Касание по закрытой карточке открывает её и считается ходом"
+          },
+          {
+            "id": "ch_outcome",
+            "steps": [
+              {
+                "x": null,
+                "y": null,
+                "action": "click",
+                "selector": "#startBtn"
+              },
+              {
+                "ms": 120,
+                "action": "wait"
+              },
+              {
+                "x": 30,
+                "y": 60,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 130,
+                "y": 190,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              },
+              {
+                "x": 30,
+                "y": 320,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 130,
+                "y": 450,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              },
+              {
+                "x": 230,
+                "y": 60,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 330,
+                "y": 190,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 350,
+                "action": "wait"
+              },
+              {
+                "x": 230,
+                "y": 320,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 300,
+                "action": "wait"
+              },
+              {
+                "x": 330,
+                "y": 450,
+                "action": "click",
+                "selector": "#game"
+              },
+              {
+                "ms": 2500,
+                "action": "wait_for"
+              }
+            ],
+            "expect": {
+              "value": "won",
+              "operator": "eq"
+            },
+            "category": "outcome",
+            "viewport": "mobile",
+            "observation": {
+              "path": "status",
+              "source": "state"
+            },
+            "requirement": "Найденные одинаковые карточки остаются открытыми и победа достигается"
+          }
+        ],
+        "created_at": "2026-10-24T11:49:47.043789+00:00"
+      },
+      "selected_verdict": "playable",
+      "first_candidate_seconds": null,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 15.69914698600769,
+      "last_known_receipt_seconds": 227.10264706611633,
+      "premature_terminal": true,
+      "application_consumed_all_replies": false
+    },
+    {
+      "case": "grid",
+      "kind": "create",
+      "run_id": "c8da5188-645f-4963-8b64-1e89bcd260ac",
+      "source_run_id": null,
+      "calls": 2,
+      "status": "needs_attention",
+      "error_code": "check_review_required",
+      "created_at": "2026-10-24T13:12:07.568067+00:00",
+      "finished_at": "2026-10-24T13:20:10.375331+00:00",
+      "can_confirm": false,
+      "max_model_calls": 4,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "cc01d21c-e51b-40ef-baa8-b90b60cfc84e",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 0.191,
+        "model_seconds": 264.262701,
+        "queue_seconds": 209.560978,
+        "total_seconds": 482.807264,
+        "packaging_seconds": 0.010676000034436584
+      },
+      "invocations": [
+        {
+          "id": "71f74455-8cd0-4563-9ce8-2339be826f26",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 4195,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 264.262701,
+          "created_at": "2026-10-24T13:15:37.175690+00:00",
+          "sent_at": "2026-10-24T13:15:37.184358+00:00",
+          "finished_at": "2026-10-24T13:20:01.466034+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 6,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 258.02666037064046,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "f0684acb-2535-429c-abcd-f2b61e8cb7c4",
+          "attempt": 2,
+          "state": "returned",
+          "usage": {
+            "input_tokens": 5201,
+            "output_tokens": 3934,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 261.640952,
+          "created_at": "2026-10-24T13:20:03.385912+00:00",
+          "sent_at": "2026-10-24T13:20:03.394722+00:00",
+          "finished_at": "2026-10-24T13:24:25.039791+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 6,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": true,
+          "provider_reported_inference_seconds": 244.2125634914264,
+          "local_run_finished_before_receipt": true,
+          "response_status": "ok",
+          "bound_source_hash": "e2bb58d85eb619e045444b1a1b0842eff13e058e5138c54dcaaba91e48167ca0",
+          "bound_checks_hash": "28895ac361dab5476d7d2a827173006238234058c3deb008d300b294f40efd19",
+          "locked_requirements": [
+            {
+              "id": "game-starts-and-turn-progresses",
+              "category": "regression",
+              "viewport": "desktop",
+              "requirement": "after first tap phase should change and turn should progress"
+            },
+            {
+              "id": "turn-alternates-correctly",
+              "category": "regression",
+              "viewport": "desktop",
+              "requirement": "After X plays, turn should be O"
+            },
+            {
+              "id": "win-detected-correctly",
+              "category": "regression",
+              "viewport": "desktop",
+              "requirement": "When X gets 3 in a row, phase should be 'win' and winner should be 'X'"
+            },
+            {
+              "id": "draw-detected-correctly",
+              "category": "regression",
+              "viewport": "desktop",
+              "requirement": "When all cells filled with no winner, phase should be 'draw'"
+            },
+            {
+              "id": "game-reset-works",
+              "category": "regression",
+              "viewport": "desktop",
+              "requirement": "After a win, pressing 'Новая игра' should reset to playing state"
+            },
+            {
+              "id": "required_start",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "Понятное начало игры согласно исходному запросу."
+            },
+            {
+              "id": "required_control",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "Реальный ввод управляет игрой: Tap or click on canvas cells to place marks; Click 'Начать игру' to start; Click 'Новая игра' to reset after game ends"
+            },
+            {
+              "id": "required_outcome",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "Достигается игровой исход: Player X or O wins by getting 3 in a row, or draw if all 9 cells filled with no winner"
+            }
+          ]
+        }
+      ],
+      "revisions": [
+        {
+          "id": "cc01d21c-e51b-40ef-baa8-b90b60cfc84e",
+          "parent_id": null,
+          "artifact_hash": "e2bb58d85eb619e045444b1a1b0842eff13e058e5138c54dcaaba91e48167ca0",
+          "created_at": "2026-10-24T13:20:01.541698+00:00",
+          "accepted": false,
+          "verification": "none",
+          "application_check_counts": {
+            "passed": 0,
+            "facts": 0
+          },
+          "report_status": "unverified",
+          "finding_codes": [
+            "incomplete_checks"
+          ],
+          "assessment_action": "review",
+          "mandatory_gates_passed": false,
+          "checks_review_required": false,
+          "independent_verdict": "playable",
+          "independent_review": {
+            "artifact_hash": "e2bb58d85eb619e045444b1a1b0842eff13e058e5138c54dcaaba91e48167ca0",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent actual Start, occupied-cell, five-move X-column win, ignored post-win input, reset and nine-move draw at 390x844; exact immutable saved HTML. No game-state/source changes.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Начать игру reveals an empty active 3x3 Canvas and Ход: X."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "X/O alternate, occupied cell ignored, Новая игра clears the board."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Actual X-column victory displays X выиграли!; post-win move ignored. Separate full nine-move sequence displays Ничья."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Board and Start/reset controls fit 390x844 and accept normal pointer input."
+              }
+            },
+            "screenshots": [
+              "cc01d21c-e51b-40ef-baa8-b90b60cfc84e/manual-win.png",
+              "cc01d21c-e51b-40ef-baa8-b90b60cfc84e/manual-draw.png"
+            ]
+          },
+          "independent_native": {
+            "status": "passed",
+            "passed": 6,
+            "total": 6
+          }
+        }
+      ],
+      "selected_verdict": "playable",
+      "first_candidate_seconds": 473.97363090515137,
+      "first_playable_candidate_seconds": 473.97363090515137,
+      "local_decision_seconds": 482.80726385116577,
+      "last_known_receipt_seconds": 737.4717240333557,
+      "premature_terminal": true,
+      "application_consumed_all_replies": false
+    },
+    {
+      "case": "snake",
+      "kind": "create",
+      "run_id": "98f061a7-8e94-40ff-a65c-36fea6941b6d",
+      "source_run_id": null,
+      "calls": 2,
+      "status": "failed",
+      "error_code": "incomplete_response",
+      "created_at": "2026-10-24T13:24:26.125104+00:00",
+      "finished_at": "2026-10-24T13:42:33.478089+00:00",
+      "can_confirm": false,
+      "max_model_calls": 4,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": null,
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 0,
+        "model_seconds": 1087.21818,
+        "queue_seconds": 0.039307,
+        "total_seconds": 1087.352985
+      },
+      "invocations": [
+        {
+          "id": "43a157a5-9b0a-4f23-a2eb-3a9cb48d8b2f",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1208,
+            "output_tokens": 1053,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 73.22396,
+          "created_at": "2026-10-24T13:24:26.186793+00:00",
+          "sent_at": "2026-10-24T13:24:26.193178+00:00",
+          "finished_at": "2026-10-24T13:25:39.422742+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 6,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": "incomplete_sources",
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 66.05852420907468,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "3a1200b2-d540-4dad-b306-552b067b553e",
+          "attempt": 2,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 1306,
+            "output_tokens": 16384,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 1013.99422,
+          "created_at": "2026-10-24T13:25:39.462500+00:00",
+          "sent_at": "2026-10-24T13:25:39.467176+00:00",
+          "finished_at": "2026-10-24T13:42:33.464178+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 6,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": "incomplete_response",
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 1013.135731710121,
+          "local_run_finished_before_receipt": false,
+          "response_status": null
+        }
+      ],
+      "revisions": [],
+      "selected_verdict": "no_candidate",
+      "first_candidate_seconds": null,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 1087.3529851436615,
+      "last_known_receipt_seconds": 1087.3390741348267,
+      "premature_terminal": false,
+      "application_consumed_all_replies": true
+    },
+    {
+      "case": "memory",
+      "kind": "create",
+      "run_id": "c62ac0a0-b139-4417-bfdc-4ea51c243ee9",
+      "source_run_id": null,
+      "calls": 2,
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "created_at": "2026-10-24T13:42:36.370485+00:00",
+      "finished_at": "2026-10-24T13:48:08.259123+00:00",
+      "can_confirm": true,
+      "max_model_calls": 4,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "c2e4b4b0-ad68-43b6-8457-c4ae96ab7128",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 3.373,
+        "model_seconds": 319.122576,
+        "queue_seconds": 0.022826,
+        "total_seconds": 331.888638,
+        "packaging_seconds": 0.009268625057302415
+      },
+      "invocations": [
+        {
+          "id": "f0069d7e-df39-467f-b75c-ab8adf30e46e",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 4996,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 319.122576,
+          "created_at": "2026-10-24T13:42:36.411367+00:00",
+          "sent_at": "2026-10-24T13:42:36.416239+00:00",
+          "finished_at": "2026-10-24T13:47:55.541919+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 6,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 315.68804336246103,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "f080356d-7ea9-43a2-9b09-5b8903e9fb0f",
+          "attempt": 2,
+          "state": "returned",
+          "usage": {
+            "input_tokens": 5094,
+            "output_tokens": 1541,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 103.60427,
+          "created_at": "2026-10-24T13:48:00.361816+00:00",
+          "sent_at": "2026-10-24T13:48:00.369796+00:00",
+          "finished_at": "2026-10-24T13:49:43.978699+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 2,
+            "pipeline_version": 6,
+            "reported_findings": 4,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": true,
+          "provider_reported_inference_seconds": 96.02196254488081,
+          "local_run_finished_before_receipt": true,
+          "response_status": "ok",
+          "bound_source_hash": "4734615f3ad6128351b3db69f465ca32c809fc03b46c52c6d7d592234c407808",
+          "bound_checks_hash": "e96a3827a6a14eab36e4ec8779f144aec0d43d15600a6d2725d3a29a27f94418",
+          "locked_requirements": [
+            {
+              "id": "c1",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "Игра запускается с нулём открытых и найденных карточек"
+            },
+            {
+              "id": "c2",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "Касание двух разных карточек открывает обе одновременно"
+            },
+            {
+              "id": "c3",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "Нахождение обеих пар завершает игру победой"
+            },
+            {
+              "id": "c4",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "После перезапуска счётчики обнуляются и игра снова доступна"
+            }
+          ]
+        }
+      ],
+      "revisions": [
+        {
+          "id": "c2e4b4b0-ad68-43b6-8457-c4ae96ab7128",
+          "parent_id": null,
+          "artifact_hash": "4734615f3ad6128351b3db69f465ca32c809fc03b46c52c6d7d592234c407808",
+          "created_at": "2026-10-24T13:47:55.569495+00:00",
+          "accepted": false,
+          "verification": "none",
+          "application_check_counts": {
+            "passed": 0,
+            "facts": 4
+          },
+          "report_status": "unverified",
+          "finding_codes": [
+            "invalid_check"
+          ],
+          "assessment_action": "review",
+          "mandatory_gates_passed": true,
+          "checks_review_required": false,
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "4734615f3ad6128351b3db69f465ca32c809fc03b46c52c6d7d592234c407808",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "method": "Independent actual Start and restart clicks at 390x844 on exact saved HTML; both leave overlay blocking all cards. Read-only source diagnosis after observed failure: resetOverlay replaces button then binds stale detached startBtn; restartBtn has no handler. No source/state changes or overlay bypass.",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Начать игру receives focus but overlay remains, four closed cards never become available."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Start/restart do not activate the board; matching/mismatching cards cannot be exercised through normal UI."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Victory unreachable through normal UI because the start overlay cannot close."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "At 390x844 controls fit but cards are blocked by non-dismissable overlay."
+              }
+            },
+            "screenshots": [
+              "c2e4b4b0-ad68-43b6-8457-c4ae96ab7128/manual-start-stuck.png"
+            ]
+          }
+        }
+      ],
+      "selected_verdict": "broken",
+      "first_candidate_seconds": 319.1990098953247,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 331.88863801956177,
+      "last_known_receipt_seconds": 427.6082139015198,
+      "premature_terminal": true,
+      "application_consumed_all_replies": false
+    },
+    {
+      "case": "grid",
+      "kind": "replicate_create",
+      "run_id": "3ba20c95-2ce1-43ea-a323-ab13903dca46",
+      "source_run_id": null,
+      "calls": 2,
+      "status": "needs_attention",
+      "error_code": "check_review_required",
+      "created_at": "2026-10-24T13:49:45.649041+00:00",
+      "finished_at": "2026-10-24T13:53:12.352613+00:00",
+      "can_confirm": false,
+      "max_model_calls": 4,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "e95b87f5-77b0-4eed-881f-f54c9c823ed4",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 0.194,
+        "model_seconds": 197.779263,
+        "queue_seconds": 0.053182,
+        "total_seconds": 206.703572,
+        "packaging_seconds": 0.004078667028807104
+      },
+      "invocations": [
+        {
+          "id": "f2705e46-c1ee-4df1-a140-09ff530c5d1d",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 3115,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 197.779263,
+          "created_at": "2026-10-24T13:49:45.722510+00:00",
+          "sent_at": "2026-10-24T13:49:45.725856+00:00",
+          "finished_at": "2026-10-24T13:53:03.507875+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 6,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 193.9237949848175,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "5bc9e401-eaad-4f5f-aee5-af8ea8546045",
+          "attempt": 2,
+          "state": "returned",
+          "usage": {
+            "input_tokens": 3902,
+            "output_tokens": 1656,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 103.54797,
+          "created_at": "2026-10-24T13:53:05.099659+00:00",
+          "sent_at": "2026-10-24T13:53:05.105555+00:00",
+          "finished_at": "2026-10-24T13:54:48.657171+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 6,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": true,
+          "provider_reported_inference_seconds": 100.79143912438303,
+          "local_run_finished_before_receipt": true,
+          "response_status": "ok",
+          "bound_source_hash": "9619c5a0edcae4c6e234171c7746be6306889ff9b0052839db2c6412ec7c37fc",
+          "bound_checks_hash": "279c2a9b3fdf14b37695963c9147212c7ee9d3e031ba31a1e8fac8bc1a1e0c6c",
+          "locked_requirements": [
+            {
+              "id": "draw-x",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "clicking a cell marks it"
+            },
+            {
+              "id": "draw-o",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "opponent gets the other symbol"
+            },
+            {
+              "id": "win",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "three in a row ends the game with a winner"
+            },
+            {
+              "id": "draw",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "a filled board without a line is a draw"
+            },
+            {
+              "id": "required_start",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "Понятное начало игры согласно исходному запросу."
+            }
+          ]
+        }
+      ],
+      "revisions": [
+        {
+          "id": "e95b87f5-77b0-4eed-881f-f54c9c823ed4",
+          "parent_id": null,
+          "artifact_hash": "9619c5a0edcae4c6e234171c7746be6306889ff9b0052839db2c6412ec7c37fc",
+          "created_at": "2026-10-24T13:53:03.528081+00:00",
+          "accepted": false,
+          "verification": "none",
+          "application_check_counts": {
+            "passed": 0,
+            "facts": 0
+          },
+          "report_status": "unverified",
+          "finding_codes": [
+            "incomplete_checks"
+          ],
+          "assessment_action": "review",
+          "mandatory_gates_passed": false,
+          "checks_review_required": false,
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "9619c5a0edcae4c6e234171c7746be6306889ff9b0052839db2c6412ec7c37fc",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "method": "Independent actual cell and reset clicks at 390x844; blank board stays unchanged. Browser console records SyntaxError: Illegal return statement on this exact UUID. No source/state changes.",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "No grid lines or marks render; only blank Canvas panel and Ход: X."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Real click at visible board upper-left cell and Заново have no effect."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Game script fails to parse, so no normal input can reach win/draw."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Panel fits 390x844 but cells are neither visible nor operable."
+              }
+            },
+            "screenshots": [
+              "e95b87f5-77b0-4eed-881f-f54c9c823ed4/manual-syntax-error.png"
+            ]
+          },
+          "independent_gate_diagnostic": {
+            "status": "failed",
+            "stage": "syntax",
+            "stages": [
+              {
+                "stage": "syntax",
+                "status": "failed",
+                "scripts": 1
+              }
+            ],
+            "findings": [
+              {
+                "code": "javascript_syntax",
+                "stage": "syntax",
+                "message": "Собранный HTML index.html:1:3048, скрипт №1, строка 1: SyntaxError: Illegal return statement. Координаты относятся к экспорту; найдите этот скрипт в исходниках игры.",
+                "location": "bundled_html",
+                "file": "index.html",
+                "line": 1,
+                "column": 3048,
+                "script_index": 1,
+                "script_line": 1,
+                "script_column": 1683
+              }
+            ]
+          }
+        }
+      ],
+      "selected_verdict": "broken",
+      "first_candidate_seconds": 197.87904000282288,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 206.70357203483582,
+      "last_known_receipt_seconds": 303.00813007354736,
+      "premature_terminal": true,
+      "application_consumed_all_replies": false
+    },
+    {
+      "case": "snake",
+      "kind": "replicate_create",
+      "run_id": "bac4cf21-7b27-462b-bd68-35f035244fbc",
+      "source_run_id": null,
+      "calls": 4,
+      "status": "needs_attention",
+      "error_code": "check_review_required",
+      "created_at": "2026-10-24T13:54:50.535677+00:00",
+      "finished_at": "2026-10-24T14:08:06.526283+00:00",
+      "can_confirm": false,
+      "max_model_calls": 4,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "c664a346-da6b-45e4-a17e-16ce41fc08b2",
+      "metrics": {
+        "model_calls": 4,
+        "check_seconds": 0.193,
+        "model_seconds": 786.969586,
+        "queue_seconds": 0.034692,
+        "total_seconds": 795.990606,
+        "packaging_seconds": 0.006093500065617263
+      },
+      "invocations": [
+        {
+          "id": "28c508f2-f10c-41df-9633-3d9ab89ec9cd",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1208,
+            "output_tokens": 3080,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 192.947288,
+          "created_at": "2026-10-24T13:54:50.589475+00:00",
+          "sent_at": "2026-10-24T13:54:50.593975+00:00",
+          "finished_at": "2026-10-24T13:58:03.544155+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 6,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": "incomplete_sources",
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 190.91695903334767,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "16764079-48b2-4c4c-983d-36efa2355e4a",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1306,
+            "output_tokens": 4274,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 270.05871,
+          "created_at": "2026-10-24T13:58:03.577012+00:00",
+          "sent_at": "2026-10-24T13:58:03.581304+00:00",
+          "finished_at": "2026-10-24T14:02:33.644607+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 6,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": "incomplete_sources",
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 266.2644771123305,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "c26517eb-edb6-4d09-9505-fea27cba2025",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1306,
+            "output_tokens": 5107,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 323.963588,
+          "created_at": "2026-10-24T14:02:33.688101+00:00",
+          "sent_at": "2026-10-24T14:02:33.692566+00:00",
+          "finished_at": "2026-10-24T14:07:57.659057+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 6,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 318.3246012572199,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "e11de8e3-845a-4f28-a193-a7c2d1c31653",
+          "attempt": 4,
+          "state": "returned",
+          "usage": {
+            "input_tokens": 5292,
+            "output_tokens": 2658,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 168.136267,
+          "created_at": "2026-10-24T14:07:59.216831+00:00",
+          "sent_at": "2026-10-24T14:07:59.223328+00:00",
+          "finished_at": "2026-10-24T14:10:47.363919+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 1,
+            "pipeline_version": 6,
+            "reported_findings": 1,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": true,
+          "provider_reported_inference_seconds": 166.55525708198547,
+          "local_run_finished_before_receipt": true,
+          "response_status": "ok",
+          "bound_source_hash": "bb53d5890df5bd451f0391d3d658c3722c61a3863dfc54277aa20458a3ca286d",
+          "bound_checks_hash": "6a7327b8e701b2348c15df2bfb2482680cd8d02bbfeafbd85cfec0026d29b8c8",
+          "locked_requirements": [
+            {
+              "id": "snake-start-play",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "После запуска змейка играет"
+            },
+            {
+              "id": "snake-ctrl-right",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "Стрелка меняет направление"
+            },
+            {
+              "id": "snake-ctrl-up",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "Свайп/тап меняет направление"
+            },
+            {
+              "id": "snake-win",
+              "category": "regression",
+              "viewport": "mobile",
+              "requirement": "Доведя до победы"
+            },
+            {
+              "id": "required_start",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "Понятное начало игры согласно исходному запросу."
+            },
+            {
+              "id": "required_control",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "Реальный ввод управляет игрой: Кнопка СТАРТ запускает игру.; Стрелки клавиатуры или кнопки на экране управляют змейкой.; Сбор яблок увеличивает счёт.; Кнопка ЕЩЁ РАЗ перезапускает партию."
+            },
+            {
+              "id": "required_outcome",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "Достигается игровой исход: Победа при сборе 10 яблок; проигрыш при столкновении со стеной или собой."
+            }
+          ]
+        }
+      ],
+      "revisions": [
+        {
+          "id": "c664a346-da6b-45e4-a17e-16ce41fc08b2",
+          "parent_id": null,
+          "artifact_hash": "bb53d5890df5bd451f0391d3d658c3722c61a3863dfc54277aa20458a3ca286d",
+          "created_at": "2026-10-24T14:07:57.683656+00:00",
+          "accepted": false,
+          "verification": "none",
+          "application_check_counts": {
+            "passed": 0,
+            "facts": 0
+          },
+          "report_status": "unverified",
+          "finding_codes": [
+            "incomplete_checks"
+          ],
+          "assessment_action": "review",
+          "mandatory_gates_passed": false,
+          "checks_review_required": false,
+          "independent_verdict": "playable",
+          "independent_review": {
+            "artifact_hash": "bb53d5890df5bd451f0391d3d658c3722c61a3863dfc54277aa20458a3ca286d",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "method": "Independent actual Start/Up turn and wall collision at 390x844. Separate native 4/4 suite with real touches confirms start, Up movement to 4,4, then Left turn to 3,4, and normal wall-loss. No source/state changes. Fixed rubric retained; optional Pause failure recorded separately.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "СТАРТ starts a visible snake round, status Идёт игра."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Actual Up directs head toward top; independent touch then Left changes head position 4,4 to 3,4. Motion is real."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Normal movement reaches wall: Змейка врезалась, Ой, упс!, ЕЩЁ РАЗ. Restart starts another round."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Large field/start/direction buttons fit 390x844; real touch input works, movement interval 500ms."
+              }
+            },
+            "additional_findings": [
+              {
+                "code": "pause_button_does_not_pause",
+                "status": "failed",
+                "evidence": "Actual ПАУЗА click leaves Идёт игра and round continues. Source has unused pause(); start handler calls start(), which immediately returns while playing.",
+                "affects_fixed_rubric": false
+              }
+            ],
+            "limits": "Basic four-criterion playability, not defect-free acceptance or proof of ten-apple victory/long-session stability.",
+            "screenshots": [
+              "c664a346-da6b-45e4-a17e-16ce41fc08b2/manual-collision.png",
+              "c664a346-da6b-45e4-a17e-16ce41fc08b2/manual-pause-ignored.png"
+            ]
+          },
+          "independent_native": {
+            "status": "passed",
+            "passed": 4,
+            "total": 4
+          }
+        }
+      ],
+      "selected_verdict": "playable",
+      "first_candidate_seconds": 787.1479790210724,
+      "first_playable_candidate_seconds": 787.1479790210724,
+      "local_decision_seconds": 795.9906060695648,
+      "last_known_receipt_seconds": 956.8282420635223,
+      "premature_terminal": true,
+      "application_consumed_all_replies": false
+    },
+    {
+      "case": "memory",
+      "kind": "replicate_create",
+      "run_id": "1cfc13dd-f04a-4d28-b81a-886fa6d6aba8",
+      "source_run_id": null,
+      "calls": 2,
+      "status": "needs_attention",
+      "error_code": "unchanged",
+      "created_at": "2026-10-24T14:10:49.928641+00:00",
+      "finished_at": "2026-10-24T14:17:33.335667+00:00",
+      "can_confirm": false,
+      "max_model_calls": 4,
+      "model_call_deadline": "2026-10-24T14:39:41.614318+00:00",
+      "selected_revision_id": "1be597dd-fe7b-4fb1-a20d-bc1a4af7da63",
+      "metrics": {
+        "model_calls": 2,
+        "check_seconds": 4.12,
+        "model_seconds": 396.64975400000003,
+        "queue_seconds": 0.047373,
+        "total_seconds": 403.407026,
+        "packaging_seconds": 0.010201458004303277
+      },
+      "invocations": [
+        {
+          "id": "d676241b-bcc0-4a30-a8ba-64880ba35e0c",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1261,
+            "output_tokens": 5808,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 371.702259,
+          "created_at": "2026-10-24T14:10:49.996790+00:00",
+          "sent_at": "2026-10-24T14:10:50.000948+00:00",
+          "finished_at": "2026-10-24T14:17:01.706957+00:00",
+          "operation": "create",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 0,
+            "pipeline_version": 6,
+            "reported_findings": 0,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "06c36f99ad8162f2032fb56fb342da887abf4efec5144ce8ab7fd985ce69c8e5",
+            "response_schema_sha256": "9dfc3800f4b0d7af33c6d8483344a37813f871f3b877107ce49d702e92375efe"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 366.49609030783176,
+          "local_run_finished_before_receipt": false,
+          "response_status": "ok"
+        },
+        {
+          "id": "edc1fc7c-d3cc-4a89-b954-934fc96ad28d",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 6018,
+            "output_tokens": 326,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "elapsed_seconds": 24.947495,
+          "created_at": "2026-10-24T14:17:08.309266+00:00",
+          "sent_at": "2026-10-24T14:17:08.316294+00:00",
+          "finished_at": "2026-10-24T14:17:33.267468+00:00",
+          "operation": "check_repair",
+          "execution_limits": {
+            "context_window": 32768,
+            "max_output_tokens": 16384
+          },
+          "contract": {
+            "focused_findings": 2,
+            "pipeline_version": 6,
+            "reported_findings": 2,
+            "max_repair_attempts": 3,
+            "system_prompt_sha256": "f353766a7c31cf3ac24f2830abfdd3c5a49a12baebf948279a5c9d768ea02a63",
+            "response_schema_sha256": "44a2e2af542d777a52d9f32f693ecdfe85b78593444b223b643000591e9cf474"
+          },
+          "error_code": null,
+          "operator_receipt_collection": false,
+          "provider_reported_inference_seconds": 21.844954940490425,
+          "local_run_finished_before_receipt": false,
+          "response_status": "unchanged",
+          "bound_source_hash": "aacd045b37615fc526e91edbe3a46b313249e0811ce988ea5d11ae95a2fa8ead",
+          "bound_checks_hash": "99fa34edee3a257a3a8da00627aade2fffaf6a4f3abc9287b86ccda3e4c8aa84",
+          "locked_requirements": [
+            {
+              "id": "start-plays",
+              "category": "start",
+              "viewport": "mobile",
+              "requirement": "Игра запускается после касания/тапа по старту"
+            },
+            {
+              "id": "first-flip",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "Касание по закрытой карточке открывает её (flipped.length=1)"
+            },
+            {
+              "id": "mismatch-reflows",
+              "category": "control",
+              "viewport": "mobile",
+              "requirement": "Две разные карточки закрываются (flipped.length=0)"
+            },
+            {
+              "id": "win-two-pairs",
+              "category": "outcome",
+              "viewport": "mobile",
+              "requirement": "Найдены обе пары — победа (phase=won)"
+            }
+          ]
+        }
+      ],
+      "revisions": [
+        {
+          "id": "1be597dd-fe7b-4fb1-a20d-bc1a4af7da63",
+          "parent_id": null,
+          "artifact_hash": "aacd045b37615fc526e91edbe3a46b313249e0811ce988ea5d11ae95a2fa8ead",
+          "created_at": "2026-10-24T14:17:01.737679+00:00",
+          "accepted": false,
+          "verification": "none",
+          "application_check_counts": {
+            "passed": 2,
+            "facts": 4
+          },
+          "report_status": "failed",
+          "finding_codes": [
+            "effect_mismatch"
+          ],
+          "assessment_action": "repair",
+          "mandatory_gates_passed": true,
+          "checks_review_required": false,
+          "independent_verdict": "broken",
+          "independent_review": {
+            "artifact_hash": "aacd045b37615fc526e91edbe3a46b313249e0811ce988ea5d11ae95a2fa8ead",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "method": "Independent actual Start and four card taps at 390x844. Initial visual centers of right/bottom card can miss; reachable edge segments reveal them. Deliberate apple/banana mismatch remains face-up well after 1100ms; repeated input cannot reflip it; remaining apple/banana also leaves all four open without victory, HUD moves stays 0. Read-only source confirms timeout assigns faceDown=false. No source/state mutation.",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Играть reveals four closed cards forming two fruit pairs, with clipped upper/left portions."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Apple/banana mismatch does not close after the reveal delay; re-clicks cannot flip those cards. HUD still Ходы: 0."
+              },
+              "outcome": {
+                "status": "unverified",
+                "evidence": "After two real mismatches all four stay open and no victory; round cannot recover without reset. Perfect initial pair guesses not tested."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Top/left cards clipped at 390x844; visible right-card center does not trigger it because hit-test division disagrees with drawn card positions."
+              }
+            },
+            "screenshots": [
+              "1be597dd-fe7b-4fb1-a20d-bc1a4af7da63/manual-mismatch-stays-open.png",
+              "1be597dd-fe7b-4fb1-a20d-bc1a4af7da63/manual-all-open-no-victory.png"
+            ]
+          }
+        }
+      ],
+      "selected_verdict": "broken",
+      "first_candidate_seconds": 371.80903792381287,
+      "first_playable_candidate_seconds": null,
+      "local_decision_seconds": 403.4070258140564,
+      "last_known_receipt_seconds": 403.33882689476013,
+      "premature_terminal": false,
+      "application_consumed_all_replies": true
+    }
+  ],
+  "new_revision_count": 6,
+  "raw_rejected_reviews": [
+    {
+      "invocation_id": "43a157a5-9b0a-4f23-a2eb-3a9cb48d8b2f",
+      "case": "snake",
+      "artifact_hash": "c77e5168dffda66b8dc13f1425b4d3630a6656a3e5acf707f4393277ba3c8b5e",
+      "verdict": "broken",
+      "review": {
+        "artifact_hash": "c77e5168dffda66b8dc13f1425b4d3630a6656a3e5acf707f4393277ba3c8b5e",
+        "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+        "method": "Exact rejected raw sources viewed in isolated browser at 390x844; DOM/screenshot only, no source or state mutation.",
+        "criteria": {
+          "start": {
+            "status": "failed",
+            "evidence": "Blank page: zero Canvas/buttons, no snake, controls or reachable round."
+          },
+          "control": {
+            "status": "failed",
+            "evidence": "Blank page: zero Canvas/buttons, no snake, controls or reachable round."
+          },
+          "outcome": {
+            "status": "failed",
+            "evidence": "Blank page: zero Canvas/buttons, no snake, controls or reachable round."
+          },
+          "mobile": {
+            "status": "failed",
+            "evidence": "Blank page: zero Canvas/buttons, no snake, controls or reachable round."
+          }
+        },
+        "screenshot": "raw-43a157a5-9b0a-4f23-a2eb-3a9cb48d8b2f/manual-mobile.png"
+      }
+    },
+    {
+      "invocation_id": "28c508f2-f10c-41df-9633-3d9ab89ec9cd",
+      "case": "snake",
+      "artifact_hash": "4107765b6924ff7dc0bb9fcbb5e87a12b9a5708ef21def50253cee0e8ca5a7af",
+      "verdict": "broken",
+      "review": {
+        "artifact_hash": "4107765b6924ff7dc0bb9fcbb5e87a12b9a5708ef21def50253cee0e8ca5a7af",
+        "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+        "method": "Independent actual Start and direction clicks at 390x844 on exact rejected raw source. Overlay and blank board remain unchanged. Read-only source inspection confirms entire game.js is one // comment line. No newline insertion/source modification/state changes.",
+        "criteria": {
+          "start": {
+            "status": "failed",
+            "evidence": "ИГРАТЬ does not remove start overlay or render snake."
+          },
+          "control": {
+            "status": "failed",
+            "evidence": "Direction button and Start clicks have no game effect; no movement."
+          },
+          "outcome": {
+            "status": "failed",
+            "evidence": "No executable game loop, collision cannot complete a normal round."
+          },
+          "mobile": {
+            "status": "failed",
+            "evidence": "Large visible buttons fit but do not control any game."
+          }
+        },
+        "screenshots": [
+          "raw-28c508f2-f10c-41df-9633-3d9ab89ec9cd/manual-start-stuck.png"
+        ]
+      }
+    },
+    {
+      "invocation_id": "16764079-48b2-4c4c-983d-36efa2355e4a",
+      "case": "snake",
+      "artifact_hash": "bce76b866727120f9e3f07ec705d42bde068ed959ffba39785a4a18600443970",
+      "verdict": "broken",
+      "review": {
+        "artifact_hash": "bce76b866727120f9e3f07ec705d42bde068ed959ffba39785a4a18600443970",
+        "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+        "method": "Independent actual Start click on exact rejected raw HTML at 390x844. Overlay remains, text overlaps and board/controls unavailable. No source/state changes.",
+        "criteria": {
+          "start": {
+            "status": "failed",
+            "evidence": "Overlapping heading/instructions and dark overlay; no visible snake; Start does not begin round."
+          },
+          "control": {
+            "status": "failed",
+            "evidence": "No accessible direction controls or movement through normal UI."
+          },
+          "outcome": {
+            "status": "failed",
+            "evidence": "Normal round cannot begin or reach collision."
+          },
+          "mobile": {
+            "status": "failed",
+            "evidence": "Broken layout with overlapping text and blocked Start at 390x844."
+          }
+        },
+        "screenshots": [
+          "raw-16764079-48b2-4c4c-983d-36efa2355e4a/manual-broken-layout.png"
+        ]
+      }
+    }
+  ],
+  "raw_unpackageable": [
+    {
+      "invocation_id": "3a1200b2-d540-4dad-b306-552b067b553e",
+      "case": "snake",
+      "error_code": "incomplete_response",
+      "error_type": "JSONDecodeError"
+    }
+  ],
+  "snake_truncation": {
+    "invocation_id": "3a1200b2-d540-4dad-b306-552b067b553e",
+    "relay_state": "completed",
+    "model": "qwen38",
+    "finish_reason": "length",
+    "usage": {
+      "completion_tokens": 16384,
+      "prompt_tokens": 1306,
+      "total_tokens": 17690
+    },
+    "max_output_tokens": 16384
+  },
+  "late_proposal_diagnostics": [
+    {
+      "case": "memory",
+      "kind": "targeted_check_repair",
+      "run_id": "4b458644-2d8a-410e-a312-f51df6641e3a",
+      "invocation_id": "3fc96c68-12cf-4ac5-9165-7a378f14e2ed",
+      "source_revision_id": "47c29121-cf35-45d9-96cc-cc1ef2ce16e5",
+      "artifact_hash": "28982b8a24d9cd7dfdca2652da129cfba7cb2ed4860ede927f4caf26bd864875",
+      "applied_in_application": false,
+      "status": "unchanged",
+      "proposal": "declined"
+    },
+    {
+      "case": "grid",
+      "kind": "create",
+      "run_id": "c8da5188-645f-4963-8b64-1e89bcd260ac",
+      "invocation_id": "f0684acb-2535-429c-abcd-f2b61e8cb7c4",
+      "source_revision_id": "cc01d21c-e51b-40ef-baa8-b90b60cfc84e",
+      "artifact_hash": "e2bb58d85eb619e045444b1a1b0842eff13e058e5138c54dcaaba91e48167ca0",
+      "applied_in_application": false,
+      "status": "ok",
+      "proposal": "valid_source_preserving_contract",
+      "browser_status": "unverified",
+      "passed": 2,
+      "total": 8,
+      "finding_codes": [
+        "check_timeout"
+      ],
+      "source_bytes_unchanged": true
+    },
+    {
+      "case": "memory",
+      "kind": "create",
+      "run_id": "c62ac0a0-b139-4417-bfdc-4ea51c243ee9",
+      "invocation_id": "f080356d-7ea9-43a2-9b09-5b8903e9fb0f",
+      "source_revision_id": "c2e4b4b0-ad68-43b6-8457-c4ae96ab7128",
+      "artifact_hash": "4734615f3ad6128351b3db69f465ca32c809fc03b46c52c6d7d592234c407808",
+      "applied_in_application": false,
+      "status": "ok",
+      "proposal": "valid_source_preserving_contract",
+      "browser_status": "unverified",
+      "passed": 0,
+      "total": 4,
+      "finding_codes": [
+        "invalid_check"
+      ],
+      "source_bytes_unchanged": true
+    },
+    {
+      "case": "grid",
+      "kind": "replicate_create",
+      "run_id": "3ba20c95-2ce1-43ea-a323-ab13903dca46",
+      "invocation_id": "5bc9e401-eaad-4f5f-aee5-af8ea8546045",
+      "source_revision_id": "e95b87f5-77b0-4eed-881f-f54c9c823ed4",
+      "artifact_hash": "9619c5a0edcae4c6e234171c7746be6306889ff9b0052839db2c6412ec7c37fc",
+      "applied_in_application": false,
+      "status": "ok",
+      "proposal": "valid_source_preserving_contract",
+      "browser_status": "failed",
+      "passed": 0,
+      "total": 0,
+      "finding_codes": [
+        "javascript_syntax"
+      ],
+      "source_bytes_unchanged": true
+    },
+    {
+      "case": "snake",
+      "kind": "replicate_create",
+      "run_id": "bac4cf21-7b27-462b-bd68-35f035244fbc",
+      "invocation_id": "e11de8e3-845a-4f28-a193-a7c2d1c31653",
+      "source_revision_id": "c664a346-da6b-45e4-a17e-16ce41fc08b2",
+      "artifact_hash": "bb53d5890df5bd451f0391d3d658c3722c61a3863dfc54277aa20458a3ca286d",
+      "applied_in_application": false,
+      "status": "ok",
+      "proposal": "valid_source_preserving_contract",
+      "browser_status": "failed",
+      "passed": 4,
+      "total": 7,
+      "finding_codes": [
+        "effect_mismatch",
+        "invalid_check"
+      ],
+      "source_bytes_unchanged": true,
+      "diagnostic_notes": [
+        "snake-win repeatedly steers right into wall then expects won although ten randomly placed apples are required; actual lost is not proof of broken collision.",
+        "required_start and required_control incorrectly observe state path textContent.",
+        "Passed snake-ctrl-right only establishes movement: reverse Left is ignored, subsequent Right preserves default direction; changed snake alone does not prove turning. Independent touch Up then Left actually verifies turning."
+      ]
+    }
+  ],
+  "receipt_recovery": [
+    {
+      "invocation_id": "3fc96c68-12cf-4ac5-9165-7a378f14e2ed",
+      "observations": 1,
+      "first_observed_at": "2026-10-24T13:15:36.340023+00:00",
+      "last_observed_at": "2026-10-24T13:15:36.340023+00:00",
+      "last_relay_state": "completed",
+      "receipt_collected_at": "2026-10-24T13:15:36.340023+00:00",
+      "stored_state": "returned"
+    },
+    {
+      "invocation_id": "f0684acb-2535-429c-abcd-f2b61e8cb7c4",
+      "observations": 3,
+      "first_observed_at": "2026-10-24T13:22:55.368901+00:00",
+      "last_observed_at": "2026-10-24T13:24:25.021278+00:00",
+      "last_relay_state": "completed",
+      "receipt_collected_at": "2026-10-24T13:24:25.021278+00:00",
+      "stored_state": "returned"
+    },
+    {
+      "invocation_id": "f080356d-7ea9-43a2-9b09-5b8903e9fb0f",
+      "observations": 7,
+      "first_observed_at": "2026-10-24T13:48:09.394969+00:00",
+      "last_observed_at": "2026-10-24T13:49:43.968440+00:00",
+      "last_relay_state": "completed",
+      "receipt_collected_at": "2026-10-24T13:49:43.968440+00:00",
+      "stored_state": "returned"
+    },
+    {
+      "invocation_id": "5bc9e401-eaad-4f5f-aee5-af8ea8546045",
+      "observations": 7,
+      "first_observed_at": "2026-10-24T13:53:13.859225+00:00",
+      "last_observed_at": "2026-10-24T13:54:48.648202+00:00",
+      "last_relay_state": "completed",
+      "receipt_collected_at": "2026-10-24T13:54:48.648202+00:00",
+      "stored_state": "returned"
+    },
+    {
+      "invocation_id": "e11de8e3-845a-4f28-a193-a7c2d1c31653",
+      "observations": 11,
+      "first_observed_at": "2026-10-24T14:08:08.683925+00:00",
+      "last_observed_at": "2026-10-24T14:10:47.346200+00:00",
+      "last_relay_state": "completed",
+      "receipt_collected_at": "2026-10-24T14:10:47.346200+00:00",
+      "stored_state": "returned"
+    }
+  ],
+  "runtime_events": [
+    {
+      "kind": "terminal_run_with_inflight_receipt",
+      "run_id": "4b458644-2d8a-410e-a312-f51df6641e3a",
+      "invocation_id": "3fc96c68-12cf-4ac5-9165-7a378f14e2ed",
+      "observed_at": 1792847915.694905,
+      "local_status": "unverified",
+      "invocation_state": "sent",
+      "intervention": "Stopped only pilot orchestration, fetched existing relay job by GET, stored known receipt/usage without applying or repeating inference; resumed same ledger and deadline. Generator and validator unchanged."
+    },
+    {
+      "kind": "terminal_run_with_inflight_receipt",
+      "run_id": "c8da5188-645f-4963-8b64-1e89bcd260ac",
+      "invocation_id": "f0684acb-2535-429c-abcd-f2b61e8cb7c4",
+      "observed_at": 1792848175.368901,
+      "local_status": "needs_attention",
+      "invocation_state": "sent",
+      "intervention": "Paused new trial submissions; GET-only collection of this same relay job, store receipt/usage without applying. Same ledger/deadline. No repeat inference or generator changes."
+    },
+    {
+      "kind": "terminal_run_with_inflight_receipt",
+      "run_id": "c62ac0a0-b139-4417-bfdc-4ea51c243ee9",
+      "invocation_id": "f080356d-7ea9-43a2-9b09-5b8903e9fb0f",
+      "observed_at": 1792849689.394969,
+      "local_status": "unverified",
+      "invocation_state": "sent",
+      "intervention": "Paused new trial submissions; GET-only collection of this same relay job, store receipt/usage without applying. Same ledger/deadline. No repeat inference or generator changes."
+    },
+    {
+      "kind": "terminal_run_with_inflight_receipt",
+      "run_id": "3ba20c95-2ce1-43ea-a323-ab13903dca46",
+      "invocation_id": "5bc9e401-eaad-4f5f-aee5-af8ea8546045",
+      "observed_at": 1792849993.859225,
+      "local_status": "needs_attention",
+      "invocation_state": "sent",
+      "intervention": "Paused new trial submissions; GET-only collection of this same relay job, store receipt/usage without applying. Same ledger/deadline. No repeat inference or generator changes."
+    },
+    {
+      "kind": "incomplete_checks_precedes_syntax",
+      "run_id": "3ba20c95-2ce1-43ea-a323-ab13903dca46",
+      "artifact_hash": "9619c5a0edcae4c6e234171c7746be6306889ff9b0052839db2c6412ec7c37fc",
+      "application_report": "unverified/incomplete_checks, empty facts/stages, gates=false",
+      "independent_report": "failed/javascript_syntax on same exact HTML; observed real browser SyntaxError: Illegal return statement",
+      "manual_acceptance": false
+    },
+    {
+      "kind": "terminal_run_with_inflight_receipt",
+      "run_id": "bac4cf21-7b27-462b-bd68-35f035244fbc",
+      "invocation_id": "e11de8e3-845a-4f28-a193-a7c2d1c31653",
+      "observed_at": 1792850888.683925,
+      "local_status": "needs_attention",
+      "invocation_state": "sent",
+      "intervention": "Paused new submissions. GET-only receipt collection, stored usage/reply without applying or repeating inference; same ledger/deadline, no generator changes."
+    }
+  ],
+  "guardrails": {
+    "gpu_admin_changes": false,
+    "codex_calls": 0,
+    "generator_changes_during_pilot": false,
+    "validator_changes_during_pilot": false,
+    "manual_game_source_changes": false,
+    "app_checks_manually_changed": false,
+    "manual_acceptances": 0,
+    "operator_assisted_receipt_collection": true
+  }
+}

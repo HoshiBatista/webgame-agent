@@ -1,0 +1,229 @@
+export interface User {
+  id: string;
+  username: string;
+  is_staff: boolean;
+}
+export interface Preferences {
+  theme: 'light' | 'dark';
+  notes: string[];
+  model_profile?: string;
+}
+export interface PromptTemplate {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+export interface ModelProfile {
+  id: string;
+  name: string;
+  description: string;
+  available: boolean;
+  unavailable_reason: string;
+}
+export interface Budget {
+  limit_usd: number | string;
+  spent_usd: number | string;
+  reserved_usd: number | string;
+  unknown_usd: number | string;
+  available_usd: number | string;
+}
+export interface Session {
+  user: User | null;
+  csrfToken: string;
+  preferences: Preferences;
+  capabilities: {
+    provider: string;
+    model: string;
+    models: Array<string | { id: string; name?: string; priced?: boolean }>;
+    local_only: boolean;
+    model_profiles?: ModelProfile[];
+    default_model_profile?: string;
+  };
+  budget: Budget | null;
+}
+export interface Finding {
+  message?: string;
+  code?: string;
+  [key: string]: unknown;
+}
+export interface Report {
+  current?: boolean;
+  id?: number;
+  status: string;
+  findings: Array<Finding | string>;
+  facts: Array<{ id?: string; requirement?: string; status?: string; detail?: string }>;
+  stages?: Array<{ stage: string; status: string }>;
+  elapsed_seconds?: number;
+  assessment?: {
+    action: string;
+    outstanding: string[];
+    corrections: unknown[];
+    gates_passed?: boolean;
+    not_run?: string[];
+    timings?: { queue_seconds: number; execution_seconds: number; total_seconds: number };
+    requirement_coverage?: {
+      scope: string;
+      uncovered: string[];
+      independent_semantic_verification: boolean;
+    };
+  };
+}
+export interface ValidationTask {
+  id: string;
+  revision_id: string;
+  artifact_hash: string;
+  origin: 'automatic' | 'manual';
+  status: string;
+  stage: string;
+  progress: {
+    completed?: number;
+    total?: number;
+    batch?: number;
+    batches?: number;
+    phase?: string;
+    check_id?: string;
+  };
+  can_cancel: boolean;
+  error?: { code?: string; message?: string };
+  report: Report | null;
+}
+export interface Revision {
+  id: string;
+  title: string;
+  number: number;
+  artifact_hash: string;
+  design: Record<string, unknown>;
+  checks: unknown[];
+  created_at: string;
+  accepted: boolean;
+  verification: 'automatic' | 'manual' | 'none';
+  publication?: { id: string; title: string; public_url: string } | null;
+  feedback_rating?: number | null;
+  feedback?: {
+    id: number;
+    rating: number;
+    selected_reasons: string[];
+    custom_reason: string;
+    processing_status: string;
+  } | null;
+  preview_url: string;
+  export_url: string;
+  parent_id: string | null;
+  report: Report | null;
+  can_validate?: boolean;
+  validation?: ValidationTask | null;
+}
+export type RunStatus =
+  | 'queued'
+  | 'generating'
+  | 'checking'
+  | 'succeeded'
+  | 'needs_attention'
+  | 'unverified'
+  | 'failed'
+  | 'cancelled'
+  | 'unknown';
+export interface ApiErrorData {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+export interface Run {
+  id: string;
+  chat_id: string;
+  operation: string;
+  generation_strategy?: 'lite' | 'pro' | 'lite_code_then_checks';
+  game_plan?: {
+    summary: string;
+    core_loop: string;
+    mechanics: string[];
+    progression: string;
+    outcome: string;
+    visual: string;
+    presentation?: { art_direction: string; motion: string };
+    assumptions: string[];
+  };
+  model_profile?: string;
+  model_label?: string;
+  model?: string;
+  provider?: string;
+  status: RunStatus;
+  stage: string;
+  message: string;
+  prompt: string;
+  created_at: string;
+  updated_at: string;
+  finished_at: string | null;
+  base_revision_id: string | null;
+  source_revision_id?: string | null;
+  candidate_revision_id: string | null;
+  result_revision_id: string | null;
+  error: ApiErrorData | null;
+  can_cancel: boolean;
+  can_continue: boolean;
+  can_retry_unknown?: boolean;
+  can_confirm: boolean;
+  can_recheck?: boolean;
+  confirmation?: { artifact_hash: string; report_id: number; requirements: string[] } | null;
+  attempts: number;
+  max_repair_attempts?: number;
+  max_model_calls?: number;
+  elapsed_seconds: number;
+  events_url: string;
+  budget: Budget;
+  metrics: Record<string, unknown>;
+}
+export interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  created_at: string;
+  run_id: string | null;
+  generation?: Pick<
+    Run,
+    'id' | 'status' | 'model_profile' | 'model_label' | 'elapsed_seconds'
+  > | null;
+}
+export interface ChatSummary {
+  id: string;
+  title: string;
+  audience: string;
+  updated_at: string;
+  current_revision: Revision | string | null;
+  active_run: Run | null;
+}
+export interface Chat extends ChatSummary {
+  created_at: string;
+  current_revision: Revision | null;
+  candidate_revision: Revision | null;
+  messages: Message[];
+  revisions: Revision[];
+  runs: Run[];
+  source_publication: string | null;
+}
+export interface Publication {
+  id: string;
+  title: string;
+  author: { id?: string; username: string };
+  created_at: string;
+  updated_at: string;
+  revision_id: string;
+  artifact_hash: string;
+  preview_url: string;
+  thumbnail_url: string | null;
+  likes: number;
+  liked: boolean;
+  is_owner: boolean;
+  source_chat_id: string | null;
+  verification: string;
+  public_url: string;
+}
+export interface RunEvent {
+  id: number;
+  kind: string;
+  message: string;
+  created_at: string;
+  details?: unknown;
+}

@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-29",
+  "code_revision": "b59ec1658221816125b2caed9661ffd39ffc9c92",
+  "pro_worker_revision": "a14f9f423f050b0563b00f4bd46fbcde1f27b323",
+  "limits": {
+    "application_pro_limit": 100,
+    "remote_pro_limit": 100,
+    "other_provider_limit": 1,
+    "remote_online": true,
+    "remote_draining": false,
+    "remote_active_jobs": 0,
+    "budget_limit_usd": "75.000000",
+    "model_calls_for_verification": 0
+  },
+  "local_tests": 67,
+  "pro_worker_local_tests": 190,
+  "pro_worker_linux_amd64_tests": 190,
+  "model_calls": 0,
+  "live_load_test": false,
+  "pro_host_ram_mib": 889,
+  "pro_host_cpus": 1,
+  "gpu_server_accessed": false,
+  "server": {
+    "revision": "b59ec1658221816125b2caed9661ffd39ffc9c92",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 76,
+      "CheckReport": 77,
+      "Feedback": 4,
+      "FeedbackProcessing": 2,
+      "Invocation": 268,
+      "Like": 3,
+      "Message": 244,
+      "Outbox": 124,
+      "Preference": 4,
+      "PromptTemplate": 3,
+      "Publication": 2,
+      "Revision": 70,
+      "Run": 124,
+      "RunEvent": 1385,
+      "User": 5,
+      "ValidationRequest": 58,
+      "ValidationTask": 58
+    },
+    "all_existing_records_preserved": true,
+    "unknown_preserved": 12,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "configuration_preserved_except_images_and_pro_concurrency": true,
+    "pro_concurrency": 100,
+    "relay_db_redis_identity_preserved": true,
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:b9c06ce35bf3754f9ce9612c1a568d7e5a4e792abdb50da6c1482f76efc86f88",
+        "image_tag": "gameforge-mini:cloud-b59ec16-20261029"
+      },
+      "preview": {
+        "image_id": "sha256:b9c06ce35bf3754f9ce9612c1a568d7e5a4e792abdb50da6c1482f76efc86f88",
+        "image_tag": "gameforge-mini:cloud-b59ec16-20261029"
+      },
+      "worker": {
+        "image_id": "sha256:b9c06ce35bf3754f9ce9612c1a568d7e5a4e792abdb50da6c1482f76efc86f88",
+        "image_tag": "gameforge-mini:cloud-b59ec16-20261029"
+      },
+      "beat": {
+        "image_id": "sha256:b9c06ce35bf3754f9ce9612c1a568d7e5a4e792abdb50da6c1482f76efc86f88",
+        "image_tag": "gameforge-mini:cloud-b59ec16-20261029"
+      },
+      "validator": {
+        "image_id": "sha256:77a7244262897f678f977d490fe2f1cd6b8f549d6850281bf8f37f05dd56ab1f",
+        "image_tag": "gameforge-mini-validator:cloud-b59ec16-20261029"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-b59ec16-20261029T160206Z.dump",
+    "backup_sha256": "3f9737282b801f10662f04608a65fe4020c9eb8755442c2802945036727a31ed",
+    "validator_isolation_verified": true,
+    "app_private_socket_read_only": true
+  },
+  "http": {
+    "https_verified": true,
+    "health_http": 200,
+    "assets_exact": 22,
+    "guest_private_api_denied": true,
+    "model_calls": 0,
+    "http_mutations": 0
+  },
+  "backend": {
+    "app_environment_probe": "mini-browser-v1:e0bc843703caa708d87f20ef0877f93798edfe677990159637b205940b5b69fa:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "manual_api_real_browser": "passed",
+    "idempotency": true,
+    "fresh_run": true,
+    "cancellation": true,
+    "no_autopromotion_or_generation": true,
+    "temporary_fixtures_rolled_back": true,
+    "persistent_records_unchanged": true,
+    "model_calls": 0
+  },
+  "validator_unchanged_canary_reused": true
+}

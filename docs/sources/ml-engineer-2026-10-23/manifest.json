@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-23",
+  "role": "reference_material_not_active_instructions",
+  "ml_branch": "origin/develop",
+  "ml_commit": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d",
+  "retrieval": "WebStorm Git Fetch; read without checkout or merge",
+  "files": [
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/adr/0001-target-architecture.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/adr/0001-target-architecture.md",
+      "sha256": "1e4fdb4ae7b1df4bdf3acfe0f26d17617c47ad34cbd0ab3c030b0f44bed767f4"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/adr/0002-generation-harness.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/adr/0002-generation-harness.md",
+      "sha256": "4537d063c3df385b9ff6f7207fb892abb4a8cb2375c1f97fe24fec464b77c2bf"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/adr/0003-openai-luna-mvp.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/adr/0003-openai-luna-mvp.md",
+      "sha256": "b9c43417994f9069b4295ce7fa95d50ea6695ec5909b20ca889ad9e1bbd57096"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/adr/0004-container-trust-boundaries.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/adr/0004-container-trust-boundaries.md",
+      "sha256": "699e72fba3da9d56dde56750c349ccae2ec1437ce6b4a6ee9260e03a01caf0ae"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/adr/0005-vllm-model-connector.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/adr/0005-vllm-model-connector.md",
+      "sha256": "47a08ea22a4b12a4286ba03f5fcf1a36b1a52f7576862b3ad0837aadd43b5987"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/architecture.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/architecture.md",
+      "sha256": "8f568c91239e75fdf45b10de0a6d66f47eb70b24a654898b841caea10e60719c"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/capacity.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/capacity.md",
+      "sha256": "02e68b87995b7fe628d83ed7a6326a7de9340f44951b66befe39c3d51256a816"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/ci.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/ci.md",
+      "sha256": "d11fc4a85b2bd2141bbdf47ba21196fb4c7d06c5e187ab7bc1365bf86cbabcfc"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/hackathon-requirements.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/hackathon-requirements.md",
+      "sha256": "87e53bebeeb1333cfe65a5b4268b25354cffea14dbb01be28d0160d25853c67e"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/docs/research/landscape.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:docs/research/landscape.md",
+      "sha256": "f1f175f988c0b47bcb401eb127a8036639928484a2d95b371a1322ef6b484305"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/hackathon_requirements.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:hackathon_requirements.md",
+      "sha256": "224001470caa767b4652ecd25b49b2a0770179d84fc2c166a06e7dc25a46f6d7"
+    },
+    {
+      "path": "docs/sources/ml-engineer-2026-10-23/работа.md",
+      "git_source": "e68cf1f8b54caca95e382ece4fe7f1b94c376d9d:работа.md",
+      "sha256": "f529c7c2ca4dc97682fccd9aa5bcfdfe77f9be6048625db932f48904a370aaf6"
+    }
+  ]
+}

@@ -1,0 +1,988 @@
+{
+  "date": "2026-10-25",
+  "purpose": "harness research, no deployment or new inference",
+  "research_model_calls": 0,
+  "gpu_server_access": false,
+  "production_source_unchanged": true,
+  "frozen_source_sha256": {
+    "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+    "generation/artifacts.py": "79d4512c3627d94e6ebd3cfc72cb47662f14d201e9501a8d636a4216dbdc0660",
+    "generation/check_repair.py": "e9f8cb669dd3dceedc9dd1a51502977497f2a476febda4244d080b041d6b1fda",
+    "generation/code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+    "generation/compact.py": "0e02b3dcb2174e340a1ce5144bc8c9bb18ec0a5de48185a6e3f8753fe772c782",
+    "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+    "generation/feedback.py": "a2f50dbe5884098401f9e767b4ded877fe19e109bcc6d6ce422fea204e61ae48",
+    "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+    "generation/prompts.py": "f0822e6c1bf7c11d0ffab4b163026e76f0cd9db012aa37dd5ddbe4c08aef38a9",
+    "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+    "generation/providers/codex.py": "c0ab8cc5888aee250416c53eb7c578a8ca77962134523731c3d1dd96b8bcf030",
+    "generation/providers/fake.py": "06f7e902eab646b706ab5985dca2098d7b55b628d70075965f4d8d109baf82ca",
+    "generation/providers/relay.py": "c1054f4b873be1d6db64ec9ff930a02aaa3fdea843ec62f79e2714bdd74bc3bd",
+    "generation/providers/vllm.py": "1ac02553528ce9fa4dec8e644acc0908b958ac91d421d7be328e47f539124427",
+    "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+    "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+    "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+    "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+    "generation/runtime/compact-v1.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+    "generation/runtime/compact-v1.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+    "generation/schema.py": "e1373e00b623259eb98b47230466c56c84d653129745d62fffba3db65dee7bd4",
+    "generation/service.py": "0573eb65e7bfc61bfa2e755f03b75a24f5d67eaeb906a08c6914a34631f798f6",
+    "generation/source_map.py": "6475586bd819a057fb7c7080d37328137354cc0a1eabfd3f0c6407bf227d2ec5",
+    "generation/source_policy.py": "f8a7772f079362e3c924e55a3d79b73eabbb6f988450c0a45e009437dfa0c6b8",
+    "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+    "scripts/evaluation.py": "0cbfc027cce1e93f3a3d397f4dcea786381868305fa79c90608109c0898db2a1",
+    "scripts/live_eval.py": "a373b8c53061e1762a119ca2a63ba7422911a6703cdcb762f2f4d9984284622b",
+    "studio/acceptance.py": "65d3a6a6be9b269d6ca4c781bbde2a4d4b3e56a74a4596c0cdec15fb71b9f3ab",
+    "studio/check_repair.py": "3e3466298ab0269379060330449fe0ec4b627dee721881b7e66956c15ed6597d",
+    "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+    "studio/models.py": "1730a0cf239fa5cae844299680741fc00dabd713197f9525b19063c1daff8393",
+    "studio/recovery.py": "5c6341d7c0c692a706f41a8382b3c953e23818d6d6198fea5fb9061d1421b6ea",
+    "studio/serialization.py": "9819ef70d801a742e25c6fdfc4de45c66fb119a2e8248c1000e00e31ee07026f",
+    "studio/services.py": "ffed6a9c2a3618c0b56b0606d475db4827a36315e992450dba39e744707b34c8",
+    "studio/tasks.py": "a524debc39d114089c143b3b0bd08d345bc0be17e98f70f0e646d875244eef06",
+    "studio/views.py": "c8363bad3d03e4dcb6fa128f44e021280e772df3e670cbb2aa0075a0f218a799",
+    "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+    "validation/checks.py": "7e6581b434a691f760708f95b7c29ed9afeb1d5ba89ee64e635846ad853461b6",
+    "validation/contracts.py": "cfaf614065c1004bebab6bd95d8d11fc6a06d312d224b4edbc6992679a293b77",
+    "validation/daemon.py": "d5147e7d25ed9b3d2681f0efe9b55fb1814064f7f661bb206d5027c9d9ccca4b",
+    "validation/diagnostics.py": "d659595501935c5967849c3189e247aa0fd6cecb088275b0df72eeab83800df7",
+    "validation/evidence.py": "ed971bdec55ed23f47940ab2cedb53586852fad2a767ef3a1e6b341a8a8d4b8a",
+    "validation/native.py": "3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+    "validation/protocol.py": "01c76424b763d989b0e49c7e9f49f1fd95c417bfce07117a5e5788f9210904bd",
+    "validation/runner.py": "7bb8d7f8336632627e9ddbb7c6d2905dc60c30f26833483dcae8eaf86a2cce23",
+    "validation/service.py": "6e46c102b76439272d716da081c8e8c4c51aa1c2bc327fe973658c3f5349e0e7",
+    "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd"
+  },
+  "pilot_ledger_sha256": "8e23dcaa905db17efce7b0325d87aa164b7a9cada71a552332b553a6a57f27fc",
+  "main_games": 9,
+  "main_call_counts": {
+    "create": 12,
+    "check_repair": 6,
+    "repair": 3
+  },
+  "source_repairs_all_syntax": true,
+  "checkpoint_affected_games": [
+    {
+      "case": "grid",
+      "profile": "compact_lines"
+    },
+    {
+      "case": "snake",
+      "profile": "compact_lines"
+    },
+    {
+      "case": "memory",
+      "profile": "compact_string"
+    }
+  ],
+  "operations": [
+    {
+      "case": "grid",
+      "profile": "compact_lines",
+      "run_id": "c89070b7-725d-4001-9e92-4ce0a43b144c",
+      "terminal_status": "unverified",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 2494,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "check_repair",
+          "state": "settled",
+          "finding_codes": [
+            "invalid_check",
+            "invalid_check"
+          ],
+          "usage": {
+            "input_tokens": 4535,
+            "output_tokens": 694,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+          "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "click_x"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "win_x"
+            }
+          ]
+        },
+        {
+          "id": "446339e5-c738-4504-a987-0e4b8ae0b40a",
+          "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "win_x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "profile": "full",
+      "run_id": "000865de-c7ff-4f3c-bf54-02632d68128e",
+      "terminal_status": "needs_attention",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1361,
+            "output_tokens": 4613,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "check_repair",
+          "state": "settled",
+          "finding_codes": [
+            "effect_mismatch",
+            "effect_mismatch",
+            "effect_mismatch"
+          ],
+          "usage": {
+            "input_tokens": 5475,
+            "output_tokens": 2323,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "028b2982-7ace-412c-9781-34a88c70fa96",
+          "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+          "status": "failed",
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "start-game"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "make-first-move"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "win-x"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "draw"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "ignore-invalid-move"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "no-move-after-win"
+            }
+          ]
+        },
+        {
+          "id": "3c3e7749-cf87-4b11-b80b-37fd5de948fe",
+          "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+          "status": "failed",
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "win-x"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "draw"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "no-move-after-win"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "profile": "compact_string",
+      "run_id": "0a5be74a-6ddb-4658-86d4-b53dd9fb693d",
+      "terminal_status": "needs_attention",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 2303,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "repair",
+          "state": "settled",
+          "finding_codes": [
+            "javascript_syntax"
+          ],
+          "usage": {
+            "input_tokens": 4293,
+            "output_tokens": 83,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "a9abcd1f-6832-4649-953d-3f1c513368c4",
+          "artifact_hash": "afbf00d5f63d4d3825a385b3bbe647206a6252cb2b73c03217fffc59ca728c38",
+          "status": "failed",
+          "findings": [
+            {
+              "code": "javascript_syntax",
+              "check_id": null
+            },
+            {
+              "code": "incomplete_checks",
+              "check_id": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "profile": "full",
+      "run_id": "4ecfd2f9-4f28-4985-b62a-e0ff3085f0b2",
+      "terminal_status": "needs_attention",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1255,
+            "output_tokens": 3668,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "check_repair",
+          "state": "failed",
+          "finding_codes": [
+            "incomplete_checks"
+          ],
+          "usage": {
+            "input_tokens": 4521,
+            "output_tokens": 386,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "dd3c5302-0a20-4f1a-b27b-7565cb067e2e",
+          "artifact_hash": "b084c21ac15ca975c2ba4b030e38f741fa3fcd1fd41277d2215a7ab3709433bd",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "incomplete_checks",
+              "check_id": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "profile": "compact_lines",
+      "run_id": "56ec8d7b-9941-43be-98f6-9479564b5ab9",
+      "terminal_status": "unverified",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "failed",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 898,
+            "output_tokens": 2716,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [
+            "invalid_schema"
+          ],
+          "usage": {
+            "input_tokens": 940,
+            "output_tokens": 3129,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "check_repair",
+          "state": "settled",
+          "finding_codes": [
+            "invalid_check",
+            "invalid_check",
+            "invalid_check"
+          ],
+          "usage": {
+            "input_tokens": 4676,
+            "output_tokens": 643,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "f6869ec5-e27c-4850-9007-9eaa7c6ea4a5",
+          "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "start_state"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "control_left"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "control_right"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "game_over"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "control_up"
+            }
+          ]
+        },
+        {
+          "id": "78b85f41-3023-4b90-8503-61d14e4f1d80",
+          "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "start_state"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "control_left"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "control_right"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "control_up"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "game_over"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "profile": "compact_string",
+      "run_id": "e158850e-af4b-4315-8ebb-36fbe5faae66",
+      "terminal_status": "failed",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 898,
+            "output_tokens": 1786,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+          "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+          "status": "infrastructure_error",
+          "findings": [
+            {
+              "code": "validator_unavailable",
+              "check_id": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "profile": "compact_string",
+      "run_id": "1e0868f4-368d-4ef6-8ccf-5a592a2bc4d7",
+      "terminal_status": "needs_attention",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 1904,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "check_repair",
+          "state": "failed",
+          "finding_codes": [
+            "invalid_check",
+            "invalid_check",
+            "invalid_check"
+          ],
+          "usage": {
+            "input_tokens": 4078,
+            "output_tokens": 489,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "bbc8f5b8-253f-4fc6-a459-d95ece6fdc9e",
+          "artifact_hash": "fdb708b6c715c6c71f6b092cea25b01cc254c44a3ce38e73054c756cd8567b36",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "start"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "open1"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "open2"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "win"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "profile": "full",
+      "run_id": "0a2fbb90-e722-4220-8a10-4642513e1898",
+      "terminal_status": "needs_attention",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1361,
+            "output_tokens": 4938,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [
+            "incomplete_sources"
+          ],
+          "usage": {
+            "input_tokens": 1459,
+            "output_tokens": 5155,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "repair",
+          "state": "settled",
+          "finding_codes": [
+            "javascript_syntax"
+          ],
+          "usage": {
+            "input_tokens": 6810,
+            "output_tokens": 3511,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "repair",
+          "state": "settled",
+          "finding_codes": [
+            "javascript_syntax"
+          ],
+          "usage": {
+            "input_tokens": 6829,
+            "output_tokens": 3196,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "029bdec3-36a8-42e7-8913-296a29c0dfb7",
+          "artifact_hash": "1145d0b02e0226e1df46a60a36b2e0038ca82b36e32fb68b70ab5ddcd74a9f25",
+          "status": "failed",
+          "findings": [
+            {
+              "code": "javascript_syntax",
+              "check_id": null
+            }
+          ]
+        },
+        {
+          "id": "b91077c3-4d0c-461a-95d6-6890d6525081",
+          "artifact_hash": "f307f7457eb6053e1761b64f7429e0c294e4025fe2d50cf10d58ad4e1be35a05",
+          "status": "failed",
+          "findings": [
+            {
+              "code": "javascript_syntax",
+              "check_id": null
+            }
+          ]
+        },
+        {
+          "id": "1dd45b5f-4d4f-4d7c-83d2-f324758d3c21",
+          "artifact_hash": "5dd2f9ede6212d45658d7866f8c2e0f30fdb9102f9c9a324cf96db58a871e82a",
+          "status": "failed",
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "c02-first-open"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "c03-win-after-pairs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "profile": "compact_lines",
+      "run_id": "62b82a7a-51bf-4287-a75c-b273fc2e764e",
+      "terminal_status": "unverified",
+      "calls": [
+        {
+          "operation": "create",
+          "state": "failed",
+          "finding_codes": [],
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 1175,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "create",
+          "state": "settled",
+          "finding_codes": [
+            "invalid_schema"
+          ],
+          "usage": {
+            "input_tokens": 1046,
+            "output_tokens": 2220,
+            "cached_input_tokens": 0
+          }
+        },
+        {
+          "operation": "check_repair",
+          "state": "settled",
+          "finding_codes": [
+            "invalid_check",
+            "invalid_check",
+            "invalid_check"
+          ],
+          "usage": {
+            "input_tokens": 3514,
+            "output_tokens": 101,
+            "cached_input_tokens": 0
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "a989604d-c250-42a0-98c7-c75e778ccf74",
+          "artifact_hash": "4f2e82def9b25473dbeb4dbefb65de3ec75f7c831fdc81f6b5e8174b30d6832f",
+          "status": "unverified",
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "start"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "flip_control"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "win"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "requirement_drift_example": {
+    "user_outcome": "Реальное открытие обеих пар даёт победу",
+    "model_requirement": "При совпадении пары — победа"
+  },
+  "checkpoint_ablation": [
+    {
+      "case": "grid",
+      "profile": "compact_lines",
+      "revision": "446339e5-c738-4504-a987-0e4b8ae0b40a",
+      "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+      "original_status": "unverified",
+      "research_status": "failed",
+      "production": false,
+      "model_calls": 0,
+      "findings": [
+        {
+          "code": "effect_mismatch",
+          "check_id": "win_x",
+          "message": "Не подтверждено: Крестики выигрывают по диагонали."
+        }
+      ],
+      "facts": [
+        {
+          "id": "start",
+          "status": "passed",
+          "before": null,
+          "after": "playing",
+          "expected": {
+            "value": "playing",
+            "operator": "eq"
+          }
+        },
+        {
+          "id": "click_x",
+          "status": "passed",
+          "before": "X",
+          "after": "O",
+          "expected": {
+            "value": "O",
+            "operator": "changed"
+          }
+        },
+        {
+          "id": "win_x",
+          "status": "failed",
+          "before": "playing",
+          "after": "playing",
+          "expected": {
+            "value": "X won",
+            "operator": "eq"
+          }
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "profile": "compact_lines",
+      "revision": "78b85f41-3023-4b90-8503-61d14e4f1d80",
+      "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+      "original_status": "unverified",
+      "research_status": "failed",
+      "production": false,
+      "model_calls": 0,
+      "findings": [
+        {
+          "code": "effect_mismatch",
+          "check_id": "control_left",
+          "message": "Не подтверждено: Проверить управление влево"
+        },
+        {
+          "code": "effect_mismatch",
+          "check_id": "control_right",
+          "message": "Не подтверждено: Проверить управление вправо"
+        },
+        {
+          "code": "effect_mismatch",
+          "check_id": "control_up",
+          "message": "Не подтверждено: Проверить управление вверх"
+        },
+        {
+          "code": "effect_mismatch",
+          "check_id": "game_over",
+          "message": "Не подтверждено: Проверить завершение игры при столкновении"
+        }
+      ],
+      "facts": [
+        {
+          "id": "start_state",
+          "status": "passed",
+          "before": 1,
+          "after": 1,
+          "expected": {
+            "value": 1,
+            "operator": "eq"
+          }
+        },
+        {
+          "id": "control_left",
+          "status": "failed",
+          "before": 0,
+          "after": 0,
+          "expected": {
+            "value": null,
+            "operator": "changed"
+          }
+        },
+        {
+          "id": "control_right",
+          "status": "failed",
+          "before": 0,
+          "after": 0,
+          "expected": {
+            "value": null,
+            "operator": "changed"
+          }
+        },
+        {
+          "id": "control_up",
+          "status": "failed",
+          "before": 0,
+          "after": 0,
+          "expected": {
+            "value": null,
+            "operator": "changed"
+          }
+        },
+        {
+          "id": "game_over",
+          "status": "failed",
+          "before": false,
+          "after": false,
+          "expected": {
+            "value": true,
+            "operator": "eq"
+          }
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "profile": "compact_string",
+      "revision": "bbc8f5b8-253f-4fc6-a459-d95ece6fdc9e",
+      "artifact_hash": "fdb708b6c715c6c71f6b092cea25b01cc254c44a3ce38e73054c756cd8567b36",
+      "original_status": "unverified",
+      "research_status": "unverified",
+      "production": false,
+      "model_calls": 0,
+      "findings": [
+        {
+          "code": "invalid_check",
+          "check_id": "open1",
+          "message": "Одна точка baseline допустима только для changed/increased/decreased."
+        },
+        {
+          "code": "invalid_check",
+          "check_id": "open2",
+          "message": "Одна точка baseline допустима только для changed/increased/decreased."
+        },
+        {
+          "code": "invalid_check",
+          "check_id": "win",
+          "message": "Одна точка baseline допустима только для changed/increased/decreased."
+        }
+      ],
+      "facts": [
+        {
+          "id": "start",
+          "status": "passed",
+          "before": 0,
+          "after": 0,
+          "expected": {
+            "value": 0,
+            "operator": "eq"
+          }
+        },
+        {
+          "id": "open1",
+          "status": "unverified",
+          "before": null,
+          "after": null,
+          "expected": null
+        },
+        {
+          "id": "open2",
+          "status": "unverified",
+          "before": null,
+          "after": null,
+          "expected": null
+        },
+        {
+          "id": "win",
+          "status": "unverified",
+          "before": null,
+          "after": null,
+          "expected": null
+        }
+      ]
+    }
+  ],
+  "random_counterfactual": {
+    "model_calls": 0,
+    "artifact_hash": "5105e773e3b5d0303db16fe5cf2dba91f92d0f70b1b72162ea61f8f3a21ae8eb",
+    "complete_game": false,
+    "hypothesis": "Uncoupled random pages can falsely attribute a value to ignored input.",
+    "unseeded_passed_fact_counts": [
+      2
+    ],
+    "seeded_passed_fact_count": 0,
+    "seeded_statuses": [
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified",
+      "unverified"
+    ],
+    "unseeded_overall_statuses": [
+      "failed"
+    ]
+  },
+  "timed_outcome": {
+    "artifact_hash": "fdf10cec8024660fd0ef863ccfe62c40658e245644649c297bb4466a0bd48b05",
+    "status": "unverified",
+    "facts": [
+      {
+        "id": "start",
+        "category": "start",
+        "status": "passed",
+        "after": 0,
+        "counterfactual": null
+      },
+      {
+        "id": "control",
+        "category": "control",
+        "status": "passed",
+        "after": 1,
+        "counterfactual": {
+          "comparison": false,
+          "status": "failed",
+          "execution_valid": true,
+          "failure_codes": [
+            "effect_mismatch"
+          ],
+          "before": null,
+          "after": 0,
+          "detail": null,
+          "observation_absent": false,
+          "omitted_steps": [
+            0
+          ]
+        }
+      },
+      {
+        "id": "outcome",
+        "category": "outcome",
+        "status": "unverified",
+        "after": true,
+        "counterfactual": {
+          "comparison": true,
+          "status": "passed",
+          "execution_valid": true,
+          "failure_codes": [],
+          "before": null,
+          "after": true,
+          "detail": null,
+          "observation_absent": false,
+          "omitted_steps": [
+            0
+          ]
+        }
+      }
+    ]
+  },
+  "random_false_positive_examples": [
+    {
+      "id": "random_1",
+      "status": "passed",
+      "after": true,
+      "counterfactual": {
+        "comparison": false,
+        "status": "failed",
+        "execution_valid": true,
+        "failure_codes": [
+          "effect_mismatch"
+        ],
+        "before": null,
+        "after": false,
+        "detail": null,
+        "observation_absent": false,
+        "omitted_steps": [
+          0
+        ]
+      }
+    },
+    {
+      "id": "random_10",
+      "status": "passed",
+      "after": true,
+      "counterfactual": {
+        "comparison": false,
+        "status": "failed",
+        "execution_valid": true,
+        "failure_codes": [
+          "effect_mismatch"
+        ],
+        "before": null,
+        "after": false,
+        "detail": null,
+        "observation_absent": false,
+        "omitted_steps": [
+          0
+        ]
+      }
+    }
+  ],
+  "private_experiment_sha256": {
+    ".data/harness-r2-research-20261025.py": "be7b1a35dc9702637bc67a2a51afc69620e4b68bf267e64ad339e9133496c538",
+    ".data/harness-r2-random-control.py": "cd3622b6a9a4144d2a7f5a2ad083256fc4606e9a18b29bf6f960541e33b911f1",
+    ".data/harness-r2-timed-outcome.py": "018d5a1fc0b7aa4b2226263dc3631667943ceee82065f43dc4ff3b482ea377a9",
+    ".data/harness-r2-research-20261025/random-control.json": "f23ffa674e532cefe37efa4ff95d3571bae15d17f9e430c3b39c15cc2b73a433",
+    ".data/harness-r2-research-20261025/timed-outcome.json": "cbae6916b7550d112d34912f601eba0b530988a3a4de4bcdee8619d827da5e77",
+    ".data/harness-r2-research-20261025/summary.json": "970ef04024c1ba12e33d8d80926e3aba15d4e1da09b43cd6defc6ae068229a34"
+  }
+}

@@ -1,0 +1,3145 @@
+{
+  "schema_version": 2,
+  "authorization": "New user authorization on 2026-10-25: up to 48 Lite calls / 180 minutes",
+  "limits": {
+    "max_calls": 48,
+    "max_seconds": 10800
+  },
+  "started_at": 1792927799.346396,
+  "closed_at": 1792931665.2615192,
+  "submission_deadline": 1792936799.346396,
+  "hard_deadline": 1792938599.346396,
+  "closure_reason": "Requested phases completed or bounded stop; unused allowance permanently closed",
+  "controller_sha256": "37730c69ae6f0fc566f24c4452ee20e0310092216fc4925eec5c316f84668d5c",
+  "date": "2026-10-25",
+  "baseline_head": "de097fb",
+  "duration_seconds": 3865.9151232242584,
+  "unused_calls_closed": 25,
+  "generator_provenance": {
+    "source_sha256": {
+      "generation/__init__.py": "b44d55a2343848715e055fee4ed4890398d1dbd8c2f4400161c4fa7bd3b79e85",
+      "generation/artifacts.py": "79d4512c3627d94e6ebd3cfc72cb47662f14d201e9501a8d636a4216dbdc0660",
+      "generation/check_repair.py": "e9f8cb669dd3dceedc9dd1a51502977497f2a476febda4244d080b041d6b1fda",
+      "generation/code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+      "generation/compact.py": "0e02b3dcb2174e340a1ce5144bc8c9bb18ec0a5de48185a6e3f8753fe772c782",
+      "generation/errors.py": "154ac598fcf91a5853af63707fa294c1c2bb3eb3d27a95bf86920ddf93db4682",
+      "generation/feedback.py": "a2f50dbe5884098401f9e767b4ded877fe19e109bcc6d6ce422fea204e61ae48",
+      "generation/normalization.py": "9f3fc7d36f478728e5f75ff99750c7e8363bed1df79a241d833c39797cbb0c50",
+      "generation/prompts.py": "f0822e6c1bf7c11d0ffab4b163026e76f0cd9db012aa37dd5ddbe4c08aef38a9",
+      "generation/providers/__init__.py": "03502b2f505310307ead41fad8b1aee77bc3d905008caa5be225cf186e3ea6c9",
+      "generation/providers/codex.py": "c0ab8cc5888aee250416c53eb7c578a8ca77962134523731c3d1dd96b8bcf030",
+      "generation/providers/fake.py": "06f7e902eab646b706ab5985dca2098d7b55b628d70075965f4d8d109baf82ca",
+      "generation/providers/relay.py": "c1054f4b873be1d6db64ec9ff930a02aaa3fdea843ec62f79e2714bdd74bc3bd",
+      "generation/providers/vllm.py": "1ac02553528ce9fa4dec8e644acc0908b958ac91d421d7be328e47f539124427",
+      "generation/relay_api/__init__.py": "9bffcdcc7a3893df1f49ec1a43f40b91363332821ca9eac014e19fdd8601f3eb",
+      "generation/relay_api/client.py": "50158302293980be6c06f639288052c5ba9d558f5e9f0d3254436d5f60bf5722",
+      "generation/relay_api/diagnostics.py": "56496b3d59c543865e7f25f43a56f6ac8e077df32cae7e619c5272a29a653f60",
+      "generation/relay_api/protocol.py": "bf02583b12a11eddae4a07928759263333a3e8663b47d9f378a1e5244ce00313",
+      "generation/runtime/compact-v1.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+      "generation/runtime/compact-v1.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+      "generation/schema.py": "e1373e00b623259eb98b47230466c56c84d653129745d62fffba3db65dee7bd4",
+      "generation/service.py": "0573eb65e7bfc61bfa2e755f03b75a24f5d67eaeb906a08c6914a34631f798f6",
+      "generation/source_map.py": "6475586bd819a057fb7c7080d37328137354cc0a1eabfd3f0c6407bf227d2ec5",
+      "generation/source_policy.py": "f8a7772f079362e3c924e55a3d79b73eabbb6f988450c0a45e009437dfa0c6b8",
+      "generation/transport_diagnostics.py": "ac9153f8e8c84c81015b7156b81e32e50da0de8415c2e4712374c4be8bd2d026",
+      "scripts/evaluation.py": "0cbfc027cce1e93f3a3d397f4dcea786381868305fa79c90608109c0898db2a1",
+      "scripts/live_eval.py": "a373b8c53061e1762a119ca2a63ba7422911a6703cdcb762f2f4d9984284622b",
+      "studio/acceptance.py": "65d3a6a6be9b269d6ca4c781bbde2a4d4b3e56a74a4596c0cdec15fb71b9f3ab",
+      "studio/check_repair.py": "3e3466298ab0269379060330449fe0ec4b627dee721881b7e66956c15ed6597d",
+      "studio/continuations.py": "931241e4d00cb0811db819dba0e1bbb793f6af5a256b8718aacfe14f0ad3032f",
+      "studio/models.py": "1730a0cf239fa5cae844299680741fc00dabd713197f9525b19063c1daff8393",
+      "studio/recovery.py": "5c6341d7c0c692a706f41a8382b3c953e23818d6d6198fea5fb9061d1421b6ea",
+      "studio/serialization.py": "9819ef70d801a742e25c6fdfc4de45c66fb119a2e8248c1000e00e31ee07026f",
+      "studio/services.py": "ffed6a9c2a3618c0b56b0606d475db4827a36315e992450dba39e744707b34c8",
+      "studio/tasks.py": "a524debc39d114089c143b3b0bd08d345bc0be17e98f70f0e646d875244eef06",
+      "studio/views.py": "c8363bad3d03e4dcb6fa128f44e021280e772df3e670cbb2aa0075a0f218a799",
+      "validation/__init__.py": "1dbbffa6ee4bc8f0cdd6f51759bd69538e538bcf49a96d54759e6bfcd92db87d",
+      "validation/checks.py": "7e6581b434a691f760708f95b7c29ed9afeb1d5ba89ee64e635846ad853461b6",
+      "validation/contracts.py": "cfaf614065c1004bebab6bd95d8d11fc6a06d312d224b4edbc6992679a293b77",
+      "validation/daemon.py": "d5147e7d25ed9b3d2681f0efe9b55fb1814064f7f661bb206d5027c9d9ccca4b",
+      "validation/diagnostics.py": "d659595501935c5967849c3189e247aa0fd6cecb088275b0df72eeab83800df7",
+      "validation/evidence.py": "ed971bdec55ed23f47940ab2cedb53586852fad2a767ef3a1e6b341a8a8d4b8a",
+      "validation/native.py": "3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+      "validation/protocol.py": "01c76424b763d989b0e49c7e9f49f1fd95c417bfce07117a5e5788f9210904bd",
+      "validation/runner.py": "7bb8d7f8336632627e9ddbb7c6d2905dc60c30f26833483dcae8eaf86a2cce23",
+      "validation/service.py": "6e46c102b76439272d716da081c8e8c4c51aa1c2bc327fe973658c3f5349e0e7",
+      "validation/syntax.py": "4460118c2b60694d8de7aa9dd9e80ea5b520749cba7ba6f262d6262287b7bccd"
+    },
+    "weight_revision": "Not exposed by the relay API; model alias only",
+    "sampling_defaults": "Provider defaults; inspect captured request for explicit values"
+  },
+  "source_archive_sha256": "8067773386b5855c203ce2eaefb4a080a105658e4b236bbd5d6e26284ea26140",
+  "summary": {
+    "counts": {
+      "operations": 12,
+      "automatic": 0,
+      "playable": 5,
+      "broken": 7,
+      "unverified": 0,
+      "unreviewed": 0,
+      "playable_not_accepted": 5,
+      "false_acceptances": 0,
+      "unknown_usage": 0
+    },
+    "tokens": {
+      "input_tokens": 66614,
+      "output_tokens": 49374
+    },
+    "remaining_calls": 25,
+    "results": [
+      {
+        "case": "grid",
+        "kind": "compact_lines",
+        "run_id": "c89070b7-725d-4001-9e92-4ce0a43b144c",
+        "status": "unverified",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "536711d5-c156-44a4-a72f-be5c9751ba3a": "playable",
+          "446339e5-c738-4504-a987-0e4b8ae0b40a": "playable"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 157.5526828765869,
+        "decision_seconds": 221.30657505989075,
+        "first_playable_seconds": 157.5526828765869,
+        "calls_after_playable": 1
+      },
+      {
+        "case": "grid",
+        "kind": "full",
+        "run_id": "000865de-c7ff-4f3c-bf54-02632d68128e",
+        "status": "needs_attention",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "028b2982-7ace-412c-9781-34a88c70fa96": "playable",
+          "3c3e7749-cf87-4b11-b80b-37fd5de948fe": "playable"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 288.2583661079407,
+        "decision_seconds": 443.6072270870209,
+        "first_playable_seconds": 288.2583661079407,
+        "calls_after_playable": 1
+      },
+      {
+        "case": "grid",
+        "kind": "compact_string",
+        "run_id": "0a5be74a-6ddb-4658-86d4-b53dd9fb693d",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "a9abcd1f-6832-4649-953d-3f1c513368c4": "broken"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 155.853924036026,
+        "decision_seconds": 173.06602907180786,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "snake",
+        "kind": "full",
+        "run_id": "4ecfd2f9-4f28-4985-b62a-e0ff3085f0b2",
+        "status": "needs_attention",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "dd3c5302-0a20-4f1a-b27b-7565cb067e2e": "playable"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 230.39247798919678,
+        "decision_seconds": 264.5213210582733,
+        "first_playable_seconds": 230.39247798919678,
+        "calls_after_playable": 1
+      },
+      {
+        "case": "snake",
+        "kind": "compact_lines",
+        "run_id": "56ec8d7b-9941-43be-98f6-9479564b5ab9",
+        "status": "unverified",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "f6869ec5-e27c-4850-9007-9eaa7c6ea4a5": "broken",
+          "78b85f41-3023-4b90-8503-61d14e4f1d80": "broken"
+        },
+        "calls": 3,
+        "reserved_ceiling": 3,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 357.3845338821411,
+        "decision_seconds": 413.87971687316895,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "snake",
+        "kind": "compact_string",
+        "run_id": "e158850e-af4b-4315-8ebb-36fbe5faae66",
+        "status": "failed",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "9ff761b9-5ee3-4caa-88bd-f771fe091bbf": "broken"
+        },
+        "calls": 1,
+        "reserved_ceiling": 1,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 114.33452415466309,
+        "decision_seconds": 115.7111451625824,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "compact_string",
+        "run_id": "1e0868f4-368d-4ef6-8ccf-5a592a2bc4d7",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "bbc8f5b8-253f-4fc6-a459-d95ece6fdc9e": "broken"
+        },
+        "calls": 2,
+        "reserved_ceiling": 2,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 114.79505515098572,
+        "decision_seconds": 148.8053960800171,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "full",
+        "run_id": "0a2fbb90-e722-4220-8a10-4642513e1898",
+        "status": "needs_attention",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "029bdec3-36a8-42e7-8913-296a29c0dfb7": "broken",
+          "b91077c3-4d0c-461a-95d6-6890d6525081": "broken",
+          "1dd45b5f-4d4f-4d7c-83d2-f324758d3c21": "broken"
+        },
+        "calls": 4,
+        "reserved_ceiling": 4,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 613.7538900375366,
+        "decision_seconds": 1053.6567301750183,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "memory",
+        "kind": "compact_lines",
+        "run_id": "62b82a7a-51bf-4287-a75c-b273fc2e764e",
+        "status": "unverified",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "a989604d-c250-42a0-98c7-c75e778ccf74": "broken"
+        },
+        "calls": 3,
+        "reserved_ceiling": 3,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 217.82026195526123,
+        "decision_seconds": 239.74047994613647,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "grid",
+        "kind": "controlled_compact_check_repair",
+        "run_id": "e7921dd1-8b9b-479a-8c57-461e410772f7",
+        "status": "unverified",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "af0e3908-589a-4312-86e2-c7d25c8d37fd": "playable"
+        },
+        "calls": 1,
+        "reserved_ceiling": 1,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 56.26941895484924,
+        "decision_seconds": 61.18178701400757,
+        "first_playable_seconds": 56.26941895484924,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "grid",
+        "kind": "controlled_full_check_repair",
+        "run_id": "a4f4d8a2-e382-44c0-8c6f-a000171640fa",
+        "status": "unverified",
+        "verdict": "playable",
+        "revision_verdicts": {
+          "72cd6975-9798-40b1-8863-f507c0af66b1": "playable"
+        },
+        "calls": 1,
+        "reserved_ceiling": 1,
+        "inherited_candidate": false,
+        "first_candidate_seconds": 75.5783748626709,
+        "decision_seconds": 79.31307101249695,
+        "first_playable_seconds": 75.5783748626709,
+        "calls_after_playable": 0
+      },
+      {
+        "case": "snake",
+        "kind": "recheck_overlong",
+        "run_id": "0bdfac8d-c3e8-41a6-9dc3-31e2568935e7",
+        "status": "failed",
+        "verdict": "broken",
+        "revision_verdicts": {
+          "9ff761b9-5ee3-4caa-88bd-f771fe091bbf": "broken"
+        },
+        "calls": 0,
+        "reserved_ceiling": 0,
+        "inherited_candidate": true,
+        "first_candidate_seconds": null,
+        "decision_seconds": 1.7361180782318115,
+        "first_playable_seconds": null,
+        "calls_after_playable": 0
+      }
+    ],
+    "skipped_edits": [],
+    "note": "Unreviewed/uncertain outcomes remain in the denominator. Application status is not an independent verdict."
+  },
+  "operations": [
+    {
+      "case": "grid",
+      "kind": "compact_lines",
+      "criteria": {
+        "start": "Начинается пустая партия 3×3 на Canvas",
+        "control": "Ходы X/O чередуются; занятую клетку нельзя перезаписать",
+        "outcome": "Реальные ходы дают победителя или ничью",
+        "mobile": "Управление и поле доступны на телефоне"
+      },
+      "run": {
+        "id": "c89070b7-725d-4001-9e92-4ce0a43b144c",
+        "status": "unverified",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "lines",
+        "attempts": 2,
+        "created_at": "2026-10-25T11:29:59.543756+00:00",
+        "finished_at": "2026-10-25T11:33:40.850331+00:00",
+        "candidate_revision_id": "446339e5-c738-4504-a987-0e4b8ae0b40a",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "manual_verification",
+      "calls": [
+        {
+          "id": "06e5ba33-9ca2-4f00-a597-be8513a121a8",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 2494,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:29:59.849975+00:00",
+          "sent_at": "2026-10-25T11:29:59.865688+00:00",
+          "finished_at": "2026-10-25T11:32:37.068128+00:00",
+          "elapsed_seconds": 157.195824,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 154.35247315932065,
+            "first_output_seconds": 5.316558548249304
+          },
+          "submitted_schema_sha256": "4cb692532c0e5df4f030a85b858d1b3bf154af12b997fd5f60ec3573727f905c",
+          "lines": {
+            "source_lines_present": true,
+            "parentheses": {
+              "(": 87,
+              ")": 87
+            },
+            "source_sha256": "d2ecba2ccc46155a0e6ce1d71e00ed7db99f6a284c17610d77578a09fbb65f89",
+            "missing_required": []
+          }
+        },
+        {
+          "id": "1766df47-d6b3-48ec-bb23-ab4314aa5361",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4535,
+            "output_tokens": 694,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:32:40.753130+00:00",
+          "sent_at": "2026-10-25T11:32:40.765082+00:00",
+          "finished_at": "2026-10-25T11:33:35.101596+00:00",
+          "elapsed_seconds": 54.332539,
+          "operation": "check_repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 47.47062083054334,
+            "first_output_seconds": 5.762612976133823
+          },
+          "submitted_schema_sha256": "cec14e0751cea01db85efe4fdc031418b3decfa8dfa534d8cd2d0464239a76fb",
+          "source_files_sha256": {
+            "game.js": "d2ecba2ccc46155a0e6ce1d71e00ed7db99f6a284c17610d77578a09fbb65f89",
+            "index.html": "98948eab5ccf887d8aeb3198b560f658399e5941b3db37dcf96ba81175ec3893",
+            "runtime.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+            "runtime.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+          "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:32:37.096439+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "d2ecba2ccc46155a0e6ce1d71e00ed7db99f6a284c17610d77578a09fbb65f89",
+              "bytes": 3664
+            },
+            "index.html": {
+              "sha256": "98948eab5ccf887d8aeb3198b560f658399e5941b3db37dcf96ba81175ec3893",
+              "bytes": 603
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "click_x",
+                "category": "control",
+                "status": "unverified"
+              },
+              {
+                "id": "win_x",
+                "category": "outcome",
+                "status": "unverified"
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "check_id": "click_x"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "win_x"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "evidence_source_revision_id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+            "evidence_file": "independent-core.json",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Empty board and X turn on initial real rendered scene."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Actual taps alternate X/O; occupied cell preserved. Independent core 9/9."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Real move sequences produce X win, O win and draw."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Actual taps and reset reachable at 390x844; desktop and resize also passed; screenshot inspected."
+              }
+            },
+            "additional_defects": [
+              "Advertised R reset uses KeyR rather than event.key; independent extra test records failure."
+            ]
+          },
+          "independent_evidence": {
+            "independent-extra-checks.json": "7bdffde66b30be3b52c1d202bdb51c5c19288cd707ddc0c3b760e81e93c4a500",
+            "independent-core.json": "ae80662c78298037e3e03e7209239394b5f7d34dabc57583edfe42741bb064e0",
+            "independent-checks.json": "f2e4dbbceb74f9d5954eb083819f08aa80b892878f6aa1c320a62213fe6b1364",
+            "independent-core.jpg": "7df4b913e3196b46f3ae45fdf8ee040f5a24e6284605d67525ab37985e3c6176",
+            "independent-extra.json": "a1d108c91c2937141688354c47a11fd916a11356d6e00acf5eaab2b2544001fd",
+            "independent-extra.jpg": "5dfd7fda02ec2d1ed8467f086490b03a7e9d76e794e259c2e9d558811471b1af",
+            "independent-observers.json": "5908957c426ccf42d8de336b1dc12eafc16f538cf80aee9807868919f048f71a"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+              "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+              "files": {
+                "independent-extra-checks.json": "7bdffde66b30be3b52c1d202bdb51c5c19288cd707ddc0c3b760e81e93c4a500",
+                "independent-core.json": "ae80662c78298037e3e03e7209239394b5f7d34dabc57583edfe42741bb064e0",
+                "independent-checks.json": "f2e4dbbceb74f9d5954eb083819f08aa80b892878f6aa1c320a62213fe6b1364",
+                "independent-core.jpg": "7df4b913e3196b46f3ae45fdf8ee040f5a24e6284605d67525ab37985e3c6176",
+                "independent-extra.json": "a1d108c91c2937141688354c47a11fd916a11356d6e00acf5eaab2b2544001fd",
+                "independent-extra.jpg": "5dfd7fda02ec2d1ed8467f086490b03a7e9d76e794e259c2e9d558811471b1af",
+                "independent-observers.json": "5908957c426ccf42d8de336b1dc12eafc16f538cf80aee9807868919f048f71a"
+              }
+            }
+          ]
+        },
+        {
+          "id": "446339e5-c738-4504-a987-0e4b8ae0b40a",
+          "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+          "parent_id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:33:35.130006+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "d2ecba2ccc46155a0e6ce1d71e00ed7db99f6a284c17610d77578a09fbb65f89",
+              "bytes": 3664
+            },
+            "index.html": {
+              "sha256": "98948eab5ccf887d8aeb3198b560f658399e5941b3db37dcf96ba81175ec3893",
+              "bytes": 603
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "click_x",
+                "category": "control",
+                "status": "passed"
+              },
+              {
+                "id": "win_x",
+                "category": "outcome",
+                "status": "unverified"
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "check_id": "win_x"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "evidence_source_revision_id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+            "evidence_file": "independent-core.json",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Empty board and X turn on initial real rendered scene."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Actual taps alternate X/O; occupied cell preserved. Independent core 9/9."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Real move sequences produce X win, O win and draw."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Actual taps and reset reachable at 390x844; desktop and resize also passed; screenshot inspected."
+              }
+            },
+            "additional_defects": [
+              "Advertised R reset uses KeyR rather than event.key; independent extra test records failure."
+            ]
+          },
+          "independent_evidence": {},
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+              "artifact_hash": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+              "files": {
+                "independent-extra-checks.json": "7bdffde66b30be3b52c1d202bdb51c5c19288cd707ddc0c3b760e81e93c4a500",
+                "independent-core.json": "ae80662c78298037e3e03e7209239394b5f7d34dabc57583edfe42741bb064e0",
+                "independent-checks.json": "f2e4dbbceb74f9d5954eb083819f08aa80b892878f6aa1c320a62213fe6b1364",
+                "independent-core.jpg": "7df4b913e3196b46f3ae45fdf8ee040f5a24e6284605d67525ab37985e3c6176",
+                "independent-extra.json": "a1d108c91c2937141688354c47a11fd916a11356d6e00acf5eaab2b2544001fd",
+                "independent-extra.jpg": "5dfd7fda02ec2d1ed8467f086490b03a7e9d76e794e259c2e9d558811471b1af",
+                "independent-observers.json": "5908957c426ccf42d8de336b1dc12eafc16f538cf80aee9807868919f048f71a"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "kind": "full",
+      "criteria": {
+        "start": "Начинается пустая партия 3×3 на Canvas",
+        "control": "Ходы X/O чередуются; занятую клетку нельзя перезаписать",
+        "outcome": "Реальные ходы дают победителя или ничью",
+        "mobile": "Управление и поле доступны на телефоне"
+      },
+      "run": {
+        "id": "000865de-c7ff-4f3c-bf54-02632d68128e",
+        "status": "needs_attention",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "full",
+        "source_format": "string",
+        "attempts": 2,
+        "created_at": "2026-10-25T11:34:48.932962+00:00",
+        "finished_at": "2026-10-25T11:42:12.540189+00:00",
+        "candidate_revision_id": "3c3e7749-cf87-4b11-b80b-37fd5de948fe",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "check_review_required",
+      "calls": [
+        {
+          "id": "2792a3c5-0abf-4547-967d-9a8015550a3c",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1361,
+            "output_tokens": 4613,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:34:49.022383+00:00",
+          "sent_at": "2026-10-25T11:34:49.029671+00:00",
+          "finished_at": "2026-10-25T11:39:37.161582+00:00",
+          "elapsed_seconds": 288.127884,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 281.6640834854916,
+            "first_output_seconds": 9.63043908122927
+          },
+          "submitted_schema_sha256": "dc0d09b6a8b85d0b7b05b31d9c81d6d967afbf8554d2108dd765319b9804e060"
+        },
+        {
+          "id": "636ba443-bc16-4246-98ac-8a382281cac3",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5475,
+            "output_tokens": 2323,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:39:42.082606+00:00",
+          "sent_at": "2026-10-25T11:39:42.094717+00:00",
+          "finished_at": "2026-10-25T11:42:07.161707+00:00",
+          "elapsed_seconds": 145.056443,
+          "operation": "check_repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 142.46484864410013,
+            "first_output_seconds": 7.2666395446285605
+          },
+          "submitted_schema_sha256": "ffb969677593c18148c6e085a5f17a3bca466059e0819f95d0694cfc88eab440",
+          "source_files_sha256": {
+            "game.js": "98f5f1facec166789a7ea0ee31a9aef71a86c455507157c0b2b416a19fc2e108",
+            "index.html": "b82345434ed39e193fb016f5e75e0f0fa211cd1c9363dd599f802397db25ec97",
+            "styles.css": "4b5181c04eafdf06aac1c4ddbeb5c8b959e4409f2572d11f472bb52232c350fb"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "028b2982-7ace-412c-9781-34a88c70fa96",
+          "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:39:37.191328+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "98f5f1facec166789a7ea0ee31a9aef71a86c455507157c0b2b416a19fc2e108",
+              "bytes": 4386
+            },
+            "index.html": {
+              "sha256": "b82345434ed39e193fb016f5e75e0f0fa211cd1c9363dd599f802397db25ec97",
+              "bytes": 838
+            },
+            "styles.css": {
+              "sha256": "4b5181c04eafdf06aac1c4ddbeb5c8b959e4409f2572d11f472bb52232c350fb",
+              "bytes": 1546
+            }
+          },
+          "report": {
+            "status": "failed",
+            "facts": [
+              {
+                "id": "show-start-overlay",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "start-game",
+                "category": "start",
+                "status": "failed"
+              },
+              {
+                "id": "make-first-move",
+                "category": "control",
+                "status": "failed"
+              },
+              {
+                "id": "win-x",
+                "category": "outcome",
+                "status": "failed"
+              },
+              {
+                "id": "draw",
+                "category": "outcome",
+                "status": "failed"
+              },
+              {
+                "id": "ignore-invalid-move",
+                "category": "regression",
+                "status": "failed"
+              },
+              {
+                "id": "no-move-after-win",
+                "category": "regression",
+                "status": "failed"
+              }
+            ],
+            "findings": [
+              {
+                "code": "effect_mismatch",
+                "check_id": "start-game"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "make-first-move"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "win-x"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "draw"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "ignore-invalid-move"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "no-move-after-win"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "evidence_source_revision_id": "028b2982-7ace-412c-9781-34a88c70fa96",
+            "evidence_file": "independent-core.json",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Actual start button dismisses overlay and shows X turn."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Real touch and desktop mouse alternate turns; occupied cell ignored. Core 10/10."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Real X/O winning routes and draw reach visible Russian status, no later moves after win."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "390x844 real taps/start reachable; desktop and resize preserve play state."
+              }
+            },
+            "additional_defects": [
+              "No visible restart control after ending; only initial start button is present and hidden."
+            ]
+          },
+          "independent_evidence": {
+            "independent-core.json": "749a6effa5388888b70c8b452740c8437a93f58d8d070826cf2e2deea60cae8a",
+            "independent-checks.json": "fc61503cdae7f2808b30b9ffd1006ecfe2bb6411963110de0ab655223139f2f9",
+            "independent-core.jpg": "d7274bea6d9db70d0606bd40c96b6cb2d556232294f851fb67d5296486ce2e92"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "028b2982-7ace-412c-9781-34a88c70fa96",
+              "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+              "files": {
+                "independent-core.json": "749a6effa5388888b70c8b452740c8437a93f58d8d070826cf2e2deea60cae8a",
+                "independent-checks.json": "fc61503cdae7f2808b30b9ffd1006ecfe2bb6411963110de0ab655223139f2f9",
+                "independent-core.jpg": "d7274bea6d9db70d0606bd40c96b6cb2d556232294f851fb67d5296486ce2e92"
+              }
+            }
+          ]
+        },
+        {
+          "id": "3c3e7749-cf87-4b11-b80b-37fd5de948fe",
+          "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+          "parent_id": "028b2982-7ace-412c-9781-34a88c70fa96",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:42:07.204777+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "98f5f1facec166789a7ea0ee31a9aef71a86c455507157c0b2b416a19fc2e108",
+              "bytes": 4386
+            },
+            "index.html": {
+              "sha256": "b82345434ed39e193fb016f5e75e0f0fa211cd1c9363dd599f802397db25ec97",
+              "bytes": 838
+            },
+            "styles.css": {
+              "sha256": "4b5181c04eafdf06aac1c4ddbeb5c8b959e4409f2572d11f472bb52232c350fb",
+              "bytes": 1546
+            }
+          },
+          "report": {
+            "status": "failed",
+            "facts": [
+              {
+                "id": "show-start-overlay",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "start-game",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "make-first-move",
+                "category": "control",
+                "status": "passed"
+              },
+              {
+                "id": "win-x",
+                "category": "outcome",
+                "status": "failed"
+              },
+              {
+                "id": "draw",
+                "category": "outcome",
+                "status": "failed"
+              },
+              {
+                "id": "ignore-invalid-move",
+                "category": "regression",
+                "status": "passed"
+              },
+              {
+                "id": "no-move-after-win",
+                "category": "regression",
+                "status": "failed"
+              }
+            ],
+            "findings": [
+              {
+                "code": "effect_mismatch",
+                "check_id": "win-x"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "draw"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "no-move-after-win"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "evidence_source_revision_id": "028b2982-7ace-412c-9781-34a88c70fa96",
+            "evidence_file": "independent-core.json",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Actual start button dismisses overlay and shows X turn."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Real touch and desktop mouse alternate turns; occupied cell ignored. Core 10/10."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Real X/O winning routes and draw reach visible Russian status, no later moves after win."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "390x844 real taps/start reachable; desktop and resize preserve play state."
+              }
+            },
+            "additional_defects": [
+              "No visible restart control after ending; only initial start button is present and hidden."
+            ]
+          },
+          "independent_evidence": {},
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "028b2982-7ace-412c-9781-34a88c70fa96",
+              "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+              "files": {
+                "independent-core.json": "749a6effa5388888b70c8b452740c8437a93f58d8d070826cf2e2deea60cae8a",
+                "independent-checks.json": "fc61503cdae7f2808b30b9ffd1006ecfe2bb6411963110de0ab655223139f2f9",
+                "independent-core.jpg": "d7274bea6d9db70d0606bd40c96b6cb2d556232294f851fb67d5296486ce2e92"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "kind": "compact_string",
+      "criteria": {
+        "start": "Начинается пустая партия 3×3 на Canvas",
+        "control": "Ходы X/O чередуются; занятую клетку нельзя перезаписать",
+        "outcome": "Реальные ходы дают победителя или ничью",
+        "mobile": "Управление и поле доступны на телефоне"
+      },
+      "run": {
+        "id": "0a5be74a-6ddb-4658-86d4-b53dd9fb693d",
+        "status": "needs_attention",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "string",
+        "attempts": 2,
+        "created_at": "2026-10-25T11:42:14.129480+00:00",
+        "finished_at": "2026-10-25T11:45:07.195509+00:00",
+        "candidate_revision_id": "a9abcd1f-6832-4649-953d-3f1c513368c4",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "unchanged",
+      "calls": [
+        {
+          "id": "3c1d35d9-52c1-432f-b617-cb745dc8b2a3",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 2303,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:42:17.376872+00:00",
+          "sent_at": "2026-10-25T11:42:17.382042+00:00",
+          "finished_at": "2026-10-25T11:44:49.960706+00:00",
+          "elapsed_seconds": 152.575163,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 145.39095386583358,
+            "first_output_seconds": 6.126230364665389
+          },
+          "submitted_schema_sha256": "b51c5a7527c34ab7e5f415c5133fc8d347b4a331232062cb58c5ee90027117ff"
+        },
+        {
+          "id": "15b7a49b-9e28-4227-9cfc-1fd74f831ee8",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4293,
+            "output_tokens": 83,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:44:52.856493+00:00",
+          "sent_at": "2026-10-25T11:44:52.867407+00:00",
+          "finished_at": "2026-10-25T11:45:05.988494+00:00",
+          "elapsed_seconds": 13.116075,
+          "operation": "repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 10.896246317774057,
+            "first_output_seconds": 5.417820301838219
+          },
+          "submitted_schema_sha256": "804b9235b38a485b568b314a677a536c34e04082daf5a01314090e705b4f5583"
+        }
+      ],
+      "revisions": [
+        {
+          "id": "a9abcd1f-6832-4649-953d-3f1c513368c4",
+          "artifact_hash": "afbf00d5f63d4d3825a385b3bbe647206a6252cb2b73c03217fffc59ca728c38",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:44:49.983404+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "bfd6c7c9f0ea09dda4bd98b1f5c99cc2fa55ff87b22e718de2c93fe7c51496a1",
+              "bytes": 5041
+            },
+            "index.html": {
+              "sha256": "6ee57bc2400a29993040732f88e503e2714f15d3538bdd216e1f9c883a94bfa9",
+              "bytes": 581
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "failed",
+            "facts": [],
+            "findings": [
+              {
+                "code": "javascript_syntax",
+                "check_id": null
+              },
+              {
+                "code": "incomplete_checks",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "afbf00d5f63d4d3825a385b3bbe647206a6252cb2b73c03217fffc59ca728c38",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Independent native compilation confirms JavaScript syntax error."
+              },
+              "control": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              },
+              "outcome": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              },
+              "mobile": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              }
+            },
+            "evidence": "independent-syntax.json"
+          },
+          "independent_evidence": {
+            "independent-syntax.json": "26dd249a1e33b71af50e004f7dee62b8aa80be769a321e75d22e98acf0a09634"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "a9abcd1f-6832-4649-953d-3f1c513368c4",
+              "artifact_hash": "afbf00d5f63d4d3825a385b3bbe647206a6252cb2b73c03217fffc59ca728c38",
+              "files": {
+                "independent-syntax.json": "26dd249a1e33b71af50e004f7dee62b8aa80be769a321e75d22e98acf0a09634"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "kind": "full",
+      "criteria": {
+        "start": "Начинается понятная партия змейки",
+        "control": "Ввод реально меняет направление, змейка движется",
+        "outcome": "Столкновение приводит к завершению партии",
+        "mobile": "Крупное доступное управление и спокойный темп для пожилого игрока"
+      },
+      "run": {
+        "id": "4ecfd2f9-4f28-4985-b62a-e0ff3085f0b2",
+        "status": "needs_attention",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "full",
+        "source_format": "string",
+        "attempts": 2,
+        "created_at": "2026-10-25T11:45:07.612110+00:00",
+        "finished_at": "2026-10-25T11:49:32.133431+00:00",
+        "candidate_revision_id": "dd3c5302-0a20-4f1a-b27b-7565cb067e2e",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "invalid_unchanged",
+      "calls": [
+        {
+          "id": "adf4a009-8e7d-4ce7-9111-b9b8b7f57d16",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1255,
+            "output_tokens": 3668,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:45:08.945254+00:00",
+          "sent_at": "2026-10-25T11:45:08.954312+00:00",
+          "finished_at": "2026-10-25T11:48:57.983810+00:00",
+          "elapsed_seconds": 229.026213,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 227.34591983631253,
+            "first_output_seconds": 8.076498811133206
+          },
+          "submitted_schema_sha256": "dc0d09b6a8b85d0b7b05b31d9c81d6d967afbf8554d2108dd765319b9804e060"
+        },
+        {
+          "id": "74ce111c-9c06-4f65-beab-2710c39a16b6",
+          "attempt": 2,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 4521,
+            "output_tokens": 386,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:49:00.626335+00:00",
+          "sent_at": "2026-10-25T11:49:00.636887+00:00",
+          "finished_at": "2026-10-25T11:49:31.991715+00:00",
+          "elapsed_seconds": 31.35142,
+          "operation": "check_repair",
+          "error_code": "invalid_unchanged",
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 30.30041622929275,
+            "first_output_seconds": 6.816241420805454
+          },
+          "submitted_schema_sha256": "ffb969677593c18148c6e085a5f17a3bca466059e0819f95d0694cfc88eab440",
+          "source_files_sha256": {
+            "game.js": "e7e77c891f2c562d334465c45cf563cfd1e77807b3136fc8bdcab910762f7e49",
+            "index.html": "e705c151108770c774538de26b98c5c2cecf80b1ce02faa5dac43a964786389e",
+            "styles.css": "1f2f66dfce9b97421fe09a70dcfbccb979eba923ad984edcc45df5d6cb587767"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "dd3c5302-0a20-4f1a-b27b-7565cb067e2e",
+          "artifact_hash": "b084c21ac15ca975c2ba4b030e38f741fa3fcd1fd41277d2215a7ab3709433bd",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:48:58.004588+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "e7e77c891f2c562d334465c45cf563cfd1e77807b3136fc8bdcab910762f7e49",
+              "bytes": 7251
+            },
+            "index.html": {
+              "sha256": "e705c151108770c774538de26b98c5c2cecf80b1ce02faa5dac43a964786389e",
+              "bytes": 773
+            },
+            "styles.css": {
+              "sha256": "1f2f66dfce9b97421fe09a70dcfbccb979eba923ad984edcc45df5d6cb587767",
+              "bytes": 1917
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [],
+            "findings": [
+              {
+                "code": "incomplete_checks",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "b084c21ac15ca975c2ba4b030e38f741fa3fcd1fd41277d2215a7ab3709433bd",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Actual start button hides overlay in mobile and desktop."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Read-only Canvas pixels prove head moves down via screen button and up via actual ArrowUp after 550 ms."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Actual movement reaches wall; visible defeat and overlay on both viewports."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Large actual start/turn buttons reachable, scene has no horizontal overflow. Restart after loss fails and is an additional defect."
+              }
+            },
+            "evidence": "independent-adaptive.json"
+          },
+          "independent_evidence": {
+            "independent-adaptive-desktop.jpg": "48070f05ec96d72360a0722b56ab3e6d9e005f6764beef87b0d553e3e5107109",
+            "independent-adaptive.json": "77f686b4adfeae0c3663c49942e744d4a90e2e4f3f9322401f703fd725551c31",
+            "independent-adaptive-mobile.jpg": "2e94617376ee84dd55a8c1fb4d8406d6e4547e00f451517c1930b628c59a6a6f"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "dd3c5302-0a20-4f1a-b27b-7565cb067e2e",
+              "artifact_hash": "b084c21ac15ca975c2ba4b030e38f741fa3fcd1fd41277d2215a7ab3709433bd",
+              "files": {
+                "independent-adaptive-desktop.jpg": "48070f05ec96d72360a0722b56ab3e6d9e005f6764beef87b0d553e3e5107109",
+                "independent-adaptive.json": "77f686b4adfeae0c3663c49942e744d4a90e2e4f3f9322401f703fd725551c31",
+                "independent-adaptive-mobile.jpg": "2e94617376ee84dd55a8c1fb4d8406d6e4547e00f451517c1930b628c59a6a6f"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "kind": "compact_lines",
+      "criteria": {
+        "start": "Начинается понятная партия змейки",
+        "control": "Ввод реально меняет направление, змейка движется",
+        "outcome": "Столкновение приводит к завершению партии",
+        "mobile": "Крупное доступное управление и спокойный темп для пожилого игрока"
+      },
+      "run": {
+        "id": "56ec8d7b-9941-43be-98f6-9479564b5ab9",
+        "status": "unverified",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "lines",
+        "attempts": 3,
+        "created_at": "2026-10-25T11:49:34.088082+00:00",
+        "finished_at": "2026-10-25T11:56:27.967799+00:00",
+        "candidate_revision_id": "78b85f41-3023-4b90-8503-61d14e4f1d80",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "manual_verification",
+      "calls": [
+        {
+          "id": "a60af4b9-cdd1-4cde-b4e0-f43073c8b0fc",
+          "attempt": 1,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 898,
+            "output_tokens": 2716,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:49:34.135780+00:00",
+          "sent_at": "2026-10-25T11:49:34.144659+00:00",
+          "finished_at": "2026-10-25T11:52:29.519801+00:00",
+          "elapsed_seconds": 175.370388,
+          "operation": "create",
+          "error_code": "invalid_schema",
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 162.16303115803748,
+            "first_output_seconds": 5.365248749032617
+          },
+          "submitted_schema_sha256": "4cb692532c0e5df4f030a85b858d1b3bf154af12b997fd5f60ec3573727f905c",
+          "lines": {
+            "source_lines_present": true,
+            "parentheses": {
+              "(": 113,
+              ")": 113
+            },
+            "source_sha256": "e80a7459bff493e45f6748bd8d85899030761f3980a3b920544850b880b003d3",
+            "missing_required": [
+              "status",
+              "summary",
+              "world"
+            ]
+          }
+        },
+        {
+          "id": "cfa8a1ee-1898-4fb2-82f8-f619458a3b58",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 940,
+            "output_tokens": 3129,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:52:29.546902+00:00",
+          "sent_at": "2026-10-25T11:52:29.554557+00:00",
+          "finished_at": "2026-10-25T11:55:31.447179+00:00",
+          "elapsed_seconds": 181.889538,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 179.28867931012064,
+            "first_output_seconds": 0.4626727169379592
+          },
+          "submitted_schema_sha256": "4cb692532c0e5df4f030a85b858d1b3bf154af12b997fd5f60ec3573727f905c",
+          "lines": {
+            "source_lines_present": true,
+            "parentheses": {
+              "(": 60,
+              ")": 60
+            },
+            "source_sha256": "16e148f4b3534bf73b5d3b765b8b78c367423940af611e48dc76eb7f12c19585",
+            "missing_required": []
+          }
+        },
+        {
+          "id": "207ca875-1462-49d9-9b21-71c21b8ce938",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4676,
+            "output_tokens": 643,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:55:34.316819+00:00",
+          "sent_at": "2026-10-25T11:55:34.332698+00:00",
+          "finished_at": "2026-10-25T11:56:23.476918+00:00",
+          "elapsed_seconds": 49.138425,
+          "operation": "check_repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 44.029150765389204,
+            "first_output_seconds": 5.711341421119869
+          },
+          "submitted_schema_sha256": "cec14e0751cea01db85efe4fdc031418b3decfa8dfa534d8cd2d0464239a76fb",
+          "source_files_sha256": {
+            "game.js": "16e148f4b3534bf73b5d3b765b8b78c367423940af611e48dc76eb7f12c19585",
+            "index.html": "48b445f7bd2fe5b4a5a814724413e3eb39c0cec0614f01376cee5e47c311d7d2",
+            "runtime.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+            "runtime.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "f6869ec5-e27c-4850-9007-9eaa7c6ea4a5",
+          "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:55:31.472616+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "16e148f4b3534bf73b5d3b765b8b78c367423940af611e48dc76eb7f12c19585",
+              "bytes": 4194
+            },
+            "index.html": {
+              "sha256": "48b445f7bd2fe5b4a5a814724413e3eb39c0cec0614f01376cee5e47c311d7d2",
+              "bytes": 547
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start_state",
+                "category": "start",
+                "status": "unverified"
+              },
+              {
+                "id": "control_left",
+                "category": "control",
+                "status": "unverified"
+              },
+              {
+                "id": "control_right",
+                "category": "control",
+                "status": "unverified"
+              },
+              {
+                "id": "game_over",
+                "category": "outcome",
+                "status": "unverified"
+              },
+              {
+                "id": "control_up",
+                "category": "control",
+                "status": "unverified"
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "check_id": "start_state"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "control_left"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "control_right"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "game_over"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "control_up"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Three segments rendered initially."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Actual ArrowUp and 1200 ms leave head y=5; dt accumulator never advances at runtime dt<=0.1. No touch controls."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "After real input and 3000 ms over remains false; snake never moves."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Manifest has no controls; module handles keyboard only."
+              }
+            },
+            "evidence": "78b85f41-3023-4b90-8503-61d14e4f1d80/independent-core.json"
+          },
+          "independent_evidence": {},
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "78b85f41-3023-4b90-8503-61d14e4f1d80",
+              "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+              "files": {
+                "independent-core.json": "1cfa5b81187e0b7da719563773585be5c0e6444d6fec6c5f9ae0f76497c49d8a",
+                "independent-checks.json": "490287371324b0a549f8d02932949877035437c0ad4e15d4691ded461963ea35",
+                "independent-core.jpg": "6db034f17d835f530c1f7d8cad0b6c2822f1e244ea51923caf0c94cf28c338c3",
+                "independent-observers.json": "243614510128aaa54c70f9054e8eb9443b8627008c894db0a012b635ab2c195a"
+              }
+            }
+          ]
+        },
+        {
+          "id": "78b85f41-3023-4b90-8503-61d14e4f1d80",
+          "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+          "parent_id": "f6869ec5-e27c-4850-9007-9eaa7c6ea4a5",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:56:23.515813+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "16e148f4b3534bf73b5d3b765b8b78c367423940af611e48dc76eb7f12c19585",
+              "bytes": 4194
+            },
+            "index.html": {
+              "sha256": "48b445f7bd2fe5b4a5a814724413e3eb39c0cec0614f01376cee5e47c311d7d2",
+              "bytes": 547
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start_state",
+                "category": "start",
+                "status": "unverified"
+              },
+              {
+                "id": "control_left",
+                "category": "control",
+                "status": "failed"
+              },
+              {
+                "id": "control_right",
+                "category": "control",
+                "status": "failed"
+              },
+              {
+                "id": "control_up",
+                "category": "control",
+                "status": "failed"
+              },
+              {
+                "id": "game_over",
+                "category": "outcome",
+                "status": "unverified"
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "check_id": "start_state"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "control_left"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "control_right"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "control_up"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "game_over"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Three segments rendered initially."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Actual ArrowUp and 1200 ms leave head y=5; dt accumulator never advances at runtime dt<=0.1. No touch controls."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "After real input and 3000 ms over remains false; snake never moves."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Manifest has no controls; module handles keyboard only."
+              }
+            },
+            "evidence": "78b85f41-3023-4b90-8503-61d14e4f1d80/independent-core.json"
+          },
+          "independent_evidence": {
+            "independent-core.json": "1cfa5b81187e0b7da719563773585be5c0e6444d6fec6c5f9ae0f76497c49d8a",
+            "independent-checks.json": "490287371324b0a549f8d02932949877035437c0ad4e15d4691ded461963ea35",
+            "independent-core.jpg": "6db034f17d835f530c1f7d8cad0b6c2822f1e244ea51923caf0c94cf28c338c3",
+            "independent-observers.json": "243614510128aaa54c70f9054e8eb9443b8627008c894db0a012b635ab2c195a"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "78b85f41-3023-4b90-8503-61d14e4f1d80",
+              "artifact_hash": "d355e5a32f4b83fa91c668c3f871f4a3c284c59b1648c6e7a3c324d5301841f1",
+              "files": {
+                "independent-core.json": "1cfa5b81187e0b7da719563773585be5c0e6444d6fec6c5f9ae0f76497c49d8a",
+                "independent-checks.json": "490287371324b0a549f8d02932949877035437c0ad4e15d4691ded461963ea35",
+                "independent-core.jpg": "6db034f17d835f530c1f7d8cad0b6c2822f1e244ea51923caf0c94cf28c338c3",
+                "independent-observers.json": "243614510128aaa54c70f9054e8eb9443b8627008c894db0a012b635ab2c195a"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "kind": "compact_string",
+      "criteria": {
+        "start": "Начинается понятная партия змейки",
+        "control": "Ввод реально меняет направление, змейка движется",
+        "outcome": "Столкновение приводит к завершению партии",
+        "mobile": "Крупное доступное управление и спокойный темп для пожилого игрока"
+      },
+      "run": {
+        "id": "e158850e-af4b-4315-8ebb-36fbe5faae66",
+        "status": "failed",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "string",
+        "attempts": 1,
+        "created_at": "2026-10-25T11:56:31.142459+00:00",
+        "finished_at": "2026-10-25T11:58:26.853604+00:00",
+        "candidate_revision_id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "validator_unavailable",
+      "calls": [
+        {
+          "id": "0b38ec41-c071-451e-9249-67e3a55ceaec",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 898,
+            "output_tokens": 1786,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:56:31.195521+00:00",
+          "sent_at": "2026-10-25T11:56:31.205519+00:00",
+          "finished_at": "2026-10-25T11:58:25.459442+00:00",
+          "elapsed_seconds": 114.250343,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 113.24635598156601,
+            "first_output_seconds": 6.20285271294415
+          },
+          "submitted_schema_sha256": "b51c5a7527c34ab7e5f415c5133fc8d347b4a331232062cb58c5ee90027117ff"
+        }
+      ],
+      "revisions": [
+        {
+          "id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+          "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:58:25.476983+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "80c1a15c06daa2eeea08b3bc96e2cf2bbe95bbc5dbbd85168c1ccaf87893df24",
+              "bytes": 3491
+            },
+            "index.html": {
+              "sha256": "fd82aa27a1ecb6e30ace846ece2aca15b756591dd9cf355a41fa8b3ce5854183",
+              "bytes": 753
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "infrastructure_error",
+            "facts": [],
+            "findings": [
+              {
+                "code": "validator_unavailable",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "All snake/food drawing coordinates are outside the logical canvas; independent runtime later crashes."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Direction input changes a scalar but no usable player scene; reset empties snake and later update throws."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Natural real ArrowUp run reaches runtime TypeError rather than a stable playable outcome."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Controls are reachable but player/food rendering is outside the canvas."
+              }
+            },
+            "evidence": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf/independent-core.json"
+          },
+          "independent_evidence": {
+            "independent-core.json": "b477000ef27086ff7a7fa0a0e2bf6c3de3ce1fb0f120378f58e3c0f449f6c1aa",
+            "independent-checks.json": "fe4c49e2bd9ff723d7c6d831c5ad9eddb32f4d5bbf572b2cac8df01d6472c7f6",
+            "independent-core.jpg": "b797b5a34b49b7c4395699e5e5b2a98c02decf57b7b9cbf3be7b03257b2bbdf3",
+            "independent-observers.json": "8727f076500983fae4acb384fe2625b34699d39a6d89b1e4bd6f5e7e54d58a69"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+              "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+              "files": {
+                "independent-core.json": "b477000ef27086ff7a7fa0a0e2bf6c3de3ce1fb0f120378f58e3c0f449f6c1aa",
+                "independent-checks.json": "fe4c49e2bd9ff723d7c6d831c5ad9eddb32f4d5bbf572b2cac8df01d6472c7f6",
+                "independent-core.jpg": "b797b5a34b49b7c4395699e5e5b2a98c02decf57b7b9cbf3be7b03257b2bbdf3",
+                "independent-observers.json": "8727f076500983fae4acb384fe2625b34699d39a6d89b1e4bd6f5e7e54d58a69"
+              }
+            },
+            {
+              "source_revision_id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+              "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+              "files": {
+                "independent-core.json": "b477000ef27086ff7a7fa0a0e2bf6c3de3ce1fb0f120378f58e3c0f449f6c1aa",
+                "independent-checks.json": "fe4c49e2bd9ff723d7c6d831c5ad9eddb32f4d5bbf572b2cac8df01d6472c7f6",
+                "independent-core.jpg": "b797b5a34b49b7c4395699e5e5b2a98c02decf57b7b9cbf3be7b03257b2bbdf3",
+                "independent-observers.json": "8727f076500983fae4acb384fe2625b34699d39a6d89b1e4bd6f5e7e54d58a69"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "kind": "compact_string",
+      "criteria": {
+        "start": "Четыре закрытые карточки образуют две пары",
+        "control": "Совпадения остаются открыты; несовпадения закрываются",
+        "outcome": "Реальное открытие обеих пар даёт победу",
+        "mobile": "Карточки доступны касанием на телефоне"
+      },
+      "run": {
+        "id": "1e0868f4-368d-4ef6-8ccf-5a592a2bc4d7",
+        "status": "needs_attention",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "string",
+        "attempts": 2,
+        "created_at": "2026-10-25T11:58:28.718603+00:00",
+        "finished_at": "2026-10-25T12:00:57.523999+00:00",
+        "candidate_revision_id": "bbc8f5b8-253f-4fc6-a459-d95ece6fdc9e",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "invalid_unchanged",
+      "calls": [
+        {
+          "id": "ec21799f-11e2-4b6e-8a46-2700657144dc",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 1904,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T11:58:28.769489+00:00",
+          "sent_at": "2026-10-25T11:58:28.775053+00:00",
+          "finished_at": "2026-10-25T12:00:23.493232+00:00",
+          "elapsed_seconds": 114.714283,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 110.52959927264601,
+            "first_output_seconds": 0.530643954873085
+          },
+          "submitted_schema_sha256": "b51c5a7527c34ab7e5f415c5133fc8d347b4a331232062cb58c5ee90027117ff"
+        },
+        {
+          "id": "0afcc935-e967-4c42-8360-841430f84410",
+          "attempt": 2,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 4078,
+            "output_tokens": 489,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:00:26.370009+00:00",
+          "sent_at": "2026-10-25T12:00:26.391321+00:00",
+          "finished_at": "2026-10-25T12:00:57.513186+00:00",
+          "elapsed_seconds": 31.117799,
+          "operation": "check_repair",
+          "error_code": "invalid_unchanged",
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 29.42695366870612,
+            "first_output_seconds": 1.6745174694806337
+          },
+          "submitted_schema_sha256": "cec14e0751cea01db85efe4fdc031418b3decfa8dfa534d8cd2d0464239a76fb",
+          "source_files_sha256": {
+            "game.js": "3618cf6e991d662fa57a9e108e06c6cc17d3331a403b116ed7326482629997a9",
+            "index.html": "2f0f5e904f87d6b775cffa19c79ab0e51010c74bf8d3f82908c04bcbe0155ec3",
+            "runtime.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+            "runtime.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "bbc8f5b8-253f-4fc6-a459-d95ece6fdc9e",
+          "artifact_hash": "fdb708b6c715c6c71f6b092cea25b01cc254c44a3ce38e73054c756cd8567b36",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:00:23.513658+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "3618cf6e991d662fa57a9e108e06c6cc17d3331a403b116ed7326482629997a9",
+              "bytes": 3474
+            },
+            "index.html": {
+              "sha256": "2f0f5e904f87d6b775cffa19c79ab0e51010c74bf8d3f82908c04bcbe0155ec3",
+              "bytes": 553
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start",
+                "category": "start",
+                "status": "unverified"
+              },
+              {
+                "id": "open1",
+                "category": "control",
+                "status": "unverified"
+              },
+              {
+                "id": "open2",
+                "category": "control",
+                "status": "unverified"
+              },
+              {
+                "id": "win",
+                "category": "outcome",
+                "status": "unverified"
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "check_id": "start"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "open1"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "open2"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "win"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "fdb708b6c715c6c71f6b092cea25b01cc254c44a3ce38e73054c756cd8567b36",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Four card positions are reachable, initial openCount=0."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "After two mismatching taps and 700 ms openCount remains 2; resolve only starts on a third tap."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Both correct pairs clicked; matched remains false and open cards cannot progress."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Actual mobile and desktop taps open a card; all four centers fit canvas."
+              }
+            },
+            "evidence": "independent-core.json"
+          },
+          "independent_evidence": {
+            "independent-core.json": "c4a6d4034aa5bcdffdaffd4242893937d830d293c6eccd603d5e2dffd9ecceaf",
+            "independent-checks.json": "84b38458897bb4a2c027007e8843f7ba9b7b2163ff2772c6ea3538555a412cbd",
+            "independent-core.jpg": "1de9080e962fa0f3eca8e78bb8f7f084d7423d71831e8e0a318206a57479efe5",
+            "independent-observers.json": "c4cdb76d360b839ec6898b88bca44af9a1c4299aa9c688d21c4c45c70664c2d6"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "bbc8f5b8-253f-4fc6-a459-d95ece6fdc9e",
+              "artifact_hash": "fdb708b6c715c6c71f6b092cea25b01cc254c44a3ce38e73054c756cd8567b36",
+              "files": {
+                "independent-core.json": "c4a6d4034aa5bcdffdaffd4242893937d830d293c6eccd603d5e2dffd9ecceaf",
+                "independent-checks.json": "84b38458897bb4a2c027007e8843f7ba9b7b2163ff2772c6ea3538555a412cbd",
+                "independent-core.jpg": "1de9080e962fa0f3eca8e78bb8f7f084d7423d71831e8e0a318206a57479efe5",
+                "independent-observers.json": "c4cdb76d360b839ec6898b88bca44af9a1c4299aa9c688d21c4c45c70664c2d6"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "kind": "full",
+      "criteria": {
+        "start": "Четыре закрытые карточки образуют две пары",
+        "control": "Совпадения остаются открыты; несовпадения закрываются",
+        "outcome": "Реальное открытие обеих пар даёт победу",
+        "mobile": "Карточки доступны касанием на телефоне"
+      },
+      "run": {
+        "id": "0a2fbb90-e722-4220-8a10-4642513e1898",
+        "status": "needs_attention",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "full",
+        "source_format": "string",
+        "attempts": 4,
+        "created_at": "2026-10-25T12:01:00.205963+00:00",
+        "finished_at": "2026-10-25T12:18:33.862693+00:00",
+        "candidate_revision_id": "1dd45b5f-4d4f-4d7c-83d2-f324758d3c21",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "repair_exhausted",
+      "calls": [
+        {
+          "id": "fa687076-535c-4005-8572-0b72d84077ac",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1361,
+            "output_tokens": 4938,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:01:00.266273+00:00",
+          "sent_at": "2026-10-25T12:01:00.273136+00:00",
+          "finished_at": "2026-10-25T12:06:07.495318+00:00",
+          "elapsed_seconds": 307.218803,
+          "operation": "create",
+          "error_code": "incomplete_sources",
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 303.9841486401856,
+            "first_output_seconds": 9.593338473699987
+          },
+          "submitted_schema_sha256": "dc0d09b6a8b85d0b7b05b31d9c81d6d967afbf8554d2108dd765319b9804e060"
+        },
+        {
+          "id": "55c7cd5d-c5dc-4df2-815b-018f013558e8",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1459,
+            "output_tokens": 5155,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:06:07.527757+00:00",
+          "sent_at": "2026-10-25T12:06:07.535948+00:00",
+          "finished_at": "2026-10-25T12:11:13.905885+00:00",
+          "elapsed_seconds": 306.361259,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 300.9710704218596,
+            "first_output_seconds": 0.67947450093925
+          },
+          "submitted_schema_sha256": "dc0d09b6a8b85d0b7b05b31d9c81d6d967afbf8554d2108dd765319b9804e060"
+        },
+        {
+          "id": "355ec7d5-50db-4776-8068-3762975c3c74",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 6810,
+            "output_tokens": 3511,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:11:16.860356+00:00",
+          "sent_at": "2026-10-25T12:11:16.873655+00:00",
+          "finished_at": "2026-10-25T12:15:05.954012+00:00",
+          "elapsed_seconds": 229.075023,
+          "operation": "repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 221.8390529435128,
+            "first_output_seconds": 10.578033119440079
+          },
+          "submitted_schema_sha256": "9b21998ae19f2c89875c2045592faf05facd238c0242721e5e92ba191c7589c0"
+        },
+        {
+          "id": "6bc5e91f-81a2-4f06-9949-34772583fa7c",
+          "attempt": 4,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 6829,
+            "output_tokens": 3196,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:15:08.807382+00:00",
+          "sent_at": "2026-10-25T12:15:08.820508+00:00",
+          "finished_at": "2026-10-25T12:18:27.948817+00:00",
+          "elapsed_seconds": 199.121403,
+          "operation": "repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 193.45673236623406,
+            "first_output_seconds": 2.774957213550806
+          },
+          "submitted_schema_sha256": "9b21998ae19f2c89875c2045592faf05facd238c0242721e5e92ba191c7589c0"
+        }
+      ],
+      "revisions": [
+        {
+          "id": "029bdec3-36a8-42e7-8913-296a29c0dfb7",
+          "artifact_hash": "1145d0b02e0226e1df46a60a36b2e0038ca82b36e32fb68b70ab5ddcd74a9f25",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:11:13.959853+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "cfd3c989fa6b2de8e25d35bd9351bd2a5d752cfafd5f22a668b932fd7134f2bf",
+              "bytes": 8852
+            },
+            "index.html": {
+              "sha256": "2c96c805c28acf830214c3c23bb5d799402f1de22fb86f02938bacb99703f5d8",
+              "bytes": 518
+            },
+            "styles.css": {
+              "sha256": "092052b9b893862c2b1b1ccb64395a90d153911bcb615342f25d0ada78b76b5d",
+              "bytes": 1305
+            }
+          },
+          "report": {
+            "status": "failed",
+            "facts": [],
+            "findings": [
+              {
+                "code": "javascript_syntax",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "1145d0b02e0226e1df46a60a36b2e0038ca82b36e32fb68b70ab5ddcd74a9f25",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Independent native compilation confirms JavaScript syntax error."
+              },
+              "control": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              },
+              "outcome": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              },
+              "mobile": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              }
+            },
+            "evidence": "independent-syntax.json"
+          },
+          "independent_evidence": {
+            "independent-syntax.json": "c49877ab7ca48bf300093cb89448f811878f826f44ce8ed6bb1f6a7750d82bcc"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "029bdec3-36a8-42e7-8913-296a29c0dfb7",
+              "artifact_hash": "1145d0b02e0226e1df46a60a36b2e0038ca82b36e32fb68b70ab5ddcd74a9f25",
+              "files": {
+                "independent-syntax.json": "c49877ab7ca48bf300093cb89448f811878f826f44ce8ed6bb1f6a7750d82bcc"
+              }
+            }
+          ]
+        },
+        {
+          "id": "b91077c3-4d0c-461a-95d6-6890d6525081",
+          "artifact_hash": "f307f7457eb6053e1761b64f7429e0c294e4025fe2d50cf10d58ad4e1be35a05",
+          "parent_id": "029bdec3-36a8-42e7-8913-296a29c0dfb7",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:15:05.995350+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "f6294767a2f11888b56c7bdb9414dbd04f20bb7dfcf3b765056f8399688d3e72",
+              "bytes": 8851
+            },
+            "index.html": {
+              "sha256": "2c96c805c28acf830214c3c23bb5d799402f1de22fb86f02938bacb99703f5d8",
+              "bytes": 518
+            },
+            "styles.css": {
+              "sha256": "092052b9b893862c2b1b1ccb64395a90d153911bcb615342f25d0ada78b76b5d",
+              "bytes": 1305
+            }
+          },
+          "report": {
+            "status": "failed",
+            "facts": [],
+            "findings": [
+              {
+                "code": "javascript_syntax",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "f307f7457eb6053e1761b64f7429e0c294e4025fe2d50cf10d58ad4e1be35a05",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "Independent native compilation confirms JavaScript syntax error."
+              },
+              "control": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              },
+              "outcome": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              },
+              "mobile": {
+                "status": "unverified",
+                "evidence": "Source cannot execute."
+              }
+            },
+            "evidence": "independent-syntax.json"
+          },
+          "independent_evidence": {
+            "independent-syntax.json": "7fd1ab120de0260c0cbf47c2c1ac45399f75383a9b61014eed5758bb37deb2c5"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "b91077c3-4d0c-461a-95d6-6890d6525081",
+              "artifact_hash": "f307f7457eb6053e1761b64f7429e0c294e4025fe2d50cf10d58ad4e1be35a05",
+              "files": {
+                "independent-syntax.json": "7fd1ab120de0260c0cbf47c2c1ac45399f75383a9b61014eed5758bb37deb2c5"
+              }
+            }
+          ]
+        },
+        {
+          "id": "1dd45b5f-4d4f-4d7c-83d2-f324758d3c21",
+          "artifact_hash": "5dd2f9ede6212d45658d7866f8c2e0f30fdb9102f9c9a324cf96db58a871e82a",
+          "parent_id": "b91077c3-4d0c-461a-95d6-6890d6525081",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:18:28.020409+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "3ec9271f8ae95479137ee30973b1f2d3251bf863fb9470511f666e47bab24677",
+              "bytes": 7354
+            },
+            "index.html": {
+              "sha256": "2c96c805c28acf830214c3c23bb5d799402f1de22fb86f02938bacb99703f5d8",
+              "bytes": 518
+            },
+            "styles.css": {
+              "sha256": "092052b9b893862c2b1b1ccb64395a90d153911bcb615342f25d0ada78b76b5d",
+              "bytes": 1305
+            }
+          },
+          "report": {
+            "status": "failed",
+            "facts": [
+              {
+                "id": "c01-start-ready",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "c02-first-open",
+                "category": "control",
+                "status": "failed"
+              },
+              {
+                "id": "c03-win-after-pairs",
+                "category": "outcome",
+                "status": "failed"
+              },
+              {
+                "id": "c04-no-spurious-moves",
+                "category": "regression",
+                "status": "passed"
+              }
+            ],
+            "findings": [
+              {
+                "code": "effect_mismatch",
+                "check_id": "c02-first-open"
+              },
+              {
+                "code": "effect_mismatch",
+                "check_id": "c03-win-after-pairs"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "5dd2f9ede6212d45658d7866f8c2e0f30fdb9102f9c9a324cf96db58a871e82a",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Four closed cards, initial exposed counters zero."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Real play identifies a pair; mismatch closes when encountered; first pair remains face up."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "After both correct pairs, exposed opened=4 and won=false on mobile and desktop; first/second indices are not reset after a match."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "All real card centers and reset are reachable on mobile and desktop."
+              }
+            },
+            "evidence": "independent-adaptive.json"
+          },
+          "independent_evidence": {
+            "independent-adaptive-desktop.jpg": "243c624b27b4306190e24dde8d3061d23f6a6e753dfa977903bf16519ea7e1fb",
+            "independent-adaptive.json": "923024914305927bcc3ea8df471de58fa00a0dfb2312de9adc9fcb41c3f169b0",
+            "independent-adaptive-mobile.jpg": "52bcaef4d33339def6c428aa8e5e6ebca35b27f6da77a21879ce0d8e6d25987f"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "1dd45b5f-4d4f-4d7c-83d2-f324758d3c21",
+              "artifact_hash": "5dd2f9ede6212d45658d7866f8c2e0f30fdb9102f9c9a324cf96db58a871e82a",
+              "files": {
+                "independent-adaptive-desktop.jpg": "243c624b27b4306190e24dde8d3061d23f6a6e753dfa977903bf16519ea7e1fb",
+                "independent-adaptive.json": "923024914305927bcc3ea8df471de58fa00a0dfb2312de9adc9fcb41c3f169b0",
+                "independent-adaptive-mobile.jpg": "52bcaef4d33339def6c428aa8e5e6ebca35b27f6da77a21879ce0d8e6d25987f"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "memory",
+      "kind": "compact_lines",
+      "criteria": {
+        "start": "Четыре закрытые карточки образуют две пары",
+        "control": "Совпадения остаются открыты; несовпадения закрываются",
+        "outcome": "Реальное открытие обеих пар даёт победу",
+        "mobile": "Карточки доступны касанием на телефоне"
+      },
+      "run": {
+        "id": "62b82a7a-51bf-4287-a75c-b273fc2e764e",
+        "status": "unverified",
+        "operation": "create",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "lines",
+        "attempts": 3,
+        "created_at": "2026-10-25T12:18:36.754704+00:00",
+        "finished_at": "2026-10-25T12:22:36.495184+00:00",
+        "candidate_revision_id": "a989604d-c250-42a0-98c7-c75e778ccf74",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "manual_verification",
+      "calls": [
+        {
+          "id": "fd244a7d-6d06-4750-9b38-d0927f119ff1",
+          "attempt": 1,
+          "state": "failed",
+          "usage": {
+            "input_tokens": 1004,
+            "output_tokens": 1175,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:18:36.813733+00:00",
+          "sent_at": "2026-10-25T12:18:36.844153+00:00",
+          "finished_at": "2026-10-25T12:20:02.470586+00:00",
+          "elapsed_seconds": 85.620666,
+          "operation": "create",
+          "error_code": "invalid_schema",
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 79.1798960166052,
+            "first_output_seconds": 5.652137619443238
+          },
+          "submitted_schema_sha256": "4cb692532c0e5df4f030a85b858d1b3bf154af12b997fd5f60ec3573727f905c",
+          "lines": {
+            "source_lines_present": true,
+            "parentheses": {
+              "(": 56,
+              ")": 56
+            },
+            "source_sha256": "e7ddfe4b41f8643f3590a0de4326645307faf3db74ba5c7f044a1b7a1ee78d22",
+            "missing_required": [
+              "status",
+              "summary",
+              "world"
+            ]
+          }
+        },
+        {
+          "id": "a645fcff-a50f-45de-979c-ab9b5aeaab5f",
+          "attempt": 2,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1046,
+            "output_tokens": 2220,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:20:02.504337+00:00",
+          "sent_at": "2026-10-25T12:20:02.510635+00:00",
+          "finished_at": "2026-10-25T12:22:14.550130+00:00",
+          "elapsed_seconds": 132.036539,
+          "operation": "create",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 129.06974029075354,
+            "first_output_seconds": 0.7309119356796145
+          },
+          "submitted_schema_sha256": "4cb692532c0e5df4f030a85b858d1b3bf154af12b997fd5f60ec3573727f905c",
+          "lines": {
+            "source_lines_present": true,
+            "parentheses": {
+              "(": 48,
+              ")": 48
+            },
+            "source_sha256": "235edbdb1c4a0fc9413d1acc3792e0c0e39c6b7b0b4c19ef50f7482bc7627427",
+            "missing_required": []
+          }
+        },
+        {
+          "id": "3fa8723d-7194-4084-b52c-1a00a5c7ca05",
+          "attempt": 3,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 3514,
+            "output_tokens": 101,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:22:17.997917+00:00",
+          "sent_at": "2026-10-25T12:22:18.009821+00:00",
+          "finished_at": "2026-10-25T12:22:36.470957+00:00",
+          "elapsed_seconds": 18.456294,
+          "operation": "check_repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 11.67361281439662,
+            "first_output_seconds": 5.5448702946305275
+          },
+          "submitted_schema_sha256": "cec14e0751cea01db85efe4fdc031418b3decfa8dfa534d8cd2d0464239a76fb",
+          "source_files_sha256": {
+            "game.js": "235edbdb1c4a0fc9413d1acc3792e0c0e39c6b7b0b4c19ef50f7482bc7627427",
+            "index.html": "899e2f11d2023617f6b68d5240157dfcf19d6c3005a0cf0ba4346e4425c70b5e",
+            "runtime.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+            "runtime.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "a989604d-c250-42a0-98c7-c75e778ccf74",
+          "artifact_hash": "4f2e82def9b25473dbeb4dbefb65de3ec75f7c831fdc81f6b5e8174b30d6832f",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:22:14.574966+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "235edbdb1c4a0fc9413d1acc3792e0c0e39c6b7b0b4c19ef50f7482bc7627427",
+              "bytes": 2694
+            },
+            "index.html": {
+              "sha256": "899e2f11d2023617f6b68d5240157dfcf19d6c3005a0cf0ba4346e4425c70b5e",
+              "bytes": 565
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "start",
+                "category": "start",
+                "status": "unverified"
+              },
+              {
+                "id": "flip_control",
+                "category": "control",
+                "status": "unverified"
+              },
+              {
+                "id": "win",
+                "category": "outcome",
+                "status": "unverified"
+              }
+            ],
+            "findings": [
+              {
+                "code": "invalid_check",
+                "check_id": "start"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "flip_control"
+              },
+              {
+                "code": "invalid_check",
+                "check_id": "win"
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "4f2e82def9b25473dbeb4dbefb65de3ec75f7c831fdc81f6b5e8174b30d6832f",
+            "criteria_hash": "54618d4d419c797723b41cb78d2e85cd538f33433eda5c8d8f0816e701bf886f",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Four closed cards shown at mobile and desktop."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Read-only card pixels show mismatch does not close visually after timer and first pair does not stay matched through second pair."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Both true pairs selected using exposed order; final card pixels do not show completed set. Exposed scalar matches/moves are stale copies."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Actual taps reach all four card centers on mobile and desktop."
+              }
+            },
+            "evidence": "independent-adaptive.json"
+          },
+          "independent_evidence": {
+            "independent-adaptive-desktop.jpg": "84ccc3ca5774ae707bb6f68f1802cf8b5d71ae6c5b224d11a056bd771a9986da",
+            "independent-adaptive.json": "5d06d010ec5784900fc79bc4393fe546971054a21cc2397fb159bb572e61a9b3",
+            "independent-adaptive-mobile.jpg": "aef01ac70071e57fbf3806e3771cd5898b29d93dc25f48ed03c51ed8d496912c"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "a989604d-c250-42a0-98c7-c75e778ccf74",
+              "artifact_hash": "4f2e82def9b25473dbeb4dbefb65de3ec75f7c831fdc81f6b5e8174b30d6832f",
+              "files": {
+                "independent-adaptive-desktop.jpg": "84ccc3ca5774ae707bb6f68f1802cf8b5d71ae6c5b224d11a056bd771a9986da",
+                "independent-adaptive.json": "5d06d010ec5784900fc79bc4393fe546971054a21cc2397fb159bb572e61a9b3",
+                "independent-adaptive-mobile.jpg": "aef01ac70071e57fbf3806e3771cd5898b29d93dc25f48ed03c51ed8d496912c"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "kind": "controlled_compact_check_repair",
+      "criteria": {
+        "start": "Начинается пустая партия 3×3 на Canvas",
+        "control": "Ходы X/O чередуются; занятую клетку нельзя перезаписать",
+        "outcome": "Реальные ходы дают победителя или ничью",
+        "mobile": "Управление и поле доступны на телефоне"
+      },
+      "run": {
+        "id": "e7921dd1-8b9b-479a-8c57-461e410772f7",
+        "status": "unverified",
+        "operation": "repair",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "string",
+        "attempts": 1,
+        "created_at": "2026-10-25T12:25:49.200584+00:00",
+        "finished_at": "2026-10-25T12:26:50.382371+00:00",
+        "candidate_revision_id": "af0e3908-589a-4312-86e2-c7d25c8d37fd",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "manual_verification",
+      "calls": [
+        {
+          "id": "6258d708-1e54-4ba0-a1c1-95a723d61a9f",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4347,
+            "output_tokens": 815,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:25:54.782490+00:00",
+          "sent_at": "2026-10-25T12:25:54.792494+00:00",
+          "finished_at": "2026-10-25T12:26:45.445755+00:00",
+          "elapsed_seconds": 50.649708,
+          "operation": "check_repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 48.99821510631591,
+            "first_output_seconds": 1.9122747667133808
+          },
+          "submitted_schema_sha256": "cec14e0751cea01db85efe4fdc031418b3decfa8dfa534d8cd2d0464239a76fb",
+          "source_files_sha256": {
+            "game.js": "b72f918166cbfcd19ba07b1d1e640bc3a1d1810d5fb73e5db55b194ed1a9f04a",
+            "index.html": "7b3edb3621d28e3519403c68813af97c89744177104cf9b835850c1a9d7161ed",
+            "runtime.js": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+            "runtime.css": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "af0e3908-589a-4312-86e2-c7d25c8d37fd",
+          "artifact_hash": "b1a97df99c585db301a645d5e7c69a7e90c02644ac8aaafb52a06402e879beb1",
+          "parent_id": "07c20766-29b5-4d8a-960b-956b74ff3df4",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:26:45.470003+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "b72f918166cbfcd19ba07b1d1e640bc3a1d1810d5fb73e5db55b194ed1a9f04a",
+              "bytes": 2545
+            },
+            "index.html": {
+              "sha256": "7b3edb3621d28e3519403c68813af97c89744177104cf9b835850c1a9d7161ed",
+              "bytes": 614
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "begin",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "move",
+                "category": "control",
+                "status": "passed"
+              },
+              {
+                "id": "win",
+                "category": "outcome",
+                "status": "passed"
+              }
+            ],
+            "findings": [
+              {
+                "code": "check_suite_revised",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "b1a97df99c585db301a645d5e7c69a7e90c02644ac8aaafb52a06402e879beb1",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Exact artifact b1a97d… independently replayed 9/9 in v8 review; repaired begin/move/win facts all passed, source unchanged."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Exact artifact b1a97d… independently replayed 9/9 in v8 review; repaired begin/move/win facts all passed, source unchanged."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Exact artifact b1a97d… independently replayed 9/9 in v8 review; repaired begin/move/win facts all passed, source unchanged."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Exact artifact b1a97d… independently replayed 9/9 in v8 review; repaired begin/move/win facts all passed, source unchanged."
+              }
+            },
+            "evidence": "prior v8 independent replay plus current 3/3 facts"
+          },
+          "independent_evidence": {},
+          "independent_evidence_references": []
+        }
+      ]
+    },
+    {
+      "case": "grid",
+      "kind": "controlled_full_check_repair",
+      "criteria": {
+        "start": "Начинается пустая партия 3×3 на Canvas",
+        "control": "Ходы X/O чередуются; занятую клетку нельзя перезаписать",
+        "outcome": "Реальные ходы дают победителя или ничью",
+        "mobile": "Управление и поле доступны на телефоне"
+      },
+      "run": {
+        "id": "a4f4d8a2-e382-44c0-8c6f-a000171640fa",
+        "status": "unverified",
+        "operation": "repair",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "full",
+        "source_format": "string",
+        "attempts": 1,
+        "created_at": "2026-10-25T12:26:51.903876+00:00",
+        "finished_at": "2026-10-25T12:28:11.216947+00:00",
+        "candidate_revision_id": "72cd6975-9798-40b1-8863-f507c0af66b1",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "manual_verification",
+      "calls": [
+        {
+          "id": "a180fda0-8e92-4b66-b04f-fa36d08be077",
+          "attempt": 1,
+          "state": "settled",
+          "usage": {
+            "input_tokens": 4302,
+            "output_tokens": 1032,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "created_at": "2026-10-25T12:26:56.050437+00:00",
+          "sent_at": "2026-10-25T12:26:56.064082+00:00",
+          "finished_at": "2026-10-25T12:28:07.458005+00:00",
+          "elapsed_seconds": 71.390323,
+          "operation": "check_repair",
+          "error_code": null,
+          "metadata": {
+            "actual_model": "qwen38",
+            "finish_reason": "stop",
+            "inference_seconds": 68.40746503230184,
+            "first_output_seconds": 6.972936152480543
+          },
+          "submitted_schema_sha256": "ffb969677593c18148c6e085a5f17a3bca466059e0819f95d0694cfc88eab440",
+          "source_files_sha256": {
+            "game.js": "98f5f1facec166789a7ea0ee31a9aef71a86c455507157c0b2b416a19fc2e108",
+            "index.html": "b82345434ed39e193fb016f5e75e0f0fa211cd1c9363dd599f802397db25ec97",
+            "styles.css": "4b5181c04eafdf06aac1c4ddbeb5c8b959e4409f2572d11f472bb52232c350fb"
+          }
+        }
+      ],
+      "revisions": [
+        {
+          "id": "72cd6975-9798-40b1-8863-f507c0af66b1",
+          "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+          "parent_id": "ed7f774d-3062-4fdc-b302-f5c570141299",
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T12:28:07.482251+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "98f5f1facec166789a7ea0ee31a9aef71a86c455507157c0b2b416a19fc2e108",
+              "bytes": 4386
+            },
+            "index.html": {
+              "sha256": "b82345434ed39e193fb016f5e75e0f0fa211cd1c9363dd599f802397db25ec97",
+              "bytes": 838
+            },
+            "styles.css": {
+              "sha256": "4b5181c04eafdf06aac1c4ddbeb5c8b959e4409f2572d11f472bb52232c350fb",
+              "bytes": 1546
+            }
+          },
+          "report": {
+            "status": "unverified",
+            "facts": [
+              {
+                "id": "begin",
+                "category": "start",
+                "status": "passed"
+              },
+              {
+                "id": "first_move",
+                "category": "control",
+                "status": "passed"
+              },
+              {
+                "id": "x_win",
+                "category": "outcome",
+                "status": "passed"
+              }
+            ],
+            "findings": [
+              {
+                "code": "check_suite_revised",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+            "criteria_hash": "701b6823190fbf88fb4584ce50ad5f328f1d87a2dd3b032f1a17ba93a1c525dd",
+            "criteria": {
+              "start": {
+                "status": "passed",
+                "evidence": "Exact unchanged full-grid artifact f02352… independently passed 10/10; repaired begin/first_move/x_win facts all passed."
+              },
+              "control": {
+                "status": "passed",
+                "evidence": "Exact unchanged full-grid artifact f02352… independently passed 10/10; repaired begin/first_move/x_win facts all passed."
+              },
+              "outcome": {
+                "status": "passed",
+                "evidence": "Exact unchanged full-grid artifact f02352… independently passed 10/10; repaired begin/first_move/x_win facts all passed."
+              },
+              "mobile": {
+                "status": "passed",
+                "evidence": "Exact unchanged full-grid artifact f02352… independently passed 10/10; repaired begin/first_move/x_win facts all passed."
+              }
+            },
+            "evidence": "028b2982-7ace-412c-9781-34a88c70fa96/independent-core.json"
+          },
+          "independent_evidence": {},
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "028b2982-7ace-412c-9781-34a88c70fa96",
+              "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+              "files": {
+                "independent-core.json": "749a6effa5388888b70c8b452740c8437a93f58d8d070826cf2e2deea60cae8a",
+                "independent-checks.json": "fc61503cdae7f2808b30b9ffd1006ecfe2bb6411963110de0ab655223139f2f9",
+                "independent-core.jpg": "d7274bea6d9db70d0606bd40c96b6cb2d556232294f851fb67d5296486ce2e92"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "snake",
+      "kind": "recheck_overlong",
+      "criteria": {
+        "start": "Начинается понятная партия змейки",
+        "control": "Ввод реально меняет направление, змейка движется",
+        "outcome": "Столкновение приводит к завершению партии",
+        "mobile": "Крупное доступное управление и спокойный темп для пожилого игрока"
+      },
+      "run": {
+        "id": "0bdfac8d-c3e8-41a6-9dc3-31e2568935e7",
+        "status": "failed",
+        "operation": "repair",
+        "provider": "relay",
+        "model": "qwen38",
+        "generation_profile": "compact",
+        "source_format": "string",
+        "attempts": 0,
+        "created_at": "2026-10-25T12:28:15.363348+00:00",
+        "finished_at": "2026-10-25T12:28:17.099466+00:00",
+        "candidate_revision_id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+        "result_revision_id": null,
+        "source_revision_id": null
+      },
+      "error_code": "validator_unavailable",
+      "calls": [],
+      "revisions": [
+        {
+          "id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+          "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+          "parent_id": null,
+          "accepted": false,
+          "verification": "none",
+          "created_at": "2026-10-25T11:58:25.476983+00:00",
+          "files": {
+            "game.js": {
+              "sha256": "80c1a15c06daa2eeea08b3bc96e2cf2bbe95bbc5dbbd85168c1ccaf87893df24",
+              "bytes": 3491
+            },
+            "index.html": {
+              "sha256": "fd82aa27a1ecb6e30ace846ece2aca15b756591dd9cf355a41fa8b3ce5854183",
+              "bytes": 753
+            },
+            "runtime.js": {
+              "sha256": "81b8d590d585ee40fe16963b96b39e9de642c070fdeb9097813ca988f34517fe",
+              "bytes": 6386
+            },
+            "runtime.css": {
+              "sha256": "8f76c520c4a888e874c32bc3852421083a31b9580a391a6d68dd7f641f388759",
+              "bytes": 763
+            }
+          },
+          "report": {
+            "status": "infrastructure_error",
+            "facts": [],
+            "findings": [
+              {
+                "code": "validator_unavailable",
+                "check_id": null
+              }
+            ]
+          },
+          "independent_review": {
+            "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+            "criteria_hash": "e7d864aa29ebbcff117f4867a1e39bcf3bdd5407090e1af5989d5893fca684d2",
+            "criteria": {
+              "start": {
+                "status": "failed",
+                "evidence": "All snake/food drawing coordinates are outside the logical canvas; independent runtime later crashes."
+              },
+              "control": {
+                "status": "failed",
+                "evidence": "Direction input changes a scalar but no usable player scene; reset empties snake and later update throws."
+              },
+              "outcome": {
+                "status": "failed",
+                "evidence": "Natural real ArrowUp run reaches runtime TypeError rather than a stable playable outcome."
+              },
+              "mobile": {
+                "status": "failed",
+                "evidence": "Controls are reachable but player/food rendering is outside the canvas."
+              }
+            },
+            "evidence": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf/independent-core.json"
+          },
+          "independent_evidence": {
+            "independent-core.json": "b477000ef27086ff7a7fa0a0e2bf6c3de3ce1fb0f120378f58e3c0f449f6c1aa",
+            "independent-checks.json": "fe4c49e2bd9ff723d7c6d831c5ad9eddb32f4d5bbf572b2cac8df01d6472c7f6",
+            "independent-core.jpg": "b797b5a34b49b7c4395699e5e5b2a98c02decf57b7b9cbf3be7b03257b2bbdf3",
+            "independent-observers.json": "8727f076500983fae4acb384fe2625b34699d39a6d89b1e4bd6f5e7e54d58a69"
+          },
+          "independent_evidence_references": [
+            {
+              "source_revision_id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+              "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+              "files": {
+                "independent-core.json": "b477000ef27086ff7a7fa0a0e2bf6c3de3ce1fb0f120378f58e3c0f449f6c1aa",
+                "independent-checks.json": "fe4c49e2bd9ff723d7c6d831c5ad9eddb32f4d5bbf572b2cac8df01d6472c7f6",
+                "independent-core.jpg": "b797b5a34b49b7c4395699e5e5b2a98c02decf57b7b9cbf3be7b03257b2bbdf3",
+                "independent-observers.json": "8727f076500983fae4acb384fe2625b34699d39a6d89b1e4bd6f5e7e54d58a69"
+              }
+            },
+            {
+              "source_revision_id": "9ff761b9-5ee3-4caa-88bd-f771fe091bbf",
+              "artifact_hash": "bdca1c53a6aeb4e674fc027ca0409e3056f0e7daaaebb2566f0dceb85975bc16",
+              "files": {
+                "independent-core.json": "b477000ef27086ff7a7fa0a0e2bf6c3de3ce1fb0f120378f58e3c0f449f6c1aa",
+                "independent-checks.json": "fe4c49e2bd9ff723d7c6d831c5ad9eddb32f4d5bbf572b2cac8df01d6472c7f6",
+                "independent-core.jpg": "b797b5a34b49b7c4395699e5e5b2a98c02decf57b7b9cbf3be7b03257b2bbdf3",
+                "independent-observers.json": "8727f076500983fae4acb384fe2625b34699d39a6d89b1e4bd6f5e7e54d58a69"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "preservation": {
+    "previous_invocations_unchanged": 196,
+    "new_invocations": 23,
+    "user_password_digests_unchanged": true,
+    "active_runs": 0,
+    "pending_invocations": 0,
+    "historical_unknown": 11,
+    "codex_cli": "codex-cli 0.164.0-alpha.11.1",
+    "codex_model_calls": 0,
+    "gpu_administration": false
+  },
+  "lines_first_proof": {
+    "invocation": "06e5ba33-9ca2-4f00-a597-be8513a121a8",
+    "source_exact_lf_join": true,
+    "source_sha256": "d2ecba2ccc46155a0e6ce1d71e00ed7db99f6a284c17610d77578a09fbb65f89",
+    "parentheses": {
+      "(": 87,
+      ")": 87
+    },
+    "first_artifact": "6469cf28d701bd89784ec4ea0d4eff575c273184e5dc0fad35bf7d9f7441d5c9",
+    "independent_core": "passed 9/9"
+  },
+  "accounting": {
+    "calls": 23,
+    "states": {
+      "settled": 19,
+      "failed": 4
+    },
+    "known_usage_calls": 23,
+    "finish_reasons": {
+      "stop": 23
+    },
+    "new_unknown": 0,
+    "all_submitted_schemas_match_frozen_code": true
+  },
+  "arms": {
+    "full": {
+      "created_games": 3,
+      "playable": 2,
+      "broken": 1,
+      "automatic": 0,
+      "calls": 8,
+      "input_tokens": 29071,
+      "output_tokens": 27790,
+      "median_terminal_seconds": 443.6072270870209,
+      "sum_inference_seconds": 1702.026272566989
+    },
+    "compact_string": {
+      "created_games": 3,
+      "playable": 0,
+      "broken": 3,
+      "automatic": 0,
+      "calls": 5,
+      "input_tokens": 11277,
+      "output_tokens": 6565,
+      "median_terminal_seconds": 148.8053960800171,
+      "sum_inference_seconds": 409.4901091065258
+    },
+    "compact_lines": {
+      "created_games": 3,
+      "playable": 1,
+      "broken": 2,
+      "automatic": 0,
+      "calls": 8,
+      "input_tokens": 17617,
+      "output_tokens": 13172,
+      "median_terminal_seconds": 239.74047994613647,
+      "sum_inference_seconds": 807.2272043451667
+    }
+  },
+  "baseline": {
+    "file": "docs/evidence/lite-v8-pilot-2026-10-25.json",
+    "sha256": "748045d4a6ee06fb6e786e096a55e75b8d0c945c741440380a6c5efdbb7d3090",
+    "arms": {
+      "full": {
+        "operations": 3,
+        "playable": 1,
+        "broken": 2,
+        "unverified_or_unreviewed": 0,
+        "calls": 9,
+        "known_usage_calls": 9,
+        "unknown_usage_calls": 0,
+        "automatic": 0,
+        "input_tokens": 18602,
+        "output_tokens": 35436,
+        "sum_inference_seconds": 2117.409734662622,
+        "median_decision_seconds": 838.5631589889526
+      },
+      "compact_string": {
+        "operations": 3,
+        "playable": 1,
+        "broken": 2,
+        "unverified_or_unreviewed": 0,
+        "calls": 7,
+        "known_usage_calls": 7,
+        "unknown_usage_calls": 0,
+        "automatic": 0,
+        "input_tokens": 18955,
+        "output_tokens": 7861,
+        "sum_inference_seconds": 494.21824002079666,
+        "median_decision_seconds": 155.678640127182
+      },
+      "compact_lines": {
+        "operations": 3,
+        "playable": 0,
+        "broken": 3,
+        "unverified_or_unreviewed": 0,
+        "calls": 9,
+        "known_usage_calls": 8,
+        "unknown_usage_calls": 1,
+        "automatic": 0,
+        "input_tokens": 20172,
+        "output_tokens": 15827,
+        "sum_inference_seconds": 3741.78690711502,
+        "median_decision_seconds": 353.9152719974518
+      }
+    },
+    "calls": 33,
+    "duration_seconds": 8702.578833818436,
+    "new_unknown": 2
+  },
+  "recovery": [
+    {
+      "kind": "controlled_compact_check_repair",
+      "model_calls": 1,
+      "source_unchanged": true,
+      "requirements_unchanged": true,
+      "artifact_hash": "b1a97df99c585db301a645d5e7c69a7e90c02644ac8aaafb52a06402e879beb1",
+      "facts_passed": 3,
+      "facts_total": 3,
+      "manual_confirmation_required": true
+    },
+    {
+      "kind": "controlled_full_check_repair",
+      "model_calls": 1,
+      "source_unchanged": true,
+      "requirements_unchanged": true,
+      "artifact_hash": "f0235220b42844d5d4bb5f2ddd78bee252461682524e580f1ee4c53f703207a8",
+      "facts_passed": 3,
+      "facts_total": 3,
+      "manual_confirmation_required": true
+    }
+  ],
+  "validation_defects": [
+    {
+      "code": "overlong_check_misclassified_as_infrastructure",
+      "source_run": "e158850e-af4b-4315-8ebb-36fbe5faae66",
+      "recheck_run": "0bdfac8d-c3e8-41a6-9dc3-31e2568935e7",
+      "wait_ms": 10100,
+      "limit_ms": 10000,
+      "recheck_model_calls": 0,
+      "source_unchanged": true,
+      "result": "same ValueError / validator_unavailable"
+    },
+    {
+      "code": "timer_state_change_not_rendered_without_update",
+      "revision": "a989604d-c250-42a0-98c7-c75e778ccf74",
+      "evidence": "independent-adaptive.json",
+      "runtime_behavior": "tick paints only inside optional game.update branch"
+    }
+  ],
+  "notes": [
+    "Nine main creations are the quality denominator; two controlled fixtures and a zero-inference recheck are separate.",
+    "The source is frozen throughout this pilot; no production code was changed to improve its scores.",
+    "Both full and compact controlled repairs passed 3/3 and remain behind explicit scenario review.",
+    "The lines wire defect did not recur in materialized candidates; strict-schema missing metadata still occurred twice.",
+    "No statistical quality improvement is claimed from one sample per prompt/profile.",
+    "GPU administration and Codex inference were not performed."
+  ],
+  "model_free_render_reproduction": {
+    "environment": "mini-browser-v1:5857e9bd02b68a68d4fca56e9567a0bec461bd66c3e81e2e5781b12a8b257794:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1:private-timer-repro",
+    "initial": {
+      "on": false,
+      "pixel": [
+        0,
+        0,
+        255
+      ]
+    },
+    "after_timer": {
+      "on": true,
+      "pixel": [
+        0,
+        0,
+        255
+      ]
+    },
+    "after_next_input": {
+      "on": true,
+      "pixel": [
+        255,
+        0,
+        0
+      ]
+    },
+    "model_calls": 0,
+    "artifact_hash": "e03b58dedda2edc13546621c8a693ea869b09063eb9058bc892e51785fd3ec8d",
+    "fixture_source_sha256": "af1c094d409f2bab325eea0e61fd64f9470ec8b56e0b8cf2d6d93418e0f0d511"
+  },
+  "independent_oracles_sha256": {
+    ".data/lite-v8-independent.py": "fce68995cde7d2017b70b54cdf9be3f345e270a04049c8a512011c979f67092a",
+    ".data/lite-v8-r2-grid-checks.py": "a2ed51cd9de2b65ea6c4c3b148d78beddc16830ce5f9d2bd71597a77c63d7f41",
+    ".data/lite-v8-r2-fullgrid-checks.py": "f56f5a588a74b72910b2d6e50e4942129f7c6d6c1a0349e9eeedbe41406a3e5e",
+    ".data/lite-v8-r2-fullsnake.py": "c09083c4240cf0975366df5fb5411dd49e410d5e4330aa9c2f217464a69433a5",
+    ".data/lite-v8-r2-fullmemory.py": "96875b42282763505e07c537601e29b357fb84f2b775eec17bbb8d19adee7a27",
+    ".data/lite-v8-r2-linesmemory.py": "f109aa037d6d6faba0a54a9862f3ec217420212122c3aafd77f6e68a6ad0782f",
+    ".data/lite-v8-r2-render-repro.py": "e052d6ccf8d31de406fdbd30acf676913cb7e2654245aa87e1734ee969b2dd3d"
+  },
+  "lines_materialization_audit": [
+    {
+      "case": "grid",
+      "first_materialized_revision": "536711d5-c156-44a4-a72f-be5c9751ba3a",
+      "exact_lf_join": true,
+      "parentheses_present": true,
+      "syntax_error": false
+    },
+    {
+      "case": "snake",
+      "first_materialized_revision": "f6869ec5-e27c-4850-9007-9eaa7c6ea4a5",
+      "exact_lf_join": true,
+      "parentheses_present": true,
+      "syntax_error": false
+    },
+    {
+      "case": "memory",
+      "first_materialized_revision": "a989604d-c250-42a0-98c7-c75e778ccf74",
+      "exact_lf_join": true,
+      "parentheses_present": true,
+      "syntax_error": false
+    }
+  ]
+}

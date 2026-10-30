@@ -1,0 +1,198 @@
+{
+  "date": "2026-10-28",
+  "release": "75f5065b0f2d47a1090b9b8457a4e5b9e01ee587",
+  "previous_release": "5d339a06fc9790db0f0b23621505f3e9cbd672e1",
+  "included_edit_recovery": "8e0019e",
+  "server": {
+    "revision": "75f5065b0f2d47a1090b9b8457a4e5b9e01ee587",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 27,
+      "CheckReport": 3,
+      "Feedback": 0,
+      "Invocation": 114,
+      "Like": 0,
+      "Message": 112,
+      "Outbox": 58,
+      "Preference": 3,
+      "PromptTemplate": 2,
+      "Publication": 0,
+      "Revision": 3,
+      "Run": 58,
+      "RunEvent": 599,
+      "User": 4
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "unknown_preserved": 5,
+    "visible_chats": 1,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_configuration_and_secrets_preserved": true,
+    "relay_db_redis_identity_preserved": true,
+    "validator_updated": true,
+    "validator_check": {
+      "checks": [
+        {
+          "detailed_scene": false,
+          "status": "passed",
+          "mime": "image/png",
+          "image_bytes": 5140,
+          "environment": "mini-browser-v1:b7c3885ca765549f06131856f2e625568abe4a20d330f5a1c699b2d1676ba16a:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)"
+        },
+        {
+          "detailed_scene": true,
+          "status": "passed",
+          "mime": "image/jpeg",
+          "image_bytes": 238594,
+          "environment": "mini-browser-v1:b7c3885ca765549f06131856f2e625568abe4a20d330f5a1c699b2d1676ba16a:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)"
+        }
+      ],
+      "model_calls": 0,
+      "records_created": 0
+    },
+    "new_migrations": [],
+    "model_calls": 0,
+    "images": {
+      "app": {
+        "image_id": "sha256:9d1edf468da8fa338f4d84e0c82b56ab34e2ab7763eb3961e0c3c813b18a1153",
+        "image_tag": "gameforge-mini:cloud-75f5065-20261028"
+      },
+      "preview": {
+        "image_id": "sha256:9d1edf468da8fa338f4d84e0c82b56ab34e2ab7763eb3961e0c3c813b18a1153",
+        "image_tag": "gameforge-mini:cloud-75f5065-20261028"
+      },
+      "worker": {
+        "image_id": "sha256:9d1edf468da8fa338f4d84e0c82b56ab34e2ab7763eb3961e0c3c813b18a1153",
+        "image_tag": "gameforge-mini:cloud-75f5065-20261028"
+      },
+      "beat": {
+        "image_id": "sha256:9d1edf468da8fa338f4d84e0c82b56ab34e2ab7763eb3961e0c3c813b18a1153",
+        "image_tag": "gameforge-mini:cloud-75f5065-20261028"
+      },
+      "validator": {
+        "image_id": "sha256:18219663a65343c1140e082bcb482314f92ec4bcafe59713fa6da6fa09f79a44",
+        "image_tag": "gameforge-mini-validator:cloud-75f5065-20261028"
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-75f5065-20261027T232016Z.dump",
+    "backup_sha256": "6b51daf942bd9db4d74bb7655b0486382ab3564ee0fd0600abb18879f0e42703"
+  },
+  "browser": {
+    "revision": "75f5065b0f2d47a1090b9b8457a4e5b9e01ee587",
+    "https_verified": true,
+    "html_and_assets_exact": true,
+    "asset_count": 14,
+    "health": "ok",
+    "guest_chats_denied": true,
+    "both_pro_and_lite_available": true,
+    "viewports": [
+      {
+        "browser": "chromium",
+        "theme": "light",
+        "width": 390,
+        "height": 844,
+        "row_height": 43,
+        "arrow_gap_px": 6,
+        "wish_before_stars_and_at_five": true,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "chromium",
+        "theme": "light",
+        "width": 320,
+        "height": 568,
+        "row_height": 43,
+        "arrow_gap_px": 6,
+        "wish_before_stars_and_at_five": true,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "chromium",
+        "theme": "light",
+        "width": 1440,
+        "height": 1000,
+        "row_height": 42,
+        "arrow_gap_px": 6,
+        "wish_before_stars_and_at_five": true,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 390,
+        "height": 844,
+        "row_height": 43,
+        "arrow_gap_px": 6,
+        "wish_before_stars_and_at_five": true,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 320,
+        "height": 568,
+        "row_height": 43,
+        "arrow_gap_px": 6,
+        "wish_before_stars_and_at_five": true,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      },
+      {
+        "browser": "webkit",
+        "theme": "dark",
+        "width": 1440,
+        "height": 1000,
+        "row_height": 42,
+        "arrow_gap_px": 6,
+        "wish_before_stars_and_at_five": true,
+        "one_row": true,
+        "scroll_both_directions": true,
+        "selection_preserved_while_scrolling": true,
+        "reduced_motion": true,
+        "horizontal_overflow": false
+      }
+    ],
+    "existing_chat_selected_mode_visible": true,
+    "page_errors": [],
+    "http_mutations": "login/logout only, one session per browser",
+    "model_calls": 0,
+    "chats_created": 0,
+    "physical_ios": false
+  },
+  "final_health": {
+    "run_count": 58,
+    "invocation_count": 114,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "migration_0020": true,
+    "preview_https_verified": true,
+    "preview_status": 200,
+    "preview_no_cookies": true,
+    "preview_sandbox_csp": true,
+    "deployed_revision": "75f5065b0f2d47a1090b9b8457a4e5b9e01ee587",
+    "validator_isolation_verified": true,
+    "new_migrations": []
+  },
+  "gpu_accessed": false,
+  "codex_worker_changed": false,
+  "old_covers_regenerated": false
+}

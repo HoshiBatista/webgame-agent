@@ -1,0 +1,414 @@
+{
+  "research_date_moscow": "2026-10-25",
+  "cloud_snapshot_at_utc": "2026-10-24T21:43:02.428014+00:00",
+  "application_source_revision": "bb07e1fa57681d499471578455acc2a188bb2fa6",
+  "local_head": "de097fb",
+  "private_snapshot_sha256": "855ea3cc62392ec06611380d876992772eeb5f4080c75c571b039a55471d3f12",
+  "collection": {
+    "database_transaction": "REPEATABLE READ, READ ONLY",
+    "tables": [
+      "Run",
+      "Invocation",
+      "Revision",
+      "CheckReport",
+      "RunEvent"
+    ],
+    "new_model_calls": 0,
+    "cloud_mutations": 0,
+    "gpu_connections": 0,
+    "independent_local_browser_replays": 2
+  },
+  "scope": {
+    "all_runs": 16,
+    "all_invocations": 38,
+    "real_runs": 10,
+    "fake_runs_excluded": 6,
+    "real_run_statuses": {
+      "needs_attention": 8,
+      "failed": 1,
+      "unverified": 1
+    },
+    "real_invocations_by_contract": {
+      "2": 10,
+      "3": 17,
+      "7": 5
+    },
+    "active_runs": 0,
+    "active_or_unknown_invocations": 0
+  },
+  "all_historical_real_calls": {
+    "calls": 32,
+    "input_tokens": 152443,
+    "output_tokens": 73611,
+    "invocation_seconds_sum": 4740.178,
+    "provider_inference_seconds_sum": 4598.675,
+    "inference_fraction_of_invocation_seconds": 0.97015,
+    "median_first_output_seconds": 2.006,
+    "states": {
+      "settled": 30,
+      "failed": 2
+    },
+    "error_codes": {
+      "none": 16,
+      "rewrite_disallowed": 2,
+      "invalid_unchanged": 1,
+      "ambiguous_patch": 6,
+      "missing_resource": 1,
+      "overlapping_patch": 2,
+      "no_changes": 1,
+      "incomplete_response": 1,
+      "incomplete_sources": 2
+    }
+  },
+  "cloud_v7": {
+    "statistics": {
+      "calls": 5,
+      "input_tokens": 9924,
+      "output_tokens": 15983,
+      "invocation_seconds_sum": 1070.334,
+      "provider_inference_seconds_sum": 1040.704,
+      "inference_fraction_of_invocation_seconds": 0.97232,
+      "median_first_output_seconds": 1.367,
+      "states": {
+        "settled": 5
+      },
+      "error_codes": {
+        "none": 3,
+        "incomplete_sources": 2
+      }
+    },
+    "runs": [
+      {
+        "id": "57635269-2c1a-4060-956e-6ff7e2061173",
+        "chat_id": "9972cc80-3019-404e-b41c-7833d5005bd7",
+        "operation": "create",
+        "status": "unverified",
+        "base_revision_id": null,
+        "continued_from_id": null,
+        "candidate_revision_id": "f2dc935b-2d8e-4c43-bf3c-2cc68ed70681",
+        "created_at": "2026-10-24 19:02:40.657206+00:00",
+        "finished_at": "2026-10-24 19:07:57.374700+00:00"
+      },
+      {
+        "id": "cbe7695e-dac7-457b-af6b-d164df66ff44",
+        "chat_id": "9972cc80-3019-404e-b41c-7833d5005bd7",
+        "operation": "create",
+        "status": "needs_attention",
+        "base_revision_id": null,
+        "continued_from_id": null,
+        "candidate_revision_id": "84da75a0-f7a0-4214-a81c-57a8cdd030fc",
+        "created_at": "2026-10-24 19:58:15.777361+00:00",
+        "finished_at": "2026-10-24 20:11:26.929019+00:00"
+      }
+    ],
+    "calls": [
+      {
+        "id": "70902037-aaf3-405f-b951-23bc04bc2323",
+        "run_id": "57635269-2c1a-4060-956e-6ff7e2061173",
+        "operation": "create",
+        "state": "settled",
+        "error_code": null,
+        "usage": {
+          "input_tokens": 1208,
+          "output_tokens": 3362,
+          "cached_input_tokens": 0
+        },
+        "elapsed_seconds": 223.068422,
+        "inference_seconds": 216.53484708070755,
+        "response_format": "json_schema",
+        "request_model": "qwen38",
+        "execution_limits": {
+          "context_window": 32768,
+          "max_output_tokens": 16384
+        },
+        "raw_decoded_files_equal_response_files": true
+      },
+      {
+        "id": "14b0b774-1e1e-480c-8474-81ffbdeade6b",
+        "run_id": "57635269-2c1a-4060-956e-6ff7e2061173",
+        "operation": "check_repair",
+        "state": "settled",
+        "error_code": null,
+        "usage": {
+          "input_tokens": 4824,
+          "output_tokens": 959,
+          "cached_input_tokens": 0
+        },
+        "elapsed_seconds": 67.027884,
+        "inference_seconds": 61.30568117275834,
+        "response_format": "json_schema",
+        "request_model": "qwen38",
+        "execution_limits": {
+          "context_window": 32768,
+          "max_output_tokens": 16384
+        },
+        "raw_decoded_files_equal_response_files": true
+      },
+      {
+        "id": "b3ca57e4-06bf-4deb-a14f-5237db0e326c",
+        "run_id": "cbe7695e-dac7-457b-af6b-d164df66ff44",
+        "operation": "create",
+        "state": "settled",
+        "error_code": "incomplete_sources",
+        "usage": {
+          "input_tokens": 1232,
+          "output_tokens": 1134,
+          "cached_input_tokens": 0
+        },
+        "elapsed_seconds": 84.418143,
+        "inference_seconds": 78.72225306835026,
+        "response_format": "json_schema",
+        "request_model": "qwen38",
+        "execution_limits": {
+          "context_window": 32768,
+          "max_output_tokens": 16384
+        },
+        "raw_decoded_files_equal_response_files": true
+      },
+      {
+        "id": "87e33a22-6c3b-4423-b684-bd2fdc760c9b",
+        "run_id": "cbe7695e-dac7-457b-af6b-d164df66ff44",
+        "operation": "create",
+        "state": "settled",
+        "error_code": "incomplete_sources",
+        "usage": {
+          "input_tokens": 1330,
+          "output_tokens": 5529,
+          "cached_input_tokens": 0
+        },
+        "elapsed_seconds": 365.797526,
+        "inference_seconds": 359.0450314823538,
+        "response_format": "json_schema",
+        "request_model": "qwen38",
+        "execution_limits": {
+          "context_window": 32768,
+          "max_output_tokens": 16384
+        },
+        "raw_decoded_files_equal_response_files": true
+      },
+      {
+        "id": "44eba731-a336-4b5a-aebb-966e178fdf08",
+        "run_id": "cbe7695e-dac7-457b-af6b-d164df66ff44",
+        "operation": "create",
+        "state": "settled",
+        "error_code": null,
+        "usage": {
+          "input_tokens": 1330,
+          "output_tokens": 4999,
+          "cached_input_tokens": 0
+        },
+        "elapsed_seconds": 330.021646,
+        "inference_seconds": 325.0956997582689,
+        "response_format": "json_schema",
+        "request_model": "qwen38",
+        "execution_limits": {
+          "context_window": 32768,
+          "max_output_tokens": 16384
+        },
+        "raw_decoded_files_equal_response_files": true
+      }
+    ]
+  },
+  "static_parse": [
+    {
+      "invocation_id": "70902037-aaf3-405f-b951-23bc04bc2323",
+      "path": "game.js",
+      "chars": 4057,
+      "newlines": 0,
+      "top_level_statements": 28,
+      "node_types": [
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "FunctionDeclaration",
+        "ExpressionStatement",
+        "ExpressionStatement",
+        "ExpressionStatement",
+        "VariableDeclaration",
+        "FunctionDeclaration",
+        "FunctionDeclaration",
+        "FunctionDeclaration",
+        "FunctionDeclaration",
+        "FunctionDeclaration",
+        "FunctionDeclaration",
+        "FunctionDeclaration",
+        "ExpressionStatement",
+        "ExpressionStatement",
+        "VariableDeclaration",
+        "ExpressionStatement",
+        "ExpressionStatement",
+        "ExpressionStatement"
+      ],
+      "comment_chars": 0,
+      "first_comment": null,
+      "syntax_error": null
+    },
+    {
+      "invocation_id": "b3ca57e4-06bf-4deb-a14f-5237db0e326c",
+      "path": "game.js",
+      "chars": 61,
+      "newlines": 0,
+      "top_level_statements": 0,
+      "node_types": [],
+      "comment_chars": 61,
+      "first_comment": {
+        "start": 0,
+        "end": 61
+      },
+      "syntax_error": null
+    },
+    {
+      "invocation_id": "87e33a22-6c3b-4423-b684-bd2fdc760c9b",
+      "path": "game.js",
+      "chars": 8468,
+      "newlines": 0,
+      "top_level_statements": 0,
+      "node_types": [],
+      "comment_chars": 8468,
+      "first_comment": {
+        "start": 0,
+        "end": 8468
+      },
+      "syntax_error": null
+    },
+    {
+      "invocation_id": "44eba731-a336-4b5a-aebb-966e178fdf08",
+      "path": "game.js",
+      "chars": 8112,
+      "newlines": 0,
+      "top_level_statements": 24,
+      "node_types": [
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration",
+        "VariableDeclaration"
+      ],
+      "comment_chars": 7325,
+      "first_comment": {
+        "start": 787,
+        "end": 8112
+      },
+      "syntax_error": null
+    }
+  ],
+  "local_browser_replays": [
+    {
+      "revision_id": "f2dc935b-2d8e-4c43-bf3c-2cc68ed70681",
+      "artifact_hash": "e51293556d727343428cdd031f28f40eaeaa95af9ce4199ddbf3fd406a1cc02a",
+      "status": "unverified",
+      "fact_statuses": [
+        {
+          "id": "c0",
+          "status": "passed",
+          "before": null,
+          "after": "play"
+        },
+        {
+          "id": "c1",
+          "status": "unverified",
+          "before": null,
+          "after": null
+        },
+        {
+          "id": "c2",
+          "status": "passed",
+          "before": null,
+          "after": "over"
+        }
+      ],
+      "environment": "mini-browser-v1:901dc92abdd3e1ea058357a9f87adfa2d5db337c9612ad67a11521a757b67cca:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+      "elapsed_seconds": 6.106,
+      "finding_codes": {
+        "invalid_check": 1
+      }
+    },
+    {
+      "revision_id": "84da75a0-f7a0-4214-a81c-57a8cdd030fc",
+      "artifact_hash": "ab1fc238554ea73beefcfb5609b0774eef0fce2e929c6b16001b8d7c65214694",
+      "status": "unverified",
+      "fact_statuses": [
+        {
+          "id": "snake-starts-on-tap",
+          "status": "unverified",
+          "before": null,
+          "after": null
+        },
+        {
+          "id": "snake-turns-on-arrow",
+          "status": "unverified",
+          "before": null,
+          "after": null
+        },
+        {
+          "id": "touch-dpad-turns-snake",
+          "status": "unverified",
+          "before": null,
+          "after": null
+        },
+        {
+          "id": "snake-eats-and-grows",
+          "status": "unverified",
+          "before": null,
+          "after": null
+        },
+        {
+          "id": "snake-dies-on-wall",
+          "status": "unverified",
+          "before": null,
+          "after": null
+        }
+      ],
+      "environment": "mini-browser-v1:901dc92abdd3e1ea058357a9f87adfa2d5db337c9612ad67a11521a757b67cca:145.0.7632.6:native-darwin:3d9d7be4441a7a024b590e2d85d9601aeabe0cb74cf4047bcf2290875c8807c1",
+      "elapsed_seconds": 4.433,
+      "finding_codes": {
+        "incomplete_checks": 1,
+        "check_timeout": 2,
+        "invalid_check": 3,
+        "scene_visually_unverified": 1
+      }
+    }
+  ],
+  "local_v7_pilot_reference": {
+    "file": "lite-v7-pilot-2026-10-24.json",
+    "new_creates": 6,
+    "fully_processed": 6,
+    "independently_basic_playable": 3,
+    "automatically_accepted": 0,
+    "check_repair_attempts": 6,
+    "fully_restored_suites": 0
+  },
+  "limitations": [
+    "Cloud v2/v3 and v7 are separate cohorts, not an A/B test.",
+    "Cloud v7 has two runs in one chat; the second is a user follow-up, not an independent game prompt.",
+    "qwen38 is an API alias; weights, quantization, server defaults and reasoning mode are not verified.",
+    "Worker stdout covers only the current container since the deployment; historical evidence comes from persisted records.",
+    "Native replay confirms validation findings; it is not full independent gameplay or physical WebView acceptance."
+  ]
+}

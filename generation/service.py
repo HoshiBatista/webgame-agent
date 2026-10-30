@@ -1,0 +1,148 @@
+"""A single model operation. Retries and saved-candidate policy belong to the queue."""
+
+import time
+import uuid
+
+from .errors import GenerationError
+from .normalization import VERSION as NORMALIZATION_VERSION
+from .normalization import normalize_response
+from .providers import codex, codex_api, fake, relay, vllm
+from .schema import response_schema, validate_response
+
+PROVIDERS = {"codex": codex, "codex_api": codex_api, "vllm": vllm, "relay": relay, "fake": fake}
+DURABLE_PROVIDERS = frozenset({"relay", "codex_api"})
+
+
+def generate(request, *, on_event, is_cancelled):
+    if request.get("operation") in {"visual_review", "visual_patch"}:
+        from .feedback_image import image_input
+
+        if image_input(request) is None:
+            raise GenerationError("invalid_visual_image", "Нет допустимого пакета кадров.", outcome_unknown=False)
+    provider_name = request.get("provider", "codex")
+    provider = PROVIDERS.get(provider_name)
+    if provider is None:
+        raise GenerationError("unknown_provider", "Неизвестный провайдер генерации.")
+    started = time.monotonic()
+    result = provider.generate(request, on_event=on_event, is_cancelled=is_cancelled)
+    result["provider_metadata"] = {
+        **(result.get("provider_metadata") or {}),
+        "request_profile": {
+            "requested_model": request.get("model"),
+            "generation_strategy": request.get("generation_strategy", "lite"),
+            "presentation_policy": request.get("presentation_policy", 0),
+            "reasoning_effort": request.get("reasoning_effort", "low") if provider_name in {"codex", "codex_api"} else None,
+            "generation_contract": request.get("generation_contract", {}),
+            "execution_limits": request.get("execution_limits", {}),
+            "explicit_sampling": {key: request["relay"]["payload"][key] for key in
+                                  ("temperature", "top_p", "seed", "top_k")
+                                  if key in (request.get("relay", {}).get("payload") or {})},
+            "server_defaults_known": False,
+        },
+    }
+    original = result["response"]
+    result.setdefault("raw_response", original)
+    result["response"], changes = normalize_response(original)
+    if changes:
+        result["provider_metadata"] = {
+            **(result.get("provider_metadata") or {}),
+            "response_normalization": {"version": NORMALIZATION_VERSION, "paths": changes},
+        }
+    if request.get('operation') == 'plan':
+        from .planning import PROVENANCE_VERSION, normalize_plan_sources
+
+        result['response'], source_changes = normalize_plan_sources(result['response'], request)
+        if source_changes:
+            result['provider_metadata']['plan_provenance'] = {
+                'version': PROVENANCE_VERSION, 'changes': source_changes,
+            }
+    try:
+        if request.get('response_completion'):
+            from .response_completion import assemble
+
+            result['response'] = assemble(original, request)
+            policy = request['response_completion']
+            result['provider_metadata']['response_completion'] = {
+                'source_invocation': policy['source_invocation'], 'source_sha256': policy['source_sha256'],
+                'retained_fields': list(policy['retained_fields']),
+                'retained_files': [f['path'] for f in policy['retained_files']],
+            }
+        elif request.get("patch_repair"):
+            from .patch_repair import validate_reply
+
+            validate_reply(result["response"], request["patch_repair"])
+        elif request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:
+            from .compact import validate_wire
+
+            validate_wire(result["response"], request)
+        else:
+            validate_response(result["response"], operation=request.get("operation", "create"),
+                          schema=response_schema(request),
+                          defer_check_errors=(request.get("operation", "create") in {"create", "edit"}
+                          and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
+                          or bool(request.get('operation') == 'check_repair' and
+                                  request.get('check_repair', {}).get('protected_checks')))
+            if request.get('operation') == 'check_repair' and request.get('check_repair', {}).get('protected_checks'):
+                from .check_repair import scoped_response
+
+                result['response'], retained = scoped_response(result['response'],
+                    previous_checks=request['checks'], policy=request['check_repair'])
+                result['provider_metadata']['check_repair_scope'] = {'retained_passed_checks': retained}
+                validate_response(result['response'], operation='check_repair', schema=response_schema(request))
+        if request.get('operation') == 'plan':
+            from .planning import validate_plan
+
+            validate_plan(result['response'], request)
+    except GenerationError as exc:
+        exc.usage = result.get("usage")
+        exc.raw_response = result.get("raw_response") or result.get("response")
+        exc.provider_metadata = result.get("provider_metadata") or {}
+        raise
+    # A completed receipt must reach durable storage even if cancellation raced it.
+    # The backend fence prevents applying it to an already cancelled run.
+    result.update(
+        provider=provider_name,
+        model=result.get("model") or request.get("model") or ("fixture" if provider_name == "fake" else None),
+        elapsed_seconds=time.monotonic() - started,
+        invocation_id=str(uuid.uuid4()),
+    )
+    return result
+
+
+def estimate_reservation(request, price):
+    """Conservative one-inference liability, never a claimed actual charge.
+
+    Official limits for the currently verified Codex model profile (2026-10-18):
+    872k maximum context and 128k output. Tools and transport retries are disabled,
+    so a product invocation cannot silently turn into an unbounded agent loop.
+    Other paid providers must declare their bounds in the operator's tariff.
+    """
+    from decimal import ROUND_UP, Decimal
+
+    if request.get("provider") == "fake":
+        return Decimal(0)
+    rates = [Decimal(str(price.get(key, 0))) for key in ("input", "cached", "cache_write", "output")]
+    if any(not value.is_finite() or value < 0 for value in rates):
+        raise GenerationError("invalid_tariff", "Тариф должен содержать конечные неотрицательные цены.")
+    if not any(rates):
+        return Decimal(0)
+    model = request.get("model") or "gpt-6-luna"
+    if request.get("provider", "codex") in {"codex", "codex_api"} and model in {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"}:
+        context, output, input_factor, output_factor = 872000, 128000, Decimal(2), Decimal("1.5")
+    else:
+        context, output = price.get("context_window"), price.get("max_output_tokens")
+        if type(context) is not int or type(output) is not int or not 0 < output < context:
+            raise GenerationError(
+                "provider_limits_unknown",
+                "Для платного провайдера не заданы проверенные пределы одного запроса.",
+            )
+        input_factor = Decimal(str(price.get("max_input_multiplier", 1)))
+        output_factor = Decimal(str(price.get("max_output_multiplier", 1)))
+        if any(not value.is_finite() or value < 1 for value in (input_factor, output_factor)):
+            raise GenerationError(
+                "invalid_tariff", "Множители тарифов должны быть конечными числами не меньше единицы."
+            )
+    result = (
+        Decimal(context) * max(rates[:3]) * input_factor + Decimal(output) * rates[3] * output_factor
+    ) / 1000000
+    return result.quantize(Decimal(".000001"), rounding=ROUND_UP)

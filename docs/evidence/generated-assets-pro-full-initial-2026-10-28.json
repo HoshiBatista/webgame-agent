@@ -1,0 +1,222 @@
+{
+  "artifact_hash": "7d38763d8f75cc391b5e406a14a3f0ebf4257e92490f0f803584c1806f0fe2a4",
+  "scope": "Independently authored actions; not model self-report. One resize check exposed missing landscape support in the compiler.",
+  "status": "unverified",
+  "elapsed_seconds": 5.532,
+  "gates": {
+    "syntax": true,
+    "runtime": true,
+    "surface": true
+  },
+  "findings": [
+    {
+      "code": "invalid_check",
+      "check_id": "independent_resize",
+      "message": "Неизвестный размер контрольного viewport."
+    }
+  ],
+  "facts": [
+    {
+      "id": "independent_start",
+      "status": "passed",
+      "before": null,
+      "after": "playing",
+      "player_experience": {
+        "version": 1,
+        "graphicsReady": 3,
+        "graphicsErrors": [],
+        "drawCalls": 16,
+        "voicesPlayed": 2,
+        "activeVoices": 2,
+        "musicPlaying": true,
+        "muted": false,
+        "state": "running",
+        "peak": 0,
+        "audioError": "",
+        "layout": {
+          "width": 390,
+          "height": 844,
+          "orientation": "portrait",
+          "toolbar": 64,
+          "safe": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        "keyboardOnly": false,
+        "audioQuality": "not_listened",
+        "audienceFit": "not_independently_verified"
+      }
+    },
+    {
+      "id": "independent_touch",
+      "status": "passed",
+      "before": 70.0,
+      "after": 106.0,
+      "player_experience": {
+        "version": 1,
+        "graphicsReady": 3,
+        "graphicsErrors": [],
+        "drawCalls": 28,
+        "voicesPlayed": 3,
+        "activeVoices": 3,
+        "musicPlaying": true,
+        "muted": false,
+        "state": "running",
+        "peak": 0.0495893731713295,
+        "audioError": "",
+        "layout": {
+          "width": 390,
+          "height": 844,
+          "orientation": "portrait",
+          "toolbar": 64,
+          "safe": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        "keyboardOnly": false,
+        "audioQuality": "not_listened",
+        "audienceFit": "not_independently_verified"
+      }
+    },
+    {
+      "id": "independent_keyboard",
+      "status": "passed",
+      "before": 70.0,
+      "after": 106.0,
+      "player_experience": {
+        "version": 1,
+        "graphicsReady": 3,
+        "graphicsErrors": [],
+        "drawCalls": 34,
+        "voicesPlayed": 3,
+        "activeVoices": 3,
+        "musicPlaying": true,
+        "muted": false,
+        "state": "running",
+        "peak": 0.014120165258646011,
+        "audioError": "",
+        "layout": {
+          "width": 1280,
+          "height": 800,
+          "orientation": "landscape",
+          "toolbar": 64,
+          "safe": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        "keyboardOnly": true,
+        "audioQuality": "not_listened",
+        "audienceFit": "not_independently_verified"
+      }
+    },
+    {
+      "id": "independent_finish",
+      "status": "passed",
+      "before": null,
+      "after": "won",
+      "player_experience": {
+        "version": 1,
+        "graphicsReady": 3,
+        "graphicsErrors": [],
+        "drawCalls": 432,
+        "voicesPlayed": 10,
+        "activeVoices": 7,
+        "musicPlaying": false,
+        "muted": false,
+        "state": "running",
+        "peak": 0.38940468430519104,
+        "audioError": "",
+        "layout": {
+          "width": 1280,
+          "height": 800,
+          "orientation": "landscape",
+          "toolbar": 64,
+          "safe": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        "keyboardOnly": true,
+        "audioQuality": "not_listened",
+        "audienceFit": "not_independently_verified"
+      }
+    },
+    {
+      "id": "independent_restart",
+      "status": "passed",
+      "before": null,
+      "after": "playing",
+      "player_experience": {
+        "version": 1,
+        "graphicsReady": 3,
+        "graphicsErrors": [],
+        "drawCalls": 433,
+        "voicesPlayed": 12,
+        "activeVoices": 9,
+        "musicPlaying": true,
+        "muted": false,
+        "state": "running",
+        "peak": 0.4253925085067749,
+        "audioError": "",
+        "layout": {
+          "width": 1280,
+          "height": 800,
+          "orientation": "landscape",
+          "toolbar": 64,
+          "safe": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        "keyboardOnly": true,
+        "audioQuality": "not_listened",
+        "audienceFit": "not_independently_verified"
+      }
+    },
+    {
+      "id": "independent_resize",
+      "status": "unverified",
+      "player_experience": {
+        "version": 1,
+        "graphicsReady": 3,
+        "graphicsErrors": [],
+        "drawCalls": 10,
+        "voicesPlayed": 0,
+        "activeVoices": 0,
+        "musicPlaying": false,
+        "muted": false,
+        "state": "locked",
+        "peak": 0,
+        "audioError": "",
+        "layout": {
+          "width": 390,
+          "height": 844,
+          "orientation": "portrait",
+          "toolbar": 64,
+          "safe": {
+            "top": 0,
+            "right": 0,
+            "bottom": 0,
+            "left": 0
+          }
+        },
+        "keyboardOnly": false,
+        "audioQuality": "not_listened",
+        "audienceFit": "not_independently_verified"
+      }
+    }
+  ]
+}

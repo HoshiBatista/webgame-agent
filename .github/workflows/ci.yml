@@ -1,91 +1,75 @@
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  UV_LOCKED: "1"
-
+name: Mini-games
+on: [push, pull_request]
+permissions: {contents: read}
 jobs:
-  quality:
-    name: Quality and package
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      UV_PYTHON: "3.13"
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-        with:
-          version: "0.11.30"
-          enable-cache: true
-
-      - name: Install dependencies
-        run: uv sync --all-groups
-
-      - name: Check formatting
-        run: uv run ruff format --check .
-
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Type-check
-        run: uv run mypy
-
-      - name: Build distributions
-        run: uv build
-
-  tests:
-    name: Tests / Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  native-validator:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     env:
-      UV_PYTHON: ${{ matrix.python-version }}
-
+      DJANGO_SECRET_KEY: ci-only-native-validator-not-a-deployment-secret
+      GAMEFORGE_PROVIDER: fake
+      VALIDATOR_BACKEND: native
     steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-        with:
-          version: "0.11.30"
-          enable-cache: true
-
-      - name: Install dependencies
-        run: uv sync --all-groups
-
-      - name: Run tests
-        run: uv run pytest
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: requirements-dev.lock}
+      - run: python -m venv .venv && .venv/bin/python -m pip install -r requirements-dev.lock
+      - run: sudo apt-get update && sudo apt-get install -y bubblewrap
+      - name: Allow system bubblewrap namespaces on Ubuntu 24.04
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          command -v bwrap
+          sysctl kernel.apparmor_restrict_unprivileged_userns
+          sudo apparmor_parser -a deploy/apparmor/gameforge-bwrap
+      - run: .venv/bin/python -m playwright install-deps chromium
+      - run: .venv/bin/python scripts/native.py prepare
+      - run: .venv/bin/pytest tests/test_native_validation.py
+      - run: .venv/bin/pytest tests/test_validation.py -m browser -k 'not real_unix_transport and not state_snapshot'
+      - run: .venv/bin/pytest tests/test_source_map.py -m browser
+      - name: Repeated cold starts and fraction input (no retries)
+        run: |
+          for attempt in $(seq 1 10); do
+            echo "Cold-start regression $attempt/10"
+            .venv/bin/pytest tests/test_validation.py -m browser -k fraction_input || exit 1
+          done
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env: {POSTGRES_USER: forge, POSTGRES_PASSWORD: ci-only, POSTGRES_DB: gameforge}
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U forge" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    env:
+      DATABASE_URL: postgresql://forge:ci-only@127.0.0.1:5432/gameforge
+      REDIS_URL: redis://127.0.0.1:6379/0
+      DJANGO_SECRET_KEY: ci-only-not-used-in-any-deployment-000000000000
+      GAMEFORGE_PROVIDER: fake
+      GAMEFORGE_MODEL: fixture
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: requirements-dev.lock}
+      - uses: actions/setup-node@v4
+        with: {node-version: '22', cache: npm, cache-dependency-path: web/package-lock.json}
+      - run: pip install -r requirements-dev.lock
+      - run: ruff check gameforge studio generation validation scripts tests
+      - run: mypy generation validation --ignore-missing-imports
+      - run: python manage.py check && python manage.py makemigrations --check --dry-run
+      - run: pytest tests studio/tests -m 'not browser and not live'
+      - run: npm ci && npm run lint && npm run build && npm test
+        working-directory: web
+      - run: sh scripts/validator-start.sh
+      - run: pytest tests/test_validation.py -m browser
+      - name: Verify container definitions
+        env:
+          DJANGO_SUPERUSER_USERNAME: ci-user
+          DJANGO_SUPERUSER_PASSWORD: ci-only-not-a-deployment-password
+        run: docker compose config --quiet && docker compose build

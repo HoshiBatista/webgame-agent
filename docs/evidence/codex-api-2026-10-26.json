@@ -1,0 +1,213 @@
+{
+  "code_revision": "e30b774a9644ef076281b734997fc92660bb60dc",
+  "date": "2026-10-26",
+  "budget": {
+    "max_calls": 2,
+    "max_seconds": 900,
+    "calls_used": 2,
+    "elapsed_until_closed_seconds": 96.84,
+    "status": "closed"
+  },
+  "tests": {
+    "full_passed": 702,
+    "full_deselected": 89,
+    "full_elapsed_seconds": 122.47,
+    "post_review_targeted_passed": 54,
+    "targeted_overlaps_full": true,
+    "ruff": "passed",
+    "diff_check": "passed"
+  },
+  "local_pilot": {
+    "job_id": "4c7b2ace-b39a-408b-8242-927b295c33bd",
+    "status": "completed",
+    "operation": "plan",
+    "profile": "full",
+    "schema_valid": true,
+    "plan_status": "ok",
+    "model": "gpt-6-sol",
+    "usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 0,
+      "input_tokens": 1700,
+      "output_tokens": 690
+    },
+    "receipt_hash": "133f06be6d941dd78aebfadb614dc0b43fdb3bad9d2aa5f9eb3014c0cf4692d3",
+    "payload_hash": "06477f70a57a89cfaee3c5a49787a72c7f44ba582c6ec2e67b3cd699a0af4b09",
+    "response_hash": "0330dc909b3bfb5a18d88c51bd54f04f1d3a06a3406962db453ed07986162392",
+    "elapsed_seconds": 17.08,
+    "chats_created": 0,
+    "app_invocations_created": 0
+  },
+  "cloud_pilot": {
+    "job_id": "8be7e65f-4047-4ae9-ae6d-dd0119eb202c",
+    "status": "completed",
+    "operation": "plan",
+    "profile": "compact",
+    "schema_valid": true,
+    "plan_status": "ok",
+    "model": "gpt-6-sol",
+    "usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 1536,
+      "input_tokens": 1700,
+      "output_tokens": 753
+    },
+    "receipt_hash": "615580e174ece79db771ebf9761babc31542655aed1bcf1fc9d76a6957fa9eb8",
+    "payload_hash": "06477f70a57a89cfaee3c5a49787a72c7f44ba582c6ec2e67b3cd699a0af4b09",
+    "response_hash": "b93d649c13bca9d9a86ae9a7e689a887826df5ee22da944ad3304564d28fcecd",
+    "elapsed_seconds": 21.45,
+    "chats_created": 0,
+    "app_invocations_created": 0,
+    "receipt_retrieved_again_without_inference": true
+  },
+  "codex_worker_after_pilot": {
+    "attention_required": false,
+    "draining": false,
+    "free_bytes": 8479035392,
+    "idle": true,
+    "jobs": {
+      "completed": 2
+    },
+    "protocol": 1,
+    "storage_bytes": 61440,
+    "usage": {
+      "input_tokens": 3400,
+      "output_tokens": 1443,
+      "submitted_without_known_usage": 0
+    },
+    "worker_online": true,
+    "worker_seen": 1793047873.2501414
+  },
+  "local_after_pilot": {
+    "profiles": [
+      {
+        "id": "pro",
+        "provider": "codex_api",
+        "model": "gpt-6-sol",
+        "available": true
+      },
+      {
+        "id": "lite",
+        "provider": "relay",
+        "model": "qwen38",
+        "available": true
+      }
+    ],
+    "active_runs": 0,
+    "active_invocations": 0,
+    "catalog_age_seconds": 12.4
+  },
+  "cloud_deployment": {
+    "revision": "e30b774a9644ef076281b734997fc92660bb60dc",
+    "preserved_counts": {
+      "Budget": 1,
+      "Chat": 16,
+      "CheckReport": 11,
+      "Feedback": 0,
+      "Invocation": 73,
+      "Like": 0,
+      "Message": 66,
+      "Outbox": 35,
+      "Preference": 1,
+      "Publication": 0,
+      "Revision": 11,
+      "Run": 35,
+      "RunEvent": 373,
+      "User": 2
+    },
+    "all_existing_record_hashes_unchanged": true,
+    "migration_added_run_defaults": [
+      "generation_strategy",
+      "planning_required",
+      "game_plan"
+    ],
+    "unknown_preserved": 4,
+    "visible_chats": 3,
+    "active_runs": 0,
+    "active_invocations": 0,
+    "existing_secrets_preserved": true,
+    "relay_db_redis_container_identity_preserved": true,
+    "api_token_only_worker": true,
+    "images": {
+      "app": {
+        "image_id": "sha256:d65e5aafa3b2dd0228a4aae5a68c7050d4d3f531df6c277e564dcf6354be7186",
+        "image_tag": "gameforge-mini:cloud-e30b774-20261026",
+        "running": true
+      },
+      "preview": {
+        "image_id": "sha256:d65e5aafa3b2dd0228a4aae5a68c7050d4d3f531df6c277e564dcf6354be7186",
+        "image_tag": "gameforge-mini:cloud-e30b774-20261026",
+        "running": true
+      },
+      "worker": {
+        "image_id": "sha256:d65e5aafa3b2dd0228a4aae5a68c7050d4d3f531df6c277e564dcf6354be7186",
+        "image_tag": "gameforge-mini:cloud-e30b774-20261026",
+        "running": true
+      },
+      "beat": {
+        "image_id": "sha256:d65e5aafa3b2dd0228a4aae5a68c7050d4d3f531df6c277e564dcf6354be7186",
+        "image_tag": "gameforge-mini:cloud-e30b774-20261026",
+        "running": true
+      },
+      "validator": {
+        "image_id": "sha256:975ecf64cef187e6765bc8ed2516cbf7d2023130774f01db24c8de686d56198b",
+        "image_tag": "gameforge-mini-validator:cloud-e30b774-20261026",
+        "running": true
+      }
+    },
+    "backup_path": "/opt/gameforge/backups/before-e30b774-20261026T204807Z.dump",
+    "backup_sha256": "27a65671eefc3a45389f8f8ebcb1ee3601f4ba236f1aeefe0286839b008cf025"
+  },
+  "cloud_validator_fixture": {
+    "status": "passed",
+    "passed_facts": 3,
+    "artifact_hash": "31f5703a5c0f6a76ffffdb83cc04d6ef731771dc57e6f7c00fc090bbfefb1d9f",
+    "validator_hash": "d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0",
+    "validator_environment": "mini-browser-v1:d7105858406d7c11c7caadf52f99010baafa63d4b3feb824115fcbceebc4b7b0:Chromium 156.0.8078.47 built on Debian GNU/Linux 12 (bookworm)",
+    "chats_created": 0,
+    "invocations_created": 0,
+    "real_model_calls": 0
+  },
+  "cloud_profiles": {
+    "1": {
+      "pro_available": true,
+      "lite_available": true
+    },
+    "2": {
+      "pro_available": true,
+      "lite_available": true
+    },
+    "999999": {
+      "pro_available": false,
+      "lite_available": true
+    }
+  },
+  "scope": {
+    "real_game_generation_tested": false,
+    "real_model_operation": "plan",
+    "plan_schema_same_for_full_compact": true,
+    "gpu_accessed": false,
+    "local_cli_retained": true,
+    "client_keys_separate": true,
+    "model_retry_new_uuid": false
+  },
+  "cloud_after_pilot": {
+    "records_unchanged_after_pilot": true,
+    "profiles": {
+      "1": {
+        "pro_available": true,
+        "lite_available": true
+      },
+      "2": {
+        "pro_available": true,
+        "lite_available": true
+      },
+      "999999": {
+        "pro_available": false,
+        "lite_available": true
+      }
+    },
+    "catalog_age_seconds": 56.06,
+    "ssh_access_restored": true
+  }
+}
