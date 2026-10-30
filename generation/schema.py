@@ -216,11 +216,12 @@ def response_schema(request):
     if version != CONTRACT_VERSION:
         raise ContractError("unknown_contract", "Неизвестная версия контракта генерации.")
     if request.get("patch_repair"):
-        from .patch_repair import reply_schema
+        from .lite import enabled as lite_enabled
+        from .patch_repair import reply_schema as patch_reply_schema
 
         if request.get("operation") != "edit":
             raise ContractError("operation_mismatch", "Исправление фрагментов доступно только для доработки.")
-        return reply_schema(request["patch_repair"])
+        return patch_reply_schema(request["patch_repair"], files=request.get('files') if lite_enabled(request) else None)
     if request.get("operation") in {"visual_review", "visual_patch"}:
         from .visual import PATCH_SCHEMA, REVIEW_SCHEMA
 
@@ -234,7 +235,15 @@ def response_schema(request):
 
         return wire_schema(request)
     if request.get("operation") == "check_repair" and request.get("check_repair"):
-        return deepcopy(CHECK_REPAIR_SCHEMA)
+        from validation.suites import MAX_SAVED_CHECKS
+
+        from .lite import constrain_checks
+        from .lite import enabled as lite_enabled
+
+        result = deepcopy(CHECK_REPAIR_SCHEMA)
+        if request['check_repair'].get('max_checks') == MAX_SAVED_CHECKS:
+            result['properties']['checks']['maxItems'] = MAX_SAVED_CHECKS
+        return constrain_checks(result, request) if lite_enabled(request) else result
     schema = deepcopy(RESPONSE_SCHEMA)
     schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
     operation = request.get("operation", "create")
@@ -264,7 +273,10 @@ def response_schema(request):
                 replacement["properties"]["path"] = {"enum": sorted(allowed)}
                 props["patches"] = {"anyOf": [array(deepcopy(EXACT_PATCH), maxItems=80),
                                                array(replacement, minItems=1, maxItems=1)]}
-    return schema
+    from .lite import constrain_checks
+    from .lite import enabled as lite_enabled
+
+    return constrain_checks(schema, request) if lite_enabled(request) else schema
 
 
 def validate_response(response, *, operation=None, schema=None, defer_check_errors=False):

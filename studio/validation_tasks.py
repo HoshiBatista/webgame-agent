@@ -13,7 +13,7 @@ from django.utils import timezone
 from generation.requirements import coverage
 from generation.source_map import locate_findings
 from validation.checks import VERSION, review_checks
-from validation.contracts import implementation_hash
+from validation.contracts import implementation_hash, suite_findings
 from validation.suites import BUDGET_SECONDS, combine, plan
 
 from .acceptance import assess
@@ -185,6 +185,15 @@ def execute_validation(job, *, validate=None, outer_cancel=None, capture_visual=
             finish_cancelled()
             return None
         result = combine(checks, batches, artifact_hash=revision.artifact_hash)
+        # Simple Lite has no media marker in its HTML. Its frozen input promise
+        # still applies to automatic and manual checks, including later edits.
+        if job.snapshot['requirement_manifest'].get('require_keyboard'):
+            keyboard = [f for f in suite_findings(checks, require_keyboard=True)
+                        if f['code'] == 'missing_keyboard_control']
+            existing = {f.get('code') for f in result.get('findings', [])}
+            result.setdefault('findings', []).extend(f for f in keyboard if f['code'] not in existing)
+            if keyboard and result['status'] == 'passed':
+                result['status'] = 'unverified'
         result['findings'] = locate_findings(result.get('findings', []), files=revision.files, html=revision.html)
         if job.snapshot['checks_review_required'] and result['status'] == 'passed':
             result['status'] = 'unverified'

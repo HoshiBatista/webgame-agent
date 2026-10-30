@@ -81,6 +81,28 @@ def test_manual_check_is_read_only_fresh_idempotent_and_owner_only(game):
     assert client.post(f'/api/revisions/{revision.id}/validations/').status_code == 404
 
 
+@pytest.mark.parametrize('keyboard', [False, True])
+def test_simple_lite_keeps_keyboard_requirement_without_media(game, keyboard):
+    from generation.check_repair import permission
+    from generation.requirements import manifest
+
+    revision, client = game
+    revision.requirement_manifest = manifest('Играть на телефоне и клавиатуре')
+    revision.requirement_manifest['require_keyboard'] = True
+    if keyboard:
+        revision.checks = fixture_response(with_assets=True)['checks']
+    revision.save()
+    amended = manifest('Игра', previous=revision.requirement_manifest, amendment='Светлый фон')
+    assert amended['require_keyboard'] is True
+    repair = permission(revision.artifact_hash, revision.checks, revision.design, amended)
+    assert repair['require_keyboard'] is True
+    assert any(r['category'] == 'control' and r['viewport'] == 'desktop' for r in repair['requirements'])
+    report = execute_validation(submit(revision, client), validate=browser)
+    assert report.status == ('passed' if keyboard else 'unverified')
+    assert any(f['code'] == 'missing_keyboard_control' for f in report.findings) is not keyboard
+    assert report.assessment['action'] == ('accept' if keyboard else 'review')
+
+
 def test_hash_format_and_csrf_are_enforced(game):
     revision, client = game
     url = f'/api/revisions/{revision.id}/validations/'

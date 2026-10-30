@@ -474,6 +474,15 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
             profile_id, operation, prompt, provider=provider, model=model,
         )
     )
+    from generation.lite import eligible as lite_direct
+
+    # Restore pre-cb807c7 direct creation for new full Lite games only.
+    # Continuations retain their saved plan policy and already paid receipts.
+    if not continued_from and lite_direct({
+        'provider': provider, 'generation_strategy': generation_strategy,
+        'generation_profile': generation_profile,
+    }):
+        planning_required = False
     if not chat.title_is_custom and chat.current_revision_id is None and not chat.runs.exists():
         chat.title = title_from_prompt(prompt)
     if continued_from:
@@ -491,8 +500,21 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
 
     from .preferences import validate_notes
 
+    helper_catalog = continued_from.helper_catalog if continued_from else catalog()
+    if not continued_from and lite_direct({
+        'provider': provider, 'generation_strategy': generation_strategy,
+        'generation_profile': generation_profile,
+    }):
+        from generation.experience import PATH as media_path
+        from generation.experience import RECIPE
+
+        # New simple Lite games do not need a media recipe. Edits of existing
+        # media games retain the pinned helper and their original assets.
+        if not source or RECIPE not in source.files:
+            helper_catalog = {path: value for path, value in helper_catalog.items() if path != media_path}
+            frozen_manifest['require_keyboard'] = True
     run = Run.objects.create(
-        helper_catalog=continued_from.helper_catalog if continued_from else catalog(),
+        helper_catalog=helper_catalog,
         chat=chat,
         operation=operation,
         prompt=prompt.strip(),

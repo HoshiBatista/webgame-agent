@@ -368,6 +368,11 @@ def request_for(run, base, findings, last_attempt_error=None):
         "game_plan": run.game_plan,
         "generation_contract": {"pipeline_version": version},
     }
+    from generation.lite import VERSION as LITE_POLICY_VERSION
+    from generation.lite import eligible as lite_eligible
+
+    if lite_eligible(request):
+        request['lite_policy'] = LITE_POLICY_VERSION
     if run.planning_required and not run.game_plan and base is None:
         from generation.planning import PROVENANCE_VERSION
 
@@ -395,8 +400,11 @@ def request_for(run, base, findings, last_attempt_error=None):
         if attempted(run, base):
             raise DomainError("check_review_required", "Проверки уже пересматривались для этих исходников. Код сохранён; нужен разбор результата.")
         try:
+            from validation.suites import MAX_SAVED_CHECKS
+
+            options = {'max_requirements': MAX_SAVED_CHECKS} if request.get('lite_policy') else {}
             request["check_repair"] = permission(base.artifact_hash, base.checks, base.design, run.requirement_manifest,
-                                                  protected_ids=protected_ids(base))
+                                                  protected_ids=protected_ids(base), **options)
         except ContractError as exc:
             raise DomainError(exc.code, exc.message) from exc
         request["operation"] = "check_repair"

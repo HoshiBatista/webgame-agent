@@ -48,7 +48,11 @@ def needs_check_repair(checks, findings):
     return bool(codes)
 
 
-def permission(artifact_hash, checks, design, manifest=None, *, protected_ids=()):
+def permission(artifact_hash, checks, design, manifest=None, *, protected_ids=(), max_requirements=12):
+    from validation.suites import MAX_SAVED_CHECKS
+
+    if max_requirements not in {12, MAX_SAVED_CHECKS}:
+        raise ContractError('invalid_check_policy', 'Неизвестный предел ремонта проверок.')
     requirements: list[dict[str, str]] = []
     identities: dict[tuple, str] = {}
     repairs = []
@@ -108,19 +112,21 @@ def permission(artifact_hash, checks, design, manifest=None, *, protected_ids=()
             ident += "_"
         ids.add(ident)
         requirements.append({**original, "id": ident, "viewport": "mobile"})
-    require_keyboard = bool(design.get('assets'))
+    require_keyboard = bool(design.get('assets') or (manifest or {}).get('require_keyboard'))
     if require_keyboard and not any(r['category'] == 'control' and r['viewport'] == 'desktop' for r in requirements):
         ident = 'required_keyboard_control'
         while ident in ids:
             ident += '_'
         requirements.append({'id': ident, 'category': 'control', 'viewport': 'desktop',
                              'requirement': 'Реальное управление с клавиатуры вызывает игровой эффект без мыши.'})
-    if len(requirements) > 12:
+    if len(requirements) > max_requirements:
         raise ContractError(
             "check_review_required", "Для обязательных условий недостаточно места в наборе проверок."
         )
     policy = {"artifact_hash": artifact_hash, "checks_hash": checks_hash(checks), "requirements": requirements,
               "identity_repairs": repairs, "require_keyboard": require_keyboard}
+    if max_requirements > 12:
+        policy['max_checks'] = max_requirements
     if protected_ids:
         validate_checks(checks)
         expected = {r['id']: r for r in requirements}

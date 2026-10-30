@@ -65,8 +65,8 @@ def permission(response, *, files, base_revision, profile="full"):
             "paths": {str(issue["index"]): patches[issue["index"]]["path"] for issue in issues}}
 
 
-def reply_schema(policy):
-    return obj({
+def reply_schema(policy, *, files=None):
+    result = obj({
         "status": {"enum": ["ok", "unchanged"]}, "operation": {"enum": ["edit"]},
         "base_revision": {"enum": [policy["base_revision"]]},
         "response_hash": {"enum": [policy["response_hash"]]},
@@ -74,6 +74,21 @@ def reply_schema(policy):
                                   "patches": array(deepcopy(EXACT_PATCH), maxItems=8)}), maxItems=80),
         "message": string(minLength=1, maxLength=1000),
     })
+    if files is not None:
+        from .lite import literal_candidates
+
+        candidates = literal_candidates(policy, files)
+        if candidates:
+            variants = []
+            for index in policy['indices']:
+                patch = deepcopy(EXACT_PATCH)
+                if index in candidates:
+                    path = policy['paths'][str(index)]
+                    patch['properties'].update(path={'enum': [path]}, file_hash={'enum': [sha256(files[path])]},
+                                               old_text={'enum': candidates[index]})
+                variants.append(obj({'index': {'enum': [index]}, 'patches': array(patch, maxItems=8)}))
+            result['properties']['corrections']['items'] = {'anyOf': variants}
+    return result
 
 
 def validate_reply(response, policy):
@@ -127,10 +142,15 @@ def prompt_context(request):
     files = request["files"]
     patches = patches_for(policy["response"], files, policy["profile"])
     paths = set(policy["paths"].values())
-    return {"operation": "edit", "prompt": request.get("prompt", ""),
+    context = {"operation": "edit", "prompt": request.get("prompt", ""),
             "base_revision": policy["base_revision"], "response_hash": policy["response_hash"],
             "files": {p: files[p] for p in paths if p in files},
             "file_hashes": {p: sha256(files[p]) if p in files else None for p in paths},
             "issues": policy["issues"],
             "rejected_patches": [{"index": i, "patch": patches[i]} for i in policy["indices"]],
             "locked_patches": [p for i, p in enumerate(patches) if i not in policy["indices"] and p["path"] in paths]}
+    from .lite import enabled, literal_candidates
+
+    if enabled(request):
+        context['exact_old_text_candidates'] = literal_candidates(policy, files)
+    return context

@@ -1,0 +1,654 @@
+{
+  "date": "2026-10-30",
+  "status": "local_simple_lite_ready_for_commit; further Lite experiments deferred by owner; Pro preserved; not deployed",
+  "baseline": {
+    "commit": "1e368190eed6ac1baa55a6791d143400d40af3f2",
+    "source_path": "generation/prompts.py",
+    "source_sha256": "90732e1592306048babb3cefd93d60450418a4ae1d1a69729b94b62d77f348f0",
+    "prompt_sha256": {
+      "create": "e9d236a7239eadf4ae17ef9ee9a964811b3cda8ba71bb117f32f7db444d4163e",
+      "edit": "53847ebc3deaa795b29494298f1186be403b244dec046cbb833daf40a36b90a1",
+      "repair": "2e286d34455ec09e37adf3495b377905e727cc8fab5026edf69e4b561d4385a2",
+      "check_repair": "c5da362fea7208875f34aa3ca12608ffb0bad2af3306dd66e53f00b1d55ce626"
+    }
+  },
+  "offline": {
+    "passed": 1275,
+    "deselected": 164,
+    "targeted_after_prompt_followup": 94,
+    "pro_message_schema_baselines_unchanged": 20,
+    "ruff": "passed",
+    "mypy_source_files": 53,
+    "django_check": "passed",
+    "targeted_after_simple_lite": 83,
+    "targeted_after_final_prompt_isolation": 55,
+    "final_pro_only_recheck": 20
+  },
+  "live": [
+    {
+      "run_id": "c79d6d3d-c4a0-43ce-aa63-4bfd74ddf9d5",
+      "chat_id": "c5c31f86-aae0-46ac-856c-dba2bdc10ffb",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "failed",
+      "attempts": 1,
+      "planning_required": false,
+      "error_code": "validator_unavailable",
+      "calls": [
+        {
+          "id": "1c2d1f6c-3a65-4634-93aa-93bc9911d41e",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2444,
+            "output_tokens": 5151,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null,
+          "elapsed_seconds": 325.171571
+        }
+      ],
+      "revisions": [
+        {
+          "id": "0ada7cc2-1584-45e6-86e5-85a80412a8c8",
+          "artifact_hash": "29dd34f6ddbe43563dbdccc9666dcd867d6bcf110927968310c3513aebd378be",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "infrastructure_error",
+              "finding_codes": [
+                "browser_watchdog"
+              ]
+            }
+          ]
+        }
+      ],
+      "media_policy": "mandatory_media_before_simple_lite_authorization"
+    },
+    {
+      "run_id": "0d9fe4a3-6dca-4a31-b65a-61ebef644ad5",
+      "chat_id": "1c7a1600-e01d-4c2a-8933-ec66faca5b63",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "needs_attention",
+      "attempts": 4,
+      "planning_required": false,
+      "error_code": "invalid_unchanged",
+      "calls": [
+        {
+          "id": "12657038-9085-40f8-8c12-b067511552ec",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2606,
+            "output_tokens": 4745,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null,
+          "elapsed_seconds": 282.912192
+        },
+        {
+          "id": "6c684faa-31cf-4ddc-8cd2-8bb54897b298",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7552,
+            "output_tokens": 2200,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "no_changes",
+          "elapsed_seconds": 149.856119
+        },
+        {
+          "id": "a03378c4-4fdc-4f61-8b12-d50f3e6f629f",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7605,
+            "output_tokens": 2148,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null,
+          "elapsed_seconds": 135.051749
+        },
+        {
+          "id": "66b0c85f-cb2a-44e8-8a2f-2b4f5aef1c12",
+          "operation": "check_repair",
+          "state": "failed",
+          "usage": {
+            "input_tokens": 7344,
+            "output_tokens": 1488,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "invalid_unchanged",
+          "elapsed_seconds": 99.002945
+        }
+      ],
+      "revisions": [
+        {
+          "id": "4ae9eac9-9857-4df2-9e41-9cd7dcd787e6",
+          "artifact_hash": "10a07d34f409ebf882db3183075bd6e2f6f98555c81c4656c05dd2b08f23ab75",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "invalid_check",
+                "runtime_or_network",
+                "surface_not_observed"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "23bdca5d-c7c5-4a61-a3e1-ea36a124d26a",
+          "artifact_hash": "aef973188d2749d8eded4d0249d193c5df81d9326aab27e0b9bfd7c5c2d3260d",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "unverified",
+              "finding_codes": [
+                "effect_mismatch",
+                "invalid_check",
+                "surface_not_observed"
+              ]
+            }
+          ]
+        }
+      ],
+      "media_policy": "mandatory_media_before_simple_lite_authorization"
+    },
+    {
+      "run_id": "cebdd399-e81a-4e78-a8b2-d4a07e6da84f",
+      "chat_id": "269a350a-32d9-416f-8d30-124883eb4c54",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "needs_attention",
+      "attempts": 3,
+      "planning_required": false,
+      "error_code": "repair_regression",
+      "policy_sha256": "494686f6e379de49bb7c59e619c8a49481269994f5c089cce0b589451845d67a",
+      "media_policy": "simple_no_mandatory_media",
+      "calls": [
+        {
+          "id": "1e446678-f527-458f-9f4b-5a6b597c2c13",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2135,
+            "output_tokens": 4239,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null
+        },
+        {
+          "id": "b84dcfc1-3f57-4ce5-8d46-d462963308e4",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5198,
+            "output_tokens": 571,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "stale_file"
+        },
+        {
+          "id": "490421b3-88f7-41fe-9c16-8134789ce404",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 5218,
+            "output_tokens": 2238,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null
+        }
+      ],
+      "revisions": [
+        {
+          "id": "2732fdc4-a02c-4300-8bb0-2be9e5cbc41b",
+          "artifact_hash": "e7902cbf0af9511bf7e5baf414af7978ccdcde3720c6bd964dd76bba93ce6fbe",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "missing_effects",
+                "missing_mobile_start",
+                "incomplete_checks",
+                "effect_mismatch",
+                "invalid_check",
+                "effect_mismatch",
+                "check_timeout",
+                "mobile_overflow",
+                "scene_visually_unverified"
+              ],
+              "passed_checks": 1,
+              "total_checks": 5,
+              "action": "repair",
+              "gates_passed": false
+            }
+          ]
+        },
+        {
+          "id": "9572ca92-a713-43ed-87c6-b8b545f86fb4",
+          "artifact_hash": "a87ded496dc3cc958ccfade55d6f46dd1066677df6a3935520a48b57ae0eae79",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "javascript_syntax",
+                "missing_effects",
+                "missing_mobile_start",
+                "incomplete_checks"
+              ],
+              "passed_checks": 0,
+              "total_checks": 5,
+              "action": "repair",
+              "gates_passed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "364efa1f-1474-4098-8927-2b80798c735b",
+      "chat_id": "95cf426b-8efe-4b73-8c7a-b354419ce9f9",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "needs_attention",
+      "attempts": 2,
+      "planning_required": false,
+      "error_code": "no_progress",
+      "policy_sha256": "48268afbc484eaaf817a8efa62667eae643b6881d2d77923177e1aad9dbd9b9d",
+      "media_policy": "simple_no_mandatory_media",
+      "calls": [
+        {
+          "id": "51c5cd79-08cf-4abf-bbf1-f5bb6193efdf",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 2135,
+            "output_tokens": 4393,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null
+        },
+        {
+          "id": "2f741a67-1035-4ebb-825e-2545410a077c",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7226,
+            "output_tokens": 2607,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null
+        }
+      ],
+      "revisions": [
+        {
+          "id": "614ff1c1-7a20-44b8-90e7-eab6f2ddccd9",
+          "artifact_hash": "04a313a5512a7c40b1abd852af84b99dddc0eaeb5b15974b657b17ea942fa4a3",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "missing_mobile_start",
+                "missing_mobile_control",
+                "incomplete_checks",
+                "effect_mismatch",
+                "invalid_check",
+                "invalid_check",
+                "mobile_overflow"
+              ],
+              "passed_checks": 2,
+              "total_checks": 5,
+              "action": "repair",
+              "gates_passed": false
+            }
+          ]
+        },
+        {
+          "id": "14c761eb-4f22-4c77-b535-f4b33e7a8e36",
+          "artifact_hash": "3da010de5206d6a81f45a288e18b7f7810dce926e1de198ff3e90aa41eff2a54",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "missing_mobile_start",
+                "missing_mobile_control",
+                "incomplete_checks",
+                "effect_mismatch",
+                "invalid_check",
+                "invalid_check",
+                "mobile_overflow"
+              ],
+              "passed_checks": 2,
+              "total_checks": 5,
+              "action": "repair",
+              "gates_passed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "3b6bb3d2-d1a2-4c46-a754-9d7d390d3fb2",
+      "chat_id": "14cdaba4-bb7a-41c9-bcdc-bae457781c4d",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "needs_attention",
+      "attempts": 4,
+      "planning_required": false,
+      "error_code": "repair_regression",
+      "policy_sha256": "f7934bdeb020fb187335d6a72cec190616ce95926dbd1246c1159223e91d3145",
+      "media_policy": "simple_no_mandatory_media",
+      "calls": [
+        {
+          "id": "ef2243e4-8c98-4a6c-840f-a2ff81bef851",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1886,
+            "output_tokens": 2052,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "duplicate_file"
+        },
+        {
+          "id": "5325585a-f171-4dee-8a53-567015cff5cc",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1922,
+            "output_tokens": 4304,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null
+        },
+        {
+          "id": "41102c34-e26e-4d86-a461-f252b4e46b15",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7644,
+            "output_tokens": 411,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "no_changes"
+        },
+        {
+          "id": "331fdc2a-3b98-4549-b1db-a393b724c7d6",
+          "operation": "repair",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 7697,
+            "output_tokens": 905,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": null
+        }
+      ],
+      "revisions": [
+        {
+          "id": "1607aa3c-d16e-45cb-b84c-4f04cfd4a470",
+          "artifact_hash": "dbee2f1151f00cb8b625e94cbc205a615ab6e3d7b6da9e84f10401ae3c90beee",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "missing_mobile_control",
+                "incomplete_checks",
+                "invalid_check",
+                "mobile_overflow",
+                "effect_not_causal",
+                "missing_keyboard_control"
+              ],
+              "passed_checks": 2,
+              "total_checks": 4,
+              "action": "repair",
+              "gates_passed": false
+            }
+          ]
+        },
+        {
+          "id": "6da69a65-8d3f-40b1-a7ca-a91e5622d3b9",
+          "artifact_hash": "6684731f793f668992e53d1d79da1a59f2cfe53788da1e760bd8e0193a755fd0",
+          "accepted": false,
+          "reports": [
+            {
+              "status": "failed",
+              "finding_codes": [
+                "missing_mobile_control",
+                "incomplete_checks",
+                "runtime_or_network",
+                "invalid_check",
+                "mobile_overflow",
+                "effect_not_causal",
+                "missing_keyboard_control"
+              ],
+              "passed_checks": 1,
+              "total_checks": 4,
+              "action": "repair",
+              "gates_passed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "666ae96e-f1c6-4843-8cf1-912fefa59f30",
+      "chat_id": "e35d5a39-ad01-4062-8ead-9f4751974fbb",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "needs_attention",
+      "attempts": 1,
+      "planning_required": false,
+      "error_code": "incomplete_sources",
+      "policy_sha256": "f7934bdeb020fb187335d6a72cec190616ce95926dbd1246c1159223e91d3145",
+      "media_policy": "simple_no_mandatory_media",
+      "calls": [
+        {
+          "id": "d3a428c6-8025-4870-8071-edac2559ab8e",
+          "operation": "create",
+          "state": "settled",
+          "usage": {
+            "input_tokens": 1208,
+            "output_tokens": 1407,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "incomplete_sources"
+        }
+      ],
+      "revisions": [],
+      "diagnostic_only": "exact_24_oct_messages_and_schema"
+    },
+    {
+      "run_id": "91fc7d10-e996-47c2-ae33-1a4af66edf97",
+      "chat_id": "e36a1dd1-5a14-446d-85ff-5e3a37e790ec",
+      "prompt": "замути змейку для бабушки",
+      "provider": "relay",
+      "model": "qwen38",
+      "status": "cancelled",
+      "attempts": 1,
+      "planning_required": false,
+      "error_code": null,
+      "policy_sha256": "f7934bdeb020fb187335d6a72cec190616ce95926dbd1246c1159223e91d3145",
+      "media_policy": "simple_no_mandatory_media",
+      "calls": [
+        {
+          "id": "7b43c7df-6669-41a5-820a-f0cc630cf1f5",
+          "operation": "create",
+          "state": "failed",
+          "usage": {
+            "input_tokens": 856,
+            "output_tokens": 2125,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "error_code": "missing_title"
+        }
+      ],
+      "revisions": [],
+      "diagnostic_only": "code_only_diagnostic_stopped_by_owner"
+    }
+  ],
+  "manual_review": {
+    "first": "Start, automatic movement and loss observed; controls overflow landscape; empty-body random-placement loop found in source. Not a success.",
+    "second": "Startup repaired by Lite after one byte-identical replacement; start and loss observed; replay resumes the old ended state instead of resetting. Not a success.",
+    "simple_first": "Start button and keyboard had no effect. Source defines bind() but never invokes it. Not a success.",
+    "simple_second": "First revision: keyboard start, turn, wall loss and fresh replay observed on desktop. Mobile/landscape layout and authored checks fail. Repair preserved those failures; not a complete success."
+  },
+  "preservation": {
+    "production_deployed": false,
+    "pro_model_calls": 0,
+    "gpu_ssh": false,
+    "existing_games_or_reports_modified": false,
+    "new_local_test_chats": 7,
+    "unknown_receipts_repeated": false,
+    "simple_mode_calls": 9,
+    "total_lite_calls": 16,
+    "active_probe_runs": 0,
+    "unsettled_probe_calls": 0
+  },
+  "limitations": [
+    "Two snake trials do not establish general Lite quality or locate the historical first regression.",
+    "First full validation hit browser watchdog; separate unchanged-artifact gates and canary showed healthy environment and a landscape layout defect.",
+    "Old source core is recovered exactly. The first two live trials still required media; the simple Lite trial is recorded separately.",
+    "Self-hosted Lite tariff is zero; prior paid Pro budgets were not reused.",
+    "Simple mode trials also failed full acceptance. Removing media and restoring prompts is not evidence of reliable generation; actual weights and server sampling defaults remain unverified."
+  ],
+  "simple_lite_authorization": "Owner authorized direct full Lite without mandatory SVG/music; optional separate music generation deferred.",
+  "policy_before_simple_mode": {
+    "pipeline": 9,
+    "planning": 2,
+    "runtime": 2,
+    "source_hashes": {
+      "lite.py": "081fea11fd288017a37e73479e40771e4fc89d799cb91dbfffb0534863bda1aa",
+      "lite_baseline.py": "79af1ff340a46ea6c88de170edab92e52c87aedab4d50668be72992fdb217393",
+      "planning.py": "268109bfa16e0918153a9bb1ac833bb1cc339f22122b4dbca54fc866f14d7bb3",
+      "requirements.py": "1861214bbc4e4f537fabc4440efd1bb8bcbf23f179f72f87e814b869684060ef",
+      "schema.py": "81b1a4aa197c171edd81637458a9ee957b0ec933a54df2d1c9f86cbc8fee0842",
+      "prompts.py": "922aba9da93262ec47fb320a516af5ca2e0ef360f0071a18744644afdbe43833",
+      "audiences.py": "4e67b3aec06107f1d728c82e4a9762bf65d05fde7383c6c50f7bf19808fc1099",
+      "presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+      "compact.py": "efdbad42e2bc0dbee52e79eae2a3032f298489269394dcea0176e6c96efffea9",
+      "helpers.py": "221a7b812ee3b594bc899cf305a4a9d86b13f4b01eb7e0ad4550b0b0c8b9bd65",
+      "experience.py": "93556c80c6631edacf6eae070b013082b8089aabe56f4d2a60a47d7706a8b7d9",
+      "runtime/experience-v1.js": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9",
+      "visual.py": "91100a1d6e0b1d0739c4d9742cd61f93d86448382d7d30a9dca080ec94142aaf",
+      "feedback_image.py": "dabff2ed5bf85edfe26105b62597d3a67c117f3793f2f7ee9139edc873791609",
+      "../studio/visual.py": "d28641a00cd66fab448838c176df3c437342364cf2cbba48d910311708c1548a",
+      "runtime/motion-v1.js": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11",
+      "runtime/compact-v2.js": "51c715b475aa082ff5165ca6d2a3199adca267e539eee78ed76174055b08b2b0",
+      "runtime/compact-v2.css": "8f3c4738b6d47e18574d15717510aeb019c738676594a4d5444cd09abaab75ae",
+      "artifacts.py": "42881f5feffab02b77b1a579a0782536561265584e94147c378e08646f51deab",
+      "source_policy.py": "abdf8ddef3d31787398dd42942523918ccea9022b83ca90e5a29a75f4c3ea201",
+      "check_repair.py": "899a95903205927874e508ad4b01a136f989a8cb7af3010f79344b74940aec2a",
+      "patch_repair.py": "b142fcc84f27528666db9a10680ea52bcf422614df5d25947151c5b6689d50ac",
+      "response_completion.py": "5ae1f51c0a0117fd4d6db5fe28c66c2c5e8ccf96ae9ac0b9ac4053f3d5c60c1a",
+      "code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+      "feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+      "../studio/tasks.py": "02b3789fb7ed9b651f928479cfdced44f7209ef077dc53b212eeffbbcb576011",
+      "../studio/check_repair.py": "9850c6165e55708c8eab876490a891fa34f502b892d2d4f1c79ff4bb45472ba4",
+      "../studio/patch_repair.py": "019ad85b44a742331432b44a1529eae76dc102f171dc11d2c7802453cec9f2dd",
+      "../studio/response_completion.py": "1c36c84c7e99a5610fd3c8ac062a96e57046d4e1e827053505d0978970aa5273",
+      "../studio/checks_create.py": "d535bf4111f4887c3f056a1cb480c93f2556d299ac5fb85b1a106437458571ce",
+      "../studio/acceptance.py": "21198c51b78c0bf83f8fcfa09c2363ac4ee5d35aaf61c36e100bd67ec49e2df6",
+      "../validation/checks.py": "cd6576d2820b4efdabaaa96b6dc87cc43400f39b89140dec050875a086d28fff",
+      "../validation/check_program.py": "fb2a4ce5ace0ad9a3d6293ca0c74f0fb4acad77866c5c74ae2a6ec84b9f2297d"
+    }
+  },
+  "current_policy": {
+    "pipeline": 9,
+    "planning": 2,
+    "runtime": 2,
+    "source_hashes": {
+      "lite.py": "6d8d0ac913dd8e4c412dc491ff2836154a32be5b232a49a83e1816fbe1c5121e",
+      "lite_baseline.py": "79af1ff340a46ea6c88de170edab92e52c87aedab4d50668be72992fdb217393",
+      "planning.py": "268109bfa16e0918153a9bb1ac833bb1cc339f22122b4dbca54fc866f14d7bb3",
+      "requirements.py": "d5e2dcd5bd963e76f33ccac73921a07e0ac414e33aa865ab286dac9f3ad9b2c8",
+      "schema.py": "81b1a4aa197c171edd81637458a9ee957b0ec933a54df2d1c9f86cbc8fee0842",
+      "prompts.py": "08472a54300227e6bf4ec674f801a140e3353cac1ff002cbecd93da648be25f8",
+      "audiences.py": "4e67b3aec06107f1d728c82e4a9762bf65d05fde7383c6c50f7bf19808fc1099",
+      "presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+      "compact.py": "efdbad42e2bc0dbee52e79eae2a3032f298489269394dcea0176e6c96efffea9",
+      "helpers.py": "221a7b812ee3b594bc899cf305a4a9d86b13f4b01eb7e0ad4550b0b0c8b9bd65",
+      "experience.py": "93556c80c6631edacf6eae070b013082b8089aabe56f4d2a60a47d7706a8b7d9",
+      "runtime/experience-v1.js": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9",
+      "visual.py": "91100a1d6e0b1d0739c4d9742cd61f93d86448382d7d30a9dca080ec94142aaf",
+      "feedback_image.py": "dabff2ed5bf85edfe26105b62597d3a67c117f3793f2f7ee9139edc873791609",
+      "../studio/visual.py": "d28641a00cd66fab448838c176df3c437342364cf2cbba48d910311708c1548a",
+      "runtime/motion-v1.js": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11",
+      "runtime/compact-v2.js": "51c715b475aa082ff5165ca6d2a3199adca267e539eee78ed76174055b08b2b0",
+      "runtime/compact-v2.css": "8f3c4738b6d47e18574d15717510aeb019c738676594a4d5444cd09abaab75ae",
+      "artifacts.py": "42881f5feffab02b77b1a579a0782536561265584e94147c378e08646f51deab",
+      "source_policy.py": "abdf8ddef3d31787398dd42942523918ccea9022b83ca90e5a29a75f4c3ea201",
+      "check_repair.py": "6ea9848ee673bc66dc4ba24a9a9444e34f322a879c327eea77b376ed5253ab07",
+      "patch_repair.py": "b142fcc84f27528666db9a10680ea52bcf422614df5d25947151c5b6689d50ac",
+      "response_completion.py": "5ae1f51c0a0117fd4d6db5fe28c66c2c5e8ccf96ae9ac0b9ac4053f3d5c60c1a",
+      "code_repair.py": "af05497c51e9d9f3d4020ea2637b2b48b0dc31605a98b3402b77be4f0e3418fb",
+      "feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+      "../studio/tasks.py": "02b3789fb7ed9b651f928479cfdced44f7209ef077dc53b212eeffbbcb576011",
+      "../studio/check_repair.py": "9850c6165e55708c8eab876490a891fa34f502b892d2d4f1c79ff4bb45472ba4",
+      "../studio/patch_repair.py": "019ad85b44a742331432b44a1529eae76dc102f171dc11d2c7802453cec9f2dd",
+      "../studio/response_completion.py": "1c36c84c7e99a5610fd3c8ac062a96e57046d4e1e827053505d0978970aa5273",
+      "../studio/checks_create.py": "d535bf4111f4887c3f056a1cb480c93f2556d299ac5fb85b1a106437458571ce",
+      "../studio/acceptance.py": "21198c51b78c0bf83f8fcfa09c2363ac4ee5d35aaf61c36e100bd67ec49e2df6",
+      "../validation/checks.py": "cd6576d2820b4efdabaaa96b6dc87cc43400f39b89140dec050875a086d28fff",
+      "../validation/check_program.py": "fb2a4ce5ace0ad9a3d6293ca0c74f0fb4acad77866c5c74ae2a6ec84b9f2297d"
+    }
+  },
+  "operator_information": {
+    "source": "owner_reply_2026-10-30",
+    "model": "Qwen 3.8 27B",
+    "configuration_changed": false,
+    "independently_verified": false,
+    "gpu_connection_authorized": false
+  },
+  "owner_scope": "Prioritize unchanged Pro and competition Git submission. Stop further dedicated Lite trials and optimization.",
+  "exact_old_wire_comparison": {
+    "source_invocation": "70902037-aaf3-405f-b951-23bc04bc2323",
+    "matching_commit": "b0ad35156c570be6e9c74028c81c2d7fbfc81fea",
+    "all_fields_match": [
+      "model",
+      "messages",
+      "response_format",
+      "max_tokens"
+    ],
+    "input_tokens_original_and_replay": 1208,
+    "outcome": "incomplete_sources; raw reply contains only 27 HTML characters; no parser data loss"
+  },
+  "old_source_current_gates": {
+    "syntax": true,
+    "runtime": true,
+    "surface": false,
+    "finding": "mobile_overflow in landscape; original files unchanged; no saved report rewritten"
+  }
+}

@@ -17,8 +17,11 @@ from tests.relay_double import RelayDouble
 from tests.test_generation_planning import plan_response
 
 
-def fixture_response():
-    return base_fixture_response(with_assets=True)
+def fixture_response(*, with_assets=True):
+    response = base_fixture_response(with_assets=True)
+    if not with_assets:
+        response.pop('assets')
+    return response
 
 
 @pytest.fixture
@@ -55,9 +58,10 @@ def environment(tmp_path, settings, monkeypatch):
                 return False
             calls.append(1)
             store.worker_update(job["id"], "gpu", start=True)
+            properties = job['payload']['response_format']['json_schema']['schema']['properties']
             response = plan_response() if (
-                job["payload"]["response_format"]["json_schema"]["schema"]["properties"].get("operation", {}).get("enum") == ["plan"]
-            ) else fixture_response()
+                properties.get("operation", {}).get("enum") == ["plan"]
+            ) else fixture_response(with_assets='assets' in properties)
             if response.get("operation") == "plan":
                 context = json.loads(job["payload"]["messages"][-1]["content"])
                 response["plan"]["request_reference"] = context.get("game_request") or context["prompt"]
@@ -67,6 +71,8 @@ def environment(tmp_path, settings, monkeypatch):
                     'input': 'Касание или пробел увеличивают число попаданий.',
                     'layouts': 'Цель видна на телефоне в двух ориентациях и на ПК.',
                 }
+                if 'player_experience' not in properties['plan']['anyOf'][0]['properties']:
+                    response['plan'].pop('player_experience')
             self.pending = (
                 job["id"],
                 {
@@ -229,8 +235,8 @@ def test_check_repair_pending_reentry_keeps_job_and_consumes_receipt_after_deadl
     from studio.tests.test_check_repair import browser
 
     run, store, executor, calls = environment
-    original_fixture = fixture_response()
-    def incomplete():
+    original_fixture = fixture_response(with_assets=False)
+    def incomplete(**kwargs):
         from copy import deepcopy
         response = deepcopy(original_fixture)
         response['checks'] = response['checks'][:2]

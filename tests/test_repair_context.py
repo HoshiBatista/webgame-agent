@@ -24,6 +24,7 @@ def request_for(run, base, findings):
     run.game_request = run.prompt
     run.generation_strategy = "lite"
     run.planning_required = False
+    run.allow_model_calls = True
     from generation.requirements import policy_snapshot
 
     run.game_plan = {}

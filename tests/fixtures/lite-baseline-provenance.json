@@ -1,0 +1,11 @@
+{
+  "commit": "1e368190eed6ac1baa55a6791d143400d40af3f2",
+  "source_path": "generation/prompts.py",
+  "source_sha256": "90732e1592306048babb3cefd93d60450418a4ae1d1a69729b94b62d77f348f0",
+  "prompt_sha256": {
+    "create": "e9d236a7239eadf4ae17ef9ee9a964811b3cda8ba71bb117f32f7db444d4163e",
+    "edit": "53847ebc3deaa795b29494298f1186be403b244dec046cbb833daf40a36b90a1",
+    "repair": "2e286d34455ec09e37adf3495b377905e727cc8fab5026edf69e4b561d4385a2",
+    "check_repair": "c5da362fea7208875f34aa3ca12608ffb0bad2af3306dd66e53f00b1d55ce626"
+  }
+}

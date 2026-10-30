@@ -23,6 +23,8 @@ def manifest(request, plan=None, *, previous=None, amendment=""):
         # may not silently erase those promises by omitting a new plan.
         "requirements": deepcopy((plan if plan is not None else previous or {}).get("requirements", [])),
     }
+    if (previous or {}).get('require_keyboard'):
+        result['require_keyboard'] = True
     if amendment:
         result.update(
             amendments=[*(previous or {}).get("amendments", []), amendment],
@@ -52,6 +54,8 @@ def coverage(checks, frozen):
 def policy_snapshot():
     root = Path(__file__).parent
     paths = [
+        "lite.py",
+        "lite_baseline.py",
         "planning.py",
         "requirements.py",
         "schema.py",

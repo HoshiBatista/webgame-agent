@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
+from generation.helpers import catalog
 from studio.models import Revision
 from studio.services import create_run
 from studio.tasks import process_run
@@ -20,10 +21,12 @@ def test_compact_profile_survives_real_relay_pending_and_receipt_reentry(environ
     run, store, executor, calls = environment
     run.generation_profile = "compact"
     run.source_format = "lines"
-    run.save(update_fields=["generation_profile", "source_format"])
+    run.helper_catalog = catalog()
+    run.requirement_manifest.pop('require_keyboard', None)
+    run.save(update_fields=["generation_profile", "source_format", "helper_catalog", "requirement_manifest"])
     reply = compact_response(with_assets=True)
     reply["source_lines"] = reply.pop("source").split("\n")
-    monkeypatch.setattr("studio.tests.test_relay.fixture_response", lambda: reply)
+    monkeypatch.setattr("studio.tests.test_relay.fixture_response", lambda **kwargs: reply)
     process_run(str(run.id))
     run.refresh_from_db()
     invocation = run.invocations.get()
@@ -152,8 +155,10 @@ def test_split_checks_stage_uses_durable_relay_uuid_and_never_regenerates_code(e
     run, _, executor, calls = environment
     run.generation_profile='compact'
     run.generation_strategy='lite_code_then_checks'
-    run.save(update_fields=['generation_profile','generation_strategy'])
-    def reply():
+    run.helper_catalog = catalog()
+    run.requirement_manifest.pop('require_keyboard', None)
+    run.save(update_fields=['generation_profile','generation_strategy','helper_catalog','requirement_manifest'])
+    def reply(**kwargs):
         request=run.invocations.order_by('-attempt').first().request
         return response_for(request)['response']
     monkeypatch.setattr('studio.tests.test_relay.fixture_response', reply)

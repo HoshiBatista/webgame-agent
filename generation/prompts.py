@@ -255,7 +255,19 @@ def build_messages(request):
                                              'type':kind,'value':row.get('value'),'phase':row.get('phase')}
         context['available_observations'] = list(available.values())[:16]
     selected = (request.get("module_repair") or {}).get("files", {})
-    if request.get("operation") == "repair" and len(selected) == 1:
+    from .lite import enabled as lite_enabled
+
+    if lite_enabled(request):
+        # Direct Lite has no plan fields to fill. Keep real inherited promises,
+        # but do not advertise empty planning scaffolding to a code-only step.
+        context.pop('generation_strategy', None)
+        if not context['game_plan']:
+            context.pop('game_plan')
+        if not context['requirement_manifest'].get('requirements'):
+            context.pop('requirement_manifest')
+    # The pre-split Lite path retained HTML/CSS and their literal patch hashes.
+    # A JS replacement permission must not hide the layout that needs repair.
+    if request.get("operation") == "repair" and len(selected) == 1 and not lite_enabled(request):
         from bs4 import BeautifulSoup
 
         path = next(iter(selected))
@@ -332,8 +344,12 @@ def schema_prompt(request=None):
 
 def system_prompt(request):
     from .helpers import GUIDANCE
+    from .lite import enabled as lite_enabled
+    from .lite import system_prompt as lite_prompt
 
     operation = request.get('operation', 'create')
+    if lite_enabled(request) and operation in {'create', 'edit', 'repair', 'check_repair'}:
+        return lite_prompt(request)
     text = _system_prompt(request)
     if operation in {'create', 'edit', 'repair', 'check_repair'} and request.get('generation_profile') != 'compact':
         text += ('\nFor held screen buttons use hold_touch(selector,x:null,y:null,ms:1..3000), real touch then release. '

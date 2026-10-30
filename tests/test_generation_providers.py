@@ -672,6 +672,11 @@ def test_vllm_rejects_unbounded_or_overlarge_input_before_network(api):
 
 @pytest.mark.parametrize("mode", ["json_object", "json_schema", "none"])
 def test_verified_server_context_allows_larger_output_without_changing_prompt(monkeypatch, mode):
+    # Test transport admission independently of growing game instructions/schemas.
+    monkeypatch.setattr('generation.prompts.build_messages', lambda _: [
+        {'role': 'system', 'content': 'x' * 16000}, {'role': 'user', 'content': 'Create a game'},
+    ])
+    monkeypatch.setattr('generation.prompts.schema_prompt', lambda _: '{}')
     request = {
         "model": "local-test-model", "prompt": "Создай игру с русским текстом",
         "execution_limits": {"context_window": 32768, "max_output_tokens": 6144},
