@@ -1,23 +1,76 @@
 # Облачный стенд GameForge и реле
 
 Целевой VPS: `212.57.126.215`, Ubuntu 24.04, 2 CPU / 4 ГБ RAM.
-Рабочий вход: `https://212.57.126.215`; реле использует тот же origin и путь
-`/bridge/v1/`. Preview использует отдельный origin `https://212.57.126.215:8443`.
-Домен `noxlight7.fvds.ru` уже указывает на VPS, но его сертификат пока не выдан:
-Let’s Encrypt возвращает общий лимит для `fvds.ru`. Для смены CA ожидается email владельца.
-По IP установлен доверенный short-lived сертификат Let’s Encrypt с автоматическим
-продлением Caddy; проверка TLS не отключается.
-На этом порту разрешён только `/preview/*`, cookies и Authorization удаляются ingress.
+С 30.10.2026 рабочий вход: `https://beegame.ru`; реле Lite —
+`https://lite.beegame.ru/bridge/v1/`. Preview использует отдельный origin
+`https://preview.beegame.ru` без дополнительного порта. На нём разрешён только
+`/preview/*`, cookies и Authorization удаляются ingress.
 Сам preview также задаёт CSP sandbox, запрещает сеть и не включает middleware сессий.
 
 Конфигурация Compose: основной `compose.yaml`, `deploy/cloud.compose.yaml` и
 `deploy/codex-api.cloud.compose.yaml`. Третий файл обязателен для текущего Pro API.
 Проверенная конфигурация Caddy: `deploy/Caddyfile.cloud`; её копия установлена
-в `/etc/caddy/Caddyfile`. Домен временно перенаправляет приложение на рабочий IP,
-когда сертификат домена станет доступен.
-Lite использует прежний relay; Pro — отдельный Codex Worker на `https://72.56.101.64`.
+в `/etc/caddy/Caddyfile`. Старый IP приложения перенаправляет на `beegame.ru`,
+его `/bridge/v1/*` сохранён для действующих локальных клиентов и GPU-исполнителя.
+Pro — прежний Codex Worker на `https://pro.beegame.ru`; `llm.beegame.ru` и
+`https://72.56.101.64` обслуживают тот же API без HTTP-перенаправления.
 Вход ChatGPT находится только на сервере Codex. На облачном приложении ключ API
 получает только worker; доступ Pro разрешён всем активным вошедшим аккаунтам.
+
+**Настройка доменов 30.10 выполнена без обновления кода генерации.** Сохранены
+текущие образы: app `gameforge-mini:cloud-a2e4c79-feedback134e6a3`,
+worker/preview/beat `gameforge-mini:cloud-a2e4c79-20261030`. Фактический current:
+`/opt/gameforge/releases/20261030-a2e4c79-feedback134e6a3`. Реле, БД, Redis,
+валидатор и оба контейнера Codex Worker не пересоздавались. Соседний чат
+исправляет Lite локально; локальные `.env`, исходники генерации и GPU не менялись.
+[Проверки переноса](evidence/domain-migration-2026-10-30.json).
+
+Для следующих выкладок сохранять в облачном `.env`:
+
+```dotenv
+CLOUD_HOST=beegame.ru
+CLOUD_ALLOWED_HOSTS=beegame.ru,preview.beegame.ru,localhost,127.0.0.1,app,preview
+CLOUD_PREVIEW_ORIGIN=https://preview.beegame.ru
+GAMEFORGE_RELAY_URL=https://lite.beegame.ru
+GAMEFORGE_CODEX_API_URL=https://pro.beegame.ru
+```
+
+Новый `cloud.compose.yaml` поддерживает отдельные allowed hosts и origin preview;
+старые выпуски без этих переменных возвращают preview на порт 8443.
+При обслуживании текущего смешанного выпуска добавлять последним Compose-файлом
+`/opt/gameforge/backups/domain-beegame-20261030T014159Z/pinned-images.json`, чтобы
+случайно не менять версии worker/preview/beat на образ app. При явной следующей
+выкладке нового кода этот временный файл не переносить: выбрать новые образы
+обычным способом, сохранив перечисленные настройки доменов.
+
+Сертификат `beegame.ru`, `preview.beegame.ru`, `lite.beegame.ru` выпущен Let's Encrypt
+через Certbot, действителен до 28.01.2027. `certbot.timer` включён; проверка
+`certbot renew --cert-name beegame.ru --dry-run --run-deploy-hooks` прошла.
+HTTP `/.well-known/acme-challenge/*` обслуживается из
+`/var/lib/caddy/certbot-webroot`. Hook
+`/etc/letsencrypt/renewal-hooks/deploy/30-beegame-caddy` установлен из
+`deploy/certbot-deploy-beegame.py`: проверяет пару ключ/сертификат, атомарно
+переключает каталог, проверяет и принудительно перечитывает конфигурацию Caddy.
+Ключи доступны root/caddy, в репозитории их нет. Pro/llm используют автоматические
+сертификаты Caddy на отдельном сервере.
+
+Причина отдельного Certbot: штатные исходящие TLS-соединения Caddy с Let's Encrypt
+на VPS приложения зависают, тогда как клиент Certbot работает. Проверенная настройка
+совместимости `tlsmlkem=0` была отклонена автоматической проверкой и **не применялась**;
+параметры безопасности Caddy сохранены. Старый IP-сертификат приложения действителен
+до **02.11.2026 21:55 МСК**; его прежнее автоматическое продление Caddy также затронуто
+этой сетевой проблемой. IP-маршруты являются временными: локальных клиентов и
+GPU-исполнителя следует перевести на `lite.beegame.ru` до этой даты либо отдельно
+исправить продление IP. Доступа к GPU в рамках переноса доменов не было.
+
+Backup перед сменой адресов: `/opt/gameforge/backups/domain-beegame-20261030T014159Z`.
+Проверены архив БД и равенство хешей всех 20 прикладных таблиц до/после переключения.
+Прежние requests/UUID/receipts, включая неизвестные исходы, не переписывались.
+Вход/выход, CSRF, host-only Secure cookies, приватность чатов, CSP preview и API health
+с существующими ключами проверены; Chrome 1440×900/390×844 открыл сайт и опубликованную
+игру. Новых модельных вызовов нет. Первый снимок данных через процесс app был остановлен
+по памяти до изменений окружения; повторная проверка выполнена потоково в PostgreSQL.
+Ниже сохранена история предыдущих выкладок; адреса и current для обслуживания брать выше.
 
 Выпуск `e7b9485` включает доступ для всех активных вошедших пользователей:
 `GAMEFORGE_PRO_ACCESS=authenticated` (новый default обоих облачных Pro Compose-файлов).

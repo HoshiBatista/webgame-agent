@@ -1,7 +1,7 @@
 # docker compose --env-file .env -f compose.yaml -f deploy/cloud.compose.yaml ...
 # Caddy runs on the host; the base file publishes edge only on loopback.
 x-cloud-environment: &cloud-environment
-  DJANGO_ALLOWED_HOSTS: ${CLOUD_HOST:?Set CLOUD_HOST},localhost,127.0.0.1,app,preview
+  DJANGO_ALLOWED_HOSTS: ${CLOUD_ALLOWED_HOSTS:-${CLOUD_HOST:?Set CLOUD_HOST},localhost,127.0.0.1,app,preview}
   DJANGO_SECURE_COOKIES: '1'
   DJANGO_TRUST_PROXY_HEADERS: '1'
   DJANGO_SSL_REDIRECT: '1'
@@ -9,7 +9,7 @@ x-cloud-environment: &cloud-environment
   GAMEFORGE_LOCAL_ONLY: '0'
   GAMEFORGE_PROVIDER: relay
   GAMEFORGE_APP_ORIGIN: https://${CLOUD_HOST}
-  GAMEFORGE_PREVIEW_ORIGIN: https://${CLOUD_HOST}:8443
+  GAMEFORGE_PREVIEW_ORIGIN: ${CLOUD_PREVIEW_ORIGIN:-https://${CLOUD_HOST}:8443}
   CSRF_TRUSTED_ORIGINS: https://${CLOUD_HOST}
   GAMEFORGE_PROVIDER_CONCURRENCY: '1'
 
