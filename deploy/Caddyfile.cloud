@@ -1,3 +1,45 @@
+http://beegame.ru, http://preview.beegame.ru, http://lite.beegame.ru {
+    handle /.well-known/acme-challenge/* {
+        root * /var/lib/caddy/certbot-webroot
+        file_server
+    }
+    handle {
+        redir https://{host}{uri} 308
+    }
+}
+
+beegame.ru {
+    tls /etc/caddy/certbot/beegame.ru/current/fullchain.pem /etc/caddy/certbot/beegame.ru/current/privkey.pem
+    reverse_proxy 127.0.0.1:8080
+}
+
+preview.beegame.ru {
+    tls /etc/caddy/certbot/beegame.ru/current/fullchain.pem /etc/caddy/certbot/beegame.ru/current/privkey.pem
+    handle /preview/* {
+        reverse_proxy 127.0.0.1:8081 {
+            header_up -Cookie
+            header_up -Authorization
+            header_down -Set-Cookie
+        }
+    }
+    handle {
+        respond 404
+    }
+}
+
+lite.beegame.ru {
+    tls /etc/caddy/certbot/beegame.ru/current/fullchain.pem /etc/caddy/certbot/beegame.ru/current/privkey.pem
+    handle /bridge/v1/* {
+        request_body {
+            max_size 5MB
+        }
+        reverse_proxy 127.0.0.1:8100
+    }
+    handle {
+        respond 404
+    }
+}
+
 noxlight7.fvds.ru {
     handle /bridge/v1/* {
         header X-Relay-Node relay-212-57-126-215
@@ -12,17 +54,13 @@ noxlight7.fvds.ru {
         }
     }
     handle {
-        redir https://212.57.126.215{uri} 302
+        redir https://beegame.ru{uri} 302
     }
 }
 
 https://noxlight7.fvds.ru:8443 {
     handle /preview/* {
-        reverse_proxy 127.0.0.1:8081 {
-            header_up -Cookie
-            header_up -Authorization
-            header_down -Set-Cookie
-        }
+        redir https://preview.beegame.ru{uri} 302
     }
     handle {
         respond 404
@@ -43,7 +81,7 @@ https://212.57.126.215 {
         reverse_proxy 127.0.0.1:8100
     }
     handle {
-        reverse_proxy 127.0.0.1:8080
+        redir https://beegame.ru{uri} 302
     }
 }
 
@@ -54,11 +92,7 @@ https://212.57.126.215:8443 {
         }
     }
     handle /preview/* {
-        reverse_proxy 127.0.0.1:8081 {
-            header_up -Cookie
-            header_up -Authorization
-            header_down -Set-Cookie
-        }
+        redir https://preview.beegame.ru{uri} 302
     }
     handle {
         respond 404

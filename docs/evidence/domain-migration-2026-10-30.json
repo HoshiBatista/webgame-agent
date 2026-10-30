@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-30",
+  "timezone": "Europe/Moscow",
+  "scope": "Existing cloud release domain migration; no generation code deployment",
+  "cutover": {
+    "status": "complete",
+    "backup": "/opt/gameforge/backups/domain-beegame-20261030T014159Z",
+    "release": "/opt/gameforge/releases/20261030-a2e4c79-feedback134e6a3",
+    "database_backup_sha256": "96ae2408049d36e04d2b68734e10c3b046e28bd50d6efd663d78b5ce1043fac2",
+    "tables_preserved": 20,
+    "active": {
+      "runs": 0,
+      "invocations": 0,
+      "feedback": 0,
+      "validation": 0
+    },
+    "settings": {
+      "CLOUD_HOST": "beegame.ru",
+      "CLOUD_ALLOWED_HOSTS": "beegame.ru,preview.beegame.ru,localhost,127.0.0.1,app,preview",
+      "CLOUD_PREVIEW_ORIGIN": "https://preview.beegame.ru",
+      "GAMEFORGE_RELAY_URL": "https://lite.beegame.ru",
+      "GAMEFORGE_CODEX_API_URL": "https://pro.beegame.ru"
+    },
+    "images_preserved": true,
+    "relay_db_validator_redis_unchanged": true
+  },
+  "authenticated_api_checks": {
+    "lite": {
+      "url": "https://lite.beegame.ru",
+      "http": 200,
+      "protocol": 1
+    },
+    "pro": {
+      "url": "https://pro.beegame.ru",
+      "health_ok": true,
+      "worker_online": true,
+      "draining": false,
+      "attention_required": false,
+      "catalog_ok": true
+    },
+    "model_calls": 0
+  },
+  "http_checks": {
+    "guest_private_http": 403,
+    "login_http": 200,
+    "authenticated_chats_http": 200,
+    "cookies_secure_host_only": true,
+    "preview_http": 200,
+    "preview_csp": "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; worker-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'; sandbox allow-scripts; frame-ancestors https://beegame.ru",
+    "preview_sets_cookie": false,
+    "preview_session_http": 404,
+    "cross_origin_logout_http": 403,
+    "logout_http": 200,
+    "public_game_url": "https://beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65",
+    "dns_override_for_cached_nxdomain": true,
+    "tls_verification": true,
+    "model_calls": 0
+  },
+  "browser_checks": [
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "landing_http": 200,
+      "title": "beeGame",
+      "public_game_loaded": true,
+      "isolated_preview": true,
+      "tls_verification": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "landing_http": 200,
+      "title": "beeGame",
+      "public_game_loaded": true,
+      "isolated_preview": true,
+      "tls_verification": true
+    }
+  ],
+  "certificates": {
+    "app_domains": [
+      "beegame.ru",
+      "preview.beegame.ru",
+      "lite.beegame.ru"
+    ],
+    "issuer": "Lets Encrypt",
+    "expires": "2027-01-28",
+    "renewal": "certbot.timer",
+    "renewal_dry_run_with_deploy_hook": "passed",
+    "pro_domains": [
+      "pro.beegame.ru",
+      "llm.beegame.ru"
+    ],
+    "pro_renewal": "Caddy automatic HTTPS",
+    "tls_defaults_modified": false
+  },
+  "retained_endpoints": {
+    "app_ip": "302 to https://beegame.ru/",
+    "preview_ip_8443": "302 to https://preview.beegame.ru/preview/...",
+    "relay_ip": "same existing API",
+    "pro_ip": "same existing API"
+  },
+  "local_environment_modified": false,
+  "gpu_accessed": false,
+  "model_calls": 0,
+  "limitations": [
+    "Local clients and the GPU executor retain their prior endpoints to avoid disrupting the concurrent Lite investigation.",
+    "The old application IP certificate expires on 2026-11-02 at 21:55 Moscow; Caddy ACME outbound TLS times out there. Move remaining Lite clients to lite.beegame.ru or repair IP renewal before that date.",
+    "New site/preview browser checks used explicit DNS mappings because of an earlier cached NXDOMAIN; normal public DNS and external HTTPS were independently verified.",
+    "No actual model generation was requested during domain verification."
+  ],
+  "diagnostics": {
+    "initial_app_data_snapshot": "process exited 137 before environment changes; database-side row hash snapshot succeeded",
+    "tls_compatibility_override": "auto-review rejected; not applied; standard Certbot used instead"
+  },
+  "backup_paths": {
+    "application": "/opt/gameforge/backups/domain-beegame-20261030T014159Z",
+    "pro": "/opt/codex-worker/backups/domain-beegame-20261030T014212Z"
+  },
+  "local_standard_dns_health": {
+    "url": "https://beegame.ru/api/health/",
+    "status": "ok",
+    "tls_verification": true,
+    "dns_override": false
+  }
+}
