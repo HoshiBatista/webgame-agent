@@ -204,6 +204,10 @@ CHECK_REPAIR_SCHEMA = obj({
 
 def response_schema(request):
     """One current operation contract; unsupported games are retired, not reinterpreted."""
+    if request.get('operation') == 'music':
+        from .music import SCHEMA
+
+        return deepcopy(SCHEMA)
     if request.get('response_completion'):
         from .response_completion import reply_schema
 
@@ -296,6 +300,11 @@ def validate_response(response, *, operation=None, schema=None, defer_check_erro
             "operation_mismatch",
             "Ответ изменил вид операции. Используйте operation из текущего запроса приложения.",
         )
+    if response["operation"] == 'music':
+        from .music import recipe
+
+        recipe(response)
+        return
     if response["operation"] in {"visual_review", "visual_patch", "extract_preferences"}:
         return
     if response["operation"] == "plan":

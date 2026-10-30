@@ -53,6 +53,10 @@ def enabled(request):
 
 
 def validate(value):
+    if isinstance(value, dict) and value.get('kind') == 'music':
+        from .music import validate_recipe
+
+        return validate_recipe(value)
     try:
         encoded = json.dumps(value, ensure_ascii=False, separators=(',', ':'), allow_nan=False)
     except (TypeError, ValueError) as exc:

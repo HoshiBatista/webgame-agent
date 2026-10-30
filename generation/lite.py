@@ -144,6 +144,9 @@ def system_prompt(request):
             else:
                 text += ('\nSimple Lite game step: draw original visuals directly with Canvas and use ordinary browser input events. '
                          'No GameForgeExperience runtime is supplied. Do not generate an assets recipe, music or audio in this step.\n')
+                if request.get('requirement_manifest', {}).get('lite_music_step'):
+                    text += ('Music is composed in a separate score-only step. Reserve the top-right 64x64 CSS pixels '
+                             'for the player mute control; do not add your own audio or player script.\n')
             if has_media(request) and operation in {'edit', 'repair'}:
                 text += '\nPreserve existing generated media with assets=null unless the user explicitly requests a media change.\n'
             if operation == 'repair':

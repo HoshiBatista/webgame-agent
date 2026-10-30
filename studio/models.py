@@ -120,7 +120,10 @@ class Run(models.Model):
 
     @property
     def max_model_calls(self):
+        from .lite_music import enabled as music_enabled
+
         maximum = 1 + self.max_repair_attempts + int(self.planning_required)
+        maximum += int(music_enabled(self))
         return min(maximum, self.model_call_limit) if self.model_call_limit is not None else maximum
 
 

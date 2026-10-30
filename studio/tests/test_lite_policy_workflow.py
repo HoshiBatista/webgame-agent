@@ -65,7 +65,7 @@ def test_returned_legacy_plan_is_saved_without_another_call_and_receipt_is_prese
     ('relay', 'full', False), ('vllm', 'full', False),
     ('relay', 'compact', True), ('codex', 'full', True), ('codex_api', 'full', True),
 ])
-def test_new_full_lite_restores_direct_creation_and_four_call_limit(settings, provider, profile, expected_plan):
+def test_new_full_lite_restores_direct_creation_with_music_budget(settings, provider, profile, expected_plan):
     settings.GAMEFORGE_PROVIDER = provider
     settings.GAMEFORGE_MODEL = 'gpt-6-sol' if provider.startswith('codex') else 'qwen38'
     settings.GAMEFORGE_LITE_PROVIDER = provider
@@ -79,12 +79,13 @@ def test_new_full_lite_restores_direct_creation_and_four_call_limit(settings, pr
                                'generation_profile': profile,
                                'model_profile': 'pro' if provider.startswith('codex') else 'lite'})
     assert run.planning_required is expected_plan
-    assert run.max_model_calls == (5 if expected_plan else 4)
+    assert run.max_model_calls == 5
     assert request_for(run, None, [])['operation'] == ('plan' if expected_plan else 'create')
     from generation.experience import PATH
     from generation.schema import response_schema
 
-    assert (PATH in run.helper_catalog) is expected_plan
+    assert PATH in run.helper_catalog
+    assert (PATH in request_for(run, None, [])['helper_catalog']) is expected_plan
     if not expected_plan:
         assert 'assets' not in response_schema(request_for(run, None, []))['properties']
         assert run.requirement_manifest['require_keyboard'] is True

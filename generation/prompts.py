@@ -184,6 +184,10 @@ def _system_prompt(request):
 
 
 def build_messages(request):
+    if request.get('operation') == 'music':
+        from .music import messages
+
+        return messages(request)
     if request.get("operation") == "extract_preferences":
         from .preference_extraction import messages
 
@@ -343,6 +347,10 @@ def schema_prompt(request=None):
 
 
 def system_prompt(request):
+    if request.get('operation') == 'music':
+        from .music import PROMPT
+
+        return PROMPT
     from .helpers import GUIDANCE
     from .lite import enabled as lite_enabled
     from .lite import system_prompt as lite_prompt

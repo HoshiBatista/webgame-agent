@@ -62,6 +62,10 @@ def environment(tmp_path, settings, monkeypatch):
             response = plan_response() if (
                 properties.get("operation", {}).get("enum") == ["plan"]
             ) else fixture_response(with_assets='assets' in properties)
+            if properties.get('operation', {}).get('const') == 'music':
+                from tests.test_music import music_response
+
+                response = music_response(json.loads(job['payload']['messages'][-1]['content']))
             if response.get("operation") == "plan":
                 context = json.loads(job["payload"]["messages"][-1]["content"])
                 response["plan"]["request_reference"] = context.get("game_request") or context["prompt"]
@@ -112,6 +116,12 @@ def environment(tmp_path, settings, monkeypatch):
         # Existing receipt tests cover the one-call path of a detailed Lite request.
         run = create_run(chat, {"prompt": "Create a mini game. " * 20, "idempotency_key": "stable",
                                 "model_profile": "lite", "generation_profile": "full"})
+        # Legacy receipts retain their original one-step generation policy.
+        from generation.experience import PATH
+
+        run.requirement_manifest.pop('lite_music_step', None)
+        run.helper_catalog.pop(PATH, None)
+        run.save(update_fields=['requirement_manifest', 'helper_catalog'])
         yield run, store, executor, calls
 
 

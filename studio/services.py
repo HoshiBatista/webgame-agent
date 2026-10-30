@@ -513,6 +513,12 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         if not source or RECIPE not in source.files:
             helper_catalog = {path: value for path, value in helper_catalog.items() if path != media_path}
             frozen_manifest['require_keyboard'] = True
+            if operation == 'create':
+                from generation.music import MARKER
+
+                frozen_manifest[MARKER] = 1
+                # Pin the player now; only the later music request receives it.
+                helper_catalog[media_path] = catalog()[media_path]
     run = Run.objects.create(
         helper_catalog=helper_catalog,
         chat=chat,

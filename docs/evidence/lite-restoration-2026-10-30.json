@@ -64,8 +64,7 @@
             }
           ]
         }
-      ],
-      "media_policy": "mandatory_media_before_simple_lite_authorization"
+      ]
     },
     {
       "run_id": "0d9fe4a3-6dca-4a31-b65a-61ebef644ad5",
@@ -162,8 +161,7 @@
             }
           ]
         }
-      ],
-      "media_policy": "mandatory_media_before_simple_lite_authorization"
+      ]
     },
     {
       "run_id": "cebdd399-e81a-4e78-a8b2-d4a07e6da84f",
@@ -176,7 +174,6 @@
       "planning_required": false,
       "error_code": "repair_regression",
       "policy_sha256": "494686f6e379de49bb7c59e619c8a49481269994f5c089cce0b589451845d67a",
-      "media_policy": "simple_no_mandatory_media",
       "calls": [
         {
           "id": "1e446678-f527-458f-9f4b-5a6b597c2c13",
@@ -274,7 +271,6 @@
       "planning_required": false,
       "error_code": "no_progress",
       "policy_sha256": "48268afbc484eaaf817a8efa62667eae643b6881d2d77923177e1aad9dbd9b9d",
-      "media_policy": "simple_no_mandatory_media",
       "calls": [
         {
           "id": "51c5cd79-08cf-4abf-bbf1-f5bb6193efdf",
@@ -361,7 +357,6 @@
       "planning_required": false,
       "error_code": "repair_regression",
       "policy_sha256": "f7934bdeb020fb187335d6a72cec190616ce95926dbd1246c1159223e91d3145",
-      "media_policy": "simple_no_mandatory_media",
       "calls": [
         {
           "id": "ef2243e4-8c98-4a6c-840f-a2ff81bef851",
@@ -471,7 +466,6 @@
       "planning_required": false,
       "error_code": "incomplete_sources",
       "policy_sha256": "f7934bdeb020fb187335d6a72cec190616ce95926dbd1246c1159223e91d3145",
-      "media_policy": "simple_no_mandatory_media",
       "calls": [
         {
           "id": "d3a428c6-8025-4870-8071-edac2559ab8e",
@@ -500,7 +494,6 @@
       "planning_required": false,
       "error_code": null,
       "policy_sha256": "f7934bdeb020fb187335d6a72cec190616ce95926dbd1246c1159223e91d3145",
-      "media_policy": "simple_no_mandatory_media",
       "calls": [
         {
           "id": "7b43c7df-6669-41a5-820a-f0cc630cf1f5",
@@ -540,11 +533,8 @@
   "limitations": [
     "Two snake trials do not establish general Lite quality or locate the historical first regression.",
     "First full validation hit browser watchdog; separate unchanged-artifact gates and canary showed healthy environment and a landscape layout defect.",
-    "Old source core is recovered exactly. The first two live trials still required media; the simple Lite trial is recorded separately.",
-    "Self-hosted Lite tariff is zero; prior paid Pro budgets were not reused.",
-    "Simple mode trials also failed full acceptance. Removing media and restoring prompts is not evidence of reliable generation; actual weights and server sampling defaults remain unverified."
+    "Self-hosted Lite tariff is zero; prior paid Pro budgets were not reused."
   ],
-  "simple_lite_authorization": "Owner authorized direct full Lite without mandatory SVG/music; optional separate music generation deferred.",
   "policy_before_simple_mode": {
     "pipeline": 9,
     "planning": 2,
@@ -650,5 +640,6 @@
     "runtime": true,
     "surface": false,
     "finding": "mobile_overflow in landscape; original files unchanged; no saved report rewritten"
-  }
+  },
+  "followup": "A separate score-only music step was added after these historical diagnostic trials; Pro unchanged. No new live model trials or cloud rollout."
 }

@@ -373,6 +373,15 @@ def request_for(run, base, findings, last_attempt_error=None):
 
     if lite_eligible(request):
         request['lite_policy'] = LITE_POLICY_VERSION
+        from generation.experience import PATH, RECIPE
+        from generation.music import MARKER
+
+        from .lite_music import due as music_due
+
+        if music_due(run, base):
+            request['operation'] = 'music'
+        elif run.requirement_manifest.get(MARKER) and (base is None or RECIPE not in base.files):
+            request['helper_catalog'] = {p: item for p, item in run.helper_catalog.items() if p != PATH}
     if run.planning_required and not run.game_plan and base is None:
         from generation.planning import PROVENANCE_VERSION
 
@@ -687,6 +696,25 @@ def _execute(run, lease, generate, materialize, validate):
             base_id = inv.request.get("base_revision")
             response_base = Revision.objects.filter(pk=base_id).first() if base_id else None
             response = inv.response
+            if inv.request['operation'] == 'music':
+                from generation.music import materialize as materialize_music
+
+                with transaction.atomic():
+                    try:
+                        artifact = materialize_music(response, inv.request, response_base)
+                        pending = store_candidate(run, artifact, response_base)
+                        inv.revision = pending
+                    except ContractError as exc:
+                        inv.error = error_data(exc)
+                        pending = response_base
+                        event(run, 'music_failed', 'Не удалось добавить музыку. Созданная игра сохранена.')
+                    inv.state = 'settled'
+                    inv.save(update_fields=['state', 'revision', 'error'])
+                if pending is None:
+                    return
+                base = pending
+                last_attempt_error = None
+                continue
             if inv.request["operation"] == "plan":
                 from generation.planning import validate_plan
                 from generation.schema import response_schema, validate_response
@@ -873,6 +901,11 @@ def _execute(run, lease, generate, materialize, validate):
                                error={**last_attempt_error, "details": findings})
                     return
         if pending is not None and resumed is None:
+            from .lite_music import due as music_due
+
+            if music_due(run, pending):
+                base, pending = pending, None
+                continue
             from generation.schema import CONTRACT_VERSION
 
             if pending.pipeline_version != CONTRACT_VERSION:
@@ -1038,7 +1071,7 @@ def _execute(run, lease, generate, materialize, validate):
                     run.attempts = inv.attempt
                     Run.objects.filter(pk=run.id, fence=run.fence).update(
                         attempts=inv.attempt, status="generating",
-                        stage="planning" if req["operation"] == "plan" else
+                        stage="music" if req["operation"] == "music" else "planning" if req["operation"] == "plan" else
                         "repairing_checks" if req["operation"] in {"check_repair", "checks_create"} else "repairing" if findings else "generating"
                     )
             req = inv.request
@@ -1092,6 +1125,8 @@ def _execute(run, lease, generate, materialize, validate):
             inv.save(update_fields=["provider_metadata"])
         if not resumed:
             message = (
+                "Создаём музыку для игры."
+                if req['operation'] == 'music' else
                 "Завершаем недостающую часть игры. Уже полученные части сохранены."
                 if req.get('response_completion') else
                 "Придумываем игровой замысел: механику, развитие и цель."
@@ -1171,6 +1206,11 @@ def _execute(run, lease, generate, materialize, validate):
                     error=error_data(exc),
                 )
                 return
+            if req['operation'] == 'music':
+                event(run, 'music_failed', 'Не удалось добавить музыку. Созданная игра сохранена.')
+                pending = base
+                last_attempt_error = None
+                continue
             if req["operation"] in {"visual_review", "visual_patch"}:
                 from .visual import fallback, skip
 
