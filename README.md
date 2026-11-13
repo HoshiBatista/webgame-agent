@@ -100,6 +100,7 @@ curl --fail --show-error http://127.0.0.1:8080/api/health/
 ```sh
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.lock
+.venv/bin/python -m pip check
 npm ci --prefix web
 npm run build --prefix web
 .venv/bin/python scripts/native.py prepare
@@ -162,6 +163,7 @@ VALIDATOR_CONTAINER=gf-mini-validator-tests .venv/bin/pytest tests/test_validati
 
 ## Документация
 
+- [Проверка чистой установки и исправления тестовых фикстур](docs/clean-install-verification-2026-11-13.ru.md).
 - [Локальный запуск с Docker](docs/team-local-setup.ru.md) и [без Docker](docs/native-local-setup.ru.md).
 - [Облачное развёртывание](docs/cloud-deployment.ru.md).
 - [Архитектура](docs/architecture.md) и [процесс создания игры](docs/game-creation-model.ru.md).

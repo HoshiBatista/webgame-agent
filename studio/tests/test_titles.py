@@ -1,5 +1,6 @@
 import importlib
 import uuid
+from unittest.mock import patch
 
 from django.apps import apps
 from django.test import Client, TestCase, override_settings
@@ -170,7 +171,9 @@ class ChatTitleTests(TestCase):
 
     def test_manual_confirmation_uses_game_name_only_when_chat_name_is_automatic(self):
         for custom in (False, True):
-            with self.subTest(custom=custom):
+            with self.subTest(custom=custom), patch(
+                "validation.service.environment_identity", return_value="title-test"
+            ):
                 self.chat = Chat.objects.create(owner=self.user)
                 run, revision = self.run_and_revision()
                 if custom:

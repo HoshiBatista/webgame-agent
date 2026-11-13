@@ -83,6 +83,8 @@ packaging==26.3
     #   pytest
 pathspec==1.1.1
     # via mypy
+pillow==12.3.0
+    # via gameforge-mini (pyproject.toml)
 playwright==1.58.0
     # via gameforge-mini (pyproject.toml)
 pluggy==1.7.0

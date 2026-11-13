@@ -28,6 +28,10 @@ def fixture_response(*, with_assets=True):
 def environment(tmp_path, settings, monkeypatch):
     settings.GAMEFORGE_PROVIDER = "relay"
     settings.GAMEFORGE_MODEL = "qwen38"
+    # This peer implements schema-mode relay with server-side context checking;
+    # its protocol must not depend on a developer's private .env.
+    monkeypatch.setenv("GAMEFORGE_VLLM_JSON_MODE", "json_schema")
+    monkeypatch.setenv("GAMEFORGE_VLLM_CONTEXT_CHECK", "server")
     monkeypatch.setenv("GAMEFORGE_RELAY_URL", "https://relay.test")
     monkeypatch.setenv(
         "GAMEFORGE_PRICES_JSON",

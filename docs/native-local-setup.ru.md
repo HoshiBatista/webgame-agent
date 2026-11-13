@@ -79,6 +79,7 @@ git clone --branch mini-games https://github.com/HoshiBatista/webgame-agent.git 
 cd GameForge
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.lock
+.venv/bin/python -m pip check
 npm ci --prefix web
 npm run build --prefix web
 ```
@@ -230,6 +231,7 @@ Codex остаётся доступным: параметры переключе
 ```sh
 git pull --ff-only
 .venv/bin/python -m pip install -r requirements-dev.lock
+.venv/bin/python -m pip check
 npm ci --prefix web
 npm run build --prefix web
 .venv/bin/python scripts/native.py prepare
