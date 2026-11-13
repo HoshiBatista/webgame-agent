@@ -54,6 +54,37 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class AnalyticsDataset(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=64)
+    version = models.PositiveIntegerField()
+    source = models.CharField(max_length=10, default="demo")
+    schema_version = models.PositiveSmallIntegerField(default=1)
+    payload = models.JSONField()
+    payload_hash = models.CharField(max_length=64, unique=True)
+    enabled = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["key", "version"], name="studio_analytics_dataset_version"),
+            models.UniqueConstraint(fields=["key"], condition=models.Q(enabled=True), name="studio_analytics_active"),
+            models.CheckConstraint(condition=models.Q(version__gt=0), name="studio_analytics_positive_version"),
+            models.CheckConstraint(condition=models.Q(source="demo", schema_version=1), name="studio_analytics_demo_v1"),
+        ]
+
+    def save(self, *args, **kwargs):
+        from django.core.exceptions import ValidationError
+
+        if not self._state.adding:
+            original = type(self).objects.get(pk=self.pk)
+            if any(getattr(original, key) != getattr(self, key) for key in (
+                "key", "version", "source", "schema_version", "payload", "payload_hash",
+            )):
+                raise ValidationError("Содержимое набора неизменно. Импортируйте новую версию.")
+        super().save(*args, **kwargs)
+
+
 class Run(models.Model):
     ACTIVE = ("queued", "generating", "checking")
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -78,6 +109,7 @@ class Run(models.Model):
     planning_required = models.BooleanField(default=False)
     game_plan = models.JSONField(default=dict)
     preferences_snapshot = models.JSONField(default=dict)
+    analytics_snapshot = models.JSONField(default=dict)
     policy_snapshot = models.JSONField(default=policy_snapshot)
     helper_catalog = models.JSONField(default=helper_catalog)
     visual_review_enabled = models.BooleanField(default=False)
@@ -159,6 +191,7 @@ class Revision(models.Model):
     runtime_version = models.PositiveSmallIntegerField(default=0)
     helper_manifest = models.JSONField(default=dict)
     requirement_manifest = models.JSONField(default=dict)
+    analytics_snapshot = models.JSONField(default=dict)
     pipeline_version = models.PositiveSmallIntegerField(default=9)
     accepted = models.BooleanField(default=False)
     verification = models.CharField(max_length=16, default="none")

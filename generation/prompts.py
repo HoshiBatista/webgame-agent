@@ -243,6 +243,11 @@ def build_messages(request):
         context["check_repair"] = request["check_repair"]
     if request.get("code_repair_basis") is not None:
         context["code_repair_basis"] = request["code_repair_basis"]
+    from .analytics import model_context
+
+    analytics = model_context(request)
+    if analytics is not None:
+        context["analytics"] = analytics
     if request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:
         context["compact_manifest"] = request.get("compact_manifest") or {}
         context["source_format"] = request.get("source_format", "string")
@@ -347,6 +352,8 @@ def schema_prompt(request=None):
 
 
 def system_prompt(request):
+    from .analytics import guidance
+
     if request.get('operation') == 'music':
         from .music import PROMPT
 
@@ -357,8 +364,8 @@ def system_prompt(request):
 
     operation = request.get('operation', 'create')
     if lite_enabled(request) and operation in {'create', 'edit', 'repair', 'check_repair'}:
-        return lite_prompt(request)
-    text = _system_prompt(request)
+        return lite_prompt(request) + guidance(request)
+    text = _system_prompt(request) + guidance(request)
     if operation in {'create', 'edit', 'repair', 'check_repair'} and request.get('generation_profile') != 'compact':
         text += ('\nFor held screen buttons use hold_touch(selector,x:null,y:null,ms:1..3000), real touch then release. '
                  'tap is brief. Checkpoint before hold tests movement; after hold + wait tests stopping. '

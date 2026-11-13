@@ -3,6 +3,68 @@ export interface User {
   username: string;
   is_staff: boolean;
 }
+export interface AnalyticsMetrics {
+  started: number;
+  finished: number;
+  replayed: number;
+  finish_rate: number | null;
+  replay_rate: number | null;
+  mean_active_seconds: number | null;
+  families: number;
+}
+export interface AnalyticsIdea {
+  id: string;
+  rule_id: string;
+  scope: { mechanic: string; round_style: string };
+  advice: string;
+  evidence: {
+    candidate: AnalyticsMetrics;
+    baseline: AnalyticsMetrics;
+    finish_delta_pp: number;
+    replay_delta_pp: number;
+  };
+}
+export interface AnalyticsSelection {
+  dataset_id: string;
+  dataset_hash: string;
+  policy_version: number;
+  recommendation_ids: string[];
+}
+export interface AnalyticsChoice {
+  audience: string;
+  selection: AnalyticsSelection;
+  ideas: AnalyticsIdea[];
+}
+export interface AnalyticsSummary {
+  audience: string;
+  policy_version: number;
+  dataset: {
+    id: string;
+    hash: string;
+    source: 'demo';
+    version: number;
+    label: string;
+    period_start: string;
+    period_end: string;
+  } | null;
+  groups: (AnalyticsMetrics & { mechanic: string; label: string; round_style: string })[];
+  recommendations: AnalyticsIdea[];
+  data_status: 'ready' | 'insufficient_data' | 'empty';
+}
+export interface AnalyticsHistory {
+  source: 'demo';
+  label: string;
+  audience: string;
+  dataset_version: number;
+  dataset_hash: string;
+  period_start: string;
+  period_end: string;
+  snapshot_hash: string;
+  ideas: string[];
+  recommendations: AnalyticsIdea[];
+  same_audience: boolean;
+  context_state?: string;
+}
 export interface Preferences {
   theme: 'light' | 'dark';
   notes: string[];
@@ -40,6 +102,7 @@ export interface Session {
     local_only: boolean;
     model_profiles?: ModelProfile[];
     default_model_profile?: string;
+    analytics?: { available: boolean; source: 'demo'; policy_version: number };
   };
   budget: Budget | null;
 }
@@ -90,6 +153,7 @@ export interface ValidationTask {
   report: Report | null;
 }
 export interface Revision {
+  analytics?: AnalyticsHistory | null;
   id: string;
   title: string;
   number: number;
@@ -131,6 +195,7 @@ export interface ApiErrorData {
   details?: unknown;
 }
 export interface Run {
+  analytics?: AnalyticsHistory | null;
   id: string;
   chat_id: string;
   operation: string;

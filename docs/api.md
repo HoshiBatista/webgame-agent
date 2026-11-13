@@ -58,6 +58,47 @@ An explicit continuation searches saved complete replies through intermediate re
 
 An edit that reports `ok` but changes neither final source files nor the final check suite is a `no_changes` contract failure and uses the same saved repair budget as other model contract failures. A provider's explicit `unchanged` result with a valid exact base finishes as `needs_attention` with `error.code=unchanged` and its explanation. It creates no revision, runs no browser check and does not retry automatically. The last accepted game remains selected; prose alone is never treated as evidence of an implemented edit.
 
+## Optional demonstration analytics
+
+`GET /api/session/` includes `capabilities.analytics:{available,source:"demo",policy_version:1}`.
+`GAMEFORGE_ANALYTICS_ENABLED` defaults to false. Authenticated
+`GET /api/analytics/summary/?audience=everyone` returns
+`{dataset:null|{id,hash,version,source,label,period_start,period_end,as_of},policy_version,audience,
+groups:[],recommendations:[],data_status:"ready"|"empty"|"insufficient_data"}`.
+Groups include `mechanic,round_style,label,started,finished,replayed,duration_observed,
+active_ms_sum,families,largest_family_started,smallest_family_started,cases_hash,
+finish_rate,replay_rate,mean_active_seconds`. Rates are percentages of starts; zero
+denominators return null. Data are explicitly fictional mobile/touch sessions.
+Recommendations include `id,rule_id,scope,advice,evidence:{candidate,baseline,
+baseline_filter,finish_delta_pp,replay_delta_pp}`; comparisons are descriptive, not causal.
+GET never invokes a model or creates a run. Flag off returns 404 `analytics_disabled`,
+invalid audience 400, corrupt dataset 503 `analytics_unavailable`, no dataset an empty result.
+
+New create requests accept optional `analytics_selection:{dataset_id,dataset_hash,
+policy_version,recommendation_ids:[id]}` with 1–2 unique IDs. No client advice or
+counters are accepted. Null/omission means no choice. Server recomputes IDs for the
+selected audience and atomically freezes advice/evidence/model context in the run.
+New choices are invalid for edit/continue/recheck. Stale/retired selections return
+409 `analytics_selection_stale`; flag off rejects new choices with 409 `analytics_disabled`.
+Malformed or inapplicable selections return 400 `invalid_analytics_selection` before
+creating a run or outbox. A client can refresh or explicitly remove choices, never
+silently replace/drop them. Normal authenticated ownership and CSRF checks apply.
+
+The normalized selection participates in the existing idempotency key; reordering
+IDs is equivalent. Exact retries return the saved run even after dataset retirement
+or flag disablement. Different choices under the same key conflict. Current datasets
+are never reread by a worker for a saved run. Preferences, source code, exports,
+model response schema and mandatory call counts are unchanged.
+
+Private `Run.analytics` / `Revision.analytics` are null or frozen provenance with
+`source,label,audience,dataset_version,dataset_hash,period_start,period_end,snapshot_hash,
+ideas,recommendations,same_audience`. Run additionally reports
+`context_state:frozen|prepared|submitted|unknown|received|inherited` based on actual
+matching plan/create invocations. Received means a response was saved, not that the
+idea was implemented. Edits and remixes preserve demo provenance; only matching-audience
+plan/create receives advice. Raw snapshots remain in private invocation diagnostics.
+See [contract](game-analytics-design.ru.md) and [verification](game-analytics-implementation.ru.md).
+
 ## API сохраняемой очереди модели
 
 Отдельный сервис `llm-relay`, HTTPS origin реле. Он не заменяет сессионный Django API.

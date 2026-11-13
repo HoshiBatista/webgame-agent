@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-13",
+  "branch": "feature/game-analytics",
+  "base": "d2a70fd",
+  "source": "demo",
+  "dataset_rows": 96,
+  "dataset_sha256": "25e46b95b52550f997b0af6c1d11c8d5ec94ec72a2c2443690170ecc24bd4ebb",
+  "python": "3.12.3",
+  "postgres": "18.7",
+  "ui_browser": "Chromium 145, Playwright 1.58.0",
+  "feature_enabled_by_default": false,
+  "paid_model_calls": 0,
+  "deployed": false,
+  "backend_regression": {
+    "passed": 1359,
+    "deselected": 164,
+    "filter": "not browser and not native_browser and not live"
+  },
+  "frontend_tests_passed": 160,
+  "package_smoke": {
+    "sdist_and_wheel_built": true,
+    "installed_wheel_data_read": true,
+    "installed_policy_snapshot": true,
+    "runtime_pip_check": true
+  },
+  "ui_generation_post_intercepted": true,
+  "ui_generated_code_executed": false,
+  "ui_checks": [
+    {
+      "width": 320,
+      "height": 720,
+      "selected_ids_in_request": true,
+      "prompt_and_choice_retained_after_error": true,
+      "game_iframes": 0,
+      "page_errors": [],
+      "send_button_visible": true,
+      "demo_badge_visible": true,
+      "keyboard_expand_collapse": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "selected_ids_in_request": true,
+      "prompt_and_choice_retained_after_error": true,
+      "game_iframes": 0,
+      "page_errors": [],
+      "send_button_visible": true,
+      "demo_badge_visible": true,
+      "keyboard_expand_collapse": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "selected_ids_in_request": true,
+      "prompt_and_choice_retained_after_error": true,
+      "game_iframes": 0,
+      "page_errors": [],
+      "send_button_visible": true,
+      "demo_badge_visible": true,
+      "keyboard_expand_collapse": true
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "selected_ids_in_request": true,
+      "prompt_and_choice_retained_after_error": true,
+      "game_iframes": 0,
+      "page_errors": [],
+      "send_button_visible": true,
+      "demo_badge_visible": true,
+      "keyboard_expand_collapse": true
+    },
+    {
+      "concurrent_readers": 10,
+      "latency_ms": [
+        10.67,
+        11.86,
+        26.3,
+        24.2,
+        27.09,
+        24.54,
+        31.17,
+        38.16,
+        39.35,
+        38.05
+      ],
+      "max_latency_ms": 39.35
+    }
+  ],
+  "limits": [
+    "Fictional data only; no real player telemetry",
+    "No paid model comparison; recommendation adherence not measured",
+    "Game browser/native_browser suite unavailable; trusted platform UI checked separately",
+    "Ten local concurrent reads at 96 rows are not a production p95 measurement",
+    "No Docker deployment or physical phone/WebView test"
+  ]
+}

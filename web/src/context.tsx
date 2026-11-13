@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
-import type { ChatSummary, Session } from './types';
+import type { AnalyticsChoice, ChatSummary, Session } from './types';
 export interface StudioDraft {
+  analyticsChoice?: AnalyticsChoice | null;
   chatTitle?: string | null;
   prompt: string;
   audience: string | null;

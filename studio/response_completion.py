@@ -7,7 +7,7 @@ from .models import Invocation
 
 CONTEXT = ('provider', 'model', 'operation', 'prompt', 'game_request', 'game_plan',
            'generation_profile', 'source_format', 'audience', 'preferences',
-           'helper_catalog', 'requirement_manifest', 'generation_strategy')
+           'helper_catalog', 'requirement_manifest', 'generation_strategy', 'analytics_snapshot')
 
 
 def pending_permission(run, request):
@@ -26,7 +26,8 @@ def pending_permission(run, request):
             or (source.error or {}).get('code') not in {'codex_turn_failed', 'response_output_limit'}
             or source.provider_metadata.get('turn_status') != 'failed'
             or source.provider_metadata.get('provider_error', {}).get('incomplete_reason') != 'max_output_tokens'
-            or any(source.request.get(k) != request.get(k) for k in CONTEXT)):
+            or any((source.request.get(k) or {}) != (request.get(k) or {}) if k == 'analytics_snapshot'
+                   else source.request.get(k) != request.get(k) for k in CONTEXT)):
         return None
     return permission(source.raw_response, source.request, source.id)
 
@@ -44,8 +45,10 @@ def adopt_completion_policy(run):
             or run.pipeline_version != CONTRACT_VERSION or run.helper_catalog != catalog()
             or run.candidate_revision_id or run.source_revision_id or run.base_revision_id):
         return
-    request = {k: getattr(run, k) for k in CONTEXT if k not in {'operation', 'preferences'}}
+    request = {k: getattr(run, k) for k in CONTEXT if k not in {'operation', 'preferences', 'analytics_snapshot'}}
     request.update(operation='create', preferences=run.preferences_snapshot)
+    if run.analytics_snapshot:
+        request['analytics_snapshot'] = run.analytics_snapshot
     policy = pending_permission(run, request)
     if policy:
         previous = fingerprint(run.policy_snapshot)

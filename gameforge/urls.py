@@ -4,9 +4,11 @@ from django.urls import path, re_path
 from django.views.static import serve
 
 from studio import views as v
+from studio.analytics_views import analytics_summary_view
 from studio.template_views import template_view, templates_view
 
 urlpatterns = [
+    path("api/analytics/summary/", analytics_summary_view),
     path("admin/", admin.site.urls),
     path("api/health/", v.health_view),
     path("api/session/", v.session_view),

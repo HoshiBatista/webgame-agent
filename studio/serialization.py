@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core import signing
 from django.utils import timezone
 
+from .analytics import history as analytics_history
 from .continuations import unacknowledged_unknowns
 from .replies import run_reply
 from .services import budget_snapshot
@@ -76,6 +77,7 @@ def revision_data(revision):
         "preview_url": preview_url(revision),
         "export_url": f"/api/revisions/{revision.id}/export/",
         "parent_id": str(revision.parent_id) if revision.parent_id else None,
+        "analytics": analytics_history(revision.analytics_snapshot),
         "can_validate": revision.pipeline_version == 9,
         "validation": validation_data(revision.validations.select_related('report').order_by('-created_at').first()),
         "report": report_data(report),
@@ -86,6 +88,19 @@ def run_data(run, budget=None):
     if run is None:
         return None
     elapsed = ((run.finished_at or timezone.now()) - run.created_at).total_seconds()
+    analytics = analytics_history(run.analytics_snapshot, run.audience)
+    if analytics:
+        from generation.analytics import model_context
+
+        analytics["context_state"] = "frozen" if run.operation == "create" else "inherited"
+        for invocation in run.invocations.order_by("attempt"):
+            if (invocation.request.get("analytics_snapshot") == run.analytics_snapshot
+                    and model_context(invocation.request)):
+                analytics["context_state"] = (
+                    "received" if invocation.state in {"returned", "settled"} and invocation.response
+                    else "unknown" if invocation.state == "unknown"
+                    else "submitted" if invocation.sent_at else "prepared"
+                )
     unknown = bool(unacknowledged_unknowns(run))
     from .acceptance import confirmation_report
 
@@ -112,6 +127,7 @@ def run_data(run, budget=None):
         "generation_strategy": run.generation_strategy,
         "visual_review": {k:run.visual_state[k] for k in ("phase","reason") if k in run.visual_state},
         "game_plan": run.game_plan,
+        "analytics": analytics,
         "model_profile": run.model_profile,
         "model": run.model,
         "provider": run.provider,

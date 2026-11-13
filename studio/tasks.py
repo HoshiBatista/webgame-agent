@@ -304,6 +304,7 @@ def store_candidate(run, materialized, base):
         helper_manifest=used(materialized["files"]),
         pipeline_version=run.pipeline_version,
         requirement_manifest=run.requirement_manifest,
+        analytics_snapshot=run.analytics_snapshot,
     )
     if not chat.title_is_custom and chat.current_revision_id is None:
         from .titles import short_game_title
@@ -387,6 +388,8 @@ def request_for(run, base, findings, last_attempt_error=None):
 
         request["operation"] = "plan"
         request['plan_provenance'] = PROVENANCE_VERSION
+    if getattr(run, "analytics_snapshot", None):
+        request["analytics_snapshot"] = run.analytics_snapshot
     if request["operation"] == "edit":
         from .patch_repair import pending_permission
 

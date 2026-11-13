@@ -2,6 +2,7 @@
 
 import json
 import uuid
+from copy import deepcopy
 
 from django.db import transaction
 
@@ -84,6 +85,7 @@ def recover_saved_response(invocation_id, *, apply=False):
     # A distinct run preserves original failures, raw receipts, usage and billing.
     # The permanent policy flag also forbids inference after a crash/restart.
     run = Run.objects.create(
+        analytics_snapshot=deepcopy(source.request.get("analytics_snapshot") or {}),
         chat=chat, operation=parent.operation, prompt=parent.prompt, audience=parent.audience,
         provider=parent.provider, model=parent.model, model_profile=parent.model_profile,
         base_revision=parent.base_revision, continued_from=parent,

@@ -22,6 +22,7 @@ include = ["gameforge*", "studio*", "generation*", "validation*"]
 
 [tool.setuptools.package-data]
 generation = ["runtime/*.js", "runtime/*.css"]
+studio = ["data/*.json"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "gameforge.settings"

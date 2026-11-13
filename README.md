@@ -12,6 +12,7 @@ GameForge создаёт браузерные мини-игры по текст�
 - Повторная проверка выбранной версии без новой генерации.
 - Публикация игр, общая лента, отзывы и оценки.
 - Личные шаблоны запросов и пожелания для следующих игр.
+- Необязательные идеи для новой игры на основе подписанных демоданных.
 - Светлая, тёмная и системная темы; интерфейс для компьютера и телефона.
 
 ## Режимы генерации
@@ -161,8 +162,31 @@ VALIDATOR_CONTAINER=gf-mini-validator-tests sh scripts/validator-start.sh
 VALIDATOR_CONTAINER=gf-mini-validator-tests .venv/bin/pytest tests/test_validation.py -m browser
 ```
 
+## Демонстрационная аналитика
+
+Функция по умолчанию выключена. После применения миграций загрузите встроенный
+вымышленный набор; команда не обращается к модели:
+
+```sh
+# Docker Compose
+docker compose exec app python manage.py load_demo_analytics
+# Либо нативная установка
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py load_demo_analytics
+```
+
+Установите `GAMEFORGE_ANALYTICS_ENABLED=1` в приватном `.env` и перезапустите
+приложение и worker (`docker compose up -d` либо stop/start через `scripts/dev.py`).
+В новом чате откройте «Что подсказывают данные» и выберите до двух идей. Они относятся
+к одной новой игре; общие пожелания аккаунта не меняются. Изменение аудитории очищает
+выбор. В истории сохраняются основание и состояние передачи модели.
+
+Это демонстрация контура рекомендаций, без сбора реальных действий игроков.
+[Реализация, проверки и ограничения](docs/game-analytics-implementation.ru.md).
+
 ## Документация
 
+- [Контракт аналитики игр и рекомендаций](docs/game-analytics-design.ru.md).
 - [Проверка чистой установки и исправления тестовых фикстур](docs/clean-install-verification-2026-11-13.ru.md).
 - [Локальный запуск с Docker](docs/team-local-setup.ru.md) и [без Docker](docs/native-local-setup.ru.md).
 - [Облачное развёртывание](docs/cloud-deployment.ru.md).

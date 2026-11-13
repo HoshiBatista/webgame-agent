@@ -26,7 +26,15 @@ import {
   Spinner,
 } from './components';
 import { chatsChanged, useSession } from './context';
-import type { Chat, Preferences, PromptTemplate, Publication, Revision, Run } from './types';
+import type {
+  AnalyticsChoice,
+  Chat,
+  Preferences,
+  PromptTemplate,
+  Publication,
+  Revision,
+  Run,
+} from './types';
 import { useSavedChat } from './useSavedChat';
 import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { selectedProfile } from './ModelSelector';
@@ -34,6 +42,7 @@ import TemplatePicker from './TemplatePicker';
 import { appendTemplate } from './textLimits';
 import AudienceSelector from './AudienceSelector';
 import ValidationControls from './ValidationControls';
+import AnalyticsSuggestions, { AnalyticsHistory } from './AnalyticsSuggestions';
 const feedbackReasons = [
   'Более понятное управление',
   'Лучше визуальное оформление',
@@ -64,6 +73,10 @@ export default function Studio() {
   const [confirmedReport, setConfirmedReport] = useState<string | null>(null);
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
+  const [analyticsChoice, setAnalyticsChoice] = useState<AnalyticsChoice | null>(
+    initialDraft?.analyticsChoice ?? null,
+  );
+  const [analyticsNotice, setAnalyticsNotice] = useState('');
   const modelProfile = selectedProfile(session);
   const profiles = session.capabilities.model_profiles ?? [];
   const selectedModel = profiles.find((item) => item.id === modelProfile);
@@ -118,8 +131,14 @@ export default function Studio() {
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
   const audienceReady = useRef(isNew || initialDraft?.audience != null);
-  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle });
-  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle };
+  const draft = useRef({
+    prompt,
+    audience,
+    selectedRevision,
+    chatTitle: newTitle,
+    analyticsChoice,
+  });
+  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle, analyticsChoice };
   useEffect(
     () => () => {
       if (id === 'new' && submissionChat.current === currentId.current) {
@@ -181,6 +200,8 @@ export default function Studio() {
     setCustomReason('');
     setShareDone('');
     if (submissionChat.current !== id) {
+      setAnalyticsChoice(remembered?.analyticsChoice ?? null);
+      setAnalyticsNotice('');
       setPending(null);
       setBusy(false);
       setError('');
@@ -401,6 +422,7 @@ export default function Studio() {
       prompt: prompt.trim(),
       audience,
       source_revision_id: revision?.id ?? null,
+      ...(analyticsChoice && !revision ? { analytics_selection: analyticsChoice.selection } : {}),
       source_artifact_hash: revision?.artifact_hash ?? null,
       source_is_historical: !!selectedRevision,
       ...(latestRun?.can_retry_unknown
@@ -458,6 +480,7 @@ export default function Studio() {
       lastPayload.current = '';
       setPrompt('');
       setSelectedRevision(null);
+      setAnalyticsChoice(null);
       chatsChanged();
     } catch (cause) {
       if (isCurrent()) {
@@ -941,11 +964,40 @@ export default function Studio() {
           </div>
         </div>
         <form className="composer" onSubmit={send}>
+          <AnalyticsHistory
+            data={
+              revision &&
+              revision.id !== latestRun?.candidate_revision_id &&
+              revision.id !== latestRun?.result_revision_id
+                ? revision.analytics
+                : (latestRun?.analytics ?? revision?.analytics)
+            }
+          />
           <AudienceSelector
             value={audience}
             disabled={!!activeRun || busy}
-            onChange={setAudience}
+            onChange={(value) => {
+              if (value !== audience && analyticsChoice) {
+                setAnalyticsChoice(null);
+                setAnalyticsNotice('Аудитория изменилась. Выберите подходящие идеи заново.');
+              }
+              setAudience(value);
+            }}
           />
+          {analyticsNotice && (
+            <p className="field-help" role="status">
+              {analyticsNotice}
+            </p>
+          )}
+          {!revision && (session.capabilities.analytics?.available || analyticsChoice) && (
+            <AnalyticsSuggestions
+              audience={audience}
+              choice={analyticsChoice}
+              available={!!session.capabilities.analytics?.available}
+              disabled={busy || !!activeRun || !!pendingHere}
+              onChange={setAnalyticsChoice}
+            />
+          )}
           <div className="composer-input">
             <textarea
               ref={promptInput}

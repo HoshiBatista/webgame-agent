@@ -1,5 +1,93 @@
 @use 'sass:color';
 
+.analytics-panel {
+  min-width: 0;
+  max-height: min(40vh, 420px);
+  overflow-y: auto;
+  margin-block: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: var(--text-small);
+  .analytics-source-bar,
+  > summary {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface);
+  }
+  .analytics-source-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+  summary {
+    cursor: pointer;
+    font-weight: 700;
+  }
+  p {
+    margin-block: 0.5rem;
+    overflow-wrap: anywhere;
+  }
+  .analytics-selected {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .analytics-selected span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .analytics-selected button {
+    flex-shrink: 0;
+  }
+  .analytics-idea {
+    padding-block: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .analytics-evidence {
+    color: var(--muted);
+  }
+  .analytics-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    min-width: 520px;
+    width: 100%;
+  }
+  caption {
+    text-align: left;
+    color: var(--muted);
+    padding-block: 0.5rem;
+  }
+  th,
+  td {
+    padding: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+}
+
+@media (max-height: 500px) {
+  .composer:has(.analytics-panel) {
+    .analytics-panel {
+      max-height: 100px;
+    }
+    .composer-input textarea {
+      min-height: 44px;
+      height: 44px;
+    }
+  }
+}
+
 $theme-colors: (
   bg: #f7f5ef,
   surface: #fffefa,

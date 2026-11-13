@@ -54,6 +54,8 @@ def coverage(checks, frozen):
 def policy_snapshot():
     root = Path(__file__).parent
     paths = [
+        "analytics.py",
+        "../studio/analytics.py",
         "lite.py",
         "lite_baseline.py",
         "music.py",

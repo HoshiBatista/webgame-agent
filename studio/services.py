@@ -297,6 +297,9 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if not isinstance(audience, str) or audience not in AUDIENCES:
         raise DomainError("invalid_audience", "Неизвестная аудитория.")
     previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
+    from .analytics import normalize_selection
+
+    analytics_selection = normalize_selection(data.get("analytics_selection"))
     acknowledged_run = None
     if data.get("acknowledge_unknown_run_id"):
         if continued_from or check_only:
@@ -387,10 +390,12 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if acknowledged_run:
         payload["acknowledge_unknown_run_id"] = str(acknowledged_run.id)
     legacy_fingerprint = fingerprint(payload)
+    if analytics_selection:
+        payload["analytics_selection"] = analytics_selection
     payload.update(provider=provider, model_profile=profile_id)
     if previous:
         legacy_match = (
-            not previous.model_profile and not profile_id and previous.provider == provider
+            not analytics_selection and not previous.model_profile and not profile_id and previous.provider == provider
             and previous.request_fingerprint == legacy_fingerprint
         )
         if previous.request_fingerprint != fingerprint(payload) and not legacy_match:
@@ -456,6 +461,13 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     ):
         raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
     operation = "repair" if candidate or continued_from else ("edit" if source else "create")
+    from .analytics import resolve_snapshot
+
+    if analytics_selection and (operation != "create" or check_only):
+        raise DomainError("invalid_analytics_selection", "Новые идеи доступны только при создании новой игры.")
+    analytics_snapshot = (continued_from.analytics_snapshot if continued_from else
+                          source.analytics_snapshot if source else
+                          resolve_snapshot(analytics_selection, audience) if analytics_selection else {})
     from generation.planning import should_plan, strategy
     from generation.requirements import manifest, policy_snapshot
 
@@ -543,6 +555,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         game_request=original_request,
         requirement_manifest=frozen_manifest,
         preferences_snapshot=continued_from.preferences_snapshot if continued_from else validate_notes(preference_for(chat.owner).notes),
+        analytics_snapshot=analytics_snapshot,
         policy_snapshot=continued_from.policy_snapshot if continued_from else policy_snapshot(),
         candidate_revision=candidate,
         continued_from=continued_from,

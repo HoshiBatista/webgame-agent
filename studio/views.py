@@ -112,6 +112,7 @@ def capabilities(request):
         "local_only": settings.GAMEFORGE_LOCAL_ONLY,
         "model_profiles": options,
         "default_model_profile": default_profile(options),
+        "analytics": {"available": settings.GAMEFORGE_ANALYTICS_ENABLED, "source": "demo", "policy_version": 1},
     }
 
 
@@ -607,6 +608,7 @@ def remix_view(request, ident):
             helper_manifest=source.helper_manifest,
             pipeline_version=source.pipeline_version,
             requirement_manifest=source.requirement_manifest,
+            analytics_snapshot=source.analytics_snapshot,
             design=source.design,
             checks=source.checks,
             checks_review_required=source.checks_review_required,
