@@ -17,6 +17,9 @@ def click(selector):
 
 
 def scenario(ident, category, steps, path, value, operator='eq', viewport='mobile'):
+    if viewport == 'desktop':
+        steps = [{**step, 'action': {'tap': 'click', 'tap_fraction': 'click_fraction'}.get(
+            step['action'], step['action'])} for step in steps]
     return {'id': ident, 'category': category, 'requirement': 'Независимое условие ' + ident,
             'viewport': viewport, 'steps': steps, 'observation': {'source': 'state', 'path': path},
             'expect': {'operator': operator, 'value': value}}

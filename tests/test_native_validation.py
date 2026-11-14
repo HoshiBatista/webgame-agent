@@ -99,6 +99,8 @@ print(json.dumps(denied))
 def test_native_probe_really_launches_chromium_without_secret_environment(monkeypatch):
     monkeypatch.setenv("GAMEFORGE_RELAY_API_KEY", "canary-not-a-real-token")
     monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/host/desktop-bus")
+    monkeypatch.setenv("LD_LIBRARY_PATH", "/host/private-loader-path")
+    monkeypatch.setenv("ALSA_CONFIG_PATH", "/host/private-audio-config")
     seen = []
     original = subprocess.Popen
 
@@ -116,5 +118,13 @@ def test_native_probe_really_launches_chromium_without_secret_environment(monkey
     assert seen[0]["HOME"] != os.path.expanduser("~")
     if platform.system() == "Linux":
         assert seen[0]["DBUS_SESSION_BUS_ADDRESS"] == "unix:path=/dev/null"
+        assert "ALSA_CONFIG_PATH" not in seen[0]
+        assert seen[0].get("LD_LIBRARY_PATH") == (
+            str(native.LINUX_LIBRARIES.resolve()) if native.LINUX_LIBRARIES.is_dir() else None
+        )
+        if native.LINUX_LIBRARIES.is_dir():
+            reads = native.runtime_paths(native.browser_path())
+            assert str(native.LINUX_LIBRARIES.resolve()) in reads
+            assert str(native.LINUX_LIBRARIES.parent.resolve()) not in reads
     else:
         assert "DBUS_SESSION_BUS_ADDRESS" not in seen[0]

@@ -159,8 +159,41 @@ npm run build --prefix web
 
 ```sh
 VALIDATOR_CONTAINER=gf-mini-validator-tests sh scripts/validator-start.sh
-VALIDATOR_CONTAINER=gf-mini-validator-tests .venv/bin/pytest tests/test_validation.py -m browser
+VALIDATOR_CONTAINER=gf-mini-validator-tests .venv/bin/pytest tests studio/tests -m 'browser and not native_browser and not runtime_browser and not live'
 ```
+
+Нативный изолированный валидатор (macOS/Linux/WSL2):
+
+```sh
+.venv/bin/python scripts/native.py prepare
+VALIDATOR_BACKEND=native .venv/bin/pytest tests studio/tests -m 'browser and not runtime_browser and not live' -k 'not real_unix_transport and not state_snapshot'
+.venv/bin/python scripts/verify_runtime_browser.py --engine chromium
+```
+
+Два исключённых теста используют `docker exec` напрямую и выполняются в контейнерном CI.
+Тесты общего проигрывателя (`runtime_browser`) запускаются отдельным скриптом внутри
+sandbox, с публичными исходниками и без доступа к БД/`.env`. Для обоих движков
+подготовьте WebKit и его зависимости через Playwright, используя тот же
+`PLAYWRIGHT_BROWSERS_PATH=.data/native-validator/browsers`, затем запустите скрипт без
+`--engine chromium`. CI выполняет оба движка.
+Если на Debian/Ubuntu отсутствуют только NSS/NSPR и нет `sudo`, подготовьте публичные
+библиотеки локально: `.venv/bin/python scripts/native.py prepare --local-linux-libs`.
+Они доступны браузеру только для чтения; ограничения ОС и сети сохраняются.
+
+Сквозная HTTP-проверка на отдельном стенде с `CONTAINER_PROVIDER=fake` и
+`CONTAINER_MODEL=fixture`, запущенными worker и валидатором:
+
+```sh
+.venv/bin/python scripts/verify_container.py
+# Для нативного стенда:
+.venv/bin/python scripts/verify_container.py --origin http://127.0.0.1:8000 --preview-origin http://localhost:8001
+```
+
+Нужны тестовые `DJANGO_SUPERUSER_USERNAME`/`DJANGO_SUPERUSER_PASSWORD`. Скрипт создаёт
+тестовые чаты, проверяет создание, точечную правку, публикацию, ремикс и экспорт,
+затем удаляет свои чаты/публикацию. На другом провайдере отказывается создавать Run.
+Отчёт: `.data/container-verification.json`. CI выполняет его в отдельном Compose-проекте
+и удаляет только volumes этого проекта.
 
 ## Демонстрационная аналитика
 
@@ -186,6 +219,7 @@ docker compose exec app python manage.py load_demo_analytics
 
 ## Документация
 
+- [Сквозная приёмка, CI и нативный валидатор — 14.11](docs/acceptance-verification-2026-11-14.ru.md).
 - [Контракт аналитики игр и рекомендаций](docs/game-analytics-design.ru.md).
 - [Проверка чистой установки и исправления тестовых фикстур](docs/clean-install-verification-2026-11-13.ru.md).
 - [Локальный запуск с Docker](docs/team-local-setup.ru.md) и [без Docker](docs/native-local-setup.ru.md).

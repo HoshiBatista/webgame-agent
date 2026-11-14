@@ -494,7 +494,9 @@ def run(payload):
         browser = pw.chromium.launch(
             headless=True,
             executable_path=os.environ.get("CHROMIUM_EXECUTABLE"),
-            args=["--disable-dev-shm-usage", "--disable-gpu"],
+            # Chromium's fake output stream still pulls the real Web Audio graph;
+            # the isolated validator has no physical sound device.
+            args=["--disable-dev-shm-usage", "--disable-gpu", "--disable-audio-output"],
         )
         syntax_error, script_count = check_javascript(browser, html)
         if syntax_error:

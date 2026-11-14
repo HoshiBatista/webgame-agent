@@ -36,7 +36,7 @@ createdb gameforge_mini
 
 ```sh
 sudo apt update
-sudo apt install python3.12 python3.12-venv redis-server bubblewrap git
+sudo apt install python3.12 python3.12-venv redis-server bubblewrap libnspr4 libnss3 git
 ```
 
 Node 22+ установите доступным в команде способом; системный пакет старой Ubuntu может

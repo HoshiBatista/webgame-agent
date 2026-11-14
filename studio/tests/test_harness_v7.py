@@ -24,7 +24,7 @@ def maker(settings):
 @pytest.mark.parametrize('case', ['normal', 'duplicate', 'stale_report'])
 def test_syntax_repair_with_incomplete_checks_then_review_uses_real_browser(maker, case):
     run = create_run(maker, {'prompt': 'Три попадания', 'idempotency_key': 'code-first'})
-    original = fixture_response()
+    original = fixture_response(with_assets=True)
     original['checks'] = original['checks'][:2]
     if case == 'duplicate':
         original['checks'].append(deepcopy(original['checks'][0]))
@@ -333,19 +333,39 @@ def test_startup_gaps_finish_or_repair_checks_without_rewriting_source(maker, ca
     from studio.check_repair import code_repair_basis
     from tests.test_harness_surface import startup_game
 
-    html, checks = startup_game(case)
+    def current_game(variant):
+        html, checks = startup_game(variant)
+        # Current generated-media games also promise real desktop keyboard input.
+        # Preserve the hidden desktop start defect rather than bypassing it.
+        html += '''<script>window.addEventListener('keydown', e => {
+          if(e.code !== 'Space' || getComputedStyle(begin).display === 'none') return;
+          if(!state.active) begin.click();
+          c.click();
+        });</script>'''
+        if checks:
+            checks.append({'id': 'keyboard', 'category': 'control', 'viewport': 'desktop',
+                           'requirement': 'Пробел начинает игру и двигает фигуру без мыши.',
+                           'steps': [{'action': 'press', 'key': 'Space'}],
+                           'observation': {'source': 'state', 'path': 'state.x'},
+                           'expect': {'operator': 'eq', 'value': 1}})
+        return html, checks
+
+    html, checks = current_game(case)
     operations = []
     def model(request, **kwargs):
         operations.append(request['operation'])
         assert request['operation'] in {'create', 'check_repair'}
         if request['operation'] == 'create':
-            reply = fixture_response()
+            reply = fixture_response(with_assets=True)
             reply.update(files=[{'path': 'index.html', 'content': html}], checks=deepcopy(checks))
         else:
             policy = request['check_repair']
-            _, corrected = startup_game('normal')
-            repaired = [{**deepcopy(next(c for c in corrected if c['category'] == r['category'])), **r}
-                        for r in policy['requirements']]
+            _, corrected = current_game('normal')
+            repaired = []
+            for requirement in policy['requirements']:
+                choices = [c for c in corrected if c['category'] == requirement['category']]
+                original = next((c for c in choices if c['viewport'] == requirement['viewport']), choices[0])
+                repaired.append({**deepcopy(original), **requirement})
             reply = {'status': 'unchanged' if case == 'desktop_route_missing' else 'ok',
                      'operation': 'check_repair', 'base_revision': request['base_revision'],
                      'artifact_hash': policy['artifact_hash'], 'checks_hash': policy['checks_hash'],

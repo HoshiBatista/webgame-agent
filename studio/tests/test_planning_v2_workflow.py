@@ -430,7 +430,7 @@ def test_code_then_checks_through_isolated_browser_without_model(maker, syntax_f
     ) + ["checks_create"]
     last = run.candidate_revision
     assert last.reports.get().assessment["gates_passed"] and confirmation_report(run)
-    assert all(f["status"] == "passed" for f in last.reports.get().facts)
+    assert all(f["status"] == "passed" for f in last.reports.get().facts), last.reports.get().facts
     assert last.files == last.parent.files and last.checks_review_required
 
 

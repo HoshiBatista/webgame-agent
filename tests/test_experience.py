@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from copy import deepcopy
 
@@ -11,6 +12,20 @@ from generation.helpers import catalog, resolve
 from generation.planning import schema
 from generation.prompts import build_messages
 from generation.providers.fake import fixture_assets, fixture_response
+
+
+def runtime_engines(playwright):
+    selected = os.environ.get('GAMEFORGE_RUNTIME_ENGINE', 'all')
+    return [engine for engine in (playwright.chromium, playwright.webkit)
+            if selected == 'all' or engine.name == selected]
+
+
+def launch_runtime_browser(engine):
+    assert os.environ.get('GAMEFORGE_RUNTIME_SANDBOX') == '1', 'Use scripts/verify_runtime_browser.py'
+    options = {'executable_path': os.environ['CHROMIUM_EXECUTABLE']} if engine.name == 'chromium' else {}
+    if engine.name == 'chromium':
+        options['args'] = ['--disable-audio-output']
+    return engine.launch(**options)
 
 
 def game():
@@ -328,6 +343,7 @@ def test_native_generated_game_has_three_device_profiles_and_real_keyboard_cover
 
 
 @pytest.mark.browser
+@pytest.mark.runtime_browser
 def test_real_audio_mute_restart_graphics_and_input_in_both_engines():
     from playwright.sync_api import sync_playwright
 
@@ -335,8 +351,8 @@ def test_real_audio_mute_restart_graphics_and_input_in_both_engines():
                     RECIPE: json.dumps(fixture_assets())})
     html = bundle(files)
     with sync_playwright() as pw:
-        for engine in [pw.chromium, pw.webkit]:
-            browser = engine.launch()
+        for engine in runtime_engines(pw):
+            browser = launch_runtime_browser(engine)
             page = browser.new_page(viewport={'width':390,'height':844}, has_touch=True)
             page.route('**/*', lambda route: route.fulfill(content_type='text/html', body=html))
             page.goto('http://fixture.test/')
@@ -372,6 +388,7 @@ def test_real_audio_mute_restart_graphics_and_input_in_both_engines():
 
 
 @pytest.mark.browser
+@pytest.mark.runtime_browser
 def test_first_music_note_is_not_dropped_or_duplicated_and_stopping_music_keeps_effects():
     from playwright.sync_api import sync_playwright
 
@@ -381,8 +398,8 @@ def test_first_music_note_is_not_dropped_or_duplicated_and_stopping_music_keeps_
     assets['sounds'][0]['duration'] = 1
     html = bundle(attach({'index.html':'<!doctype html><button>Start</button>', RECIPE:json.dumps(assets)}))
     with sync_playwright() as pw:
-        for engine in (pw.chromium, pw.webkit):
-            browser = engine.launch()
+        for engine in runtime_engines(pw):
+            browser = launch_runtime_browser(engine)
             page = browser.new_page()
             page.route('**/*', lambda route: route.fulfill(content_type='text/html', body=html))
             page.goto('http://fixture.test/')
@@ -399,6 +416,7 @@ def test_first_music_note_is_not_dropped_or_duplicated_and_stopping_music_keeps_
 
 
 @pytest.mark.browser
+@pytest.mark.runtime_browser
 def test_compact_physical_control_names_keep_logical_key_events_for_game_code():
     from playwright.sync_api import sync_playwright
 
@@ -413,8 +431,8 @@ def test_compact_physical_control_names_keep_logical_key_events_for_game_code():
     response['probes'] = []
     game = materialize(response, operation='create', generation_profile='compact', helper_catalog=catalog())
     with sync_playwright() as pw:
-        for engine in (pw.chromium, pw.webkit):
-            browser = engine.launch()
+        for engine in runtime_engines(pw):
+            browser = launch_runtime_browser(engine)
             page = browser.new_page()
             page.route('**/*', lambda route: route.fulfill(content_type='text/html', body=game['html']))
             page.goto('http://fixture.test/')
@@ -426,14 +444,15 @@ def test_compact_physical_control_names_keep_logical_key_events_for_game_code():
 
 
 @pytest.mark.browser
+@pytest.mark.runtime_browser
 def test_wrong_graphic_calls_report_a_concrete_defect_instead_of_silently_hiding_assets():
     from playwright.sync_api import Error, sync_playwright
 
     html = bundle(attach({'index.html':'<!doctype html><canvas id="scene"></canvas>',
                          RECIPE:json.dumps(fixture_assets())}))
     with sync_playwright() as pw:
-        for engine in (pw.chromium,pw.webkit):
-            browser=engine.launch()
+        for engine in runtime_engines(pw):
+            browser=launch_runtime_browser(engine)
             page=browser.new_page()
             page.route('**/*',lambda route:route.fulfill(content_type='text/html',body=html))
             page.goto('http://fixture.test/')

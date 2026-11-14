@@ -29,7 +29,7 @@ DJANGO_SETTINGS_MODULE = "gameforge.settings"
 pythonpath = ["."]
 testpaths = ["tests", "studio/tests"]
 addopts = "-q"
-markers = ["browser: requires an isolated browser", "native_browser: requires native OS sandbox and prepared browser", "live: explicitly budgeted real model test"]
+markers = ["browser: requires an isolated browser", "runtime_browser: public player tests run only by verify_runtime_browser.py", "native_browser: requires native OS sandbox and prepared browser", "live: explicitly budgeted real model test"]
 
 [tool.ruff]
 target-version = "py312"

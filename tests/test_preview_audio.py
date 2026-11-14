@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from generation.preview import with_audio_control
@@ -15,8 +13,11 @@ def test_audio_control_preserves_doctype_and_runs_before_game_scripts():
 
 
 @pytest.mark.browser
+@pytest.mark.runtime_browser
 def test_audio_control_mutes_existing_and_future_sources_without_resetting_the_game():
     from playwright.sync_api import sync_playwright
+
+    from tests.test_experience import launch_runtime_browser
 
     instrument = """<script>
       window.outputs=[];
@@ -36,7 +37,7 @@ def test_audio_control_mutes_existing_and_future_sources_without_resetting_the_g
     # Observe the real master gain without replacing any native audio behavior.
     controlled = controlled.replace('<!doctype html>', '<!doctype html>' + instrument, 1)
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(channel=os.environ.get('GAMEFORGE_TEST_BROWSER_CHANNEL'))
+        browser = launch_runtime_browser(playwright.chromium)
         page = browser.new_page()
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))

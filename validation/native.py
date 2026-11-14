@@ -20,6 +20,7 @@ from .contracts import browser_watchdog_seconds
 
 ROOT = Path(__file__).resolve().parents[1]
 BROWSERS = ROOT / ".data/native-validator/browsers"
+LINUX_LIBRARIES = BROWSERS.parent / "linux-libraries"
 MAX_RESULT = 4_000_000
 
 
@@ -48,6 +49,8 @@ def runtime_paths(browser):
     paths = [Path(sys.base_prefix), Path(playwright.__file__).parent,
              Path(greenlet.__file__).parent, Path(pyee.__file__).parent,
              Path(typing_extensions.__file__), browser.parent]
+    if platform.system() == "Linux" and LINUX_LIBRARIES.is_dir():
+        paths.append(LINUX_LIBRARIES)
     if platform.system() == "Darwin":
         for cellar in ("/opt/homebrew/Cellar", "/usr/local/Cellar"):
             if Path(cellar).is_dir():
@@ -210,7 +213,7 @@ def _execute(payload, *, probe=False, cancelled=None, progress=None):
             + ("from playwright.sync_api import sync_playwright\n"
                "with sync_playwright() as pw:\n"
                " browser=pw.chromium.launch(headless=True,executable_path=os.environ['CHROMIUM_EXECUTABLE'],"
-               "args=['--disable-dev-shm-usage','--disable-gpu'])\n"
+               "args=['--disable-dev-shm-usage','--disable-gpu','--disable-audio-output'])\n"
                " assert browser.version == os.environ['CHROMIUM_VERSION'], 'Browser version mismatch'\n"
                " browser.close()\n" if probe else "") +
             f"print(json.dumps({{'environment':identity()}} if {probe!r} "
@@ -234,6 +237,9 @@ def _execute(payload, *, probe=False, cancelled=None, progress=None):
             # is no desktop bus in this isolated process; never inherit the host's
             # address or start a session daemon. /dev/null cannot be a bus socket.
             env["DBUS_SESSION_BUS_ADDRESS"] = "unix:path=/dev/null"
+            if LINUX_LIBRARIES.is_dir():
+                # Only explicitly prepared public libraries, never the host's loader path.
+                env["LD_LIBRARY_PATH"] = str(LINUX_LIBRARIES.resolve())
         timeout = 40 if probe else browser_watchdog_seconds(payload.get("checks"), payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False)) + 5
         with (scratch / "stdout").open("w+b") as output, (scratch / "stderr").open("w+b") as errors:
             process = subprocess.Popen(command, cwd=scratch, env=env, stdin=subprocess.PIPE,

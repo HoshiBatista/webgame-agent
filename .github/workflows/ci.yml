@@ -26,8 +26,12 @@ jobs:
           command -v bwrap
           sysctl kernel.apparmor_restrict_unprivileged_userns
           sudo apparmor_parser -a deploy/apparmor/gameforge-bwrap
-      - run: .venv/bin/python -m playwright install-deps chromium
+      - run: .venv/bin/python -m playwright install-deps chromium webkit
       - run: .venv/bin/python scripts/native.py prepare
+      - name: Prepare WebKit for public runtime tests
+        run: PLAYWRIGHT_BROWSERS_PATH="$PWD/.data/native-validator/browsers" .venv/bin/python -m playwright install webkit
+      - name: Player, audio and preview tests in the OS sandbox (Chromium and WebKit)
+        run: .venv/bin/python scripts/verify_runtime_browser.py
       - run: .venv/bin/pytest tests/test_native_validation.py
       - run: .venv/bin/pytest tests/test_validation.py -m browser -k 'not real_unix_transport and not state_snapshot'
       - run: .venv/bin/pytest tests/test_source_map.py -m browser
@@ -39,6 +43,7 @@ jobs:
           done
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     services:
       postgres:
         image: postgres:18-alpine
@@ -54,6 +59,7 @@ jobs:
       DJANGO_SECRET_KEY: ci-only-not-used-in-any-deployment-000000000000
       GAMEFORGE_PROVIDER: fake
       GAMEFORGE_MODEL: fixture
+      VALIDATOR_CONTAINER: gf-mini-validator-tests
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -69,9 +75,40 @@ jobs:
       - run: npm ci && npm run lint && npm run build && npm test
         working-directory: web
       - run: sh scripts/validator-start.sh
-      - run: pytest tests/test_validation.py -m browser
-      - name: Verify container definitions
-        env:
-          DJANGO_SUPERUSER_USERNAME: ci-user
-          DJANGO_SUPERUSER_PASSWORD: ci-only-not-a-deployment-password
-        run: docker compose config --quiet && docker compose build
+      - name: All container browser scenarios, including studio workflows
+        run: pytest tests studio/tests -m 'browser and not native_browser and not runtime_browser and not live'
+  compose-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: gameforge-ci-acceptance
+      CONTAINER_PROVIDER: fake
+      CONTAINER_MODEL: fixture
+      DJANGO_SECRET_KEY: ci-only-compose-acceptance-not-a-deployment-secret
+      DJANGO_SUPERUSER_USERNAME: ci-user
+      DJANGO_SUPERUSER_PASSWORD: ci-only-not-a-deployment-password
+      POSTGRES_PASSWORD: 0123456789abcdef
+      GAMEFORGE_BUDGET_USD: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12', cache: pip, cache-dependency-path: requirements.lock}
+      - run: pip install -r requirements.lock && python -m pip check
+      - name: Build and start the disposable stack
+        run: |
+          docker compose --env-file /dev/null config --quiet
+          docker compose --env-file /dev/null up -d --build --wait --wait-timeout 180
+      - name: Create, edit, publish, remix and export over real HTTP
+        run: python scripts/verify_container.py --output .data/ci-container-verification.json
+      - name: Stack diagnostics
+        if: failure()
+        run: docker compose --env-file /dev/null logs --no-color --tail=150
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compose-acceptance
+          path: .data/ci-container-verification.json
+          if-no-files-found: ignore
+      - name: Remove only this job's stack and volumes
+        if: always()
+        run: docker compose --env-file /dev/null down --volumes --remove-orphans
