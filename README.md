@@ -219,6 +219,8 @@ docker compose exec app python manage.py load_demo_analytics
 
 ## Документация
 
+- [Проектирование полного кабинета аналитики: шесть направлений, сбор и этапы](docs/product-analytics-design.ru.md) — запланировано, ещё не реализовано.
+
 - [Сквозная приёмка, CI и нативный валидатор — 14.11](docs/acceptance-verification-2026-11-14.ru.md).
 - [Контракт аналитики игр и рекомендаций](docs/game-analytics-design.ru.md).
 - [Проверка чистой установки и исправления тестовых фикстур](docs/clean-install-verification-2026-11-13.ru.md).
