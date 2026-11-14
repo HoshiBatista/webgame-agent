@@ -266,11 +266,19 @@
     "No real model generation or physical phone/WebView"
   ],
   "source_sha256": {
-    ".github/workflows/ci.yml": "27bcabd7f53337a5fd78fb490e8a7a61d006a331eacb776258c4db30deac9052",
+    ".github/workflows/ci.yml": "e185c3d922fe72efa22acf94f6695d624c75590dce286600c059ef720e88782d",
     "scripts/native.py": "25db0a60f4da9f6cecffa4cf684292a13a0222c2255600e7823cc76ddc77db39",
     "scripts/verify_container.py": "10691dec533753381853e7165f8177566e891723aee26245344a1481f724313b",
     "scripts/verify_runtime_browser.py": "1a2a44d90c36d0a4625b465933b9479b0b66def5741c56fbdd186af7c0fff52e",
     "validation/native.py": "51f9fd3a280eea1fe2d855dc7ec55af3f00e8d2b4ad7625017f4f11c5ae143e6",
     "validation/runner.py": "ce23bb4521adc9e107655c2991b97728670232765457d0d85e051aa001846bb9"
+  },
+  "remote_ci": {
+    "run_id": 43572727043,
+    "head_commit": "7c446ad4f3a54050d01eca07e51065f665372157",
+    "url": "https://github.com/HoshiBatista/webgame-agent/actions/runs/43572727043",
+    "conclusion": "failure",
+    "steps_started": 0,
+    "blocking_reason": "The job was not started because your account is locked due to a billing issue."
   }
 }

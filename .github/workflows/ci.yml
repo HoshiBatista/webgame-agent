@@ -42,7 +42,7 @@ jobs:
             .venv/bin/pytest tests/test_validation.py -m browser -k fraction_input || exit 1
           done
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     services:
       postgres:
@@ -78,7 +78,7 @@ jobs:
       - name: All container browser scenarios, including studio workflows
         run: pytest tests studio/tests -m 'browser and not native_browser and not runtime_browser and not live'
   compose-acceptance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       COMPOSE_PROJECT_NAME: gameforge-ci-acceptance
