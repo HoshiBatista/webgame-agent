@@ -24,3 +24,6 @@ build/
 playwright-report/
 test-results/
 *.log
+
+# Windows download metadata (not portable repository files).
+*:Zone.Identifier

@@ -1,0 +1,4 @@
+{"total": {"lines":{"total":455,"covered":394,"skipped":0,"pct":86.59},"statements":{"total":507,"covered":412,"skipped":0,"pct":81.26},"functions":{"total":130,"covered":98,"skipped":0,"pct":75.38},"branches":{"total":372,"covered":259,"skipped":0,"pct":69.62},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}
+,"/home/hoshibatista/webgame-agent/web/src/App.tsx": {"lines":{"total":426,"covered":376,"skipped":0,"pct":88.26},"functions":{"total":108,"covered":87,"skipped":0,"pct":80.55},"statements":{"total":478,"covered":394,"skipped":0,"pct":82.42},"branches":{"total":356,"covered":249,"skipped":0,"pct":69.94}}
+,"/home/hoshibatista/webgame-agent/web/src/api.ts": {"lines":{"total":29,"covered":18,"skipped":0,"pct":62.06},"functions":{"total":22,"covered":11,"skipped":0,"pct":50},"statements":{"total":29,"covered":18,"skipped":0,"pct":62.06},"branches":{"total":16,"covered":10,"skipped":0,"pct":62.5}}
+}
