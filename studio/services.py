@@ -12,6 +12,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from gameforge import telemetry
 from generation.audiences import AUDIENCES
 
 from .continuations import delivery_state, unacknowledged_unknowns
@@ -73,10 +74,15 @@ def preference_for(user):
     return Preference.objects.get_or_create(user=user)[0]
 
 
-def budget_snapshot():
-    budget, _ = Budget.objects.get_or_create(
-        pk=1, defaults={"limit_usd": Decimal(settings.GAMEFORGE_BUDGET_USD)}
-    )
+def budget_snapshot(*, create=True):
+    if create:
+        budget, _ = Budget.objects.get_or_create(
+            pk=1, defaults={"limit_usd": Decimal(settings.GAMEFORGE_BUDGET_USD)}
+        )
+    else:
+        budget = Budget.objects.only("limit_usd").filter(pk=1).first()
+        if budget is None:
+            budget = Budget(limit_usd=Decimal(settings.GAMEFORGE_BUDGET_USD))
     spent = Invocation.objects.filter(cost_usd__isnull=False).aggregate(n=Sum("cost_usd"))["n"] or Decimal(0)
     reserved = Invocation.objects.filter(state__in=["reserved", "sent"], cost_usd__isnull=True).aggregate(
         n=Sum("reservation_usd")
@@ -259,6 +265,16 @@ def settle_invocation(
             inv.cost_usd = Decimal(0)
     inv.finished_at = timezone.now()
     inv.save()
+    def record_receipt():
+        attrs = {**telemetry.dimensions(run), 'operation': (inv.request or {}).get('operation'), 'status': inv.state}
+        telemetry.counter('invocations_resolved', attributes=attrs)
+        telemetry.event('invocation.resolved', {**attrs, 'gameforge.run.id': run.id})
+        if inv.state != 'unknown' and isinstance(inv.usage, dict):
+            for key, kind in [('input_tokens', 'input'), ('output_tokens', 'output'), ('cached_input_tokens', 'cached_input')]:
+                value = inv.usage.get(key)
+                if type(value) is int and value >= 0:
+                    telemetry.counter('tokens', value, {**attrs, 'kind': kind})
+    transaction.on_commit(record_receipt, robust=True)
     if was_unknown and inv.state != "unknown" and run.status == "unknown":
         # A late receipt resolves the ambiguity but never selects game bytes automatically.
         run.status = "needs_attention"
@@ -532,6 +548,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
                 # Pin the player now; only the later music request receives it.
                 helper_catalog[media_path] = catalog()[media_path]
     run = Run.objects.create(
+        trace_context=telemetry.capture(),
         helper_catalog=helper_catalog,
         chat=chat,
         operation=operation,
@@ -576,6 +593,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         event(run, "explicit_retry", "Новый запрос подтверждён пользователем; прежний неизвестный расход сохранён.",
               {"previous_run_id": str(consent_run.id),
                "unknown_invocation_ids": sorted(str(call.id) for call in unknown_calls)})
+    transaction.on_commit(lambda: telemetry.counter('runs_created', attributes=telemetry.dimensions(run)), robust=True)
     schedule(run)
     return run
 
@@ -593,6 +611,7 @@ def cancel_run(run):
         Message.objects.create(chat=run.chat, run=run, role="assistant",
                                content=assistant_reply("cancelled", run.message))
         event(run, "cancelled", run.message)
+        transaction.on_commit(lambda: telemetry.counter('cancellations', attributes=telemetry.dimensions(run)), robust=True)
     return run
 
 
@@ -607,6 +626,7 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
         status != "failed" and run.invocations.filter(state="returned", revision__isnull=True).exists()
     ):
         raise DomainError("invocation_pending", "Сначала нужно обработать сохранённый вызов.", 409)
+    first_finish = run.finished_at is None
     run.status = status
     run.stage = status
     run.message = message
@@ -655,4 +675,16 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     )
     Message.objects.create(chat=run.chat, run=run, role="assistant", content=reply)
     event(run, status, message, {"error": error} if error else {})
+    if first_finish:
+        def record_finish():
+            attrs = {**telemetry.dimensions(run), 'status': status}
+            telemetry.counter('runs_finished', attributes=attrs)
+            telemetry.histogram('run_seconds', run.metrics['total_seconds'], attrs)
+            telemetry.histogram('model_wait_seconds', model_seconds, attrs)
+            telemetry.histogram('check_seconds', check_seconds, attrs)
+            for name in ['queue_seconds', 'packaging_seconds']:
+                if name in run.metrics:
+                    telemetry.histogram('run_queue_seconds' if name == 'queue_seconds' else name, run.metrics[name], attrs)
+            telemetry.event('run.finished', {**attrs, 'gameforge.run.id': run.id})
+        transaction.on_commit(record_finish, robust=True)
     return True

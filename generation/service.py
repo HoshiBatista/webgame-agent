@@ -3,6 +3,8 @@
 import time
 import uuid
 
+from gameforge import telemetry
+
 from .errors import GenerationError
 from .normalization import VERSION as NORMALIZATION_VERSION
 from .normalization import normalize_response
@@ -13,6 +15,7 @@ PROVIDERS = {"codex": codex, "codex_api": codex_api, "vllm": vllm, "relay": rela
 DURABLE_PROVIDERS = frozenset({"relay", "codex_api"})
 
 
+@telemetry.observed('provider_transport', lambda request, **_: telemetry.dimensions(request))
 def generate(request, *, on_event, is_cancelled):
     if request.get("operation") in {"visual_review", "visual_patch"}:
         from .feedback_image import image_input

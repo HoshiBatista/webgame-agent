@@ -3,7 +3,7 @@ from .settings import *  # noqa: F403
 
 ROOT_URLCONF = "gameforge.preview_urls"
 # Preview never initializes sessions or authentication, nor sets their cookies.
-MIDDLEWARE = ["django.middleware.security.SecurityMiddleware"]
+MIDDLEWARE = ["gameforge.telemetry_middleware.TelemetryMiddleware", "django.middleware.security.SecurityMiddleware"]
 
 INSTALLED_APPS = [
     app

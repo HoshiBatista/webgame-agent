@@ -2,6 +2,8 @@
 
 from django.conf import settings
 
+from gameforge import telemetry
+
 from .model_profiles import can_use_pro, configured_profiles
 from .models import FeedbackProcessing
 from .services import DomainError
@@ -56,7 +58,7 @@ def enqueue(feedback, preference, request):
         not settings.GAMEFORGE_PRO_ENABLED or not can_use_pro(request)
     )
     FeedbackProcessing.objects.create(
-        feedback=feedback, user=feedback.user, model_profile=profile_id, provider=provider, model=model,
+        trace_context=telemetry.capture(), feedback=feedback, user=feedback.user, model_profile=profile_id, provider=provider, model=model,
         status="failed" if denied else "queued",
         error={"code": "model_unavailable"} if denied else {},
     )

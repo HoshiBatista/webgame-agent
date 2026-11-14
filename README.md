@@ -228,3 +228,20 @@ docker compose exec app python manage.py load_demo_analytics
 - [API](docs/api.md) и [устройство генератора](generation/README.md).
 - [Подключение реле](docs/relay-deployment.md) и [диагностика LLM](docs/llm-diagnostics.md).
 - [Проверка игровых версий](docs/validation-v4-implementation.ru.md).
+
+## Метрики, трейсы и технические события
+
+Опциональный контур Prometheus/Grafana + Tempo/Loki/Collector/Alertmanager содержит
+готовые панели, правила оповещений и отдельный сборщик ledger/PG/Redis. Промпты,
+игровой код, ответы модели и секреты в телеметрию не поступают.
+
+```sh
+python scripts/prepare_observability.py
+docker compose -f compose.yaml -f deploy/observability.compose.yaml up -d --build --wait --wait-timeout 180
+.venv/bin/python scripts/verify_observability.py --ready-only --timeout 180
+```
+
+Grafana: http://127.0.0.1:3000, пользователь `admin`, пароль — в приватном файле
+`.data/observability-secrets/grafana_admin_password`. [Запуск, метрики, ограничения,
+проверки и диагностика](docs/observability.ru.md). Контур требует дополнительных ресурсов;
+облако автоматически не обновляется.

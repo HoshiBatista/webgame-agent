@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from gameforge import telemetry
 from generation.requirements import coverage
 from generation.source_map import locate_findings
 from validation.checks import VERSION, review_checks
@@ -55,7 +56,8 @@ def create_validation(revision, data, *, run=None, enqueue=True):
         job = active
     else:
         job = ValidationTask.objects.create(revision=revision, run=run, run_fence=run.fence if run else None,
-                                            origin='automatic' if run else 'manual', snapshot=frozen)
+                                            origin='automatic' if run else 'manual', snapshot=frozen,
+                                            trace_context=telemetry.capture())
     ValidationRequest.objects.create(revision=revision, key=key, task=job)
     if enqueue and not active:
         transaction.on_commit(lambda: dispatch_validation(job.id), robust=True)
@@ -95,6 +97,9 @@ def cancel_validation(job):
     return job
 
 
+@telemetry.observed('validation_job',
+    lambda job, **_: {'source': job.origin, 'gameforge.validation.id': job.id},
+    parent=lambda job, **_: job.trace_context)
 def execute_validation(job, *, validate=None, outer_cancel=None, capture_visual=False):
     from validation.service import validate as browser_validate
 

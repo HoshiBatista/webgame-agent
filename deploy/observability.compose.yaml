@@ -1,0 +1,164 @@
+# Opt-in overlay: docker compose -f compose.yaml -f deploy/observability.compose.yaml ...
+x-telemetry: &telemetry
+  GAMEFORGE_OBSERVABILITY_ENABLED: '1'
+  GAMEFORGE_OTLP_ENDPOINT: http://otel-collector:4318
+  GAMEFORGE_ENVIRONMENT: ${GAMEFORGE_ENVIRONMENT:-local}
+  GAMEFORGE_RELEASE: ${GAMEFORGE_RELEASE:-dev}
+  GAMEFORGE_TRACE_SAMPLE_RATIO: ${GAMEFORGE_TRACE_SAMPLE_RATIO:-1}
+x-hardened: &hardened
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: '3'}
+services:
+  app:
+    environment:
+      <<: *telemetry
+      GAMEFORGE_SERVICE_ROLE: app
+  preview:
+    environment:
+      <<: *telemetry
+      GAMEFORGE_SERVICE_ROLE: preview
+  worker:
+    environment:
+      <<: *telemetry
+      GAMEFORGE_SERVICE_ROLE: worker
+  beat:
+    environment:
+      <<: *telemetry
+      GAMEFORGE_SERVICE_ROLE: beat
+  observability-init:
+    <<: *hardened
+    image: ${APP_IMAGE:-gameforge-mini:current}
+    restart: 'no'
+    command: [python, manage.py, observability_role]
+    environment:
+      PYTHON_DOTENV_DISABLED: '1'
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY}
+      DATABASE_URL: postgresql://gameforge:${POSTGRES_PASSWORD:-local-mini-development}@db:5432/gameforge
+    volumes: [telemetry-secrets:/run/secrets:ro]
+    networks: [backend]
+    depends_on:
+      init: {condition: service_completed_successfully}
+      telemetry-storage-init: {condition: service_completed_successfully}
+  observe-state:
+    <<: *hardened
+    image: ${APP_IMAGE:-gameforge-mini:current}
+    command: [python, manage.py, observe_state]
+    environment:
+      <<: *telemetry
+      GAMEFORGE_SERVICE_ROLE: observer
+      PYTHON_DOTENV_DISABLED: '1'
+      DJANGO_SETTINGS_MODULE: gameforge.observer_settings
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY}
+      DATABASE_URL: postgresql://gameforge_metrics@db:5432/gameforge
+      REDIS_URL: redis://redis:6379/0
+      VALIDATOR_SOCKET: /run/validator/service.sock
+      GAMEFORGE_BUDGET_USD: ${GAMEFORGE_BUDGET_USD:-50}
+    volumes: [validator-ipc:/run/validator:ro, telemetry-secrets:/run/secrets:ro]
+    networks: [backend]
+    mem_limit: 256m
+    cpus: 0.5
+    depends_on:
+      observability-init: {condition: service_completed_successfully}
+      otel-collector: {condition: service_started}
+      redis: {condition: service_healthy}
+      validator: {condition: service_started}
+  telemetry-storage-init:
+    <<: *hardened
+    image: busybox:1.37.0@sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec
+    restart: 'no'
+    user: '0:0'
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
+    network_mode: none
+    command: [sh, -ec, 'chown 10001:10001 /var/tempo /var/loki; umask 077; cp /run/secrets/metrics_db_password /private/metrics_db_password; cp /run/secrets/grafana_admin_password /private/grafana_admin_password; chmod 0400 /private/*; chown 10001:10001 /private/metrics_db_password; chown 472:0 /private/grafana_admin_password; chmod 0711 /private']
+    secrets: [metrics_db_password, grafana_admin_password]
+    volumes: [tempo-data:/var/tempo, loki-data:/var/loki, telemetry-secrets:/private]
+  otel-collector:
+    <<: *hardened
+    image: otel/opentelemetry-collector-contrib:0.165.0@sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea
+    command: ['--config=/etc/otelcol/config.yaml']
+    volumes: ['./deploy/observability/collector.yaml:/etc/otelcol/config.yaml:ro']
+    networks: [backend, telemetry]
+    mem_limit: 320m
+    cpus: 1
+    depends_on: [tempo, loki]
+  prometheus:
+    <<: *hardened
+    image: prom/prometheus:v3.16.0@sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06
+    command: ['--config.file=/etc/prometheus/prometheus.yaml', '--storage.tsdb.path=/prometheus', '--storage.tsdb.retention.time=14d', '--storage.tsdb.retention.size=5GB', '--enable-feature=exemplar-storage']
+    volumes: ['./deploy/observability/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro', './deploy/observability/rules.yaml:/etc/prometheus/rules.yaml:ro', 'prometheus-data:/prometheus']
+    networks: [telemetry]
+    mem_limit: 768m
+    cpus: 1
+  tempo:
+    <<: *hardened
+    image: grafana/tempo:2.10.10@sha256:12b0820f13ffa10ce956b6e9acc3b03f3cffded99109be6cc09d106fe56e5d38
+    user: '10001:10001'
+    command: ['-config.file=/etc/tempo/config.yaml']
+    volumes: ['./deploy/observability/tempo.yaml:/etc/tempo/config.yaml:ro', 'tempo-data:/var/tempo']
+    networks: [telemetry]
+    mem_limit: 512m
+    cpus: 1
+    depends_on:
+      telemetry-storage-init: {condition: service_completed_successfully}
+  loki:
+    <<: *hardened
+    image: grafana/loki:3.7.10@sha256:b43c257ccfc925d4a50b8717cac61a3b51df8c48d01847936057e5c4075a24a7
+    user: '10001:10001'
+    command: ['-config.file=/etc/loki/config.yaml']
+    volumes: ['./deploy/observability/loki.yaml:/etc/loki/config.yaml:ro', 'loki-data:/var/loki']
+    networks: [telemetry]
+    mem_limit: 512m
+    cpus: 1
+    depends_on:
+      telemetry-storage-init: {condition: service_completed_successfully}
+  alertmanager:
+    <<: *hardened
+    image: prom/alertmanager:v0.35.0@sha256:e638797febd034838eca8b98cdbd46f951e9bf7f178777aa8669167406a9946c
+    command: ['--config.file=/etc/alertmanager/config.yaml', '--storage.path=/alertmanager', '--cluster.listen-address=']
+    volumes: ['./deploy/observability/alertmanager.yaml:/etc/alertmanager/config.yaml:ro', 'alertmanager-data:/alertmanager']
+    networks: [telemetry]
+    mem_limit: 128m
+    cpus: 0.25
+  grafana:
+    <<: *hardened
+    image: grafana/grafana:13.3.1@sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf
+    ports: ['127.0.0.1:${GRAFANA_PORT:-3000}:3000']
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_ANALYTICS_REPORTING_ENABLED: 'false'
+      GF_ANALYTICS_CHECK_FOR_UPDATES: 'false'
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: 'false'
+      GF_NEWS_NEWS_FEED_ENABLED: 'false'
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GF_SECURITY_DISABLE_GRAVATAR: 'true'
+      GF_LOG_LEVEL: warn
+      GF_PLUGINS_PREINSTALL_DISABLED: 'true'
+    volumes: [telemetry-secrets:/run/secrets:ro, 'grafana-data:/var/lib/grafana', './deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro', './deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro']
+    networks: [telemetry, ingress]
+    mem_limit: 512m
+    cpus: 1
+    depends_on: [prometheus, tempo, loki, alertmanager]
+networks:
+  telemetry: {internal: true}
+volumes:
+  prometheus-data: {}
+  grafana-data: {}
+  tempo-data: {}
+  loki-data: {}
+  alertmanager-data: {}
+  telemetry-secrets: {}
+secrets:
+  grafana_admin_password:
+    file: ./.data/observability-secrets/grafana_admin_password
+  metrics_db_password:
+    file: ./.data/observability-secrets/metrics_db_password

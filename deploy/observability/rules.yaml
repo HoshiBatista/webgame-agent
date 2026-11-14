@@ -1,0 +1,111 @@
+groups:
+  - name: gameforge-recording
+    interval: 15s
+    rules:
+      - record: gameforge:http_requests:rate5m
+        expr: sum(rate(gameforge_http_requests_total[5m]))
+      - record: gameforge:http_errors:ratio5m
+        expr: sum(rate(gameforge_http_requests_total{http_status=~"5.."}[5m])) / clamp_min(gameforge:http_requests:rate5m, 0.001)
+  - name: gameforge-alerts
+    rules:
+      - alert: TelemetryCollectorDown
+        expr: up{job="gameforge-otel"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: Collector is not scrapeable
+          description: Check Collector health, memory and configuration. Other telemetry may be missing.
+          runbook_url: 'https://github.com/HoshiBatista/webgame-agent/blob/feature/game-analytics/docs/observability.ru.md#диагностика'
+      - alert: TelemetryStorageDown
+        expr: up{job=~"tempo|loki|alertmanager"} == 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: A telemetry storage target is unavailable}
+      - alert: StateObserverStale
+        expr: (time() - max(gameforge_state_snapshot_timestamp_seconds) > 90) or absent(gameforge_state_snapshot_timestamp_seconds)
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: Durable state collection has stopped
+          description: Check observe-state, monitoring role grants and PostgreSQL. Budget values may be stale.
+      - alert: DependencyUnavailable
+        expr: gameforge_dependency_up == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: 'GameForge dependency {{ $labels.dependency }} is unavailable'}
+      - alert: WorkerMissing
+        expr: (time() - max(gameforge_worker_heartbeat_timestamp_seconds) > 90) or absent(gameforge_worker_heartbeat_timestamp_seconds)
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: No live Celery worker heartbeat}
+      - alert: BeatMissing
+        expr: (time() - max(gameforge_beat_publish_timestamp_seconds) > 60) or absent(gameforge_beat_publish_timestamp_seconds)
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: Celery beat is not publishing outbox ticks}
+      - alert: RunQueueStalled
+        expr: max(gameforge_run_oldest_queued_seconds) > 180
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: A game run has waited more than three minutes
+          description: Check worker, provider capacity, budget and durable outbox. A full provider can legitimately queue work.
+      - alert: ExpiredLeases
+        expr: sum(gameforge_expired_leases) > 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: Worker leases remain expired after recovery ticks}
+      - alert: UnknownModelSpend
+        expr: max(gameforge_budget_unknown_usd) > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: A model call has unresolved financial liability
+          description: Retrieve existing receipts. Do not issue a new generation or clear accounting to silence this alert.
+      - alert: BudgetLow
+        expr: (max(gameforge_budget_available_usd) / clamp_min(max(gameforge_budget_limit_usd), 0.01) < 0.1) and (max(gameforge_budget_limit_usd) > 0)
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: Less than ten percent of the configured budget is available}
+      - alert: HttpServerErrors
+        expr: (gameforge:http_errors:ratio5m > 0.05) and (sum(increase(gameforge_http_requests_total[5m])) > 20)
+        for: 5m
+        labels: {severity: critical}
+        annotations: {summary: More than five percent of HTTP responses are 5xx}
+      - alert: HttpSlow
+        expr: histogram_quantile(0.95, sum by(le)(rate(gameforge_http_response_ready_seconds_bucket[5m]))) > 2
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: HTTP response-ready p95 exceeds two seconds}
+      - alert: PostgresConnectionsHigh
+        expr: sum(gameforge_postgres_connections) / clamp_min(max(gameforge_postgres_max_connections), 1) > 0.8
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: PostgreSQL is using more than eighty percent of connection slots}
+      - alert: RedisMemoryHigh
+        expr: (max(gameforge_redis_memory_used_bytes) / clamp_min(max(gameforge_redis_memory_max_bytes),1) > 0.85) and (max(gameforge_redis_memory_max_bytes) > 0)
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: Redis is close to its configured memory limit}
+      - alert: RedisEvictions
+        expr: deriv(gameforge_redis_evicted_keys[5m]) > 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: Redis is evicting keys; broker messages may be at risk}
+      - alert: CollectorRefusingTelemetry
+        expr: sum(rate(otelcol_processor_memory_limiter_refused_spans_total[5m])) > 0 or sum(rate(otelcol_processor_memory_limiter_refused_metric_points_total[5m])) > 0 or sum(rate(otelcol_processor_memory_limiter_refused_log_records_total[5m])) > 0
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: Collector memory limiter is dropping telemetry}
+      - alert: CollectorExportFailures
+        expr: sum(rate(otelcol_exporter_send_failed_spans_total[5m])) > 0 or sum(rate(otelcol_exporter_send_failed_log_records_total[5m])) > 0
+        for: 3m
+        labels: {severity: warning}
+        annotations: {summary: Collector cannot export traces or events}
+      - alert: PrometheusStorageNearLimit
+        expr: prometheus_tsdb_storage_blocks_bytes > 4500000000
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: Prometheus blocks approach the five GB retention cap
+          description: Retention may shorten. This metric does not measure free host disk space; check the host separately.

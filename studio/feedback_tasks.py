@@ -14,6 +14,7 @@ from django.db import close_old_connections, transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from gameforge import telemetry
 from generation.errors import GenerationError, GenerationPending
 from generation.preference_extraction import additions
 from generation.service import DURABLE_PROVIDERS, PROVIDERS, estimate_reservation, generate
@@ -287,7 +288,8 @@ def process_feedback(ident):
     if not mark_sent(job):
         return
     try:
-        with lease(job):
+        with lease(job), telemetry.span('gameforge.feedback',
+                {**telemetry.dimensions(job), 'gameforge.feedback.id': job.id}, job.trace_context):
             result = generate(job.request, on_event=lambda *_args, **_kwargs: None,
                               is_cancelled=lambda: not FeedbackProcessing.objects.filter(
                                   pk=job.pk, fence=job.fence, status="processing").exists())

@@ -87,6 +87,7 @@ class AnalyticsDataset(models.Model):
 
 class Run(models.Model):
     ACTIVE = ("queued", "generating", "checking")
+    trace_context = models.JSONField(default=dict, editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="runs")
     operation = models.CharField(max_length=16)
@@ -226,6 +227,7 @@ class ValidationTask(models.Model):
     """A read-only check of an exact revision, independent of model work."""
 
     ACTIVE = ('queued', 'checking')
+    trace_context = models.JSONField(default=dict, editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.ForeignKey(Revision, on_delete=models.CASCADE, related_name='validations')
     run = models.ForeignKey(Run, null=True, on_delete=models.SET_NULL, related_name='validations')
@@ -344,6 +346,7 @@ class Feedback(models.Model):
 class FeedbackProcessing(models.Model):
     """Durable one-call background job and accounting receipt, independent of game Runs."""
 
+    trace_context = models.JSONField(default=dict, editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     feedback = models.OneToOneField(Feedback, null=True, on_delete=models.SET_NULL, related_name="processing")
     user = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)

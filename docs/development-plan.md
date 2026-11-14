@@ -1,5 +1,15 @@
 # План новой конкурсной версии GameForge
 
+**14.11, наблюдаемость.** Добавлен выключенный по умолчанию Compose overlay:
+Prometheus/Grafana, Tempo/Loki, Collector и Alertmanager. Четыре панели (50 запросов),
+18 alerts; ручные HTTP/Celery/provider/validator spans, долговечный traceparent вне
+модельного контракта, отдельный read-only сборщик ledger/PG/Redis. Приватность OTLP и
+ограничения DB-роли проверены. 1373 backend-теста, 5 runtime-тестов в Chromium/WebKit,
+реальная HTTP-приёмка и связь metrics/trace/event прошли локально; при паузе Collector
+генерация продолжила работать. CI расширен; Docker Engine в WSL и удалённый запуск
+Actions (billing lock) остаются отдельными ограничениями. Облако не обновлялось.
+[Конфигурация](observability.ru.md), [отчёт](evidence/observability-2026-11-14.json).
+
 **14.11, сквозная приёмка и изолированный браузер.** Скрипт HTTP-приёмки обновлён
 под точный UUID/hash источника; добавлены отказы для отсутствующего/устаревшего
 источника и проверка экспорта после правки. CI запускает браузерные сценарии

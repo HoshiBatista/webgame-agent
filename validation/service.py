@@ -9,6 +9,8 @@ import subprocess
 import time
 import uuid
 
+from gameforge import telemetry
+
 from .contracts import browser_watchdog_seconds, implementation_hash, suite_findings
 
 ENVIRONMENT = "mini-browser-v1"
@@ -171,6 +173,15 @@ def _validated_report(report, checks, artifact_hash, started, *, contract=None, 
     return report
 
 
+def _telemetry_outcome(result):
+    status = result.get('status', 'error')
+    for finding in result.get('findings', []):
+        if isinstance(finding, dict):
+            telemetry.counter('validation_findings', attributes={'status': status, 'code': finding.get('code')})
+    return status
+
+
+@telemetry.observed('validator', outcome=_telemetry_outcome)
 def validate(html: str, checks: list[dict], *, artifact_hash: str, contract=None, test_profile=None, operator_criteria=(), capture_visual=False,
              job_id=None, cancelled=None, progress=None) -> dict:
     from .protocol import ValidationCancelled

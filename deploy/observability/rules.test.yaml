@@ -1,0 +1,50 @@
+rule_files: [rules.yaml]
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'gameforge_budget_unknown_usd'
+        values: '0 2 2 2 2 2 2 0'
+      - series: 'gameforge_budget_limit_usd'
+        values: '0+0x8'
+      - series: 'gameforge_budget_available_usd'
+        values: '0+0x8'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: UnknownModelSpend
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: A model call has unresolved financial liability
+              description: Retrieve existing receipts. Do not issue a new generation or clear accounting to silence this alert.
+      - eval_time: 8m
+        alertname: UnknownModelSpend
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: BudgetLow
+        exp_alerts: []
+  - interval: 1m
+    input_series:
+      - series: 'gameforge_budget_limit_usd'
+        values: '100+0x7'
+      - series: 'gameforge_budget_available_usd'
+        values: '5+0x7'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: BudgetLow
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations: {summary: Less than ten percent of the configured budget is available}
+  - interval: 1m
+    input_series:
+      - series: 'up{job="gameforge-otel"}'
+        values: '0+0x4'
+    alert_rule_test:
+      - eval_time: 2m
+        alertname: TelemetryCollectorDown
+        exp_alerts:
+          - exp_labels: {severity: critical, job: gameforge-otel}
+            exp_annotations:
+              summary: Collector is not scrapeable
+              description: Check Collector health, memory and configuration. Other telemetry may be missing.
+              runbook_url: 'https://github.com/HoshiBatista/webgame-agent/blob/feature/game-analytics/docs/observability.ru.md#диагностика'

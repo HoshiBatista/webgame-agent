@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "studio",
 ]
 MIDDLEWARE = [
+    "gameforge.telemetry_middleware.TelemetryMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

@@ -33,6 +33,11 @@ def main():
                     target = source / path.relative_to(ROOT)
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(path, target)
+        # The controller imports this inert, public helper; no Django settings are copied.
+        public_app = source / "gameforge"
+        public_app.mkdir()
+        (public_app / "__init__.py").touch()
+        shutil.copyfile(ROOT / "gameforge" / "telemetry.py", public_app / "telemetry.py")
         tests = source / "tests"
         tests.mkdir()
         (tests / "__init__.py").touch()

@@ -1,0 +1,271 @@
+{
+  "date": "2026-11-14",
+  "branch": "feature/game-analytics",
+  "model_provider": "fake",
+  "paid_model_calls": 0,
+  "backend": {
+    "passed": 1373,
+    "deselected_browser_or_live": 164
+  },
+  "public_runtime": {
+    "passed": 5,
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "os_sandbox": true
+  },
+  "checks": {
+    "ruff": true,
+    "mypy_generation_validation": true,
+    "django_system_check": true,
+    "migration_check": true,
+    "uv_pip_check": true,
+    "lock_existing_versions_preserved": true,
+    "compose_local_config": true,
+    "compose_cloud_overlay_config": true,
+    "collector_validate": true,
+    "loki_verify_config": true,
+    "prometheus_rule_check": true,
+    "prometheus_rule_examples": true,
+    "grafana_panel_queries_valid": 50,
+    "grafana_log_trace_link_expansion": true
+  },
+  "acceptance": {
+    "profile": "http-fake-real-worker-and-validator",
+    "create_seconds": 3.261,
+    "edit_seconds": 2.913,
+    "create_metrics": {
+      "model_calls": 1,
+      "check_seconds": 2.758,
+      "model_seconds": 0.005259993000436225,
+      "queue_seconds": 0.07855,
+      "total_seconds": 2.96457,
+      "packaging_seconds": 0.005465181999170454
+    },
+    "edit_metrics": {
+      "model_calls": 1,
+      "check_seconds": 2.699,
+      "model_seconds": 0.003911278000487073,
+      "queue_seconds": 0.016946,
+      "total_seconds": 2.817226,
+      "packaging_seconds": 0.0030922799996915273
+    },
+    "create_run": "46ababbd-5741-4614-9395-895f96938e55",
+    "edit_run": "14201342-6f17-49d6-a958-e7d9baf25b6b",
+    "publication": "dd00b08c-890b-4df9-a919-61a2c2eff779",
+    "remix": "ffe09a83-6da9-4e80-8f45-b17433a2d180",
+    "revision_hash_before": "5b678acb70a0162b111d3abe489d57d1460e1eb74fc84cf876dc177afaac854b",
+    "revision_hash_after": "f7669ed1421c4a0b634316d75d72d5b2a82f5ecc3341650daaa6b3a90877683d",
+    "budget": {
+      "limit_usd": 0.0,
+      "spent_usd": 0.0,
+      "reserved_usd": 0.0,
+      "unknown_usd": 0.0,
+      "available_usd": 0.0
+    },
+    "checks": [
+      "csrf-login",
+      "session-auth",
+      "create-automatic-browser-acceptance",
+      "exact-export-preview-bytes",
+      "separate-preview-host",
+      "preview-no-session-cookie",
+      "preview-csp-sandbox",
+      "preview-no-api",
+      "source-required",
+      "stale-source-rejected",
+      "edited-export-hash",
+      "local-edit-unchanged-mechanics",
+      "immutable-publication",
+      "published-remix-not-private-draft",
+      "empty-remix-prompts",
+      "idempotent-like",
+      "explicit-publish-update",
+      "persisted-sse-reconnect",
+      "delete-chat-keeps-publication",
+      "guest-private-access-denied"
+    ]
+  },
+  "observability": {
+    "status": "passed",
+    "dashboards": 4,
+    "metrics": {
+      "http": 80.0,
+      "game_sends": 2.0,
+      "durable_accepted": 12.0,
+      "observer": 1.0,
+      "worker": 1.0,
+      "beat": 1.0
+    },
+    "dependencies": 5,
+    "complete_run_trace": true,
+    "linked_run_event": true,
+    "provider_calls_made_by_verifier": 0
+  },
+  "collector_outage": {
+    "fault": "temporary-collector-paused",
+    "http_acceptance": "passed",
+    "paid_model_calls": 0,
+    "elapsed_seconds": 7.409
+  },
+  "image_manifests": [
+    {
+      "image": "library/busybox:1.37.0",
+      "digest": "sha256:a7dbc319b1438115a207e11930dc4bb3e643dcb3ec0bdd694bb36cd8fad289ec",
+      "architectures": [
+        "386",
+        "amd64",
+        "arm",
+        "arm64",
+        "ppc64le",
+        "riscv64",
+        "s390x",
+        "unknown"
+      ],
+      "linux_amd64_user": ""
+    },
+    {
+      "image": "prom/prometheus:v3.16.0",
+      "digest": "sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06",
+      "architectures": [
+        "amd64",
+        "arm",
+        "arm64",
+        "ppc64le",
+        "riscv64",
+        "s390x",
+        "unknown"
+      ],
+      "linux_amd64_user": "nobody"
+    },
+    {
+      "image": "prom/alertmanager:v0.35.0",
+      "digest": "sha256:e638797febd034838eca8b98cdbd46f951e9bf7f178777aa8669167406a9946c",
+      "architectures": [
+        "amd64",
+        "arm",
+        "arm64",
+        "ppc64le",
+        "s390x",
+        "unknown"
+      ],
+      "linux_amd64_user": "nobody"
+    },
+    {
+      "image": "grafana/grafana:13.3.1",
+      "digest": "sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf",
+      "architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "linux_amd64_user": "472"
+    },
+    {
+      "image": "grafana/tempo:2.10.10",
+      "digest": "sha256:12b0820f13ffa10ce956b6e9acc3b03f3cffded99109be6cc09d106fe56e5d38",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "linux_amd64_user": "10001:10001"
+    },
+    {
+      "image": "grafana/loki:3.7.10",
+      "digest": "sha256:b43c257ccfc925d4a50b8717cac61a3b51df8c48d01847936057e5c4075a24a7",
+      "architectures": [
+        "amd64",
+        "arm",
+        "arm64"
+      ],
+      "linux_amd64_user": "10001"
+    },
+    {
+      "image": "otel/opentelemetry-collector-contrib:0.165.0",
+      "digest": "sha256:e40d61f10c9a617cca1ffd1be4d7e2b3a4b0f0001798ff07e58cabe82e618cea",
+      "architectures": [
+        "386",
+        "amd64",
+        "arm",
+        "arm64",
+        "ppc64le",
+        "riscv64",
+        "s390x"
+      ],
+      "linux_amd64_user": "10001:10001"
+    }
+  ],
+  "privacy": {
+    "otlp_secret_canary": true,
+    "metric_identifiers_bounded": true,
+    "monitor_role_private_columns_denied": true,
+    "monitor_role_writes_denied": true,
+    "monitor_role_widened_membership_rejected": true
+  },
+  "limitations": [
+    "Docker Engine unavailable in current WSL integration; services exercised using checksum-verified official Linux binaries and native application processes, not Docker containers.",
+    "Existing GitHub Actions account billing lock; remote execution is not established by local checks.",
+    "No production deployment, paid provider or physical-device test. Local database includes earlier disposable acceptance runs."
+  ],
+  "gunicorn": {
+    "http_acceptance": "passed",
+    "observed_app_worker_processes": 2
+  },
+  "gunicorn_acceptance": {
+    "profile": "http-fake-real-worker-and-validator",
+    "create_seconds": 3.222,
+    "edit_seconds": 3.136,
+    "create_metrics": {
+      "model_calls": 1,
+      "check_seconds": 2.751,
+      "model_seconds": 0.004951547000018763,
+      "queue_seconds": 0.080985,
+      "total_seconds": 5.901252,
+      "packaging_seconds": 0.005190372000470234
+    },
+    "edit_metrics": {
+      "model_calls": 1,
+      "check_seconds": 2.751,
+      "model_seconds": 0.004750387999592931,
+      "queue_seconds": 0.02078,
+      "total_seconds": 2.891001,
+      "packaging_seconds": 0.002973286999804259
+    },
+    "create_run": "7703f654-e1f4-43a3-9f60-6dd2910e7ab0",
+    "edit_run": "40a3431a-ef30-4cb0-96f1-302a7cb1991f",
+    "publication": "2d9aef20-ca86-4b84-8b1e-58f087786d3a",
+    "remix": "a6531944-2746-4f9a-9b13-44149572f25e",
+    "revision_hash_before": "5b678acb70a0162b111d3abe489d57d1460e1eb74fc84cf876dc177afaac854b",
+    "revision_hash_after": "f7669ed1421c4a0b634316d75d72d5b2a82f5ecc3341650daaa6b3a90877683d",
+    "budget": {
+      "limit_usd": 0.0,
+      "spent_usd": 0.0,
+      "reserved_usd": 0.0,
+      "unknown_usd": 0.0,
+      "available_usd": 0.0
+    },
+    "checks": [
+      "csrf-login",
+      "session-auth",
+      "create-automatic-browser-acceptance",
+      "exact-export-preview-bytes",
+      "separate-preview-host",
+      "preview-no-session-cookie",
+      "preview-csp-sandbox",
+      "preview-no-api",
+      "source-required",
+      "stale-source-rejected",
+      "edited-export-hash",
+      "local-edit-unchanged-mechanics",
+      "immutable-publication",
+      "published-remix-not-private-draft",
+      "empty-remix-prompts",
+      "idempotent-like",
+      "explicit-publish-update",
+      "persisted-sse-reconnect",
+      "delete-chat-keeps-publication",
+      "guest-private-access-denied"
+    ]
+  }
+}

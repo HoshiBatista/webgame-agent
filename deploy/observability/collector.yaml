@@ -1,0 +1,90 @@
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+        max_request_body_size: 4194304
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: otel-collector
+          scrape_interval: 15s
+          static_configs:
+            - targets: ['127.0.0.1:8888']
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 240
+    spike_limit_mib: 48
+  # Only resources created by our manual instrumentation. No env baggage or user metadata.
+  resource/privacy:
+    attributes:
+      - key: host.name
+        action: delete
+  transform/privacy:
+    error_mode: ignore
+    trace_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.namespace", "service.instance.id", "service.version", "deployment.environment.name", "gameforge.role"])
+      - context: span
+        statements:
+          - keep_keys(attributes, ["provider", "profile", "operation", "status", "code", "task", "outcome", "component", "method", "source", "kind", "dependency", "state", "http_status", "route", "gameforge.run.id", "gameforge.validation.id", "gameforge.feedback.id"])
+    log_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.namespace", "service.instance.id", "service.version", "deployment.environment.name", "gameforge.role"])
+  batch:
+    timeout: 2s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:9464
+    metric_expiration: 90s
+    enable_open_metrics: true
+    resource_constant_labels:
+      included: [service.name, service.namespace, service.instance.id, service.version, deployment.environment.name, gameforge.role]
+  otlp_http/tempo:
+    endpoint: http://tempo:4318
+    timeout: 5s
+    sending_queue:
+      queue_size: 256
+    retry_on_failure:
+      max_elapsed_time: 30s
+  otlp_http/loki:
+    endpoint: http://loki:3100/otlp
+    timeout: 5s
+    sending_queue:
+      queue_size: 256
+    retry_on_failure:
+      max_elapsed_time: 30s
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: warn
+    metrics:
+      level: normal
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 127.0.0.1
+                port: 8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource/privacy, transform/privacy, batch]
+      exporters: [otlp_http/tempo]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource/privacy, transform/privacy, batch]
+      exporters: [otlp_http/loki]

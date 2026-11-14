@@ -11,6 +11,7 @@ from django.db import close_old_connections, connections, transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
+from gameforge import telemetry
 from generation.service import DURABLE_PROVIDERS, PROVIDERS
 
 from .continuations import returned_response
@@ -627,12 +628,19 @@ def mark_invocation_sent(run, inv):
         return False
     if not stored.sent_at and current.model_call_deadline and timezone.now() >= current.model_call_deadline:
         return False
+    if not stored.sent_at:
+        transaction.on_commit(
+            lambda: telemetry.counter('invocations_sent', attributes={
+                **telemetry.dimensions(run), 'operation': stored.request.get('operation')}), robust=True)
     stored.state, stored.sent_at = "sent", stored.sent_at or timezone.now()
     stored.save(update_fields=["state", "sent_at"])
     inv.state, inv.sent_at, inv.provider_metadata = stored.state, stored.sent_at, stored.provider_metadata
     return True
 
 
+@telemetry.observed('run_process',
+    lambda run, *_, **__: {**telemetry.dimensions(run), 'gameforge.run.id': run.id},
+    parent=lambda run, *_, **__: run.trace_context)
 def _execute(run, lease, generate, materialize, validate):
     from generation.errors import ContractError, GenerationPending
 

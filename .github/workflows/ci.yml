@@ -79,8 +79,9 @@ jobs:
         run: pytest tests studio/tests -m 'browser and not native_browser and not runtime_browser and not live'
   compose-acceptance:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
+      COMPOSE_FILE: compose.yaml:deploy/observability.compose.yaml
       COMPOSE_PROJECT_NAME: gameforge-ci-acceptance
       CONTAINER_PROVIDER: fake
       CONTAINER_MODEL: fixture
@@ -94,12 +95,29 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12', cache: pip, cache-dependency-path: requirements.lock}
       - run: pip install -r requirements.lock && python -m pip check
+      - name: Prepare private monitoring secrets
+        run: python scripts/prepare_observability.py
       - name: Build and start the disposable stack
         run: |
           docker compose --env-file /dev/null config --quiet
           docker compose --env-file /dev/null up -d --build --wait --wait-timeout 180
+      - name: Validate monitoring configuration and alert examples
+        run: |
+          docker compose --env-file /dev/null run --rm --no-deps --entrypoint /bin/promtool prometheus check config /etc/prometheus/prometheus.yaml
+          docker compose --env-file /dev/null run --rm --no-deps --entrypoint /bin/promtool -v "$PWD/deploy/observability:/rules:ro" -w /rules prometheus test rules rules.test.yaml
+          docker compose --env-file /dev/null run --rm --no-deps otel-collector validate --config=/etc/otelcol/config.yaml
+          docker compose --env-file /dev/null run --rm --no-deps loki -config.file=/etc/loki/config.yaml -verify-config
+      - name: Wait for provisioned dashboards and telemetry storage
+        run: python scripts/verify_observability.py --ready-only --timeout 180 --output .data/ci-observability-ready.json
       - name: Create, edit, publish, remix and export over real HTTP
         run: python scripts/verify_container.py --output .data/ci-container-verification.json
+      - name: Application works while telemetry collection is unavailable
+        run: |
+          docker compose --env-file /dev/null stop otel-collector
+          python scripts/verify_container.py --output .data/ci-observability-outage-acceptance.json
+          docker compose --env-file /dev/null up -d otel-collector
+      - name: Verify real metrics, complete run trace and linked event
+        run: python scripts/verify_observability.py --output .data/ci-observability-verification.json
       - name: Stack diagnostics
         if: failure()
         run: docker compose --env-file /dev/null logs --no-color --tail=150
@@ -107,7 +125,9 @@ jobs:
         if: always()
         with:
           name: compose-acceptance
-          path: .data/ci-container-verification.json
+          path: |
+            .data/ci-container-verification.json
+            .data/ci-observability-*.json
           if-no-files-found: ignore
       - name: Remove only this job's stack and volumes
         if: always()
