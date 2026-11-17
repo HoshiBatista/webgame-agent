@@ -121,10 +121,13 @@ def system_prompt(request):
     from .prompts import PUBLIC_REPLY_GUIDANCE
 
     operation = request['operation']
+    from .lite_checks import GUIDANCE, LAYOUT_GUIDANCE, REPAIR_GUIDANCE
+    from .lite_checks import enabled as checks_enabled
     from .lite_wire import block_prompt, blocks_enabled
 
     if blocks_enabled(request):
-        return block_prompt(request) + PREFERENCE_GUIDANCE + PUBLIC_REPLY_GUIDANCE
+        return (block_prompt(request) + (GUIDANCE if checks_enabled(request) else '')
+                + PREFERENCE_GUIDANCE + PUBLIC_REPLY_GUIDANCE)
     if request.get('patch_repair'):
         from .patch_repair import PROMPT
 
@@ -174,4 +177,10 @@ def system_prompt(request):
         text = text.replace('In JSON encode each source newline as \\n, decoded to an actual newline.',
                             'Put each source line in a separate array item; the app joins them with real newlines.')
         text += WIRE_PROMPT
+    if checks_enabled(request):
+        text += GUIDANCE
+        if operation == 'check_repair':
+            text += REPAIR_GUIDANCE
+        elif operation == 'repair':
+            text += LAYOUT_GUIDANCE
     return text + PUBLIC_REPLY_GUIDANCE

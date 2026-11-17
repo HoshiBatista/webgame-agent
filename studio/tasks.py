@@ -447,9 +447,27 @@ def request_for(run, base, findings, last_attempt_error=None):
                                    if base.files[p] != edit_source.files.get(p)}
             request["module_repair"] = policy
     if base is not None and findings:
+        from generation.lite_checks import VERSION as LITE_CHECKS_VERSION
+        from generation.lite_checks import causal_feedback, layout_feedback
+
         report = base.reports.order_by("-id").first()
         if report and report.findings == findings and report.status in {"failed", "unverified"}:
             request["validation_evidence"] = repair_evidence({"status": report.status, "facts": report.facts})
+            if lite_eligible(request) and request.get('lite_policy') == 2 and request['operation'] in {'repair', 'check_repair'}:
+                from validation.contracts import implementation_hash
+
+                request['lite_checks_policy'] = LITE_CHECKS_VERSION
+                if (report.identity == check_identity(base, report.environment)
+                        and report.assessment.get('validator_hash') == implementation_hash()):
+                    if request['operation'] == 'check_repair':
+                        request['lite_causal_feedback'] = {
+                            'artifact_hash': base.artifact_hash, 'report_id': report.id,
+                            'comparisons': causal_feedback(report.facts),
+                        }
+                    if layouts := layout_feedback(report.findings):
+                        request['lite_layout_feedback'] = {
+                            'artifact_hash': base.artifact_hash, 'report_id': report.id, 'layouts': layouts,
+                        }
             if run.generation_strategy == "pro" and report.identity == check_identity(base, report.environment):
                 request["validation_evidence"]["report_id"] = report.id
                 request["validation_evidence"]["artifact_hash"] = base.artifact_hash
@@ -491,8 +509,12 @@ def request_for(run, base, findings, last_attempt_error=None):
     if lite_eligible(request) and request.get('lite_policy') == 2 and request.get('patch_repair'):
         request['lite_patch_lines'] = 1
     if lite_wire_enabled(request) and request['operation'] == 'create' and not media_enabled(request):
-        request['lite_code_blocks'] = 2
+        request['lite_code_blocks'] = 3
         request['lite_input_policy'] = 1
+    if lite_eligible(request) and request.get('lite_policy') == 2 and request['operation'] in {'create', 'edit', 'repair', 'check_repair'}:
+        from generation.lite_checks import VERSION as LITE_CHECKS_VERSION
+
+        request['lite_checks_policy'] = LITE_CHECKS_VERSION
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         "response_schema_sha256": fingerprint(response_schema(request)),

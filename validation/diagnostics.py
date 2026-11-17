@@ -29,7 +29,28 @@ DOM = r"""() => {
      label:short(e.getAttribute('aria-label')),text:short(e.textContent),
      rect:{x:r.x,y:r.y,width:r.width,height:r.height}});
  }
- return {viewport:{width:innerWidth,height:innerHeight},controls:rows,truncated:omitted};
+ const doc = document.documentElement;
+ const layout = {width:doc.scrollWidth,height:doc.scrollHeight,
+   overflowX:doc.scrollWidth>innerWidth+2,overflowY:doc.scrollHeight>innerHeight+2,outside:[]};
+ if (layout.overflowX || layout.overflowY) {
+   const candidates = document.querySelectorAll('[id]');
+   for (const e of Array.from(candidates).slice(0,128)) {
+     const r=e.getBoundingClientRect();
+     if (!r.width || !r.height || (r.left>=-2&&r.top>=-2&&r.right<=innerWidth+2&&r.bottom<=innerHeight+2)) continue;
+     if(layout.outside.length>=8){omitted=true;break;}
+     const id=short(e.getAttribute('id')), style=getComputedStyle(e);
+     const selector=id&&id===e.getAttribute('id')?'#'+CSS.escape(id):null;
+     const matches=selector&&selector.length<=200?document.querySelectorAll(selector):[];
+     layout.outside.push({id,selector:matches.length===1&&matches[0]===e?selector:null,
+       rect:{x:r.x,y:r.y,width:r.width,height:r.height},
+       display:short(style.display),flexDirection:short(style.flexDirection),
+       minWidth:short(style.minWidth),minHeight:short(style.minHeight)});
+   }
+   if(candidates.length>128)omitted=true;
+ }
+ const result={viewport:{width:innerWidth,height:innerHeight},controls:rows,truncated:omitted};
+ if(layout.overflowX||layout.overflowY)result.layout=layout;
+ return result;
 }"""
 
 INPUT_TARGET = r"""step => {

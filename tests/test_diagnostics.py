@@ -10,6 +10,26 @@ from validation.diagnostics import bounded, collect
 from validation.service import validate
 
 
+@pytest.mark.browser
+@pytest.mark.native_browser
+def test_vertical_overflow_names_the_axis_and_offscreen_text(monkeypatch):
+    monkeypatch.setenv('VALIDATOR_BACKEND', 'native')
+    html, checks = startup_game('mobile_only')
+    html += '<style>#help{position:absolute;top:calc(100vh - 10px);height:80px;left:10px;width:200px}</style>' \
+            '<p id="help">Инструкция выходит за низ экрана</p>'
+    report = validate(html, checks, artifact_hash=sha256(html))
+    finding = next(f for f in report['findings'] if f['code'] == 'mobile_overflow')
+    layout = finding['diagnostic']['layout']
+    assert layout['overflowY'] is True and layout['overflowX'] is False
+    assert any(e['selector'] == '#help' for e in layout['outside'])
+    assert 'ширине или высоте' in finding['message']
+    from generation.lite_checks import layout_feedback
+
+    assert layout_feedback([finding])[0]['layout']['overflowY'] is True
+    # Pro retains the existing prompt context; detailed geometry is a Lite field.
+    assert 'layout' not in focus_findings([finding])[0]['diagnostic']
+
+
 @pytest.mark.parametrize('value', [list(range(20)), {str(i): i for i in range(21)}, 'ж' * 201,
                                   {'k' * 81: 1}, {'a': {'b': {'c': {'d': {'e': {'f': 1}}}}}}])
 def test_every_snapshot_truncation_is_explicit_and_survives_feedback(value):

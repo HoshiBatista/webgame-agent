@@ -241,6 +241,12 @@ def build_messages(request):
         context["checks_create"] = request["checks_create"]
     if request.get("check_repair") is not None:
         context["check_repair"] = request["check_repair"]
+    from .lite_checks import enabled as lite_checks_enabled
+
+    if lite_checks_enabled(request) and request.get('lite_causal_feedback'):
+        context['lite_causal_feedback'] = request['lite_causal_feedback']
+    if lite_checks_enabled(request) and request.get('lite_layout_feedback'):
+        context['lite_layout_feedback'] = request['lite_layout_feedback']
     if request.get("code_repair_basis") is not None:
         context["code_repair_basis"] = request["code_repair_basis"]
     if request.get("generation_profile") == "compact" and request.get("operation") not in {"plan", "visual_review", "visual_patch"}:

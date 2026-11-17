@@ -56,6 +56,7 @@ def policy_snapshot():
     paths = [
         "lite.py",
         "lite_wire.py",
+        "lite_checks.py",
         "lite_baseline.py",
         "music.py",
         "planning.py",

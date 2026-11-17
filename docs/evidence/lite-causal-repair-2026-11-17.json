@@ -1,0 +1,432 @@
+{
+  "recorded_at": "2026-11-17T06:29:53.051292+00:00",
+  "base_commit": "07b43b6d2fb9c8ccbfcce5fd476fb042d173ebad",
+  "cases": [
+    {
+      "case": "causal-snake",
+      "run_id": "fe8c8415-4f2b-4832-9db5-742e4891e298",
+      "status": "needs_attention",
+      "error": "no_progress",
+      "revision_id": "14273f0e-9dba-43e1-8aef-1e88a5534634",
+      "artifact_hash": "20bd6fe1c40cf1f2a110e7a9ae0bfac39f0d40390dbb792c62997713beab6b95",
+      "call_limit": 5,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": 2
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": null,
+          "lite_code_blocks": null
+        },
+        {
+          "attempt": 3,
+          "operation": "repair",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": null
+        },
+        {
+          "attempt": 4,
+          "operation": "repair",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": null
+        }
+      ],
+      "report": {
+        "status": "failed",
+        "finding_codes": [
+          "mobile_overflow"
+        ],
+        "passed": 6,
+        "total": 6,
+        "failed_ids": [],
+        "gates_passed": false,
+        "environment": "mini-browser-v1:4a07146346ca2c7907819cf0f5aec147c0f29841b99f06e38268c33a36551693:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e"
+      }
+    },
+    {
+      "case": "causal-edit",
+      "run_id": "b0f3fcf8-7a37-418c-8ee0-05464458632e",
+      "status": "cancelled",
+      "error": null,
+      "revision_id": null,
+      "artifact_hash": null,
+      "call_limit": 5,
+      "calls": [],
+      "report": null
+    },
+    {
+      "case": "timed-edit",
+      "run_id": "a0f98b18-a76b-4612-a8e4-0f9ecb87ce08",
+      "status": "unverified",
+      "error": "manual_verification",
+      "revision_id": "f732a105-ac77-4808-ad12-a892341bcfd7",
+      "artifact_hash": "dd0de61bea59403076c43c9252f9ce94f0433b2c6204bd1820b65191e00b19b1",
+      "call_limit": 5,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": null
+        },
+        {
+          "attempt": 2,
+          "operation": "check_repair",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": null
+        }
+      ],
+      "report": {
+        "status": "unverified",
+        "finding_codes": [
+          "check_suite_revised"
+        ],
+        "passed": 6,
+        "total": 6,
+        "failed_ids": [],
+        "gates_passed": true,
+        "environment": "mini-browser-v1:324cf7f5a591db8d85ca531e3dfffa154da32d9a80b1d94db67de52f64678e07:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e"
+      }
+    },
+    {
+      "case": "timed-snake",
+      "run_id": "64262870-9b18-4f2d-8f6f-067ecc529574",
+      "status": "needs_attention",
+      "error": "repair_exhausted",
+      "revision_id": null,
+      "artifact_hash": null,
+      "call_limit": 2,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_schema",
+          "lite_checks_policy": 1,
+          "lite_code_blocks": 3
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_schema",
+          "lite_checks_policy": 1,
+          "lite_code_blocks": 3
+        }
+      ],
+      "report": null
+    },
+    {
+      "case": "timed-grid",
+      "run_id": "0dc23a1b-55f4-40b6-91de-627ca2601460",
+      "status": "cancelled",
+      "error": null,
+      "revision_id": null,
+      "artifact_hash": null,
+      "call_limit": 5,
+      "calls": [],
+      "report": null
+    },
+    {
+      "case": "reliable-snake",
+      "run_id": "bdd46d94-11a0-477b-9851-7d963dfb659c",
+      "status": "unverified",
+      "error": "manual_verification",
+      "revision_id": "10957b66-9a31-4ad9-8764-be71f2823054",
+      "artifact_hash": "2744468ed71f13abe22b56eaca9fd61672f050e5db1b1b68d392a77e81b0c67f",
+      "call_limit": 5,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": 3
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": null,
+          "lite_code_blocks": null
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": null
+        }
+      ],
+      "report": {
+        "status": "unverified",
+        "finding_codes": [
+          "effect_mismatch"
+        ],
+        "passed": 5,
+        "total": 6,
+        "failed_ids": [
+          "outcome-wall"
+        ],
+        "gates_passed": true,
+        "environment": "mini-browser-v1:324cf7f5a591db8d85ca531e3dfffa154da32d9a80b1d94db67de52f64678e07:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e"
+      }
+    },
+    {
+      "case": "reliable-grid",
+      "run_id": "cfe2e2d8-68d7-4b24-866e-b7c552a019d0",
+      "status": "cancelled",
+      "error": null,
+      "revision_id": null,
+      "artifact_hash": null,
+      "call_limit": 5,
+      "calls": [],
+      "report": null
+    },
+    {
+      "case": "final-snake",
+      "run_id": "5a17ad8f-f7f1-418e-8b88-0cd96d0eea36",
+      "status": "succeeded",
+      "error": null,
+      "revision_id": "64020f63-37fb-4ee9-8581-ff0026b951a0",
+      "artifact_hash": "8bd1494eafdaf3b8fc69a0c48fb27bc45cfcfc91f102839daa11b726869fe378",
+      "call_limit": 5,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": 3
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": null,
+          "lite_code_blocks": null
+        }
+      ],
+      "report": {
+        "status": "passed",
+        "finding_codes": [],
+        "passed": 6,
+        "total": 6,
+        "failed_ids": [],
+        "gates_passed": true,
+        "environment": "mini-browser-v1:324cf7f5a591db8d85ca531e3dfffa154da32d9a80b1d94db67de52f64678e07:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e"
+      }
+    },
+    {
+      "case": "final-grid",
+      "run_id": "521b75a3-d762-4e77-b1b2-409623280781",
+      "status": "succeeded",
+      "error": null,
+      "revision_id": "40a41284-4d08-4597-b0e3-4e10a9d7e830",
+      "artifact_hash": "cdaacf5c559f28b429a6322d8a71d342b543907ea246eb7156ac631872abb734",
+      "call_limit": 5,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": 3
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": null,
+          "lite_code_blocks": null
+        }
+      ],
+      "report": {
+        "status": "passed",
+        "finding_codes": [],
+        "passed": 6,
+        "total": 6,
+        "failed_ids": [],
+        "gates_passed": true,
+        "environment": "mini-browser-v1:324cf7f5a591db8d85ca531e3dfffa154da32d9a80b1d94db67de52f64678e07:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e"
+      }
+    },
+    {
+      "case": "final-snake-edit",
+      "run_id": "b9a658e6-2796-47e0-a9c4-ff4b7dd63ba3",
+      "status": "succeeded",
+      "error": null,
+      "revision_id": "de6cad8a-1447-4d12-bee0-f6c0b79492f9",
+      "artifact_hash": "2a46ed56347f8bef2245eeda469d018c73696283b9c6730452560806ec8c6513",
+      "call_limit": 5,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": null,
+          "lite_checks_policy": 1,
+          "lite_code_blocks": null
+        }
+      ],
+      "report": {
+        "status": "passed",
+        "finding_codes": [],
+        "passed": 6,
+        "total": 6,
+        "failed_ids": [],
+        "gates_passed": true,
+        "environment": "mini-browser-v1:324cf7f5a591db8d85ca531e3dfffa154da32d9a80b1d94db67de52f64678e07:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e"
+      }
+    }
+  ],
+  "independent_browser_reviews": [
+    {
+      "case": "timed-edit-independent-dpr2",
+      "status": "passed",
+      "artifact_hash": "dd0de61bea59403076c43c9252f9ce94f0433b2c6204bd1820b65191e00b19b1",
+      "environment": "mini-browser-v1:0c3a9cc2cd3759e215204bfc321369f9a512d67f21bb9b099beabf60db20d454:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-2ec41486efb75d73",
+      "passed": 12,
+      "total": 12,
+      "failed_ids": [],
+      "finding_codes": [],
+      "dpr": 2
+    },
+    {
+      "case": "reliable-snake-independent-dpr2",
+      "status": "failed",
+      "artifact_hash": "2744468ed71f13abe22b56eaca9fd61672f050e5db1b1b68d392a77e81b0c67f",
+      "environment": "mini-browser-v1:0c3a9cc2cd3759e215204bfc321369f9a512d67f21bb9b099beabf60db20d454:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "passed": 11,
+      "total": 12,
+      "failed_ids": [
+        "S10"
+      ],
+      "finding_codes": [
+        "mobile_overflow"
+      ],
+      "dpr": 2
+    },
+    {
+      "case": "final-snake-independent-dpr2",
+      "status": "passed",
+      "artifact_hash": "8bd1494eafdaf3b8fc69a0c48fb27bc45cfcfc91f102839daa11b726869fe378",
+      "environment": "mini-browser-v1:0c3a9cc2cd3759e215204bfc321369f9a512d67f21bb9b099beabf60db20d454:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "passed": 12,
+      "total": 12,
+      "failed_ids": [],
+      "finding_codes": [],
+      "dpr": 2
+    },
+    {
+      "case": "final-snake-independent-dpr2-layout",
+      "status": "passed",
+      "artifact_hash": "8bd1494eafdaf3b8fc69a0c48fb27bc45cfcfc91f102839daa11b726869fe378",
+      "environment": "mini-browser-v1:0c3a9cc2cd3759e215204bfc321369f9a512d67f21bb9b099beabf60db20d454:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "passed": 7,
+      "total": 7,
+      "failed_ids": [],
+      "finding_codes": [],
+      "dpr": 2
+    },
+    {
+      "case": "final-grid-independent-dpr2",
+      "status": "passed",
+      "artifact_hash": "cdaacf5c559f28b429a6322d8a71d342b543907ea246eb7156ac631872abb734",
+      "environment": "mini-browser-v1:0c3a9cc2cd3759e215204bfc321369f9a512d67f21bb9b099beabf60db20d454:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "passed": 12,
+      "total": 12,
+      "failed_ids": [],
+      "finding_codes": [],
+      "dpr": 2
+    },
+    {
+      "case": "final-snake-edit-independent-dpr2",
+      "status": "passed",
+      "artifact_hash": "2a46ed56347f8bef2245eeda469d018c73696283b9c6730452560806ec8c6513",
+      "environment": "mini-browser-v1:0c3a9cc2cd3759e215204bfc321369f9a512d67f21bb9b099beabf60db20d454:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "passed": 12,
+      "total": 12,
+      "failed_ids": [],
+      "finding_codes": [],
+      "dpr": 2
+    },
+    {
+      "case": "pro-edit-recheck",
+      "status": "passed",
+      "artifact_hash": "6f4e85c2e67eee90a48ee86756f99bad7c6fe2c6efde496bd82ea664e6f511c8",
+      "environment": "mini-browser-v1:324cf7f5a591db8d85ca531e3dfffa154da32d9a80b1d94db67de52f64678e07:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e",
+      "passed": 10,
+      "total": 10,
+      "failed_ids": [],
+      "finding_codes": [],
+      "dpr": 1
+    }
+  ],
+  "usage": {
+    "lite_calls": 16,
+    "new_unknown": 0,
+    "input_tokens": 82479,
+    "output_tokens": 41412,
+    "cost_usd": "0.000000"
+  },
+  "notes": [
+    "Real configured relay inference through create_run/process_run; only asynchronous dispatch replaced by a local driver. No GPU administration or deployment.",
+    "Game sources were never patched by the operator. Independent tests use real input and read-only state; DPR 2 changes only the private validator display scale.",
+    "causal-snake exposed incorrect vertical-overflow diagnosis. It is retained as a failed probe, not counted as success.",
+    "timed-snake exposed an adapter timeout exceeding the existing canonical 3000ms step limit. The diagnostic budget was reduced to the two calls already sent; their receipts and usage were retained. The adapter and full service-contract regression were corrected before reliable-* probes.",
+    "causal-edit, timed-grid and reliable-grid were cancelled before any call was sent, to avoid running superseded policies.",
+    "reliable-snake exposed a terminal goal assertion represented as an intermediate precondition; its check repair then shortened the actual needed travel time. Its independent rotation check also found overflow after the pause label changed. This failed probe remains recorded. Final Lite instructions include all-state layout and rotation coverage; an exact terminal predicate compiles to a final poll, keeping its explicit timeout and goal.",
+    "timed-edit corrected the old Snake model outcome scenario. All checks passed; check_suite_revised retains the existing explicit review gate for modified model suites.",
+    "Version 3 declares an eventual outcome with an explicit bounded polling step, identical in both causal executions. Input-free timer success still fails a negative browser test.",
+    "Pro messages and schemas match all 20 stored baselines; its unchanged game passed another 10 independent checks. The private Pro replay route waits for the actual end; stored model checks and source are unchanged.",
+    "These are concrete verified games and regressions, not a claim that an LLM cannot produce any future error. Earlier history remains in lite-recovery-2026-11-17.json.",
+    "Final review made terminal-predicate equivalence JSON-type strict (true is not 1); both successful raw create receipts decode identically under that final rule. The pause regression instruction is conditional on a game actually having pause; it does not request adding that feature.",
+    "The accepted Snake edit changes exactly one color literal, #d94f3d to #e8871e. HTML, CSS, game-assets.json, gf-experience-v1.js and the entire scenario suite are byte/data identical.",
+    "Game screenshots were inspected separately from gameplay checks; no claim of universal model success, musical pleasantness, physical-device testing or frame-rate measurement is made."
+  ],
+  "verification": {
+    "backend": {
+      "passed": 1357,
+      "deselected_browser_live": 170
+    },
+    "native_terminal_and_causality_regressions": {
+      "passed": 5
+    },
+    "native_diagnostic_regressions": {
+      "passed": 5
+    },
+    "pro_message_schema_baselines": 20,
+    "ruff": "passed",
+    "mypy": {
+      "passed": true,
+      "files": 56
+    },
+    "saved_successful_create_receipts_decode_identically": 2,
+    "unresolved_diagnostic_calls": 0
+  }
+}

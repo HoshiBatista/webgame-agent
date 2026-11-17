@@ -849,7 +849,7 @@ def run(payload):
                             {
                                 "code": "mobile_overflow",
                                 "check_id": check.get("id"),
-                                "message": "Игра выходит за ширину телефонного экрана.",
+                                "message": "Игра выходит за границы телефонного экрана по ширине или высоте.",
                             }
                         )
                     if screenshot is None:

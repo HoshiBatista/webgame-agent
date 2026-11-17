@@ -5,6 +5,7 @@ rewrites JavaScript or repairs a failed game. Version-one receipts stay intact.
 """
 
 import json
+import math
 import re
 from copy import deepcopy
 
@@ -28,11 +29,11 @@ def blocks_enabled(request):
     from .experience import enabled as media_enabled
 
     return (enabled(request) and request['operation'] == 'create'
-            and request.get('lite_code_blocks') in {1, 2} and not media_enabled(request))
+            and request.get('lite_code_blocks') in {1, 2, 3} and not media_enabled(request))
 
 
 def simple_checks(request):
-    return blocks_enabled(request) and request.get('lite_code_blocks') == 2
+    return blocks_enabled(request) and request.get('lite_code_blocks') in {2, 3}
 
 
 def require_keyboard_binding(reply, request):
@@ -54,7 +55,7 @@ def require_keyboard_binding(reply, request):
         )
 
 
-def check_from_lines(check):
+def check_from_lines(check, *, timed=False):
     """Translate data-only input commands to the existing browser DSL."""
     result = deepcopy(check)
     steps = []
@@ -76,6 +77,22 @@ def check_from_lines(check):
                 step = {'action': action, 'selector': value, 'x': None, 'y': None}
         elif action == 'wait' and re.fullmatch(r'\d{1,5}', value) and int(value) <= 10000:
             step = {'action': 'wait', 'ms': int(value)}
+        elif timed and action == 'wait_for' and re.fullmatch(r'\d{1,4}', value) and 0 < int(value) <= 3000:
+            step = {'action': action, 'ms': int(value)}
+        elif timed and action == 'await_state':
+            match = re.fullmatch(r'(\S+) (.+) (\d{1,5})', value)
+            try:
+                if match is None or not 0 < int(match[3]) <= 3000:
+                    raise ValueError()
+                expected = json.loads(match[2])
+                if type(expected) not in {str, int, float, bool, type(None)} or (
+                        isinstance(expected, float) and not math.isfinite(expected)):
+                    raise ValueError()
+            except ValueError as exc:
+                raise ContractError('invalid_lite_scenario', 'await_state требует путь, скаляр JSON и 1–3000 мс.') from exc
+            step = {'action': 'await_condition', 'ms': int(match[3]),
+                    'observation': {'source': 'state', 'path': re.sub(r'\[(0|[1-9]\d*)\]', r'.\1', match[1])},
+                    'expect': {'operator': 'eq', 'value': expected}}
         elif action == 'resize' and value in {'mobile', 'landscape', 'desktop'}:
             step = {'action': action, 'viewport': value}
         elif action == 'hold_touch':
@@ -96,12 +113,27 @@ def check_from_lines(check):
         else:
             raise ContractError('invalid_lite_scenario', 'Неизвестная команда сценария Lite: ' + line[:120])
         steps.append(step)
-    result['steps'] = steps
     observation = result['observation']
     if observation.get('source') == 'state':
         # Only literal numeric array indexes are equivalent to dotted own-data
         # property traversal. Never evaluate expressions or call model getters.
         observation['path'] = re.sub(r'\[(0|[1-9]\d*)\]', r'.\1', observation['path'])
+    # A terminal wait for the identical final predicate IS the final poll, not
+    # a setup precondition. Keep its explicit timeout; a negative causal run
+    # must report a false goal instead of stopping at an intermediate assertion.
+    if (timed and result['category'] in {'control', 'outcome'} and steps
+            and steps[-1]['action'] == 'await_condition'
+            and steps[-1]['observation'] == observation
+            and json.dumps(steps[-1]['expect'], sort_keys=True) == json.dumps(result['expect'], sort_keys=True)):
+        steps[-1] = {'action': 'wait_for', 'ms': steps[-1]['ms']}
+    # Version 3 declares an eventual outcome, not a single guessed frame. This
+    # becomes an explicit canonical step in the saved suite and in BOTH causal
+    # executions. Expectations, input and the total 10-second budget stay intact.
+    if timed and result['category'] == 'outcome' and not any(s['action'] == 'wait_for' for s in steps):
+        remaining = 10000 - sum(s.get('ms', 0) for s in steps)
+        if remaining > 0 and len(steps) < 30:
+            steps.append({'action': 'wait_for', 'ms': min(3000, remaining)})
+    result['steps'] = steps
     return result
 
 
@@ -224,7 +256,8 @@ def decode(reply, request, wire_schema):
                 patch['new_text'] = '\n'.join(patch.pop('new_text_lines'))
         return result
     scenarios = result.pop('scenarios')
-    result['checks'] = [check_from_lines(c) for c in scenarios] if simple_checks(request) else scenarios
+    result['checks'] = [check_from_lines(c, timed=request.get('lite_code_blocks') == 3)
+                        for c in scenarios] if simple_checks(request) else scenarios
     if request['operation'] == 'create':
         result['files'] = [{'path': path, 'content': '\n'.join(result['files'][path])}
                            for path in PATHS if result['files'][path]]
@@ -281,7 +314,7 @@ def block_prompt(request):
     before = BLOCK_PROMPT.split('Steps:')[0]
     binding = ('''\nKEYBOARD SOURCE CONTRACT: register an actual keyboard handler with a literal event name, e.g. window.addEventListener("keydown", onKey), after defining onKey. Defining onKey without subscribing it does NOTHING. Use literal "keydown"/"keyup"/"keypress" in addEventListener, or assign onkeydown/onkeyup/onkeypress directly. Do not compute event names. Check that start, movement, pause and replay keys reach the game's actual functions.\n'''
                if request.get('lite_input_policy') == 1 else '')
-    return before + binding + """
+    text = before + binding + """
 Canvas layout: size a separate containing element with CSS grid/flex min-width:0 and min-height:0. Place canvas absolutely inside that positioned container with CSS width:100%;height:100%;display:block. Only its backing width/height use devicePixelRatio. Never let the canvas intrinsic bitmap dimensions size the flex/grid track: this can push controls outside the viewport, especially after resize or on high-DPI phones. Keep all buttons inside the viewport in both orientations and on desktop.
 If backing width/height are multiplied by dpr, immediately call ctx.setTransform(dpr,0,0,dpr,0,0) AFTER assigning both canvas dimensions. Draw using CSS-pixel coordinates and use CSS coordinates for input; do not scale twice. Without this transform the field shrinks into the corner on a high-DPI phone. Reapply the transform after every resize because setting canvas.width/height resets it.
 The music button will occupy the top-right corner. Give the header at least 72px right padding, including on mobile; wrap or shorten the title and status instead of clipping them beneath that button. Reserve its space before the music step, even though the button is not present in your source yet.
@@ -293,3 +326,16 @@ The FIRST scenario is category=start, viewport=mobile, using "tap" on the actual
 Use ONLY plain data paths actually present in your game, e.g. gameState.snake.0.y for an array item. Keep a single initialized state object; reset its properties instead of replacing it so window.gameState always references the object used for drawing and game rules. No getters or self-reported test results.
 Do not output tool calls or write_file instructions. Write the four complete fenced blocks directly in your reply. Keep final JSON compact, with no indentation. Keep normal line breaks in source. Never claim execution or passed tests.
 """
+    if request.get('lite_code_blocks') == 3:
+        text = text.replace('There is NO wait_for command. Use ordinary wait with the real time your mechanics need.',
+                            'A final "wait_for 3000" polls the final expectation. It is allowed only ONCE, as the LAST command.')
+        text += r'''
+TIMED SCENARIOS (version 3)
+Outcome assertions are eventual: when no explicit wait_for is present, the app records a final polling window of up to 3000ms, limited by the remaining 10000ms scenario budget. The same unchanged assertion/window is checked with and without the decisive input. This does not replace adequate setup and real input.
+If the LAST command in a control/outcome is await_state for the EXACT same observation and expected value as the final assertion, it means the final poll: the app records wait_for with that timeout, without adding another window. Other intermediate conditions remain setup assertions and are never removed.
+Use await_state during SETUP to wait for an actual plain state value. Command syntax: await_state PATH JSON_SCALAR TIMEOUT_MS. Example command value: await_state gameState.phase "over" 3000 (escape the quotes inside the JSON steps string). Maximum await_state timeout is 3000ms, NOT 10000ms. For a longer round, first use an ordinary wait based on the actual source timing, then await_state for up to 3000ms to confirm the terminal phase. All waits together stay <=10000ms. This compiles to await_condition with eq; it does not write state. Use YOUR actual path and terminal value. For a replay: start, wait/await_state for the terminal phase, checkpoint, activate replay, then observe the playable phase. await_state is for setup BEFORE checkpoint, not after the decisive input of a control/outcome check, since a missing input must fail the final assertion rather than an intermediate wait.
+For direction buttons wired to click, use tap then wait for actual motion. hold_touch waits BEFORE releasing the finger and triggering click, so its duration does not advance motion in the newly chosen direction. Use it only when your source handles press/hold itself, not an ordinary click button.
+In landscape, add up the heights of every control row, action button, help text and gap below the header. A narrow vertical side panel often OVERFLOWS HEIGHT; reducing its width makes text wrap further. Use a horizontal control/action layout or a second panel column on short screens. Keep visible help text and controls within BOTH axes; overflow:hidden alone is not a layout fix.
+Size the panel for ALL states, including the longer paused/resume label, game-over status and grown score. Do not let action buttons wrap into extra vertical rows when a label changes. A fixed action grid and two side-by-side groups in landscape can reserve that space. Every button needs min-height:44px. If your game has pause/resume, include a mobile regression that starts, pauses, resizes to landscape, then verifies the actual paused state/progress; it checks the layout after the labels change as well as rotation. Do not add pause to a game merely to create this scenario.
+'''
+    return text

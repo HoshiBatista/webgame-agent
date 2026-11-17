@@ -68,7 +68,7 @@ def generate(request, *, on_event, is_cancelled):
                 content = original.get('lite_source_text') if isinstance(original, dict) else None
                 wire = decode_blocks(content, request, response_schema(request))
             result['response'] = decode_lite(wire, request, response_schema(request))
-            result['provider_metadata']['lite_wire'] = 2
+            result['provider_metadata']['lite_wire'] = 3 if request.get('lite_code_blocks') == 3 else 2
             # Decode into the existing canonical contract; Pro and saved v1
             # receipts never pass through this path.
             validation_request = {**request, 'lite_policy': 1}
