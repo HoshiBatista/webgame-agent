@@ -115,7 +115,7 @@ def run_data(run, budget=None):
         "model_profile": run.model_profile,
         "model": run.model,
         "provider": run.provider,
-        "model_label": {"pro": "Pro", "lite": "Lite"}.get(run.model_profile, run.model),
+        "model_label": {"pro": "Pro", "lite": "Lite", "pro_multi": "Pro · эксперимент"}.get(run.model_profile, run.model),
         "status": run.status,
         "stage": run.stage,
         "message": message,

@@ -77,7 +77,12 @@ export default function RunMessage({
   startedAt?: number;
   sending?: boolean;
 }) {
-  const label = run.model_label === 'Pro' || run.model_profile === 'pro' ? 'Pro' : 'Lite';
+  const label =
+    run.model_profile === 'pro_multi'
+      ? 'Pro · эксперимент'
+      : run.model_label === 'Pro' || run.model_profile === 'pro'
+        ? 'Pro'
+        : 'Lite';
   const progress = sending
     ? 'Отправляю запрос…'
     : run.stage === 'waiting_capacity'

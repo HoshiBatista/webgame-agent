@@ -526,6 +526,8 @@ def request_for(run, base, findings, last_attempt_error=None):
 
     if routes_eligible(request):
         request['check_routes_policy'] = CHECK_ROUTES_VERSION
+    if run.pro_parallel and request['operation'] == 'plan':
+        request['pro_parallel'] = 1
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         "response_schema_sha256": fingerprint(response_schema(request)),
@@ -716,6 +718,12 @@ def _execute(run, lease, generate, materialize, validate):
             last_attempt_error = previous.error or {"message": "Продолжить сохранённый запрос."}
     while not lease.cancelled():
         run.refresh_from_db()
+        if run.pro_parallel and run.game_plan and base is None:
+            from .pro_parallel import advance
+
+            pending = base = advance(run, lease, generate, materialize)
+            if base is None:
+                return
         # Retrieval has priority over decisions based on the old candidate/report.
         # A re-entered worker must not treat an admitted check repair as exhausted.
         resumed = run.invocations.filter(state__in=["reserved", "sent"]).order_by("attempt").first()

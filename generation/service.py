@@ -60,6 +60,7 @@ def generate(request, *, on_event, is_cancelled):
         from .lite_wire import blocks_enabled, decode_blocks
         from .lite_wire import decode as decode_lite
         from .lite_wire import enabled as lite_wire_enabled
+        from .pro_parallel import branch, validate_reply
 
         validation_request = request
         if lite_wire_enabled(request):
@@ -80,7 +81,9 @@ def generate(request, *, on_event, is_cancelled):
             result['provider_metadata']['lite_wait_budget'] = {
                 'version': VERSION, 'milliseconds': MILLISECONDS, 'check_ids': budget_ids,
             }
-        if request.get('response_completion'):
+        if branch(request):
+            validate_reply(result['response'], request)
+        elif request.get('response_completion'):
             from .response_completion import assemble
 
             result['response'] = assemble(original, request)

@@ -41,6 +41,8 @@ def recover_saved_response(invocation_id, *, apply=False):
         raise DomainError("invalid_saved_json", "Сохранённый ответ не является полным JSON.") from exc
     response, paths = normalize_response(decoded)
     saved_request = source.request
+    if saved_request.get('pro_parallel_branch'):
+        raise DomainError('no_saved_candidate', 'Это часть игры. Продолжите сборку всех частей в чате.')
     if saved_request.get("operation") == "plan":
         raise DomainError("no_saved_candidate", "Это ответ планирования без исходников игры. Продолжите подготовку замысла в чате.")
     if parent.generation_profile == 'compact':

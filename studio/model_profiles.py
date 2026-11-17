@@ -13,6 +13,9 @@ def configured_profiles():
     return {
         "pro": {"id": "pro", "name": "Pro", "description": "Codex · GPT-6 Sol",
                 "provider": settings.GAMEFORGE_PRO_PROVIDER, "model": PRO_MODEL},
+        "pro_multi": {"id": "pro_multi", "name": "Pro · эксперимент",
+                      "description": "Параллельные геймплей, графика и звук",
+                      "provider": settings.GAMEFORGE_PRO_PROVIDER, "model": PRO_MODEL},
         "lite": {"id": "lite", "name": "Lite", "description": "Модель через API",
                  "provider": settings.GAMEFORGE_LITE_PROVIDER or (
                      settings.GAMEFORGE_PROVIDER if default_api else "vllm"),
@@ -53,7 +56,12 @@ def can_use_pro(request):
 
 
 def unavailable_reason(profile, request=None):
-    if profile["id"] == "pro":
+    if profile["id"] == "pro_multi":
+        if not settings.GAMEFORGE_PRO_PARALLEL_ENABLED:
+            return "Экспериментальная Pro не включена на этом сервере."
+        if profile["provider"] != "codex_api":
+            return "Для экспериментальной Pro нужен Pro API."
+    if profile["id"] in {"pro", "pro_multi"}:
         if not settings.GAMEFORGE_PRO_ENABLED:
             return "Pro не включён на этом сервере."
         if settings.GAMEFORGE_PRO_ACCESS == "local" and not settings.GAMEFORGE_LOCAL_ONLY:
@@ -86,6 +94,8 @@ def profile_options(request):
         return []
     options = []
     for profile in configured_profiles().values():
+        if profile["id"] == "pro_multi" and not settings.GAMEFORGE_PRO_PARALLEL_ENABLED:
+            continue
         reason = unavailable_reason(profile, request)
         options.append({**profile, "available": not reason, "unavailable_reason": reason})
     return options

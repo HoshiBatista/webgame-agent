@@ -179,11 +179,18 @@ def _system_prompt(request):
                  "The inherited scenario suite may be incomplete; return checks=[] and preserve it exactly. "
                  "Do not fix or invent scenarios while repairing source.\n")
     from .experience import guidance as experience_guidance
+    from .pro_parallel import GAMEPLAY_GUIDANCE, branch
 
-    return text + presentation.implementation_prompt(request) + experience_guidance(request)
+    return text + presentation.implementation_prompt(request) + (
+        GAMEPLAY_GUIDANCE if branch(request) == 'gameplay' else experience_guidance(request))
 
 
 def build_messages(request):
+    from .pro_parallel import branch
+    from .pro_parallel import messages as parallel_messages
+
+    if branch(request) in {'graphics', 'audio'}:
+        return parallel_messages(request)
     if request.get('operation') == 'music':
         from .music import messages
 
@@ -353,6 +360,11 @@ def schema_prompt(request=None):
 
 
 def system_prompt(request):
+    from .pro_parallel import branch
+    from .pro_parallel import messages as parallel_messages
+
+    if branch(request) in {'graphics', 'audio'}:
+        return parallel_messages(request)[0]['content']
     if request.get('operation') == 'music':
         from .music import PROMPT
 

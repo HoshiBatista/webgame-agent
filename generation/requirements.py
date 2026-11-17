@@ -62,6 +62,8 @@ def policy_snapshot():
         "lite_check_delta.py",
         "lite_baseline.py",
         "music.py",
+        "pro_parallel.py",
+        "../studio/pro_parallel.py",
         "planning.py",
         "requirements.py",
         "schema.py",

@@ -91,6 +91,7 @@ class Run(models.Model):
     )
     attempts = models.PositiveSmallIntegerField(default=0)
     max_repair_attempts = models.PositiveSmallIntegerField(default=3)
+    pro_parallel = models.BooleanField(default=False)
     allow_model_calls = models.BooleanField(default=True)
     completion_policy = models.PositiveSmallIntegerField(default=2)
     model_call_limit = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -108,7 +109,9 @@ class Run(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(max_repair_attempts__lte=3), name="studio_run_repair_limit"
+                condition=(models.Q(max_repair_attempts__lte=3) |
+                           models.Q(pro_parallel=True, max_repair_attempts__lte=5)),
+                name="studio_run_repair_limit"
             ),
             models.UniqueConstraint(fields=["chat", "idempotency_key"], name="studio_run_idempotency"),
             models.UniqueConstraint(
@@ -123,6 +126,8 @@ class Run(models.Model):
         from .lite_music import enabled as music_enabled
 
         maximum = 1 + self.max_repair_attempts + int(self.planning_required)
+        if self.pro_parallel and self.operation == 'create':
+            maximum += 2
         maximum += int(music_enabled(self))
         return min(maximum, self.model_call_limit) if self.model_call_limit is not None else maximum
 

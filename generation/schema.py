@@ -206,6 +206,11 @@ CHECK_REPAIR_SCHEMA = obj({
 
 def response_schema(request):
     """One current operation contract; unsupported games are retired, not reinterpreted."""
+    from .pro_parallel import branch
+    from .pro_parallel import schema as parallel_schema
+
+    if branch(request):
+        return parallel_schema(request)
     if request.get('operation') == 'music':
         from .music import SCHEMA
 

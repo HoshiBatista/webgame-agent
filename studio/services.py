@@ -174,6 +174,10 @@ def reserve_invocation(run, request):
     Budget.objects.get_or_create(pk=1, defaults={"limit_usd": Decimal(settings.GAMEFORGE_BUDGET_USD)})
     Budget.objects.select_for_update().get(pk=1)
     current = Run.objects.get(pk=run.pk)
+    if request.get('pro_parallel_branch'):
+        current = Run.objects.select_for_update().get(pk=run.pk)
+        if current.fence != run.fence or current.cancel_requested or current.status not in Run.ACTIVE:
+            raise DomainError('cancelled', 'Задание остановлено до отправки.', 409)
     if not current.allow_model_calls:
         raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
     unknown_calls, inflight_calls = delivery_state(current)
@@ -204,7 +208,7 @@ def reserve_invocation(run, request):
         )
     from .capacity import capacity_full
 
-    if capacity_full(current):
+    if capacity_full(current, include_current_calls=bool(request.get('pro_parallel_branch'))):
         raise DomainError("provider_busy", "Ожидаем свободное место для следующего шага генерации.", 409)
     return Invocation.objects.create(
         id=invocation_id, run=run, attempt=run.attempts + 1, request=request, reservation_usd=amount, price=price
@@ -313,7 +317,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         "" if settings.GAMEFORGE_PROVIDER == "fake" else (preference_for(chat.owner).model_profile or "pro")
     )
     profile_id = data.get("model_profile", default_choice)
-    if not isinstance(profile_id, str) or profile_id not in {"", "pro", "lite"}:
+    if not isinstance(profile_id, str) or profile_id not in {"", "pro", "lite", "pro_multi"}:
         raise DomainError("invalid_model_profile", "Выберите Pro или Lite.")
     if inherited and profile_id == inherited.model_profile:
         provider, model = inherited.provider, inherited.model
@@ -353,6 +357,13 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         raise DomainError("profile_mismatch", "Профиль должен соответствовать выбранной игре.", 409)
     if continued_from and generation_profile != continued_from.generation_profile:
         raise DomainError('profile_mismatch', 'Продолжение сохраняет формат исходной игры.', 409)
+    pro_parallel = profile_id == 'pro_multi'
+    if pro_parallel and (provider != 'codex_api' or generation_profile != 'full'):
+        raise DomainError('invalid_generation_profile', 'Экспериментальная Pro использует полный формат и Pro API.')
+    if continued_from and continued_from.pro_parallel != pro_parallel and not (
+        continued_from.candidate_revision_id or continued_from.source_revision_id
+    ):
+        raise DomainError('profile_mismatch', 'Сначала завершите сохранённые этапы в исходном режиме.', 409)
     payload = {
         "prompt": prompt.strip(),
         "audience": audience,
@@ -367,8 +378,9 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         )})
     call_limit = data.get("model_call_limit")
     deadline_text = data.get("model_call_deadline")
-    if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= 5):
-        raise DomainError("invalid_call_budget", "Лимит вызовов должен быть целым числом от 1 до 5.")
+    maximum_calls = 9 if pro_parallel else 5
+    if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= maximum_calls):
+        raise DomainError("invalid_call_budget", f"Лимит вызовов должен быть целым числом от 1 до {maximum_calls}.")
     try:
         deadline = parse_datetime(deadline_text) if isinstance(deadline_text, str) else None
     except ValueError:
@@ -535,9 +547,10 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         generation_profile=generation_profile,
         source_format=source_format,
         generation_strategy=generation_strategy,
+        pro_parallel=pro_parallel,
         planning_required=planning_required,
         visual_review_enabled=(continued_from.visual_review_enabled if continued_from else
-                               settings.GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED and generation_strategy=="pro" and operation=="create"),
+                               not pro_parallel and settings.GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED and generation_strategy=="pro" and operation=="create"),
         visual_state=continued_from.visual_state if continued_from else {},
         game_plan=game_plan,
         game_request=original_request,
@@ -546,7 +559,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         policy_snapshot=continued_from.policy_snapshot if continued_from else policy_snapshot(),
         candidate_revision=candidate,
         continued_from=continued_from,
-        max_repair_attempts=settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS,
+        max_repair_attempts=5 if pro_parallel else settings.GAMEFORGE_MAX_REPAIR_ATTEMPTS,
         allow_model_calls=not check_only,
         model_call_limit=call_limit,
         model_call_deadline=deadline,
@@ -628,6 +641,8 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
         chat.save(update_fields=["current_revision", "title", "updated_at"])
     run.save()
     responses = run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
+    if run.pro_parallel:
+        responses = responses.exclude(request__operation__in=['pro_graphics', 'pro_audio'])
     if (error or {}).get("code") != "scope_refusal":
         responses = responses.exclude(request__has_key="operation", request__operation__in=["plan", "visual_review"])
     if revision:

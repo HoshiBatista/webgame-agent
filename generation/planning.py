@@ -102,11 +102,18 @@ def schema(request):
             'layouts': string(minLength=10, maxLength=350),
         })
         plan['required'].append('player_experience')
+    if request.get('pro_parallel') == 1:
+        from .pro_parallel import CONTRACT
+
+        plan = result['properties']['plan']['anyOf'][0]
+        plan['properties']['resource_contract'] = deepcopy(CONTRACT)
+        plan['required'].append('resource_contract')
     return result
 
 
 def prompt(request):
     from .experience import enabled
+    from .pro_parallel import PLAN_GUIDANCE
 
     return PLAN_PROMPT + (PREFERENCE_GUIDANCE if request.get('plan_provenance') == PROVENANCE_VERSION else '') + (
         "\nPro: develop up to four tightly connected mechanics, a distinctive visual direction and a satisfying arc. Keep the implementation feasible as a self-contained mini-game."
@@ -114,7 +121,7 @@ def prompt(request):
         "\nLite: choose one core mechanic and at most one supporting mechanic. Keep rules explicit, implementation small, and the whole game complete."
     ) + (presentation.PLAN_GUIDANCE if presentation.enabled(request) else "") + (
         '\nplayer_experience: specify audience adaptations, original music/action sounds, touch/keyboard and portrait/landscape/desktop layouts. No stock assets, extra stage or full score. Preserve silence/static requests. Include a promise with category=control, viewport=desktop in the 3-8 promises: start AND play without any mouse/touch input. A desktop start promise does not replace this control promise. Each outcome example ends at the decisive winning/losing action; replay is separate. Invariants use regression. Audio quality/mood belongs in player_experience, not a pass/fail promise. Any explicit playback promise uses regression, never start/outcome/restart. Full checks can observe player musicPlaying/effectsPlayed; compact audio stays in player_experience.'
-        if enabled(request) else '')
+        if enabled(request) else '') + (PLAN_GUIDANCE if request.get('pro_parallel') == 1 else '')
 
 
 def strategy(provider, model):
@@ -137,6 +144,10 @@ def validate_plan(response, request=None):
         return
     if not isinstance(plan, dict):
         raise ContractError('invalid_plan', 'Успешный замысел требует структуры плана.')
+    if (request or {}).get('pro_parallel') == 1:
+        from .pro_parallel import validate_contract
+
+        validate_contract(plan.get('resource_contract'))
     requirements = plan['requirements']
     if len({r['id'] for r in requirements}) != len(requirements):
         raise ContractError('invalid_plan', 'ID требований должны быть уникальными.')

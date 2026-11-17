@@ -29,7 +29,7 @@ import { chatsChanged, useSession } from './context';
 import type { Chat, Preferences, PromptTemplate, Publication, Revision, Run } from './types';
 import { useSavedChat } from './useSavedChat';
 import RunMessage, { RunTime } from './RunMessage';
-import ModelSelector, { selectedProfile } from './ModelSelector';
+import ModelSelector, { modelLabel, selectedProfile } from './ModelSelector';
 import TemplatePicker from './TemplatePicker';
 import { appendTemplate } from './textLimits';
 import AudienceSelector from './AudienceSelector';
@@ -818,8 +818,7 @@ export default function Studio() {
             {chat?.messages.map((message) => {
               const run =
                 chat.runs.find((item) => item.id === message.run_id) ?? message.generation;
-              const label =
-                run?.model_label === 'Pro' || run?.model_profile === 'pro' ? 'Pro' : 'Lite';
+              const label = modelLabel(run);
               return (
                 <article className={`chat-message message-${message.role}`} key={message.id}>
                   <span className="message-author">
@@ -932,7 +931,7 @@ export default function Studio() {
               ) && (
                 <article className="chat-message message-assistant">
                   <span className="message-author">
-                    beeGame {latestRun.model_profile === 'pro' ? 'Pro' : 'Lite'}
+                    beeGame {modelLabel(latestRun)}
                     <RunTime run={latestRun} />
                   </span>
                   <div>{latestRun.message}</div>

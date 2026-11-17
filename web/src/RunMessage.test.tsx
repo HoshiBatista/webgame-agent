@@ -7,6 +7,15 @@ import type { Run } from './types';
 const run = { id: 'one', status: 'generating', elapsed_seconds: 7, model_profile: 'lite' } as Run;
 afterEach(() => vi.useRealTimers());
 
+it('labels the parallel experiment separately from ordinary Pro and Lite', () => {
+  render(
+    <MemoryRouter>
+      <RunMessage run={{ ...run, model_profile: 'pro_multi' }} />
+    </MemoryRouter>,
+  );
+  expect(screen.getByText(/Pro · эксперимент/)).toBeInTheDocument();
+});
+
 it('ticks every second between server responses and never moves backwards after polling', () => {
   vi.useFakeTimers();
   const { rerender } = render(<RunTime run={run} />);

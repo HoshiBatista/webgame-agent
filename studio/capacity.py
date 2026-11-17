@@ -1,6 +1,6 @@
 """Provider slots; callers hold the shared Budget row lock during admission."""
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Count, Q
 
 from .models import FeedbackProcessing, Run
 
@@ -10,12 +10,19 @@ def provider_limit(provider):
             else settings.GAMEFORGE_PROVIDER_CONCURRENCY)
 
 
-def capacity_full(run):
-    # Processing and remote waiting/cancelled jobs may be disjoint. Count the
-    # union, once per run, rather than max(two counts) or duplicated SQL joins.
-    occupied = Run.objects.filter(provider=run.provider).exclude(pk=run.pk).filter(
-        Q(status__in=["generating", "checking"]) | Q(invocations__state__in=["reserved", "sent"])
-    ).values("pk").distinct().count()
+def run_slots(provider, *, exclude=None):
+    # Ordinary runs still occupy one slot. Parallel runs occupy one per admitted
+    # inference, including cancelled/waiting jobs whose receipt is outstanding.
+    runs = Run.objects.filter(provider=provider).exclude(pk=exclude).annotate(
+        pending_calls=Count('invocations', filter=Q(invocations__state__in=['reserved', 'sent']))
+    ).values_list('status', 'pending_calls')
+    return sum(max(int(status in ['generating', 'checking']), calls) for status, calls in runs)
+
+
+def capacity_full(run, *, include_current_calls=False):
+    occupied = run_slots(run.provider, exclude=run.pk)
+    if include_current_calls:
+        occupied += run.invocations.filter(state__in=['reserved', 'sent']).count()
     occupied += FeedbackProcessing.objects.filter(provider=run.provider).filter(
         Q(status="processing") | Q(invocation_state__in=["reserved", "sent"])
     ).count()
@@ -23,9 +30,7 @@ def capacity_full(run):
 
 
 def feedback_capacity_full(job):
-    occupied = Run.objects.filter(provider=job.provider).filter(
-        Q(status__in=["generating", "checking"]) | Q(invocations__state__in=["reserved", "sent"])
-    ).values("pk").distinct().count()
+    occupied = run_slots(job.provider)
     occupied += FeedbackProcessing.objects.filter(provider=job.provider).exclude(pk=job.pk).filter(
         Q(status="processing") | Q(invocation_state__in=["reserved", "sent"])
     ).count()

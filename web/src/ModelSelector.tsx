@@ -2,6 +2,11 @@ import { useEffect, useId, useRef } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import type { ModelProfile, Session } from './types';
 
+export function modelLabel(run?: { model_profile?: string; model_label?: string } | null) {
+  if (run?.model_profile === 'pro_multi') return 'Pro · эксперимент';
+  return run?.model_label === 'Pro' || run?.model_profile === 'pro' ? 'Pro' : 'Lite';
+}
+
 export function selectedProfile(session: Session) {
   if (session.capabilities.provider === 'fake') return '';
   return session.preferences.model_profile || session.capabilities.default_model_profile || '';
