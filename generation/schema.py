@@ -259,9 +259,10 @@ def response_schema(request):
         if request['check_repair'].get('max_checks') == MAX_SAVED_CHECKS:
             result['properties']['checks']['maxItems'] = MAX_SAVED_CHECKS
         from .lite_wait_budget import response_schema as wait_schema
+        from .pro_creative import check_schema
 
         result = constrain_checks(result, request) if lite_enabled(request) else result
-        return wait_schema(result, request)
+        return check_schema(wait_schema(result, request), request)
     schema = deepcopy(RESPONSE_SCHEMA)
     schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
     operation = request.get("operation", "create")
@@ -298,6 +299,9 @@ def response_schema(request):
     if lite_enabled(request):
         schema = constrain_checks(schema, request)
     schema = wait_schema(schema, request)
+    from .pro_creative import check_schema
+
+    schema = check_schema(schema, request)
     if lite_enabled(request):
         from .lite_wire import enabled as wire_enabled
         from .lite_wire import schema as lite_wire_schema

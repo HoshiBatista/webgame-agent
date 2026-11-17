@@ -81,6 +81,13 @@ def generate(request, *, on_event, is_cancelled):
             result['provider_metadata']['lite_wait_budget'] = {
                 'version': VERSION, 'milliseconds': MILLISECONDS, 'check_ids': budget_ids,
             }
+        from .pro_creative import prepare_checks
+
+        result['response'], creative_budget_ids = prepare_checks(result['response'], request)
+        if creative_budget_ids:
+            result['provider_metadata']['pro_creative_wait_budget'] = {
+                'version': 1, 'milliseconds': 30000, 'check_ids': creative_budget_ids,
+            }
         if branch(request):
             validate_reply(result['response'], request)
         elif request.get('response_completion'):

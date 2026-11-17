@@ -16,6 +16,7 @@ from studio.models import Chat, Invocation, Run, User
 from studio.pro_parallel import advance, branch_request
 from studio.services import DomainError, cancel_run, create_run, finish_run
 from studio.tasks import Lease, claim_run, request_for
+from tests.test_pro_creative import creative_brief
 
 SINGLE = {'mode': 'single', 'reason': 'Одна короткая механика не требует раздельных модулей.', 'interface': None}
 
@@ -66,6 +67,7 @@ def planned(owner, **fields):
     plan = fake_generate(plan_request, on_event=lambda _: None, is_cancelled=lambda: False)['response']['plan']
     plan['resource_contract'] = resource_contract()
     plan['gameplay_partition'] = SINGLE
+    plan['experience_direction'] = creative_brief()
     validate_contract(plan['resource_contract'])
     run.game_plan, run.requirement_manifest = plan, manifest(run.game_request, plan)
     run.save()
@@ -87,7 +89,7 @@ def test_explicit_opt_in_preserves_normal_pro_plan_limits_and_disabled_catalog(c
     assert experiment.max_model_calls == 10 and experiment.max_repair_attempts == 5
     assert not normal.pro_parallel and experiment.pro_parallel
     assert 'pro_parallel' not in request_for(normal, None, [])
-    assert request_for(experiment, None, [])['pro_parallel'] == 2
+    assert request_for(experiment, None, [])['pro_parallel'] == 3
     assert planned(context).max_model_calls == 9
     settings.GAMEFORGE_PRO_PARALLEL_ENABLED = False
     assert 'pro_multi' not in {p['id'] for p in profile_options(None)}
@@ -225,6 +227,7 @@ def test_full_pipeline_keeps_plan_then_three_branches_then_browser(context):
             result = fake_generate(req, **kwargs)
             result['response']['plan']['resource_contract'] = resource_contract()
             result['response']['plan']['gameplay_partition'] = SINGLE
+            result['response']['plan']['experience_direction'] = creative_brief()
             return result
         result = answer(req)
         if req.get('pro_parallel_branch') == 'gameplay':
@@ -357,24 +360,27 @@ def test_split_cancel_receipts_survive_and_continue_keeps_version_and_choice(con
         reconcile_relay_cancellations()
     run.refresh_from_db()
     continued = create_run(run.chat, {'prompt': run.prompt, 'idempotency_key': 'continue-split'}, continued_from=run)
-    assert continued.pro_parallel_version == 2 and continued.game_plan == run.game_plan
+    assert continued.pro_parallel_version == 3 and continued.game_plan == run.game_plan
     model = Mock(side_effect=AssertionError('Do not repeat saved branches'))
     assert tick(continued, model) and not model.called
 
 
-def test_legacy_parallel_run_keeps_v1_and_three_roles_on_continuation(context):
+@pytest.mark.parametrize('version', [1, 2])
+def test_legacy_parallel_run_keeps_version_and_three_roles_on_continuation(context, version):
     run = planned(context)
-    run.pro_parallel_version = 1
-    del run.game_plan['gameplay_partition']
+    run.pro_parallel_version = version
+    del run.game_plan['experience_direction']
+    if version == 1:
+        del run.game_plan['gameplay_partition']
     run.save()
     tick(run, Mock(side_effect=GenerationPending('running')))
     assert run.max_model_calls == 9 and run.invocations.count() == 3
-    assert set(run.invocations.values_list('request__pro_parallel', flat=True)) == {1}
+    assert set(run.invocations.values_list('request__pro_parallel', flat=True)) == {version}
     cancel_run(run)
     run.refresh_from_db()
     # Retain the old protocol before any possible future receipt reconciliation.
     continued = create_run(run.chat, {'prompt': run.prompt, 'idempotency_key': 'continue-old'}, continued_from=run)
-    assert continued.pro_parallel_version == 1 and continued.max_model_calls == 6
+    assert continued.pro_parallel_version == version and continued.max_model_calls == 6
 
 
 def test_split_pipeline_plans_once_assembles_then_uses_normal_browser_acceptance(context):
@@ -388,7 +394,8 @@ def test_split_pipeline_plans_once_assembles_then_uses_normal_browser_acceptance
         requests.append(req)
         if req['operation'] == 'plan':
             result = fake_generate(req, **kwargs)
-            result['response']['plan'].update(resource_contract=resource_contract(), gameplay_partition=partition())
+            result['response']['plan'].update(resource_contract=resource_contract(), gameplay_partition=partition(),
+                                             experience_direction=creative_brief())
             return result
         return split_answer(req)
     with patch('generation.service.generate', side_effect=model), patch(

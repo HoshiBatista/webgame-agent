@@ -64,6 +64,7 @@ def policy_snapshot():
         "music.py",
         "pro_parallel.py",
         "pro_partition.py",
+        "pro_creative.py",
         "../studio/pro_parallel.py",
         "planning.py",
         "requirements.py",

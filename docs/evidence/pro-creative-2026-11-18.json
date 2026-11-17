@@ -1,0 +1,5590 @@
+{
+  "date": "2026-11-18",
+  "recorded_at": "2026-11-17T23:53:55.486325+00:00",
+  "scope": "Experimental Pro v3 only. Existing Pro/Lite/v1/v2 messages and schemas preserved.",
+  "status": "Implementation ready; final live verification blocked by Pro Worker attention_required/draining after an unknown turn failure. Cloud administration not authorized.",
+  "base_commit": "6b9e6dad24f8b6dc02a0922adcfb9b404cff2b90",
+  "inputs": {
+    "alchemy": "Игра про алхимика",
+    "shooter": "Космический шутер"
+  },
+  "frozen_operator_requirements": {
+    "shared": [
+      "Ясное начало и настоящий ввод: телефон вертикально/горизонтально и клавиатура без мыши.",
+      "Действия меняют авторитетное состояние правил; поддерживающие механики реально взаимодействуют.",
+      "Достижимый исход, работающий перезапуск; повтор не сохраняет старые эффекты и таймеры.",
+      "Поворот экрана сохраняет прогресс и доступность объектов/управления.",
+      "Музыка и звуки после жеста, работающий mute; партитура действительно содержит вариации и разные голоса.",
+      "Анимации привязаны к реальным игровым событиям; просмотр нескольких кадров, без заявлений о FPS."
+    ],
+    "alchemy": [
+      "Ингредиенты или другие ресурсы расходуются/преобразуются по правилам.",
+      "Цель зелья/исследования достигается через последовательность осмысленных решений."
+    ],
+    "shooter": [
+      "Движение и стрельба работают с реальным вводом.",
+      "Попадания, угрозы, потеря здоровья и продвижение связаны с реальной игрой."
+    ]
+  },
+  "cases": [
+    {
+      "case": "creative-alchemy-1",
+      "run_id": "3b170829-eea3-4541-9844-d257cd84720d",
+      "prompt": "Игра про алхимика",
+      "status": "succeeded",
+      "version": 3,
+      "created_at": "2026-11-17T23:25:32.140759+00:00",
+      "seconds": 520.13,
+      "calls": [
+        {
+          "id": "cb440e73-74a8-4c26-a63e-c7e8e4770b0c",
+          "attempt": 1,
+          "state": "settled",
+          "operation": "plan",
+          "branch": null,
+          "error_code": null,
+          "usd": "0.060248",
+          "seconds": 94.063625,
+          "usage": {
+            "input_tokens": 6209,
+            "output_tokens": 4783,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "c86a6573-a004-4fc7-a879-c02d471a8110",
+          "attempt": 2,
+          "state": "failed",
+          "operation": "create",
+          "branch": "gameplay",
+          "error_code": "response_output_limit",
+          "usd": "0.141940",
+          "seconds": 213.060667,
+          "usage": {
+            "input_tokens": 13655,
+            "output_tokens": 11463,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "8a65109b-23b6-4b2b-b259-2db25dd9c162",
+          "attempt": 3,
+          "state": "settled",
+          "operation": "pro_graphics",
+          "branch": "graphics",
+          "error_code": null,
+          "usd": "0.044376",
+          "seconds": 70.636534,
+          "usage": {
+            "input_tokens": 3868,
+            "output_tokens": 3664,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "2928f676-4ebd-483a-9679-95f26baeeb39",
+          "attempt": 4,
+          "state": "settled",
+          "operation": "pro_audio",
+          "branch": "audio",
+          "error_code": null,
+          "usd": "0.031966",
+          "seconds": 51.78197,
+          "usage": {
+            "input_tokens": 4253,
+            "output_tokens": 2346,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "ff218755-56ac-4082-836e-6b93561435c4",
+          "attempt": 5,
+          "state": "settled",
+          "operation": "create",
+          "branch": "gameplay",
+          "error_code": null,
+          "usd": "0.127902",
+          "seconds": 190.974027,
+          "usage": {
+            "input_tokens": 13706,
+            "output_tokens": 10049,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ],
+      "error_code": null,
+      "policy_stage": "initial_v3",
+      "revision_id": "b3541024-ab6d-430c-9307-5b13c1088e06",
+      "artifact_hash": "05a90f9a484fbd57faac8c3d466617fbd7495246b2c0daca11b3206c79d8c494",
+      "checks_review_required": false,
+      "file_bytes": {
+        "game.js": 10086,
+        "index.html": 2603,
+        "styles.css": 5187,
+        "game-assets.json": 10349
+      },
+      "media": {
+        "graphics": 4,
+        "instruments": 3,
+        "sounds": 5,
+        "notes": 44,
+        "beats": 24,
+        "bpm": 112,
+        "notes_by_voice": {
+          "bell": 24,
+          "bass": 12,
+          "glass": 8
+        },
+        "unique_pitches": 17,
+        "silence_reason": ""
+      },
+      "plan": {
+        "summary": "Короткая алхимическая головоломка без таймера: выполняйте шесть заказов, выбирая одну из двух видимых целей и учитывая, что варка пополняет запас третьей эссенции; первая пара сопровождается подсказкой.",
+        "mechanics": [
+          "Три эссенции соединяются попарно; каждую пару обозначает отдельное зелье на карточке заказа.",
+          "Одновременно доступны два заказа, а после выполнения одного открывается следующий из очереди.",
+          "Успешная варка тратит по единице выбранных эссенций и даёт единицу невыбранной; при неподходящей паре запасы не меняются."
+        ],
+        "progression": "Очередь из шести заказов составлена из трёх пар; сначала запаса хватает свободно, затем побочные эссенции помогают закрыть оставшиеся заказы. Прохождение короткое и повторяется с исходными запасами.",
+        "gameplay_partition": {
+          "mode": "single",
+          "reason": "Запасы, заказы и выбор пары образуют небольшую связанную сцену; единая реализация проще разделения правил и отображения.",
+          "interface": null
+        },
+        "experience_direction": {
+          "arc": [
+            "Первый заказ знакомит с выбором пары и побочным продуктом.",
+            "При уменьшении запасов порядок двух доступных заказов становится важен.",
+            "Шестая удачная варка завершает смену; повторный запуск возвращает начальный набор."
+          ],
+          "music": {
+            "voices": "Мягкий колокольчик ведёт мелодию, приглушённый щипковый бас задаёт опоры, редкие стеклянные созвучия отмечают начало фраз.",
+            "structure": "Петля на 24 доли в ре миноре: две контрастные фразы A/B, около 40 нот, с паузами между ответами мелодии.",
+            "development": "Во второй фразе мелодия поднимается выше, бас меняет последние две опоры; короткая пауза подводит к чистому возвращению начала."
+          },
+          "scope": "developed",
+          "motion": [
+            {
+              "event": "Выбор ингредиентов",
+              "duration_ms": 180,
+              "choreography": "Нужные банки мягко подсвечиваются, а выбранные эссенции направляются к котлу."
+            },
+            {
+              "event": "Удачная варка",
+              "duration_ms": 320,
+              "choreography": "Две капли сходятся над котлом; внутри вспыхивает цвет готового зелья."
+            },
+            {
+              "event": "Выполнение заказа",
+              "duration_ms": 380,
+              "choreography": "Карточка заказа уходит в стопку выполненных, новая появляется рядом; знак побочной эссенции поднимается к её запасу."
+            },
+            {
+              "event": "Шестой заказ",
+              "duration_ms": 520,
+              "choreography": "Свет от котла заполняет итоговую печать, после чего спокойно появляется кнопка повтора."
+            }
+          ],
+          "reason": "Короткая тема даёт простор для самостоятельной алхимической головоломки без усложнения управления.",
+          "signature": "Котёл возвращает третью эссенцию: каждый выполненный заказ меняет возможности следующей варки."
+        }
+      },
+      "model_validation": [
+        {
+          "revision_id": "b3541024-ab6d-430c-9307-5b13c1088e06",
+          "artifact_hash": "05a90f9a484fbd57faac8c3d466617fbd7495246b2c0daca11b3206c79d8c494",
+          "reports": [
+            {
+              "status": "passed",
+              "findings": [],
+              "facts": [
+                {
+                  "id": "R01",
+                  "status": "passed"
+                },
+                {
+                  "id": "R02",
+                  "status": "passed"
+                },
+                {
+                  "id": "R07",
+                  "status": "passed"
+                },
+                {
+                  "id": "R03",
+                  "status": "passed"
+                },
+                {
+                  "id": "R04",
+                  "status": "passed"
+                },
+                {
+                  "id": "R05",
+                  "status": "passed"
+                },
+                {
+                  "id": "R06",
+                  "status": "passed"
+                },
+                {
+                  "id": "R08",
+                  "status": "passed"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "status": "passed",
+        "revision_id": "b3541024-ab6d-430c-9307-5b13c1088e06",
+        "artifact_hash": "05a90f9a484fbd57faac8c3d466617fbd7495246b2c0daca11b3206c79d8c494",
+        "checks": [
+          {
+            "id": "start",
+            "category": "start",
+            "viewport": "mobile",
+            "requirement": "Начало открывает первую смену и полный запас.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock0"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#remaining"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 6
+            }
+          },
+          {
+            "id": "touch",
+            "category": "control",
+            "viewport": "mobile",
+            "requirement": "Касания ингредиентов и варки выполняют первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 1
+            }
+          },
+          {
+            "id": "keys",
+            "category": "control",
+            "viewport": "desktop",
+            "requirement": "Клавиатура начинает смену и варит без мыши.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "1"
+              },
+              {
+                "action": "press",
+                "key": "2"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 1
+            }
+          },
+          {
+            "id": "resources",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Первая варка тратит две эссенции и возвращает третью.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock0"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 2
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock1"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 2
+                }
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#stock2"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 4
+            }
+          },
+          {
+            "id": "second-choice",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Можно сначала выполнить второй открытый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock0"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 2
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock2"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 2
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock1"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 4
+                }
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 1
+            }
+          },
+          {
+            "id": "wrong-pair",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Невидимый заказ не расходует запас и не засчитывается.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock0"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock1"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock2"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 0
+            }
+          },
+          {
+            "id": "win",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Все шесть настоящих заказов завершают смену.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 6
+            }
+          },
+          {
+            "id": "restart",
+            "category": "restart",
+            "viewport": "mobile",
+            "requirement": "После финала повтор возвращает полный запас и шесть заказов.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#replay",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock0"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock1"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock2"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 3
+                }
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#remaining"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 6
+            }
+          },
+          {
+            "id": "keyboard-win",
+            "category": "regression",
+            "viewport": "desktop",
+            "requirement": "Полная смена проходится только клавиатурой.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "1"
+              },
+              {
+                "action": "press",
+                "key": "2"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "1"
+              },
+              {
+                "action": "press",
+                "key": "3"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "2"
+              },
+              {
+                "action": "press",
+                "key": "3"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "1"
+              },
+              {
+                "action": "press",
+                "key": "2"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "1"
+              },
+              {
+                "action": "press",
+                "key": "3"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "press",
+                "key": "2"
+              },
+              {
+                "action": "press",
+                "key": "3"
+              },
+              {
+                "action": "press",
+                "key": "Enter"
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 6
+            }
+          },
+          {
+            "id": "rotate",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Поворот сохраняет запасы и позволяет следующую варку.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "resize",
+                "viewport": "landscape"
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "text_number",
+                  "selector": "#stock2"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": 4
+                }
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess2",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "text_number",
+              "selector": "#done"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": 2
+            }
+          },
+          {
+            "id": "music",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Музыка запускается жестом и доступно отключение.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "experience",
+                  "field": "musicPlaying"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": true
+                }
+              },
+              {
+                "action": "tap",
+                "selector": "#gf-player-tools button",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "muted"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": true
+            }
+          },
+          {
+            "id": "effects",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Успешная варка запускает игровой звуковой эффект.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess0",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "tap",
+                "selector": "#ess1",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "wait",
+                "ms": 100
+              },
+              {
+                "action": "checkpoint"
+              },
+              {
+                "action": "tap",
+                "selector": "#brew",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "effectsPlayed"
+            },
+            "expect": {
+              "operator": "increased",
+              "value": null
+            }
+          }
+        ],
+        "facts": [
+          {
+            "id": "start",
+            "status": "passed"
+          },
+          {
+            "id": "touch",
+            "status": "passed"
+          },
+          {
+            "id": "keys",
+            "status": "passed"
+          },
+          {
+            "id": "resources",
+            "status": "passed"
+          },
+          {
+            "id": "second-choice",
+            "status": "passed"
+          },
+          {
+            "id": "wrong-pair",
+            "status": "passed"
+          },
+          {
+            "id": "win",
+            "status": "passed"
+          },
+          {
+            "id": "restart",
+            "status": "passed"
+          },
+          {
+            "id": "keyboard-win",
+            "status": "passed"
+          },
+          {
+            "id": "rotate",
+            "status": "passed"
+          },
+          {
+            "id": "music",
+            "status": "passed"
+          },
+          {
+            "id": "effects",
+            "status": "passed"
+          }
+        ],
+        "findings": [],
+        "visual_frames": 6,
+        "visual_status": "captured",
+        "device_scale_factor": 2
+      }
+    },
+    {
+      "case": "creative-shooter-1",
+      "run_id": "9e5c3743-ad20-45aa-a8ea-7dbb5dbd2997",
+      "prompt": "Космический шутер",
+      "status": "needs_attention",
+      "version": 3,
+      "created_at": "2026-11-17T23:29:05.078885+00:00",
+      "seconds": 693.65,
+      "calls": [
+        {
+          "id": "cd5d2366-5255-488e-9ebe-bbda95b7ace9",
+          "attempt": 1,
+          "state": "settled",
+          "operation": "plan",
+          "branch": null,
+          "error_code": null,
+          "usd": "0.067026",
+          "seconds": 103.621556,
+          "usage": {
+            "input_tokens": 6213,
+            "output_tokens": 5460,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "f967a537-d978-4ef4-958e-51d5204c1fbd",
+          "attempt": 2,
+          "state": "settled",
+          "operation": "pro_mechanics",
+          "branch": "mechanics",
+          "error_code": null,
+          "usd": "0.061576",
+          "seconds": 99.758915,
+          "usage": {
+            "input_tokens": 5363,
+            "output_tokens": 5085,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "4a94f964-cb5e-4561-a6d6-3bc39e3d8a9c",
+          "attempt": 3,
+          "state": "failed",
+          "operation": "create",
+          "branch": "scene",
+          "error_code": "response_output_limit",
+          "usd": "0.141264",
+          "seconds": 208.387547,
+          "usage": {
+            "input_tokens": 15252,
+            "output_tokens": 11076,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "8768a8ef-604d-455f-afcb-c12fdf6419ce",
+          "attempt": 4,
+          "state": "settled",
+          "operation": "pro_graphics",
+          "branch": "graphics",
+          "error_code": null,
+          "usd": "0.036636",
+          "seconds": 51.717681,
+          "usage": {
+            "input_tokens": 5113,
+            "output_tokens": 2641,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "23519db9-1b58-4031-8a6e-b42015bff1b4",
+          "attempt": 5,
+          "state": "settled",
+          "operation": "pro_audio",
+          "branch": "audio",
+          "error_code": null,
+          "usd": "0.033576",
+          "seconds": 61.71933,
+          "usage": {
+            "input_tokens": 5498,
+            "output_tokens": 2258,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "0d01611e-632a-46d4-bac1-e06eae58fadc",
+          "attempt": 6,
+          "state": "failed",
+          "operation": "create",
+          "branch": "scene",
+          "error_code": "response_output_limit",
+          "usd": "0.127416",
+          "seconds": 183.513012,
+          "usage": {
+            "input_tokens": 15303,
+            "output_tokens": 9681,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "335438a4-47f8-4d58-9947-2ae46e92790f",
+          "attempt": 7,
+          "state": "failed",
+          "operation": "create",
+          "branch": "scene",
+          "error_code": "response_output_limit",
+          "usd": "0.132706",
+          "seconds": 193.449492,
+          "usage": {
+            "input_tokens": 15303,
+            "output_tokens": 10210,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ],
+      "error_code": "repair_exhausted",
+      "policy_stage": "initial_v3",
+      "plan": {
+        "summary": "Короткий космический шутер для широкой аудитории: горизонтальное управление, автоматический огонь, усиление при остановке, заранее обозначенные атаки и падающий ремонт приводят через две волны к боссу.",
+        "mechanics": [
+          "Автоматический выстрел каждые 0,38 с: обычный наносит 1 урон, после 0,7 с без движения — 2; движение сбрасывает усиление.",
+          "Корабль выдерживает три попадания; перед вражеской пулей 0,65 с видна её вертикальная линия, а после попадания действует короткая защита от повторного урона.",
+          "После второго и пятого сбитого дрона падает ремонт: подбор восстанавливает одну единицу прочности, но не выше трёх.",
+          "В первой волне три дрона с 2 единицами прочности, во второй четыре с 3, затем босс с 18; после уничтожения последнего врага начинается следующая волна, уничтожение босса приносит победу."
+        ],
+        "progression": "Волны идут последовательно без отдельного меню уровней: три дрона, четыре более крепких дрона, босс с более частыми предупреждениями. Победа и поражение достижимы в одном коротком заходе; повтор начинается с первой волны.",
+        "gameplay_partition": {
+          "mode": "split",
+          "reason": "Волны, столкновения, накопление усиления и предупреждения образуют самостоятельные правила; отображение и ввод могут опираться на чётко заданное состояние.",
+          "interface": {
+            "events": [
+              {
+                "name": "started",
+                "meaning": "{wave:1}; заход начался."
+              },
+              {
+                "name": "fired",
+                "meaning": "{x:number,power:1|2}; корабль выстрелил."
+              },
+              {
+                "name": "hit",
+                "meaning": "{x:number,y:number,kind:'drone'|'boss'}; выстрел попал во врага."
+              },
+              {
+                "name": "damaged",
+                "meaning": "{hp:number}; корабль получил урон."
+              },
+              {
+                "name": "repaired",
+                "meaning": "{hp:number}; ремонт восстановил прочность."
+              },
+              {
+                "name": "warned",
+                "meaning": "{x:number}; началось предупреждение о выстреле по этой линии."
+              },
+              {
+                "name": "wave",
+                "meaning": "{wave:2|3}; открылась следующая волна."
+              },
+              {
+                "name": "ended",
+                "meaning": "{result:'won'|'lost'}; заход завершён."
+              }
+            ],
+            "commands": [
+              {
+                "name": "start",
+                "effect": "Из титульного состояния начинает первую волну, обнуляет состояние захода.",
+                "payload": "{} без полей"
+              },
+              {
+                "name": "restart",
+                "effect": "После победы или поражения начинает новый заход с первой волны.",
+                "payload": "{} без полей"
+              },
+              {
+                "name": "move",
+                "effect": "Во время игры задаёт целевой центр корабля; x ограничивается диапазоном 28..332.",
+                "payload": "{x:number}, логические пиксели"
+              }
+            ],
+            "coordinates": "Логическое поле 360×640; начало координат сверху слева, x вправо, y вниз. Корабль начинает в (180,560), перемещается по x в пределах 28..332 со скоростью не более 300 единиц/с. Свои выстрелы идут вверх со скоростью 360 единиц/с, вражеские — вниз со скоростью 170 единиц/с, ремонт — вниз со скоростью 95 единиц/с. Дроны находятся около y=100 и y=160, босс около y=110; их горизонтальное движение отраж",
+            "state_fields": [
+              {
+                "name": "phase",
+                "shape": "'title'|'playing'|'won'|'lost'"
+              },
+              {
+                "name": "shipX",
+                "shape": "number; центр корабля, логические пиксели"
+              },
+              {
+                "name": "targetX",
+                "shape": "number; заданный центр, логические пиксели"
+              },
+              {
+                "name": "focusSeconds",
+                "shape": "number; накопленная неподвижность 0..0.7 с, порог усиления 0.7"
+              },
+              {
+                "name": "hp",
+                "shape": "integer; прочность 0..3"
+              },
+              {
+                "name": "wave",
+                "shape": "integer; 0 на титуле, 1 и 2 волны дронов, 3 босс"
+              },
+              {
+                "name": "enemies",
+                "shape": "array<{id:integer,kind:'drone'|'boss',x:number,y:number,hp:integer,dir:-1|1}>; координаты в логических пикселях"
+              },
+              {
+                "name": "shots",
+                "shape": "array<{id:integer,x:number,y:number,power:1|2}>; координаты в логических пикселях"
+              },
+              {
+                "name": "bullets",
+                "shape": "array<{id:integer,x:number,y:number}>; координаты в логических пикселях"
+              },
+              {
+                "name": "pickups",
+                "shape": "array<{id:integer,x:number,y:number}>; ремонт, координаты в логических пикселях"
+              },
+              {
+                "name": "warnings",
+                "shape": "array<{id:integer,x:number,y:number,remaining:number}>; линия атаки, оставшееся время в секундах"
+              },
+              {
+                "name": "time",
+                "shape": "number; секунды с начала текущего захода"
+              }
+            ]
+          }
+        },
+        "experience_direction": {
+          "arc": [
+            "Первая волна из трёх дронов знакомит с движением, стрельбой и предупреждениями.",
+            "Во второй волне четыре более прочных дрона заставляют выбирать между усилением огня, уклонением и ремонтом.",
+            "Босс чаще атакует обозначенную линию; его уничтожение завершает заход, после чего доступен повтор."
+          ],
+          "music": {
+            "voices": "Мягкий синтезатор ведёт короткую мелодию, округлый бас держит опоры, приглушённые импульсы обозначают ритм без постоянной плотной стены звука.",
+            "structure": "Замкнутый цикл 24 доли, A/A′, тональный центр ля минор, около 42 осмысленных нот с паузами.",
+            "development": "Вторая фраза поднимает окончание мелодии и меняет редкие басовые опоры; пауза перед последним акцентом подводит к чистому возвращению первой фразы."
+          },
+          "scope": "developed",
+          "motion": [
+            {
+              "event": "Предупреждение об атаке",
+              "duration_ms": 650,
+              "choreography": "Перед вражеским выстрелом тонкая красная линия проявляется и становится ярче; она показывает безопасное время для ухода."
+            },
+            {
+              "event": "Перемещение и накопление усиления",
+              "duration_ms": 700,
+              "choreography": "Корабль плавно следует за выбранной позицией; после остановки на нём постепенно собирается световое кольцо усиления."
+            },
+            {
+              "event": "Выстрел и попадание",
+              "duration_ms": 260,
+              "choreography": "Выстрел оставляет короткий след, попадание на мгновение подсвечивает силуэт врага, затем свечение гаснет."
+            },
+            {
+              "event": "Конец захода",
+              "duration_ms": 800,
+              "choreography": "После решающего попадания враги исчезают, экран результата проявляется поверх успокоившегося звёздного фона."
+            }
+          ],
+          "reason": "Короткий запрос задаёт жанр, но не точные правила; усиление при остановке связывает прицеливание с уклонением, не усложняя управление.",
+          "signature": "Чем дольше корабль неподвижен, тем сильнее его автоматический огонь — именно тогда обозначенная вражеская линия заставляет его сдвинуться."
+        }
+      },
+      "model_validation": []
+    },
+    {
+      "case": "creative-shooter-2",
+      "run_id": "7914aa1b-686c-40da-94a5-d5b237622871",
+      "prompt": "Космический шутер",
+      "status": "cancelled",
+      "version": 3,
+      "created_at": "2026-11-17T23:46:04.384077+00:00",
+      "seconds": 430.54,
+      "calls": [
+        {
+          "id": "829e59a1-0ab6-4c57-b5a1-c7952ce70703",
+          "attempt": 1,
+          "state": "settled",
+          "operation": "plan",
+          "branch": null,
+          "error_code": null,
+          "usd": "0.047728",
+          "seconds": 71.502255,
+          "usage": {
+            "input_tokens": 6319,
+            "output_tokens": 3509,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "1b274ef8-87a3-45ad-bd1b-87c5fc2964e5",
+          "attempt": 2,
+          "state": "unknown",
+          "operation": "create",
+          "branch": "gameplay",
+          "error_code": "codex_turn_failed",
+          "usd": null,
+          "seconds": 12.569469,
+          "usage": null
+        },
+        {
+          "id": "7095323a-1eef-47c4-b122-98aa056d8764",
+          "attempt": 3,
+          "state": "failed",
+          "operation": "pro_graphics",
+          "branch": "graphics",
+          "error_code": "cancelled_before_submission",
+          "usd": "0.000000",
+          "seconds": 0.0,
+          "usage": null
+        },
+        {
+          "id": "531ce9a7-61af-4629-8249-f58f2b8b7ae7",
+          "attempt": 4,
+          "state": "failed",
+          "operation": "pro_audio",
+          "branch": "audio",
+          "error_code": "cancelled_before_submission",
+          "usd": "0.000000",
+          "seconds": 0.0,
+          "usage": null
+        }
+      ],
+      "error_code": null,
+      "policy_stage": "final",
+      "plan": {
+        "summary": "Короткий космический шутер с движением, стрельбой и уклонением: уничтожение дронов возвращает щит, который помогает пережить бой с флагманом. Первая волна знакомит с правилами благодаря редким и заранее обозначенным залпам; предусмотрены победа, поражение и повтор.",
+        "mechanics": [
+          "Корабль движется горизонтально и выпускает снаряды при удержании кнопки огня.",
+          "Дроны и флагман предупреждают о выстрелах; вторая волна стреляет чаще, а флагман выдерживает четыре попадания.",
+          "У корабля три единицы прочности и краткая неуязвимость после попадания.",
+          "Щит действует 1,5 секунды: один заряд доступен сразу, ещё по одному дают третий и шестой уничтоженные дроны; максимум два заряда."
+        ],
+        "progression": "Один короткий бой: три дрона, затем четыре более активных дрона, затем флагман; волны сменяются после уничтожения всех врагов. Повтор сбрасывает прочность, заряды и прогресс.",
+        "gameplay_partition": {
+          "mode": "single",
+          "reason": "Позиции, столкновения, ввод и отрисовка тесно связаны в небольшой игре на одном экране; единая реализация проще разделения.",
+          "interface": null
+        },
+        "experience_direction": {
+          "arc": [
+            "Первый дрон показывает, как двигаться и стрелять; первые выстрелы врага дают время научиться уклонению.",
+            "Во второй волне дроны стреляют чаще, а уничтожение третьего и шестого дрона пополняет щит.",
+            "После семи дронов появляется флагман с четырьмя очками прочности; его уничтожение завершает бой."
+          ],
+          "music": {
+            "voices": "Мягкий синтезаторный лид, округлый бас и редкие стеклянные аккорды с негромким ритмическим импульсом.",
+            "structure": "Зацикленные 24 доли в ми миноре, около 44 нот в двух контрастных фразах A/A'.",
+            "development": "Фраза A остаётся спокойной, A' поднимает мелодию и добавляет короткий ответ баса; паузы перед концами фраз дают место звукам выстрелов. Последний такт возвращает к первому без обрыва."
+          },
+          "scope": "developed",
+          "motion": [
+            {
+              "event": "Предупреждение о залпе",
+              "duration_ms": 350,
+              "choreography": "Перед выстрелом врага вспыхивает оранжевая точка, затем болт летит по читаемой траектории."
+            },
+            {
+              "event": "Движение и выстрел",
+              "duration_ms": 180,
+              "choreography": "Корабль плавно следует за вводом; выстрел оставляет короткий световой след."
+            },
+            {
+              "event": "Уничтожение дрона",
+              "duration_ms": 420,
+              "choreography": "Попадание даёт краткую вспышку; дрон распадается на несколько быстро затухающих фрагментов, а счётчик обновляется."
+            },
+            {
+              "event": "Победа",
+              "duration_ms": 850,
+              "choreography": "Флагман гаснет после последнего попадания, открывая итоговую надпись и кнопку повтора."
+            }
+          ],
+          "reason": "Короткий запрос оставляет место для небольшой законченной аркады; щит связан с попаданиями и меняет выбор при уклонении.",
+          "signature": "Уничтожение дронов возвращает расходуемый щит перед решающим боем с флагманом."
+        }
+      },
+      "model_validation": []
+    },
+    {
+      "case": "previous-alchemy-1",
+      "run_id": "929e38bc-3eda-4106-a126-e6fc8e336279",
+      "prompt": "Игра про алхимика",
+      "status": "unverified",
+      "version": 2,
+      "created_at": "2026-11-17T23:23:34.506060+00:00",
+      "seconds": 378.25,
+      "calls": [
+        {
+          "id": "bad835f7-fb84-4c87-bde9-fc7f821cd3b8",
+          "attempt": 1,
+          "state": "settled",
+          "operation": "plan",
+          "branch": null,
+          "error_code": null,
+          "usd": "0.041812",
+          "seconds": 63.850003,
+          "usage": {
+            "input_tokens": 4731,
+            "output_tokens": 3235,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "a4293844-b4ee-441a-a0f6-b24f5703fb67",
+          "attempt": 2,
+          "state": "settled",
+          "operation": "create",
+          "branch": "gameplay",
+          "error_code": null,
+          "usd": "0.119120",
+          "seconds": 179.220933,
+          "usage": {
+            "input_tokens": 12775,
+            "output_tokens": 9357,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "cf2d4953-198d-49c9-9dff-3f8bb7a2dc61",
+          "attempt": 3,
+          "state": "settled",
+          "operation": "pro_graphics",
+          "branch": "graphics",
+          "error_code": null,
+          "usd": "0.032184",
+          "seconds": 51.902955,
+          "usage": {
+            "input_tokens": 3172,
+            "output_tokens": 2584,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "d43afa13-b8ae-4fa0-94a2-ea8a13c29b8f",
+          "attempt": 4,
+          "state": "settled",
+          "operation": "pro_audio",
+          "branch": "audio",
+          "error_code": null,
+          "usd": "0.022890",
+          "seconds": 35.011149,
+          "usage": {
+            "input_tokens": 3365,
+            "output_tokens": 1616,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          }
+        },
+        {
+          "id": "a68fb754-b6e9-4a1e-90e6-8b010b67cef1",
+          "attempt": 5,
+          "state": "settled",
+          "operation": "check_repair",
+          "branch": null,
+          "error_code": null,
+          "usd": "0.056321",
+          "seconds": 47.468548,
+          "usage": {
+            "input_tokens": 21503,
+            "output_tokens": 2207,
+            "cached_input_tokens": 4864,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ],
+      "error_code": "manual_verification",
+      "policy_stage": "previous_v2",
+      "revision_id": "15aac4f7-e39e-4c79-9753-147e794c199b",
+      "artifact_hash": "6d6d5b7c3f5d05b84c539b22a80d09231cc6b5ec12bfb97aeead75469f4128c5",
+      "checks_review_required": true,
+      "file_bytes": {
+        "game.js": 10961,
+        "index.html": 1692,
+        "styles.css": 2750,
+        "game-assets.json": 8398
+      },
+      "media": {
+        "graphics": 4,
+        "instruments": 4,
+        "sounds": 5,
+        "notes": 24,
+        "beats": 16,
+        "bpm": 88,
+        "notes_by_voice": {
+          "copper": 12,
+          "warmth": 8,
+          "glass": 4
+        },
+        "unique_pitches": 15,
+        "silence_reason": ""
+      },
+      "plan": {
+        "summary": "Короткая игра для широкой аудитории: алхимик готовит три зелья, останавливая нагрев колбы в отмеченном диапазоне. Подсказка, крупная кнопка и отметка диапазона штриховкой помогают освоить правило без спешки.",
+        "mechanics": [
+          "Нагрев растёт только пока удерживается кнопка; отпускание проверяет попадание в отмеченный диапазон.",
+          "После удачного смешивания начинается следующее зелье с более быстрым нагревом и более узким диапазоном.",
+          "Промах повторяет текущее зелье; второй промах завершает сессию поражением."
+        ],
+        "progression": "Три зелья подряд: диапазоны нагрева 40–70%, 48–68% и 55–70%; скорость растёт от заказа к заказу. После ошибки тот же заказ начинается с пустой шкалой.",
+        "gameplay_partition": {
+          "mode": "single",
+          "reason": "Правила нагрева и управление образуют одну небольшую задачу; разделение добавило бы лишнюю сложность.",
+          "interface": null
+        },
+        "experience_direction": null
+      },
+      "model_validation": [
+        {
+          "revision_id": "c196f5f9-82fb-4441-b419-87df445747f2",
+          "artifact_hash": "6d6d5b7c3f5d05b84c539b22a80d09231cc6b5ec12bfb97aeead75469f4128c5",
+          "reports": [
+            {
+              "status": "unverified",
+              "findings": [
+                {
+                  "code": "effect_mismatch",
+                  "after": "Зелье 1 из 3",
+                  "before": null,
+                  "message": "Не подтверждено: Третье удачное зелье завершает игру победой.",
+                  "check_id": "R5",
+                  "expected": {
+                    "value": "Победа!",
+                    "operator": "eq"
+                  },
+                  "diagnostic": {
+                    "step": {
+                      "x": null,
+                      "y": null,
+                      "ms": 1300,
+                      "action": "hold_touch",
+                      "selector": "#heat"
+                    },
+                    "after": "Зелье 1 из 3",
+                    "before": null,
+                    "check_id": "R5",
+                    "controls": [
+                      {
+                        "id": "art",
+                        "tag": "canvas",
+                        "rect": {
+                          "x": 11,
+                          "y": 153,
+                          "width": 368,
+                          "height": 566
+                        },
+                        "role": "",
+                        "text": "",
+                        "label": "",
+                        "selector": "#art"
+                      },
+                      {
+                        "id": "heat",
+                        "tag": "button",
+                        "rect": {
+                          "x": 169.90625,
+                          "y": 774.1875,
+                          "width": 210.09375,
+                          "height": 58
+                        },
+                        "role": "",
+                        "text": "Греть · удерживать",
+                        "label": "",
+                        "selector": "#heat"
+                      }
+                    ],
+                    "expected": {
+                      "value": "Победа!",
+                      "operator": "eq"
+                    },
+                    "viewport": {
+                      "width": 390,
+                      "height": 844
+                    },
+                    "truncated": false,
+                    "step_index": 4,
+                    "actual_type": "str",
+                    "input_probe": {
+                      "hit": {
+                        "id": "heat",
+                        "tag": "button",
+                        "label": "Греть · удерживать"
+                      },
+                      "rect": {
+                        "x": 169.90625,
+                        "y": 774.1875,
+                        "width": 210.09375,
+                        "height": 58
+                      },
+                      "point": {
+                        "x": 274.953125,
+                        "y": 803.1875
+                      },
+                      "status": "reachable",
+                      "target": {
+                        "id": "heat",
+                        "tag": "button",
+                        "label": "Греть · удерживать"
+                      }
+                    },
+                    "observation": {
+                      "source": "text",
+                      "selector": "#status"
+                    },
+                    "observations": [
+                      {
+                        "id": "obs_46d5ed67e890",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Заказ 01 / 03",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#order"
+                        }
+                      },
+                      {
+                        "id": "obs_559ee1ceed6e",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Зелье 1 из 3",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#status"
+                        }
+                      },
+                      {
+                        "id": "obs_5a7b2de4ad34",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Ошибки: 0 из 2",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#mistakes"
+                        }
+                      },
+                      {
+                        "id": "obs_b0fa6a775e09",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Цель: 40–70%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#range"
+                        }
+                      },
+                      {
+                        "id": "obs_30e9cd01215f",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#hint"
+                        }
+                      },
+                      {
+                        "id": "obs_358effc39825",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Нагрев: 0%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heatValue"
+                        }
+                      },
+                      {
+                        "id": "obs_64c7a80387f8",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Греть · удерживать",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heat"
+                        }
+                      }
+                    ],
+                    "selector_matches": 1,
+                    "selector_visible": true,
+                    "observation_skips": []
+                  }
+                },
+                {
+                  "code": "check_timeout",
+                  "message": "Locator.tap: Timeout 1500ms exceeded.\nCall log:\n  - waiting for locator(\"#replay\")\n    - locator resolved to <button hidden=\"\" id=\"replay\" type=\"button\">Снова ↺</button>\n  - attempting tap action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying tap action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying tap action\n      - waiting 100ms\n    - waiting for element to be visible, enabled and stable\n    - element is not visible\n  - retrying tap action\n    - waiting 500ms\n    - waiting for element to be visible, enabled and stable\n",
+                  "check_id": "R7",
+                  "diagnostic": {
+                    "step": {
+                      "x": null,
+                      "y": null,
+                      "action": "tap",
+                      "selector": "#replay"
+                    },
+                    "after": null,
+                    "before": null,
+                    "check_id": "R7",
+                    "controls": [
+                      {
+                        "id": "art",
+                        "tag": "canvas",
+                        "rect": {
+                          "x": 11,
+                          "y": 153,
+                          "width": 368,
+                          "height": 566
+                        },
+                        "role": "",
+                        "text": "",
+                        "label": "",
+                        "selector": "#art"
+                      },
+                      {
+                        "id": "heat",
+                        "tag": "button",
+                        "rect": {
+                          "x": 169.90625,
+                          "y": 774.1875,
+                          "width": 210.09375,
+                          "height": 58
+                        },
+                        "role": "",
+                        "text": "Греть · удерживать",
+                        "label": "",
+                        "selector": "#heat"
+                      }
+                    ],
+                    "expected": {
+                      "value": "Ошибки: 0 из 2",
+                      "operator": "eq"
+                    },
+                    "viewport": {
+                      "width": 390,
+                      "height": 844
+                    },
+                    "truncated": false,
+                    "step_index": 4,
+                    "actual_type": "NoneType",
+                    "input_probe": {
+                      "status": "hidden"
+                    },
+                    "observation": {
+                      "source": "text",
+                      "selector": "#mistakes"
+                    },
+                    "observations": [
+                      {
+                        "id": "obs_46d5ed67e890",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Заказ 01 / 03",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#order"
+                        }
+                      },
+                      {
+                        "id": "obs_559ee1ceed6e",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Зелье 1 из 3",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#status"
+                        }
+                      },
+                      {
+                        "id": "obs_5a7b2de4ad34",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Ошибки: 0 из 2",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#mistakes"
+                        }
+                      },
+                      {
+                        "id": "obs_b0fa6a775e09",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Цель: 40–70%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#range"
+                        }
+                      },
+                      {
+                        "id": "obs_30e9cd01215f",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#hint"
+                        }
+                      },
+                      {
+                        "id": "obs_358effc39825",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Нагрев: 0%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heatValue"
+                        }
+                      },
+                      {
+                        "id": "obs_64c7a80387f8",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Греть · удерживать",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heat"
+                        }
+                      }
+                    ],
+                    "selector_matches": 1,
+                    "selector_visible": true,
+                    "observation_skips": []
+                  }
+                },
+                {
+                  "code": "invalid_check",
+                  "message": "Настольный сценарий без сенсорного экрана требует click или клавиатуру вместо tap.",
+                  "check_id": "R8",
+                  "diagnostic": {
+                    "step": {
+                      "x": null,
+                      "y": null,
+                      "action": "tap",
+                      "selector": "#start"
+                    },
+                    "after": null,
+                    "before": null,
+                    "check_id": "R8",
+                    "controls": [
+                      {
+                        "id": "art",
+                        "tag": "canvas",
+                        "rect": {
+                          "x": 139,
+                          "y": 155,
+                          "width": 1002,
+                          "height": 516
+                        },
+                        "role": "",
+                        "text": "",
+                        "label": "",
+                        "selector": "#art"
+                      },
+                      {
+                        "id": "start",
+                        "tag": "button",
+                        "rect": {
+                          "x": 611,
+                          "y": 719.09375,
+                          "width": 190,
+                          "height": 58
+                        },
+                        "role": "",
+                        "text": "Начать ✦",
+                        "label": "",
+                        "selector": "#start"
+                      }
+                    ],
+                    "expected": {
+                      "value": 4,
+                      "operator": "eq"
+                    },
+                    "viewport": {
+                      "width": 1280,
+                      "height": 800
+                    },
+                    "truncated": false,
+                    "step_index": 0,
+                    "actual_type": "NoneType",
+                    "input_probe": {
+                      "hit": {
+                        "id": "start",
+                        "tag": "button",
+                        "label": "Начать ✦"
+                      },
+                      "rect": {
+                        "x": 611,
+                        "y": 719.09375,
+                        "width": 190,
+                        "height": 58
+                      },
+                      "point": {
+                        "x": 706,
+                        "y": 748.09375
+                      },
+                      "status": "reachable",
+                      "target": {
+                        "id": "start",
+                        "tag": "button",
+                        "label": "Начать ✦"
+                      }
+                    },
+                    "observation": {
+                      "field": "graphicsReady",
+                      "source": "experience"
+                    },
+                    "observations": [
+                      {
+                        "id": "obs_46d5ed67e890",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Заказ 01 / 03",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#order"
+                        }
+                      },
+                      {
+                        "id": "obs_559ee1ceed6e",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Мастерская ждёт",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#status"
+                        }
+                      },
+                      {
+                        "id": "obs_5a7b2de4ad34",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Ошибки: 0 из 2",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#mistakes"
+                        }
+                      },
+                      {
+                        "id": "obs_b0fa6a775e09",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Цель: 40–70%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#range"
+                        }
+                      },
+                      {
+                        "id": "obs_30e9cd01215f",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Помоги алхимику: удерживай нагрев и отпусти в штрихованной зоне.",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#hint"
+                        }
+                      },
+                      {
+                        "id": "obs_358effc39825",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Нагрев: 0%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heatValue"
+                        }
+                      },
+                      {
+                        "id": "obs_6efa43fa488e",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Начать ✦",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#start"
+                        }
+                      }
+                    ],
+                    "observation_skips": []
+                  }
+                }
+              ],
+              "facts": [
+                {
+                  "id": "R1",
+                  "status": "passed"
+                },
+                {
+                  "id": "R2",
+                  "status": "passed"
+                },
+                {
+                  "id": "R5",
+                  "status": "failed"
+                },
+                {
+                  "id": "R3",
+                  "status": "passed"
+                },
+                {
+                  "id": "R6",
+                  "status": "passed"
+                },
+                {
+                  "id": "R4",
+                  "status": "passed"
+                },
+                {
+                  "id": "R7",
+                  "status": "unverified"
+                },
+                {
+                  "id": "R8",
+                  "status": "unverified"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "revision_id": "15aac4f7-e39e-4c79-9753-147e794c199b",
+          "artifact_hash": "6d6d5b7c3f5d05b84c539b22a80d09231cc6b5ec12bfb97aeead75469f4128c5",
+          "reports": [
+            {
+              "status": "unverified",
+              "findings": [
+                {
+                  "code": "effect_mismatch",
+                  "after": "Зелье 1 из 3",
+                  "before": null,
+                  "message": "Не подтверждено: Третье удачное зелье завершает игру победой.",
+                  "check_id": "R5",
+                  "expected": {
+                    "value": "Победа!",
+                    "operator": "eq"
+                  },
+                  "diagnostic": {
+                    "step": {
+                      "ms": 1000,
+                      "action": "wait_for"
+                    },
+                    "after": "Зелье 1 из 3",
+                    "before": null,
+                    "check_id": "R5",
+                    "controls": [
+                      {
+                        "id": "art",
+                        "tag": "canvas",
+                        "rect": {
+                          "x": 11,
+                          "y": 153,
+                          "width": 368,
+                          "height": 566
+                        },
+                        "role": "",
+                        "text": "",
+                        "label": "",
+                        "selector": "#art"
+                      },
+                      {
+                        "id": "heat",
+                        "tag": "button",
+                        "rect": {
+                          "x": 169.90625,
+                          "y": 774.1875,
+                          "width": 210.09375,
+                          "height": 58
+                        },
+                        "role": "",
+                        "text": "Греть · удерживать",
+                        "label": "",
+                        "selector": "#heat"
+                      }
+                    ],
+                    "expected": {
+                      "value": "Победа!",
+                      "operator": "eq"
+                    },
+                    "viewport": {
+                      "width": 390,
+                      "height": 844
+                    },
+                    "truncated": false,
+                    "step_index": 7,
+                    "actual_type": "str",
+                    "observation": {
+                      "source": "text",
+                      "selector": "#status"
+                    },
+                    "observations": [
+                      {
+                        "id": "obs_46d5ed67e890",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Заказ 01 / 03",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#order"
+                        }
+                      },
+                      {
+                        "id": "obs_559ee1ceed6e",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Зелье 1 из 3",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#status"
+                        }
+                      },
+                      {
+                        "id": "obs_5a7b2de4ad34",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Ошибки: 0 из 2",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#mistakes"
+                        }
+                      },
+                      {
+                        "id": "obs_b0fa6a775e09",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Цель: 40–70%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#range"
+                        }
+                      },
+                      {
+                        "id": "obs_30e9cd01215f",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#hint"
+                        }
+                      },
+                      {
+                        "id": "obs_358effc39825",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Нагрев: 0%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heatValue"
+                        }
+                      },
+                      {
+                        "id": "obs_64c7a80387f8",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Греть · удерживать",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heat"
+                        }
+                      }
+                    ],
+                    "selector_matches": 1,
+                    "selector_visible": true,
+                    "observation_skips": []
+                  }
+                },
+                {
+                  "code": "invalid_check",
+                  "message": "Промежуточное условие сценария не выполнено; последующий ввод не исполнялся.",
+                  "check_id": "R7",
+                  "diagnostic": {
+                    "step": {
+                      "ms": 1000,
+                      "action": "await_condition",
+                      "expect": {
+                        "value": "Поражение",
+                        "operator": "eq"
+                      },
+                      "observation": {
+                        "source": "text",
+                        "selector": "#status"
+                      }
+                    },
+                    "after": null,
+                    "before": null,
+                    "check_id": "R7",
+                    "controls": [
+                      {
+                        "id": "art",
+                        "tag": "canvas",
+                        "rect": {
+                          "x": 11,
+                          "y": 153,
+                          "width": 368,
+                          "height": 566
+                        },
+                        "role": "",
+                        "text": "",
+                        "label": "",
+                        "selector": "#art"
+                      },
+                      {
+                        "id": "heat",
+                        "tag": "button",
+                        "rect": {
+                          "x": 169.90625,
+                          "y": 774.1875,
+                          "width": 210.09375,
+                          "height": 58
+                        },
+                        "role": "",
+                        "text": "Греть · удерживать",
+                        "label": "",
+                        "selector": "#heat"
+                      }
+                    ],
+                    "expected": {
+                      "value": "Ошибки: 0 из 2",
+                      "operator": "eq"
+                    },
+                    "viewport": {
+                      "width": 390,
+                      "height": 844
+                    },
+                    "truncated": false,
+                    "step_index": 4,
+                    "actual_type": "NoneType",
+                    "observation": {
+                      "source": "text",
+                      "selector": "#mistakes"
+                    },
+                    "observations": [
+                      {
+                        "id": "obs_46d5ed67e890",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Заказ 01 / 03",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#order"
+                        }
+                      },
+                      {
+                        "id": "obs_559ee1ceed6e",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Зелье 1 из 3",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#status"
+                        }
+                      },
+                      {
+                        "id": "obs_5a7b2de4ad34",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Ошибки: 0 из 2",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#mistakes"
+                        }
+                      },
+                      {
+                        "id": "obs_b0fa6a775e09",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Цель: 40–70%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#range"
+                        }
+                      },
+                      {
+                        "id": "obs_30e9cd01215f",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#hint"
+                        }
+                      },
+                      {
+                        "id": "obs_358effc39825",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Нагрев: 0%",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heatValue"
+                        }
+                      },
+                      {
+                        "id": "obs_64c7a80387f8",
+                        "type": "str",
+                        "phase": "diagnostic_snapshot",
+                        "value": "Греть · удерживать",
+                        "observation": {
+                          "source": "text",
+                          "selector": "#heat"
+                        }
+                      }
+                    ],
+                    "selector_matches": 1,
+                    "selector_visible": true,
+                    "observation_skips": []
+                  }
+                }
+              ],
+              "facts": [
+                {
+                  "id": "R1",
+                  "status": "passed"
+                },
+                {
+                  "id": "R2",
+                  "status": "passed"
+                },
+                {
+                  "id": "R5",
+                  "status": "failed"
+                },
+                {
+                  "id": "R3",
+                  "status": "passed"
+                },
+                {
+                  "id": "R6",
+                  "status": "passed"
+                },
+                {
+                  "id": "R4",
+                  "status": "passed"
+                },
+                {
+                  "id": "R7",
+                  "status": "unverified"
+                },
+                {
+                  "id": "R8",
+                  "status": "passed"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "diagnostic-initial": {
+        "status": "failed",
+        "revision_id": "15aac4f7-e39e-4c79-9753-147e794c199b",
+        "artifact_hash": "6d6d5b7c3f5d05b84c539b22a80d09231cc6b5ec12bfb97aeead75469f4128c5",
+        "checks": [
+          {
+            "id": "start",
+            "category": "start",
+            "viewport": "mobile",
+            "requirement": "Касание начинает первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Зелье 1 из 3"
+            }
+          },
+          {
+            "id": "touch",
+            "category": "control",
+            "viewport": "mobile",
+            "requirement": "Удержание и отпускание в диапазоне закрывает первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "2"
+            }
+          },
+          {
+            "id": "keys",
+            "category": "control",
+            "viewport": "desktop",
+            "requirement": "Начало и успешный нагрев доступны только клавиатурой.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait_for",
+                "ms": 1750
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "2"
+            }
+          },
+          {
+            "id": "win",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Три правильно нагретых зелья завершают игру победой.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1450
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1300
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Победа!"
+            }
+          },
+          {
+            "id": "loss",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Два коротких ошибочных нагрева завершают игру поражением.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Поражение"
+            }
+          },
+          {
+            "id": "restart",
+            "category": "restart",
+            "viewport": "mobile",
+            "requirement": "Повтор после поражения возвращает первый заказ и ноль ошибок.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "tap",
+                "selector": "#replay",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "attribute",
+                  "selector": "#order",
+                  "attribute": "data-order"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": "1"
+                }
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#mistakes"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Ошибки: 0 из 2"
+            }
+          },
+          {
+            "id": "idle",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Ожидание без удержания не нагревает колбу.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "wait_for",
+                "ms": 1200
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#mistakes"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Ошибки: 1 из 2"
+            }
+          },
+          {
+            "id": "escalation",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Второй заказ имеет более узкий диапазон и большую скорость.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "attribute",
+                  "selector": "#order",
+                  "attribute": "data-rate"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": "40"
+                }
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#range",
+              "attribute": "data-width"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "20"
+            }
+          },
+          {
+            "id": "rotate",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Поворот после первого зелья сохраняет заказ и доступность нагрева.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "resize",
+                "viewport": "landscape"
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1450
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "3"
+            }
+          },
+          {
+            "id": "music",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "После начала звучит музыка; переключатель глушит звук.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "experience",
+                  "field": "musicPlaying"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": true
+                }
+              },
+              {
+                "action": "tap",
+                "selector": "#gf-player-tools button",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "muted"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": true
+            }
+          },
+          {
+            "id": "effects",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Успешный нагрев запускает игровой звуковой эффект.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "checkpoint"
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "effectsPlayed"
+            },
+            "expect": {
+              "operator": "increased",
+              "value": null
+            }
+          },
+          {
+            "id": "keyboard-win",
+            "category": "regression",
+            "viewport": "desktop",
+            "requirement": "Полный раунд и финал доступны без мыши.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait_for",
+                "ms": 1750
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait_for",
+                "ms": 1450
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait_for",
+                "ms": 1300
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Победа!"
+            }
+          }
+        ],
+        "facts": [
+          {
+            "id": "start",
+            "status": "passed"
+          },
+          {
+            "id": "touch",
+            "status": "passed"
+          },
+          {
+            "id": "keys",
+            "status": "unverified"
+          },
+          {
+            "id": "win",
+            "status": "failed"
+          },
+          {
+            "id": "loss",
+            "status": "failed"
+          },
+          {
+            "id": "restart",
+            "status": "unverified"
+          },
+          {
+            "id": "idle",
+            "status": "unverified"
+          },
+          {
+            "id": "escalation",
+            "status": "passed"
+          },
+          {
+            "id": "rotate",
+            "status": "passed"
+          },
+          {
+            "id": "music",
+            "status": "passed"
+          },
+          {
+            "id": "effects",
+            "status": "passed"
+          },
+          {
+            "id": "keyboard-win",
+            "status": "unverified"
+          }
+        ],
+        "findings": [
+          {
+            "code": "invalid_check",
+            "check_id": "keys",
+            "message": "wait_for допустим один раз, последним действием сценария.",
+            "compile_issue": {
+              "code": "invalid_check",
+              "field": "steps",
+              "message": "wait_for допустим один раз, последним действием сценария."
+            },
+            "diagnostic": {
+              "check_id": "keys",
+              "step_index": null,
+              "step": null,
+              "observation": {
+                "attribute": "data-order",
+                "selector": "#order",
+                "source": "attribute"
+              },
+              "before": null,
+              "after": null,
+              "expected": {
+                "operator": "eq",
+                "value": "2"
+              },
+              "actual_type": "NoneType",
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 139,
+                    "y": 155,
+                    "width": 1002,
+                    "height": 516
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "start",
+                  "selector": "#start",
+                  "role": "",
+                  "label": "",
+                  "text": "Начать ✦",
+                  "rect": {
+                    "x": 611,
+                    "y": 719.09375,
+                    "width": 190,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Мастерская ждёт",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Помоги алхимику: удерживай нагрев и отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_6efa43fa488e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#start"
+                  },
+                  "type": "str",
+                  "value": "Начать ✦",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "win",
+            "message": "Не подтверждено: Три правильно нагретых зелья завершают игру победой.",
+            "before": null,
+            "after": "Зелье 1 из 3",
+            "expected": {
+              "operator": "eq",
+              "value": "Победа!"
+            },
+            "diagnostic": {
+              "check_id": "win",
+              "step_index": 3,
+              "step": {
+                "action": "hold_touch",
+                "ms": 1300,
+                "selector": "#heat"
+              },
+              "observation": {
+                "selector": "#status",
+                "source": "text"
+              },
+              "before": null,
+              "after": "Зелье 1 из 3",
+              "expected": {
+                "operator": "eq",
+                "value": "Победа!"
+              },
+              "actual_type": "str",
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 11,
+                    "y": 153,
+                    "width": 368,
+                    "height": 566
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "heat",
+                  "selector": "#heat",
+                  "role": "",
+                  "label": "",
+                  "text": "Греть · удерживать",
+                  "rect": {
+                    "x": 169.90625,
+                    "y": 774.1875,
+                    "width": 210.09375,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Зелье 1 из 3",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_64c7a80387f8",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heat"
+                  },
+                  "type": "str",
+                  "value": "Греть · удерживать",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "input_probe": {
+                "status": "reachable",
+                "target": {
+                  "tag": "button",
+                  "id": "heat",
+                  "label": "Греть · удерживать"
+                },
+                "hit": {
+                  "tag": "button",
+                  "id": "heat",
+                  "label": "Греть · удерживать"
+                },
+                "point": {
+                  "x": 274.953125,
+                  "y": 803.1875
+                },
+                "rect": {
+                  "x": 169.90625,
+                  "y": 774.1875,
+                  "width": 210.09375,
+                  "height": 58
+                }
+              },
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "loss",
+            "message": "Не подтверждено: Два коротких ошибочных нагрева завершают игру поражением.",
+            "before": null,
+            "after": "Зелье 1 из 3",
+            "expected": {
+              "operator": "eq",
+              "value": "Поражение"
+            },
+            "diagnostic": {
+              "check_id": "loss",
+              "step_index": 2,
+              "step": {
+                "action": "hold_touch",
+                "ms": 100,
+                "selector": "#heat"
+              },
+              "observation": {
+                "selector": "#status",
+                "source": "text"
+              },
+              "before": null,
+              "after": "Зелье 1 из 3",
+              "expected": {
+                "operator": "eq",
+                "value": "Поражение"
+              },
+              "actual_type": "str",
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 11,
+                    "y": 153,
+                    "width": 368,
+                    "height": 566
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "heat",
+                  "selector": "#heat",
+                  "role": "",
+                  "label": "",
+                  "text": "Греть · удерживать",
+                  "rect": {
+                    "x": 169.90625,
+                    "y": 774.1875,
+                    "width": 210.09375,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Зелье 1 из 3",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_64c7a80387f8",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heat"
+                  },
+                  "type": "str",
+                  "value": "Греть · удерживать",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "input_probe": {
+                "status": "reachable",
+                "target": {
+                  "tag": "button",
+                  "id": "heat",
+                  "label": "Греть · удерживать"
+                },
+                "hit": {
+                  "tag": "button",
+                  "id": "heat",
+                  "label": "Греть · удерживать"
+                },
+                "point": {
+                  "x": 274.953125,
+                  "y": 803.1875
+                },
+                "rect": {
+                  "x": 169.90625,
+                  "y": 774.1875,
+                  "width": 210.09375,
+                  "height": 58
+                }
+              },
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          },
+          {
+            "code": "check_timeout",
+            "check_id": "restart",
+            "message": "Locator.tap: Timeout 1500ms exceeded.\nCall log:\n  - waiting for locator(\"#replay\")\n    - locator resolved to <button hidden=\"\" id=\"replay\" type=\"button\">Снова ↺</button>\n  - attempting tap action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying tap action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying tap action\n      - waiting 100ms\n    - waiting for element to be visible, enabled and stable\n    - element is not visible\n  - retrying tap action\n    - waiting 500ms\n",
+            "diagnostic": {
+              "check_id": "restart",
+              "step_index": 3,
+              "step": {
+                "action": "tap",
+                "selector": "#replay",
+                "x": null,
+                "y": null
+              },
+              "observation": {
+                "selector": "#mistakes",
+                "source": "text"
+              },
+              "before": null,
+              "after": null,
+              "expected": {
+                "operator": "eq",
+                "value": "Ошибки: 0 из 2"
+              },
+              "actual_type": "NoneType",
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 11,
+                    "y": 153,
+                    "width": 368,
+                    "height": 566
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "heat",
+                  "selector": "#heat",
+                  "role": "",
+                  "label": "",
+                  "text": "Греть · удерживать",
+                  "rect": {
+                    "x": 169.90625,
+                    "y": 774.1875,
+                    "width": 210.09375,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Зелье 1 из 3",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Держи «Греть» или пробел; отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_64c7a80387f8",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heat"
+                  },
+                  "type": "str",
+                  "value": "Греть · удерживать",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "input_probe": {
+                "status": "hidden"
+              },
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          },
+          {
+            "code": "invalid_check",
+            "check_id": "idle",
+            "message": "wait_for допустим один раз, последним действием сценария.",
+            "compile_issue": {
+              "code": "invalid_check",
+              "field": "steps",
+              "message": "wait_for допустим один раз, последним действием сценария."
+            },
+            "diagnostic": {
+              "check_id": "idle",
+              "step_index": null,
+              "step": null,
+              "observation": {
+                "selector": "#mistakes",
+                "source": "text"
+              },
+              "before": null,
+              "after": null,
+              "expected": {
+                "operator": "eq",
+                "value": "Ошибки: 1 из 2"
+              },
+              "actual_type": "NoneType",
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 11,
+                    "y": 153,
+                    "width": 368,
+                    "height": 566
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "start",
+                  "selector": "#start",
+                  "role": "",
+                  "label": "",
+                  "text": "Начать ✦",
+                  "rect": {
+                    "x": 195,
+                    "y": 774.1875,
+                    "width": 185,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Мастерская ждёт",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Помоги алхимику: удерживай нагрев и отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_6efa43fa488e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#start"
+                  },
+                  "type": "str",
+                  "value": "Начать ✦",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          },
+          {
+            "code": "invalid_check",
+            "check_id": "keyboard-win",
+            "message": "wait_for допустим один раз, последним действием сценария.",
+            "compile_issue": {
+              "code": "invalid_check",
+              "field": "steps",
+              "message": "wait_for допустим один раз, последним действием сценария."
+            },
+            "diagnostic": {
+              "check_id": "keyboard-win",
+              "step_index": null,
+              "step": null,
+              "observation": {
+                "selector": "#status",
+                "source": "text"
+              },
+              "before": null,
+              "after": null,
+              "expected": {
+                "operator": "eq",
+                "value": "Победа!"
+              },
+              "actual_type": "NoneType",
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 139,
+                    "y": 155,
+                    "width": 1002,
+                    "height": 516
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "start",
+                  "selector": "#start",
+                  "role": "",
+                  "label": "",
+                  "text": "Начать ✦",
+                  "rect": {
+                    "x": 611,
+                    "y": 719.09375,
+                    "width": 190,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Мастерская ждёт",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Помоги алхимику: удерживай нагрев и отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_6efa43fa488e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#start"
+                  },
+                  "type": "str",
+                  "value": "Начать ✦",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          }
+        ],
+        "visual_frames": 0,
+        "visual_status": null,
+        "device_scale_factor": 2
+      }
+    },
+    {
+      "case": "previous-alchemy-fix1",
+      "run_id": "836bbe30-3ca3-4664-86a1-ac657e015228",
+      "prompt": "Игра про алхимика",
+      "status": "needs_attention",
+      "version": 2,
+      "created_at": "2026-11-17T23:32:13.733480+00:00",
+      "seconds": 0.68,
+      "calls": [],
+      "error_code": "budget_exhausted",
+      "policy_stage": "previous_v2",
+      "plan": {
+        "summary": "Короткая игра для широкой аудитории: алхимик готовит три зелья, останавливая нагрев колбы в отмеченном диапазоне. Подсказка, крупная кнопка и отметка диапазона штриховкой помогают освоить правило без спешки.",
+        "mechanics": [
+          "Нагрев растёт только пока удерживается кнопка; отпускание проверяет попадание в отмеченный диапазон.",
+          "После удачного смешивания начинается следующее зелье с более быстрым нагревом и более узким диапазоном.",
+          "Промах повторяет текущее зелье; второй промах завершает сессию поражением."
+        ],
+        "progression": "Три зелья подряд: диапазоны нагрева 40–70%, 48–68% и 55–70%; скорость растёт от заказа к заказу. После ошибки тот же заказ начинается с пустой шкалой.",
+        "gameplay_partition": {
+          "mode": "single",
+          "reason": "Правила нагрева и управление образуют одну небольшую задачу; разделение добавило бы лишнюю сложность.",
+          "interface": null
+        },
+        "experience_direction": null
+      },
+      "model_validation": []
+    },
+    {
+      "case": "previous-alchemy-fix2",
+      "run_id": "715a761e-09af-4d83-a66d-e2ecdd1ab1ee",
+      "prompt": "Игра про алхимика",
+      "status": "unverified",
+      "version": 2,
+      "created_at": "2026-11-17T23:33:24.175992+00:00",
+      "seconds": 82.51,
+      "calls": [
+        {
+          "id": "6ba006be-aefc-49c9-a92b-1bf3aa0aabb6",
+          "attempt": 1,
+          "state": "settled",
+          "operation": "edit",
+          "branch": null,
+          "error_code": null,
+          "usd": "0.057483",
+          "seconds": 51.386732,
+          "usage": {
+            "input_tokens": 26101,
+            "output_tokens": 2233,
+            "cached_input_tokens": 9472,
+            "cache_write_input_tokens": 0
+          }
+        }
+      ],
+      "error_code": "manual_verification",
+      "policy_stage": "previous_v2",
+      "revision_id": "ed1ded66-1c89-4110-92ca-343f05364a86",
+      "artifact_hash": "4c17b1175fdb0aeec37a5097780075fa3ccecbadf8c7aaa5763583b38fdbe6a8",
+      "checks_review_required": true,
+      "file_bytes": {
+        "game.js": 11486,
+        "index.html": 1692,
+        "styles.css": 2750,
+        "game-assets.json": 8398
+      },
+      "media": {
+        "graphics": 4,
+        "instruments": 4,
+        "sounds": 5,
+        "notes": 24,
+        "beats": 16,
+        "bpm": 88,
+        "notes_by_voice": {
+          "copper": 12,
+          "warmth": 8,
+          "glass": 4
+        },
+        "unique_pitches": 15,
+        "silence_reason": ""
+      },
+      "plan": {
+        "summary": "Короткая игра для широкой аудитории: алхимик готовит три зелья, останавливая нагрев колбы в отмеченном диапазоне. Подсказка, крупная кнопка и отметка диапазона штриховкой помогают освоить правило без спешки.",
+        "mechanics": [
+          "Нагрев растёт только пока удерживается кнопка; отпускание проверяет попадание в отмеченный диапазон.",
+          "После удачного смешивания начинается следующее зелье с более быстрым нагревом и более узким диапазоном.",
+          "Промах повторяет текущее зелье; второй промах завершает сессию поражением."
+        ],
+        "progression": "Три зелья подряд: диапазоны нагрева 40–70%, 48–68% и 55–70%; скорость растёт от заказа к заказу. После ошибки тот же заказ начинается с пустой шкалой.",
+        "gameplay_partition": {
+          "mode": "single",
+          "reason": "Правила нагрева и управление образуют одну небольшую задачу; разделение добавило бы лишнюю сложность.",
+          "interface": null
+        },
+        "experience_direction": null
+      },
+      "model_validation": [
+        {
+          "revision_id": "ed1ded66-1c89-4110-92ca-343f05364a86",
+          "artifact_hash": "4c17b1175fdb0aeec37a5097780075fa3ccecbadf8c7aaa5763583b38fdbe6a8",
+          "reports": [
+            {
+              "status": "unverified",
+              "findings": [
+                {
+                  "code": "check_suite_revised",
+                  "message": "Модель восстановила сценарии. Проверьте исходные игровые условия лично."
+                }
+              ],
+              "facts": [
+                {
+                  "id": "R1",
+                  "status": "passed"
+                },
+                {
+                  "id": "R2",
+                  "status": "passed"
+                },
+                {
+                  "id": "R5",
+                  "status": "passed"
+                },
+                {
+                  "id": "R3",
+                  "status": "passed"
+                },
+                {
+                  "id": "R6",
+                  "status": "passed"
+                },
+                {
+                  "id": "R9",
+                  "status": "passed"
+                },
+                {
+                  "id": "R4",
+                  "status": "passed"
+                },
+                {
+                  "id": "R7",
+                  "status": "passed"
+                },
+                {
+                  "id": "R8",
+                  "status": "passed"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "status": "passed",
+        "revision_id": "ed1ded66-1c89-4110-92ca-343f05364a86",
+        "artifact_hash": "4c17b1175fdb0aeec37a5097780075fa3ccecbadf8c7aaa5763583b38fdbe6a8",
+        "checks": [
+          {
+            "id": "start",
+            "category": "start",
+            "viewport": "mobile",
+            "requirement": "Касание начинает первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Зелье 1 из 3"
+            }
+          },
+          {
+            "id": "touch",
+            "category": "control",
+            "viewport": "mobile",
+            "requirement": "Удержание и отпускание в диапазоне закрывает первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "2"
+            }
+          },
+          {
+            "id": "keys",
+            "category": "control",
+            "viewport": "desktop",
+            "requirement": "Начало и успешный нагрев доступны только клавиатурой.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1750
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "2"
+            }
+          },
+          {
+            "id": "win",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Три правильно нагретых зелья завершают игру победой.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1450
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1300
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Победа!"
+            }
+          },
+          {
+            "id": "loss",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Два коротких ошибочных нагрева завершают игру поражением.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Поражение"
+            }
+          },
+          {
+            "id": "restart",
+            "category": "restart",
+            "viewport": "mobile",
+            "requirement": "Повтор после поражения возвращает первый заказ и ноль ошибок.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "tap",
+                "selector": "#replay",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "attribute",
+                  "selector": "#order",
+                  "attribute": "data-order"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": "1"
+                }
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#mistakes"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Ошибки: 0 из 2"
+            }
+          },
+          {
+            "id": "idle",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Ожидание без удержания не нагревает колбу.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "wait",
+                "ms": 1200
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#mistakes"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Ошибки: 1 из 2"
+            }
+          },
+          {
+            "id": "escalation",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Второй заказ имеет более узкий диапазон и большую скорость.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "attribute",
+                  "selector": "#order",
+                  "attribute": "data-rate"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": "40"
+                }
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#range",
+              "attribute": "data-width"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "20"
+            }
+          },
+          {
+            "id": "rotate",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Поворот после первого зелья сохраняет заказ и доступность нагрева.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "resize",
+                "viewport": "landscape"
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1450
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "3"
+            }
+          },
+          {
+            "id": "music",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "После начала звучит музыка; переключатель глушит звук.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "experience",
+                  "field": "musicPlaying"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": true
+                }
+              },
+              {
+                "action": "tap",
+                "selector": "#gf-player-tools button",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "muted"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": true
+            }
+          },
+          {
+            "id": "effects",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Успешный нагрев запускает игровой звуковой эффект.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "checkpoint"
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "effectsPlayed"
+            },
+            "expect": {
+              "operator": "increased",
+              "value": null
+            }
+          },
+          {
+            "id": "keyboard-win",
+            "category": "regression",
+            "viewport": "desktop",
+            "requirement": "Полный раунд и финал доступны без мыши.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1750
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1450
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1300
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Победа!"
+            }
+          }
+        ],
+        "facts": [
+          {
+            "id": "start",
+            "status": "passed"
+          },
+          {
+            "id": "touch",
+            "status": "passed"
+          },
+          {
+            "id": "keys",
+            "status": "passed"
+          },
+          {
+            "id": "win",
+            "status": "passed"
+          },
+          {
+            "id": "loss",
+            "status": "passed"
+          },
+          {
+            "id": "restart",
+            "status": "passed"
+          },
+          {
+            "id": "idle",
+            "status": "passed"
+          },
+          {
+            "id": "escalation",
+            "status": "passed"
+          },
+          {
+            "id": "rotate",
+            "status": "passed"
+          },
+          {
+            "id": "music",
+            "status": "passed"
+          },
+          {
+            "id": "effects",
+            "status": "passed"
+          },
+          {
+            "id": "keyboard-win",
+            "status": "passed"
+          }
+        ],
+        "findings": [],
+        "visual_frames": 6,
+        "visual_status": "captured",
+        "device_scale_factor": 2
+      },
+      "diagnostic-initial": {
+        "status": "unverified",
+        "revision_id": "ed1ded66-1c89-4110-92ca-343f05364a86",
+        "artifact_hash": "4c17b1175fdb0aeec37a5097780075fa3ccecbadf8c7aaa5763583b38fdbe6a8",
+        "checks": [
+          {
+            "id": "start",
+            "category": "start",
+            "viewport": "mobile",
+            "requirement": "Касание начинает первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Зелье 1 из 3"
+            }
+          },
+          {
+            "id": "touch",
+            "category": "control",
+            "viewport": "mobile",
+            "requirement": "Удержание и отпускание в диапазоне закрывает первый заказ.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "2"
+            }
+          },
+          {
+            "id": "keys",
+            "category": "control",
+            "viewport": "desktop",
+            "requirement": "Начало и успешный нагрев доступны только клавиатурой.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1750
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "2"
+            }
+          },
+          {
+            "id": "win",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Три правильно нагретых зелья завершают игру победой.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1450
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1300
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Победа!"
+            }
+          },
+          {
+            "id": "loss",
+            "category": "outcome",
+            "viewport": "mobile",
+            "requirement": "Два коротких ошибочных нагрева завершают игру поражением.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Поражение"
+            }
+          },
+          {
+            "id": "restart",
+            "category": "restart",
+            "viewport": "mobile",
+            "requirement": "Повтор после поражения возвращает первый заказ и ноль ошибок.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              },
+              {
+                "action": "tap",
+                "selector": "#replay",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "attribute",
+                  "selector": "#order",
+                  "attribute": "data-order"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": "1"
+                }
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#mistakes"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Ошибки: 0 из 2"
+            }
+          },
+          {
+            "id": "idle",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Ожидание без удержания не нагревает колбу.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "wait",
+                "ms": 1200
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 100
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#mistakes"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Ошибки: 1 из 2"
+            }
+          },
+          {
+            "id": "escalation",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Второй заказ имеет более узкий диапазон и большую скорость.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "attribute",
+                  "selector": "#order",
+                  "attribute": "data-rate"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": "40"
+                }
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#range",
+              "attribute": "data-width"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "20"
+            }
+          },
+          {
+            "id": "rotate",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Поворот после первого зелья сохраняет заказ и доступность нагрева.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              },
+              {
+                "action": "resize",
+                "viewport": "landscape"
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1450
+              }
+            ],
+            "observation": {
+              "source": "attribute",
+              "selector": "#order",
+              "attribute": "data-order"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "3"
+            }
+          },
+          {
+            "id": "music",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "После начала звучит музыка; переключатель глушит звук.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "assert",
+                "ms": 0,
+                "observation": {
+                  "source": "experience",
+                  "field": "musicPlaying"
+                },
+                "expect": {
+                  "operator": "eq",
+                  "value": true
+                }
+              },
+              {
+                "action": "tap",
+                "selector": "#gf-player-tools button",
+                "x": null,
+                "y": null
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "muted"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": true
+            }
+          },
+          {
+            "id": "effects",
+            "category": "regression",
+            "viewport": "mobile",
+            "requirement": "Успешный нагрев запускает игровой звуковой эффект.",
+            "steps": [
+              {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              {
+                "action": "checkpoint"
+              },
+              {
+                "action": "hold_touch",
+                "selector": "#heat",
+                "ms": 1750
+              }
+            ],
+            "observation": {
+              "source": "experience",
+              "field": "effectsPlayed"
+            },
+            "expect": {
+              "operator": "increased",
+              "value": null
+            }
+          },
+          {
+            "id": "keyboard-win",
+            "category": "regression",
+            "viewport": "desktop",
+            "requirement": "Полный раунд и финал доступны без мыши.",
+            "steps": [
+              {
+                "action": "press",
+                "key": "Enter"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1750
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1450
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              },
+              {
+                "action": "key_down",
+                "key": "Space"
+              },
+              {
+                "action": "wait",
+                "ms": 1300
+              },
+              {
+                "action": "key_up",
+                "key": "Space"
+              }
+            ],
+            "observation": {
+              "source": "text",
+              "selector": "#status"
+            },
+            "expect": {
+              "operator": "eq",
+              "value": "Победа!"
+            }
+          }
+        ],
+        "facts": [
+          {
+            "id": "start",
+            "status": "passed"
+          },
+          {
+            "id": "touch",
+            "status": "passed"
+          },
+          {
+            "id": "keys",
+            "status": "passed"
+          },
+          {
+            "id": "win",
+            "status": "passed"
+          },
+          {
+            "id": "loss",
+            "status": "passed"
+          },
+          {
+            "id": "restart",
+            "status": "passed"
+          },
+          {
+            "id": "idle",
+            "status": "passed"
+          },
+          {
+            "id": "escalation",
+            "status": "unverified"
+          },
+          {
+            "id": "rotate",
+            "status": "passed"
+          },
+          {
+            "id": "music",
+            "status": "passed"
+          },
+          {
+            "id": "effects",
+            "status": "passed"
+          },
+          {
+            "id": "keyboard-win",
+            "status": "passed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "check_timeout",
+            "check_id": "escalation",
+            "message": "Locator.scroll_into_view_if_needed: Timeout 1493ms exceeded.\nCall log:\n  - attempting scroll into view action\n    - waiting for element to be stable\n",
+            "diagnostic": {
+              "check_id": "escalation",
+              "step_index": 0,
+              "step": {
+                "action": "tap",
+                "selector": "#start",
+                "x": null,
+                "y": null
+              },
+              "observation": {
+                "attribute": "data-width",
+                "selector": "#range",
+                "source": "attribute"
+              },
+              "before": null,
+              "after": null,
+              "expected": {
+                "operator": "eq",
+                "value": "20"
+              },
+              "actual_type": "NoneType",
+              "viewport": {
+                "width": 390,
+                "height": 844
+              },
+              "controls": [
+                {
+                  "tag": "canvas",
+                  "id": "art",
+                  "selector": "#art",
+                  "role": "",
+                  "label": "",
+                  "text": "",
+                  "rect": {
+                    "x": 11,
+                    "y": 153,
+                    "width": 368,
+                    "height": 566
+                  }
+                },
+                {
+                  "tag": "button",
+                  "id": "start",
+                  "selector": "#start",
+                  "role": "",
+                  "label": "",
+                  "text": "Начать ✦",
+                  "rect": {
+                    "x": 195,
+                    "y": 774.1875,
+                    "width": 185,
+                    "height": 58
+                  }
+                }
+              ],
+              "truncated": false,
+              "observation_skips": [],
+              "observations": [
+                {
+                  "id": "obs_46d5ed67e890",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#order"
+                  },
+                  "type": "str",
+                  "value": "Заказ 01 / 03",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_559ee1ceed6e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#status"
+                  },
+                  "type": "str",
+                  "value": "Мастерская ждёт",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_5a7b2de4ad34",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#mistakes"
+                  },
+                  "type": "str",
+                  "value": "Ошибки: 0 из 2",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_b0fa6a775e09",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#range"
+                  },
+                  "type": "str",
+                  "value": "Цель: 40–70%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_30e9cd01215f",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  },
+                  "type": "str",
+                  "value": "Помоги алхимику: удерживай нагрев и отпусти в штрихованной зоне.",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_358effc39825",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#heatValue"
+                  },
+                  "type": "str",
+                  "value": "Нагрев: 0%",
+                  "phase": "diagnostic_snapshot"
+                },
+                {
+                  "id": "obs_6efa43fa488e",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#start"
+                  },
+                  "type": "str",
+                  "value": "Начать ✦",
+                  "phase": "diagnostic_snapshot"
+                }
+              ],
+              "input_probe": {
+                "status": "reachable",
+                "target": {
+                  "tag": "button",
+                  "id": "start",
+                  "label": "Начать ✦"
+                },
+                "hit": {
+                  "tag": "button",
+                  "id": "start",
+                  "label": "Начать ✦"
+                },
+                "point": {
+                  "x": 287.5,
+                  "y": 803.1875
+                },
+                "rect": {
+                  "x": 195,
+                  "y": 774.1875,
+                  "width": 185,
+                  "height": 58
+                }
+              },
+              "selector_matches": 1,
+              "selector_visible": true
+            }
+          }
+        ],
+        "visual_frames": 0,
+        "visual_status": null,
+        "device_scale_factor": 2
+      }
+    }
+  ],
+  "cost": {
+    "known_usd": 1.38417,
+    "unknown_invocations": [
+      "1b274ef8-87a3-45ad-bd1b-87c5fc2964e5"
+    ],
+    "unknown_liability_added_usd": 6.28,
+    "budget_snapshot": {
+      "limit_usd": 50.0,
+      "spent_usd": 8.915327,
+      "reserved_usd": 0.0,
+      "unknown_usd": 21.038,
+      "available_usd": 20.046673
+    },
+    "zero_call_budget_rejection_preserved": true
+  },
+  "verification": {
+    "backend_passed": 1520,
+    "deselected": 173,
+    "ruff": "passed",
+    "mypy_source_files": 62,
+    "django_check": "passed",
+    "migration_check": "no changes",
+    "preservation": {
+      "base_commit": "6b9e6dad24f8b6dc02a0922adcfb9b404cff2b90",
+      "contracts_checked": 26,
+      "unchanged": true,
+      "contracts": [
+        {
+          "invocation_id": "0706a714-833c-41db-9053-f6cbc9691005",
+          "strategy": "pro",
+          "operation": "check_repair",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "f82e91b9e2ebfba1f550caca37731b046a2e78e9bb6877531af0b7b02c52297c",
+            "system": "0f0b831705c3451e1f07783c2d585608b878a9cd6332cae95cfb0b5fdbc3b7dc",
+            "schema": "fc4cc8bc8d014d69cfcfeb8a2215203df5de0ecfbf5135210abb2273a616e22c"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "d483a796-0bfa-462b-b4e6-9a3978be5286",
+          "strategy": "pro",
+          "operation": "edit",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "b9c641258b9d184e9effeeb35f86156c055786756bf32956c3751f89556e44ce",
+            "system": "c02140737ea1da0593632cadb9bd0d38f20f6c2f717be0049ce479107eef3ee9",
+            "schema": "a4fc046eedbc0ec0003aafd268f28a3eacc6fa34ed97c044525f3e9196688cb7"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "97c9ea5d-810d-4fb5-a703-f914cd24f4d4",
+          "strategy": "pro",
+          "operation": "create",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "acdb643dfd1b9770bf9fcc7789a7f7d6d821dc924900521d2fee0eddc2233915",
+            "system": "f43859a8ec47a5bd07891ad8737e2e516fffa1399ab16a9d68233514a80b39ff",
+            "schema": "2dcb3cae3fb3b9096a4b814f7bf2492c31e6665c87bde5848c7a9e798e3fafdb"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "8297101c-ef9a-4a1b-804b-86fbe3b40a57",
+          "strategy": "pro",
+          "operation": "plan",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "303b1f94155174ffb0fcba6843d1eefa0282928fdd3dc0b6f07606edeef5fcba",
+            "system": "ac64cda4ded7a5a200efe68fb29c433da91edd6a29ea9908b1ea9024eff551ae",
+            "schema": "b9c3b967160e67d8652c8e9e20e1db153d70647d04013cf5ccf9da7a5ae0be27"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "35894da6-03c6-42af-b878-883c21588ca5",
+          "strategy": "pro",
+          "operation": "plan",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "cb0f39ea60ae076ed509529b0ce11930fc3ec22818a9cd9b1640defefa9b7b46",
+            "system": "814b8fd9a6ca76dc9a2475f0ed2aa8848160a2f88cb27546bdc2809d82275376",
+            "schema": "42de6b74aea5a78ccec1e87ce4550361ea35864eb8d74f2d94c66b17f947d1c3"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "55c08dea-9bc6-4a48-bd84-e2128aeb316d",
+          "strategy": "lite",
+          "operation": "check_repair",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "4fdd4bf291e4e610f5635dae34771c8a3dfe35d2c6ee4f978b1a4b06efda6cff",
+            "system": "7d9c0351834c577c7df8747d30b7bbf7afb67c28952f48257e57990ea9edad12",
+            "schema": "83e083981aba86530b34311b998ae52d134e086e168e430b5ea8d1b35149cdaa"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "af92de99-5e5a-49bd-9f01-65af664e1483",
+          "strategy": "lite",
+          "operation": "edit",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "01104a06ea3cfa84091a674f937621cd4a19ad63a1e8f1edb56ee9f336331a6c",
+            "system": "93c4eff8d8589f607a9c357b5a9d4809109dee0d6e807a4b3a210172e473f426",
+            "schema": "4b3a34faae1b31ceff79e9805bd3fc8fd91845ac3021ad2bebb4d78deef8c4bb"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "7bd034a9-2874-49c2-8795-78c688c9e15a",
+          "strategy": "lite",
+          "operation": "music",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "ae6fb9ade9894be70772e1da366b945a3901abaf531fb6218df98cf8ffac70e9",
+            "system": "a4a0b8d97e38b2ed7b76210bc644e078019d00f1c005f0efaec6dcb69275e5da",
+            "schema": "8cd76fb53f89f2414e68b40bb71b10f3d34afa718624332cb0e7d2941c4bb7de"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "e62a7a36-79cf-46c0-a798-aae162e3066e",
+          "strategy": "lite",
+          "operation": "create",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "c2368872355816cdc8c8922613dcc97f12ac139dd831a0b41f2f7b4ada894f59",
+            "system": "1c9c9155a65d7fa1595e47827acd99d1e36a2f66f4e0f27912639a9bcd37d63a",
+            "schema": "f7daaa750dfd31cb92fae828d4427193b8db7638935f777d7cef1e3bda69ec0f"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "c5d1d692-943b-423a-819e-4965e692e5bd",
+          "strategy": "lite",
+          "operation": "repair",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "e383bb83eb4d7cb276b422f0fdcaecb23ce7ba67e4a4e7ba917fbf49885e6265",
+            "system": "c87aed29b3f280e4cd67d3a5d909043eef938331711f6088c7af0fc5ffbe8af0",
+            "schema": "58d320ff4cdbba1e6de1cb520dc62df12dfef35b7317227eeaeafea8f389bb74"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "8a0f6f09-533d-4bf9-80fc-79a9913dc3d9",
+          "strategy": "lite",
+          "operation": "create",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "59b83429c85a1d6ffb18e83b582f687e8a7d7a41daf523433add62fa6fb23336",
+            "system": "eefa208e9f6ad88bbb66ced122f2e89b04d6cccf7b5877ce4d70e51159124f2e",
+            "schema": "dc4dff5a350c1eecb6a28430c97d1ea489060e23d96b5f0e7955fea40ac06c4e"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "03f64e66-1e26-457f-84b9-10848b92e8b8",
+          "strategy": "lite",
+          "operation": "plan",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "4f3a23ca1123c4862dc83fd50ef2aefb65d5b22832eed541365e92e635a944d1",
+            "system": "1f1e6aecea445e9e628df74d5d0cbd95bdcd280c08aae24ddcb34aec3d670107",
+            "schema": "bba89290b55f415a606f6ad93b5fb3ca2202f09b79b1e3dfd01e3039f5bac203"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "dd871033-d27b-4c8d-a6a1-fac9d987d0da",
+          "strategy": "lite",
+          "operation": "plan",
+          "pro_parallel": null,
+          "hashes": {
+            "messages": "f85535d667f5726736b85239fb869953b0a3acb72acb5129367a576ce9b77603",
+            "system": "1f1e6aecea445e9e628df74d5d0cbd95bdcd280c08aae24ddcb34aec3d670107",
+            "schema": "bba89290b55f415a606f6ad93b5fb3ca2202f09b79b1e3dfd01e3039f5bac203"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "0402109e-fa62-4bd1-870c-9dddb3498198",
+          "strategy": "pro",
+          "operation": "pro_audio",
+          "pro_parallel": 1,
+          "hashes": {
+            "messages": "720ad5471e2830d502ee2619bb1e6dde750ef8b8dfc567821973bc20cab6ecf0",
+            "system": "880df8b43d2643e0928c874aa96b16f63bf9c80ab59783500dc30b9734f70ce7",
+            "schema": "110dbef8e80e80d69cfe641bf6111f6f451da00e2cd65ebf60c1c41ffe012d48"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "0e89dae2-7d15-4d47-bdc4-ec8ff7ab61a9",
+          "strategy": "pro",
+          "operation": "pro_graphics",
+          "pro_parallel": 1,
+          "hashes": {
+            "messages": "32be4e37022d38ecdcc47f70c88682eb572623096f6a8e3ead8ad0b34f73fef2",
+            "system": "16979f4e1c7e0399e0d4b313ea478afbe92677c93c7585ee939494bffbac1395",
+            "schema": "c7e8b8619850641bde302ed0ce04d6e4363c556ebb63e5ad1a2779ebe7c8caab"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "becf6d14-096b-4bf1-92c8-8dd118be75b4",
+          "strategy": "pro",
+          "operation": "create",
+          "pro_parallel": 1,
+          "hashes": {
+            "messages": "0c3cca892530f9ec06163bf4c01d7b37f544185f6b2597e5f5bb6fa9ea62eed9",
+            "system": "8ef682a415ecca1fd54b8d9bc93ac469b5f0dbd1606db08142a2bc4e23ec8169",
+            "schema": "ec9090812c3634666869cdff884b6f749dc3533b5e6cb53e54bd609207d71461"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "8856d0a6-c16a-4c39-9145-8e22b0eee2f0",
+          "strategy": "pro",
+          "operation": "plan",
+          "pro_parallel": 1,
+          "hashes": {
+            "messages": "8e4348da981737a74ce24286e69de2caf2d6f7fbb2cf079680f49453731a4a7d",
+            "system": "c3a12e83c22d2845cf4e9ea0edfa6dd38982a0ce5c65c3f9bcd0e095f87fd1e6",
+            "schema": "2106de3199489cdf07f30de0a1756f44c730a0c91c7838c592f415ab60421bb5"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "6ba006be-aefc-49c9-a92b-1bf3aa0aabb6",
+          "strategy": "pro",
+          "operation": "edit",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "9bf81e755be476b95642a44c790bc2b2d7bdb925a26b2de48204610ccf000a76",
+            "system": "c02140737ea1da0593632cadb9bd0d38f20f6c2f717be0049ce479107eef3ee9",
+            "schema": "a4fc046eedbc0ec0003aafd268f28a3eacc6fa34ed97c044525f3e9196688cb7"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "a68fb754-b6e9-4a1e-90e6-8b010b67cef1",
+          "strategy": "pro",
+          "operation": "check_repair",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "f51050dfe5f2c60ff1a571f67c281d0c8fe0753422f91154a5181649515124e4",
+            "system": "0f0b831705c3451e1f07783c2d585608b878a9cd6332cae95cfb0b5fdbc3b7dc",
+            "schema": "fc4cc8bc8d014d69cfcfeb8a2215203df5de0ecfbf5135210abb2273a616e22c"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "d43afa13-b8ae-4fa0-94a2-ea8a13c29b8f",
+          "strategy": "pro",
+          "operation": "pro_audio",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "cf2d6413e1a80be0e3a3df5298038ce6fe8c713312ee60af4429e27e7ff12b5b",
+            "system": "880df8b43d2643e0928c874aa96b16f63bf9c80ab59783500dc30b9734f70ce7",
+            "schema": "110dbef8e80e80d69cfe641bf6111f6f451da00e2cd65ebf60c1c41ffe012d48"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "cf2d4953-198d-49c9-9dff-3f8bb7a2dc61",
+          "strategy": "pro",
+          "operation": "pro_graphics",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "5008109d0d72e991d7789c995bdc4eaed67107595ba51162795a4048429a2d20",
+            "system": "16979f4e1c7e0399e0d4b313ea478afbe92677c93c7585ee939494bffbac1395",
+            "schema": "c7e8b8619850641bde302ed0ce04d6e4363c556ebb63e5ad1a2779ebe7c8caab"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "a4293844-b4ee-441a-a0f6-b24f5703fb67",
+          "strategy": "pro",
+          "operation": "create",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "76a72df031607e5332d2d4e1ab6f35fe58d9a1494dc9e892160445d0de92f20d",
+            "system": "ec15dc9ad9ca2b913e284557ec8db2bf771bf114a45e2adf843ef286b4950efd",
+            "schema": "ec9090812c3634666869cdff884b6f749dc3533b5e6cb53e54bd609207d71461"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "bad835f7-fb84-4c87-bde9-fc7f821cd3b8",
+          "strategy": "pro",
+          "operation": "plan",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "87ef437c161a530e77dfebe9c738b1469a3aa58c8fc66c38c9a3ef97ee6c5676",
+            "system": "3934e87552e4e2b4954ed8b034720b5eb99e61f54473d7e39eba10ecc2bb6e76",
+            "schema": "368d809755da515ec817c5689440f15c3cae150a32cf02eb43a19210895bc010"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "bb2eff40-c878-4d60-bdcf-e5ab31517cc8",
+          "strategy": "pro",
+          "operation": "repair",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "518940896be2be395c2536edb4fd9ba8c3956fa862de14eb6bfef28b7148b58c",
+            "system": "17a44ed1f6ddd22d9132011cdea1e0e56e5b77e640e5094bbca67a85facb3be0",
+            "schema": "349c7e048462fffbf2d37a4b3c932ee1b93d5193511eab8fc7b28213e3875923"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "9ec08c0d-2592-4bd5-a9e9-5bb4c1e28ae1",
+          "strategy": "pro",
+          "operation": "create",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "76cf4340bfa557b189bf369bcac6ef9f8fef7d57f5abcb7ebb5541051b055d24",
+            "system": "e5c771f6a198ebc359499f2bf50a0b056aa47e5e438150e2235177418f67bc27",
+            "schema": "0227bd78b3a9270a611b3afd5490d1de11d31974a63e59d3788f911105e91fde"
+          },
+          "equal": true
+        },
+        {
+          "invocation_id": "350ed9ac-cd74-4a50-9023-79da8e11f841",
+          "strategy": "pro",
+          "operation": "pro_mechanics",
+          "pro_parallel": 2,
+          "hashes": {
+            "messages": "f2c6ef0be48a20fa8b36d379774e58c0b9a78bbdbfe141c480d39e4779ee9d3a",
+            "system": "fefef200870e0adefb22ae9780b358b76ff79611fd70d6325ba6ffea0ef2d2a4",
+            "schema": "aabe2c90e39e821f6e22beffe11c78fac86d460de1df8dc179760e76602d7acb"
+          },
+          "equal": true
+        }
+      ]
+    },
+    "generated_code_execution": "Native OS sandbox Chromium only; no host evaluation of model JavaScript.",
+    "initial_v3_alchemy_model_scenarios_passed": 8,
+    "initial_v3_alchemy_independent_scenarios_passed": 12,
+    "v2_alchemy_after_model_patch_model_scenarios_passed": 8,
+    "v2_alchemy_after_model_patch_independent_scenarios_passed": 12
+  },
+  "limitations": [
+    "Not a speed benchmark: overlapping runs and differing scope.",
+    "Only one completed new-v3 game so far; final output target and extended checks lack a completed fresh live game due to external worker stop.",
+    "The first split shooter hit response_output_limit three times; its operator cap of seven calls is recorded, no candidate was produced.",
+    "A repeated baseline touch-delivery timeout disappeared with the same independent checks; the diagnostic report is preserved.",
+    "Scenario repairs retain required human review; independent validation does not auto-accept them.",
+    "Music was checked for composition structure and playback/mute, not human listening quality.",
+    "Visual frames confirm event changes, not stable FPS or aesthetic superiority.",
+    "No physical phone, GPU administration, cloud deployment or Git push."
+  ]
+}

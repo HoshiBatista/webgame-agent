@@ -152,7 +152,12 @@ def _system_prompt(request):
                             "Realize the planned player decisions and progression, including the concept's supporting mechanics. Do not reduce it to a movement-only prototype.")
         text += PRO_GUIDANCE
         if operation == "create":
-            text += PRO_CREATE_GUIDANCE
+            if request.get('pro_parallel') == 3:
+                from .pro_creative import CREATE_BUDGET
+
+                text += CREATE_BUDGET + 'CHECK ROUTES' + PRO_CREATE_GUIDANCE.split('CHECK ROUTES', 1)[1]
+            else:
+                text += PRO_CREATE_GUIDANCE
     if request.get("game_plan"):
         text = text.replace("no separate planning turn", "follow the saved game concept")
         text += PLAN_GUIDANCE
@@ -181,11 +186,15 @@ def _system_prompt(request):
     from .experience import guidance as experience_guidance
     from .pro_parallel import branch, implementation_guidance
 
-    if request.get('pro_parallel') == 2 and request.get('operation') in {'edit', 'repair'}:
+    if request.get('pro_parallel') in {2, 3} and request.get('operation') in {'edit', 'repair'}:
         from .pro_partition import REPAIR_GUIDANCE, split
 
         if split(request.get('game_plan')):
             text += REPAIR_GUIDANCE
+        if request['pro_parallel'] == 3:
+            from .pro_creative import REPAIR_GUIDANCE as CREATIVE_REPAIR_GUIDANCE
+
+            text += CREATIVE_REPAIR_GUIDANCE
 
     return text + presentation.implementation_prompt(request) + (
         implementation_guidance(request) if branch(request) in {'gameplay', 'scene'} else experience_guidance(request))
@@ -380,6 +389,7 @@ def system_prompt(request):
     from .lite import enabled as lite_enabled
     from .lite import system_prompt as lite_prompt
     from .lite_wait_budget import prompt as wait_prompt
+    from .pro_creative import check_prompt
 
     operation = request.get('operation', 'create')
     if lite_enabled(request) and operation in {'create', 'edit', 'repair', 'check_repair'}:
@@ -395,4 +405,4 @@ def system_prompt(request):
         text += PREFERENCE_PRIORITY + GUIDANCE + QUICK_REVIEW_GUIDANCE
     if operation != 'visual_review':
         text += PUBLIC_REPLY_GUIDANCE
-    return wait_prompt(text + JSON_FORMAT_GUIDANCE + route_guidance(request), request)
+    return check_prompt(wait_prompt(text + JSON_FORMAT_GUIDANCE + route_guidance(request), request), request)
