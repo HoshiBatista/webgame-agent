@@ -92,6 +92,7 @@ class Run(models.Model):
     attempts = models.PositiveSmallIntegerField(default=0)
     max_repair_attempts = models.PositiveSmallIntegerField(default=3)
     pro_parallel = models.BooleanField(default=False)
+    pro_parallel_version = models.PositiveSmallIntegerField(default=1)
     allow_model_calls = models.BooleanField(default=True)
     completion_policy = models.PositiveSmallIntegerField(default=2)
     model_call_limit = models.PositiveSmallIntegerField(null=True, blank=True)
@@ -128,6 +129,12 @@ class Run(models.Model):
         maximum = 1 + self.max_repair_attempts + int(self.planning_required)
         if self.pro_parallel and self.operation == 'create':
             maximum += 2
+            if self.pro_parallel_version >= 2:
+                from generation.pro_partition import split
+
+                # Before planning allow either choice; a single-author plan keeps
+                # the old nine-call bound. Splitting adds exactly one base call.
+                maximum += int(not self.game_plan or split(self.game_plan))
         maximum += int(music_enabled(self))
         return min(maximum, self.model_call_limit) if self.model_call_limit is not None else maximum
 

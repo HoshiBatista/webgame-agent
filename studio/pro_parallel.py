@@ -10,7 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from generation.errors import ContractError, GenerationPending
-from generation.pro_parallel import BRANCHES, VERSION, assemble, validate_reply
+from generation.pro_parallel import assemble, author, branches, validate_reply
 from generation.prompts import system_prompt
 from generation.requirements import digest, policy_snapshot
 from generation.schema import response_schema
@@ -25,10 +25,14 @@ def branch_request(run, role, error=None):
 
     request = request_for(run, None, [], error)
     request.pop('response_completion', None)
-    request.update(pro_parallel=VERSION, pro_parallel_branch=role,
+    request.update(pro_parallel=run.pro_parallel_version, pro_parallel_branch=role,
                    pro_parallel_plan_hash=digest(run.game_plan),
-                   operation='create' if role == 'gameplay' else 'pro_' + role,
+                   operation='create' if role in {'gameplay', 'scene'} else 'pro_' + role,
                    reasoning_effort='high')
+    if role in {'mechanics', 'scene'}:
+        from generation.pro_partition import interface_hash
+
+        request['mechanics_interface_hash'] = interface_hash(run.game_plan)
     request['generation_contract'].update(
         system_prompt_sha256=hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         response_schema_sha256=digest(response_schema(request)),
@@ -38,8 +42,8 @@ def branch_request(run, role, error=None):
 
 def calls_for(run):
     return pending_invocations(run, None, states=('reserved', 'sent', 'returned', 'settled', 'failed', 'unknown')).filter(
-        request__pro_parallel=VERSION, request__pro_parallel_plan_hash=digest(run.game_plan),
-        request__pro_parallel_branch__in=BRANCHES,
+        request__pro_parallel=run.pro_parallel_version, request__pro_parallel_plan_hash=digest(run.game_plan),
+        request__pro_parallel_branch__in=branches(run.game_plan, run.pro_parallel_version),
     )
 
 
@@ -102,6 +106,10 @@ def advance(run, lease, generate, materialize):
     from .tasks import defer_relay, error_data, store_candidate
 
     waiting = None
+    roles = branches(run.game_plan, run.pro_parallel_version)
+    source_author = author(run.game_plan, run.pro_parallel_version)
+    progress = ('Создаём механику, сцену, графику и звук.' if source_author == 'scene'
+                else 'Создаём геймплей, графику и звук.')
     # Poll all existing jobs before admitting replacements; a capacity reduction,
     # deadline or failed sibling must not strand another branch's paid receipt.
     for call in run.invocations.filter(state__in=['reserved', 'sent']).order_by('attempt'):
@@ -118,12 +126,12 @@ def advance(run, lease, generate, materialize):
     for call in calls:
         if call.state == 'settled':
             valid.setdefault(call.request['pro_parallel_branch'], call)
-    refusal = valid.get('gameplay') and valid['gameplay'].response.get('status') == 'scope_refusal'
+    refusal = valid.get(source_author) and valid[source_author].response.get('status') == 'scope_refusal'
     unknown = unacknowledged_unknowns(run)
     blocked = None
     # Fresh branches take priority over repairs. An unavailable slot may defer a
     # branch, but can never turn the already sent siblings into new inferences.
-    missing = [role for role in BRANCHES if role not in valid and not any(
+    missing = [role for role in roles if role not in valid and not any(
         c.request['pro_parallel_branch'] == role and c.state in {'reserved', 'sent'} for c in calls)]
     missing.sort(key=lambda role: any(c.request['pro_parallel_branch'] == role for c in calls))
     if not unknown and not refusal:
@@ -141,8 +149,8 @@ def advance(run, lease, generate, materialize):
                     call = reserve_invocation(run, request)
                     run.attempts = call.attempt
                     Run.objects.filter(pk=run.id, fence=run.fence).update(attempts=call.attempt,
-                        status='generating', stage='parallel', message='Создаём геймплей, графику и звук.')
-                    event(run, 'parallel_branch', 'Создаём геймплей, графику и звук.',
+                        status='generating', stage='parallel', message=progress)
+                    event(run, 'parallel_branch', progress,
                           {'branch': role, 'attempt': call.attempt, 'max_model_calls': run.max_model_calls})
             except DomainError as exc:
                 blocked = exc
@@ -154,7 +162,7 @@ def advance(run, lease, generate, materialize):
         return None
     consume(run)
     if run.invocations.filter(state__in=['reserved', 'sent']).exists():
-        defer_relay(run, 'Ожидаем ответы: геймплей, графика и звук.', waiting)
+        defer_relay(run, 'Ожидаем ответы исполнителей.', waiting)
         return None
     unknown = unacknowledged_unknowns(run)
     if unknown:
@@ -165,19 +173,19 @@ def advance(run, lease, generate, materialize):
     for call in calls_for(run):
         if call.state == 'settled':
             valid.setdefault(call.request['pro_parallel_branch'], call)
-    if valid.get('gameplay') and valid['gameplay'].response['status'] == 'scope_refusal':
-        finish_run(run.id, run.fence, 'needs_attention', valid['gameplay'].response['message'],
-                   error={'code': 'scope_refusal', 'message': valid['gameplay'].response['message']})
+    if valid.get(source_author) and valid[source_author].response['status'] == 'scope_refusal':
+        finish_run(run.id, run.fence, 'needs_attention', valid[source_author].response['message'],
+                   error={'code': 'scope_refusal', 'message': valid[source_author].response['message']})
         return None
-    if len(valid) != len(BRANCHES):
+    if len(valid) != len(roles):
         if blocked and blocked.code != 'provider_busy':
             finish_run(run.id, run.fence, 'needs_attention', blocked.message, error=error_data(blocked))
         else:
             defer_relay(run, 'Сохранили готовые части. Продолжаем оставшиеся этапы.')
         return None
     try:
-        response = assemble({role: call.response for role, call in valid.items()}, run.game_plan)
-        request = valid['gameplay'].request
+        response = assemble({role: call.response for role, call in valid.items()}, run.game_plan, run.pro_parallel_version)
+        request = valid[source_author].request
         artifact = materialize(response, operation='create', generation_contract=request['generation_contract'],
             generation_strategy='pro', requirement_manifest=run.requirement_manifest,
             helper_catalog=run.helper_catalog, generation_profile='full', source_format='string')
@@ -188,7 +196,7 @@ def advance(run, lease, generate, materialize):
             current = Run.objects.select_for_update().get(pk=run.id)
             if current.fence != run.fence or current.cancel_requested:
                 return None
-            call = valid['gameplay']
+            call = valid[source_author]
             call.state, call.error = 'failed', error_data(exc)
             call.save(update_fields=['state', 'error'])
         defer_relay(run, 'Ресурсы сохранены. Исправляем сборку игры.')
@@ -201,7 +209,9 @@ def advance(run, lease, generate, materialize):
             revision=revision, state='settled')
         current = Run.objects.select_for_update().get(pk=run.id)
         current.metrics = {**current.metrics, 'pro_parallel': {
-            'version': VERSION, 'plan_hash': digest(run.game_plan), 'assembled_revision': str(revision.id),
+            'version': run.pro_parallel_version, 'plan_hash': digest(run.game_plan),
+            'gameplay_mode': 'split' if source_author == 'scene' else 'single',
+            'assembled_revision': str(revision.id),
             'invocations': {role: str(call.id) for role, call in valid.items()},
         }}
         current.save(update_fields=['metrics'])

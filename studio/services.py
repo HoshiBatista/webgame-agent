@@ -358,6 +358,10 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if continued_from and generation_profile != continued_from.generation_profile:
         raise DomainError('profile_mismatch', 'Продолжение сохраняет формат исходной игры.', 409)
     pro_parallel = profile_id == 'pro_multi'
+    from generation.pro_parallel import VERSION as PRO_PARALLEL_VERSION
+
+    pro_parallel_version = (continued_from.pro_parallel_version if continued_from and continued_from.pro_parallel
+                            else PRO_PARALLEL_VERSION if pro_parallel else 1)
     if pro_parallel and (provider != 'codex_api' or generation_profile != 'full'):
         raise DomainError('invalid_generation_profile', 'Экспериментальная Pro использует полный формат и Pro API.')
     if continued_from and continued_from.pro_parallel != pro_parallel and not (
@@ -378,7 +382,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         )})
     call_limit = data.get("model_call_limit")
     deadline_text = data.get("model_call_deadline")
-    maximum_calls = 9 if pro_parallel else 5
+    maximum_calls = (10 if pro_parallel_version >= 2 else 9) if pro_parallel else 5
     if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= maximum_calls):
         raise DomainError("invalid_call_budget", f"Лимит вызовов должен быть целым числом от 1 до {maximum_calls}.")
     try:
@@ -548,6 +552,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         source_format=source_format,
         generation_strategy=generation_strategy,
         pro_parallel=pro_parallel,
+        pro_parallel_version=pro_parallel_version,
         planning_required=planning_required,
         visual_review_enabled=(continued_from.visual_review_enabled if continued_from else
                                not pro_parallel and settings.GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED and generation_strategy=="pro" and operation=="create"),
@@ -642,7 +647,7 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     run.save()
     responses = run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
     if run.pro_parallel:
-        responses = responses.exclude(request__operation__in=['pro_graphics', 'pro_audio'])
+        responses = responses.exclude(request__operation__in=['pro_graphics', 'pro_audio', 'pro_mechanics'])
     if (error or {}).get("code") != "scope_refusal":
         responses = responses.exclude(request__has_key="operation", request__operation__in=["plan", "visual_review"])
     if revision:

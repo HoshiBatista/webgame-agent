@@ -179,17 +179,23 @@ def _system_prompt(request):
                  "The inherited scenario suite may be incomplete; return checks=[] and preserve it exactly. "
                  "Do not fix or invent scenarios while repairing source.\n")
     from .experience import guidance as experience_guidance
-    from .pro_parallel import GAMEPLAY_GUIDANCE, branch
+    from .pro_parallel import branch, implementation_guidance
+
+    if request.get('pro_parallel') == 2 and request.get('operation') in {'edit', 'repair'}:
+        from .pro_partition import REPAIR_GUIDANCE, split
+
+        if split(request.get('game_plan')):
+            text += REPAIR_GUIDANCE
 
     return text + presentation.implementation_prompt(request) + (
-        GAMEPLAY_GUIDANCE if branch(request) == 'gameplay' else experience_guidance(request))
+        implementation_guidance(request) if branch(request) in {'gameplay', 'scene'} else experience_guidance(request))
 
 
 def build_messages(request):
     from .pro_parallel import branch
     from .pro_parallel import messages as parallel_messages
 
-    if branch(request) in {'graphics', 'audio'}:
+    if branch(request) in {'graphics', 'audio', 'mechanics'}:
         return parallel_messages(request)
     if request.get('operation') == 'music':
         from .music import messages
@@ -363,7 +369,7 @@ def system_prompt(request):
     from .pro_parallel import branch
     from .pro_parallel import messages as parallel_messages
 
-    if branch(request) in {'graphics', 'audio'}:
+    if branch(request) in {'graphics', 'audio', 'mechanics'}:
         return parallel_messages(request)[0]['content']
     if request.get('operation') == 'music':
         from .music import PROMPT

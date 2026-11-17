@@ -63,6 +63,7 @@ def policy_snapshot():
         "lite_baseline.py",
         "music.py",
         "pro_parallel.py",
+        "pro_partition.py",
         "../studio/pro_parallel.py",
         "planning.py",
         "requirements.py",

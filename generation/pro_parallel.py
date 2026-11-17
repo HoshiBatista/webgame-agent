@@ -9,7 +9,7 @@ from jsonschema import Draft202012Validator
 from .errors import ContractError
 from .experience import CHECK_GUIDANCE, GUIDANCE, ID, SCHEMA, TEXT, obj, rows, validate_svg
 
-VERSION = 1
+VERSION = 2
 BRANCHES = ('gameplay', 'graphics', 'audio')
 CONTRACT = obj({
     'graphics': rows(obj({'id': ID, 'purpose': TEXT,
@@ -88,13 +88,40 @@ exactly; if it is nonempty return music=null, sounds=[], instruments=[]. Never a
 
 
 def branch(request):
-    return request.get('pro_parallel_branch') if request.get('pro_parallel') == VERSION else None
+    return request.get('pro_parallel_branch') if request.get('pro_parallel') in {1, VERSION} else None
+
+
+def branches(plan, version=1):
+    from .pro_partition import split
+
+    return ('mechanics', 'scene', 'graphics', 'audio') if version >= 2 and split(plan) else BRANCHES
+
+
+def author(plan, version=1):
+    return 'scene' if 'scene' in branches(plan, version) else 'gameplay'
+
+
+def implementation_guidance(request):
+    focus = ("\nKeep the keyboard cursor synchronized with real focus changes, including Tab and clicks. "
+             "Arrow navigation starts from the currently focused cell, not a stale stored index.\n"
+             if request.get('pro_parallel') == 2 else '')
+    if branch(request) == 'scene':
+        from .pro_partition import SCENE_GUIDANCE
+
+        # Share playability/media instructions without assigning rules to the scene.
+        common = 'Recompute available play bounds' + GAMEPLAY_GUIDANCE.split('Recompute available play bounds', 1)[1]
+        return SCENE_GUIDANCE + common + focus
+    return GAMEPLAY_GUIDANCE + focus
 
 
 def schema(request):
     from .schema import response_schema
 
     role = branch(request)
+    if role in {'mechanics', 'scene'}:
+        from .pro_partition import schema as partition_schema
+
+        return partition_schema(request)
     if role == 'gameplay':
         original = {k: v for k, v in request.items() if k != 'pro_parallel_branch'}
         result = response_schema(original)
@@ -106,8 +133,15 @@ def schema(request):
 
 
 def messages(request):
-    keys = ('operation', 'prompt', 'game_request', 'game_plan', 'audience', 'preferences', 'last_attempt_error')
-    return [{'role': 'system', 'content': GRAPHICS_GUIDANCE if branch(request) == 'graphics' else AUDIO_GUIDANCE},
+    from .pro_partition import MECHANICS_GUIDANCE
+
+    keys: tuple[str, ...] = ('operation', 'prompt', 'game_request', 'game_plan', 'audience', 'preferences',
+                            'mechanics_interface_hash', 'last_attempt_error')
+    prompt = {'graphics': GRAPHICS_GUIDANCE, 'audio': AUDIO_GUIDANCE, 'mechanics': MECHANICS_GUIDANCE}[branch(request)]
+    # Keep the original data-only messages byte-for-byte for v1 receipts.
+    if request.get('pro_parallel') == 1:
+        keys = tuple(key for key in keys if key != 'mechanics_interface_hash')
+    return [{'role': 'system', 'content': prompt},
             {'role': 'user', 'content': json.dumps({key: request.get(key) for key in keys}, ensure_ascii=False)}]
 
 
@@ -131,6 +165,13 @@ def validate_reply(value, request):
     error = next(Draft202012Validator(schema(request)).iter_errors(value), None)
     if error:
         raise ContractError('invalid_parallel_response', f'{list(error.path)}: {error.message[:300]}')
+    if role in {'mechanics', 'scene'}:
+        from .pro_partition import validate_reply as validate_partition_reply
+
+        if request.get('pro_parallel') != VERSION:
+            raise ContractError('invalid_gameplay_partition', 'Для раздельных модулей нужен протокол v2.')
+        validate_partition_reply(value, request)
+        return
     if role == 'gameplay':
         from .schema import validate_response
 
@@ -168,11 +209,16 @@ def validate_reply(value, request):
         raise ContractError('invalid_assets', 'Сохраните запрошенную тишину.')
 
 
-def assemble(responses, plan):
+def assemble(responses, plan, version=1):
     """No inference, source rewriting, new checks or fallback media during assembly."""
     from .experience import validate
 
-    value = deepcopy(responses['gameplay'])
+    if author(plan, version) == 'scene':
+        from .pro_partition import combine
+
+        value = combine(responses)
+    else:
+        value = deepcopy(responses['gameplay'])
     if value['status'] == 'scope_refusal':
         return value
     assets = {'version': 1, 'audience_adaptations': plan['resource_contract']['audience_adaptations'],
