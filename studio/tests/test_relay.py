@@ -62,7 +62,8 @@ def environment(tmp_path, settings, monkeypatch):
                 return False
             calls.append(1)
             store.worker_update(job["id"], "gpu", start=True)
-            properties = job['payload']['response_format']['json_schema']['schema']['properties']
+            blocks = 'response_format' not in job['payload']
+            properties = job['payload'].get('response_format', {}).get('json_schema', {}).get('schema', {}).get('properties', {})
             response = plan_response() if (
                 properties.get("operation", {}).get("enum") == ["plan"]
             ) else fixture_response(with_assets='assets' in properties)
@@ -81,6 +82,17 @@ def environment(tmp_path, settings, monkeypatch):
                 }
                 if 'player_experience' not in properties['plan']['anyOf'][0]['properties']:
                     response['plan'].pop('player_experience')
+            if blocks:
+                from tests.test_lite_wire import block_reply
+
+                content = block_reply(response, simple='COMMAND STRINGS' in job['payload']['messages'][0]['content'])
+            elif 'scenarios' in properties:
+                from tests.test_lite_wire import wire_reply
+
+                response = wire_reply(response, response['operation'])
+                content = json.dumps(response)
+            else:
+                content = json.dumps(response)
             self.pending = (
                 job["id"],
                 {
@@ -90,7 +102,7 @@ def environment(tmp_path, settings, monkeypatch):
                             "model": "qwen38",
                             "choices": [
                                 {
-                                    "message": {"content": json.dumps(response)},
+                                    "message": {"content": content},
                                     "finish_reason": "stop",
                                 }
                             ],

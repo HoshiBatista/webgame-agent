@@ -9,8 +9,12 @@ class ValidationCancelled(Exception):
     pass
 
 
-def communicate(process, data, *, timeout, cancelled=None, progress=None, read_progress=None):
-    """Bound execution from actual process start; cancellation kills descendants."""
+def communicate(process, *, timeout, cancelled=None, progress=None, read_progress=None):
+    """Poll a child whose complete input is already staged in a private file.
+
+    Callers kill descendants on cancellation or timeout. Input must not use a
+    pipe: Popen's timed communicate retries do not resume pending input writes.
+    """
     deadline = time.monotonic() + timeout
     consumed = 0
 
@@ -34,12 +38,11 @@ def communicate(process, data, *, timeout, cancelled=None, progress=None, read_p
         if remaining <= 0:
             raise subprocess.TimeoutExpired(process.args, timeout)
         try:
-            result = process.communicate(data, timeout=min(0.2, remaining))
+            result = process.communicate(timeout=min(0.2, remaining))
             notify(result[0])
             return result
         except subprocess.TimeoutExpired as exc:
             notify(exc.output)
-            data = None
 
 
 def result_from_output(raw):

@@ -1,0 +1,720 @@
+{
+  "recorded_at": "2026-11-17T04:18:31.773851+00:00",
+  "cases": [
+    {
+      "case": "baseline",
+      "run_id": "5eb780b7-2409-4cea-abc8-a24d900f31b8",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "needs_attention",
+      "error": "repair_exhausted",
+      "revision_id": "3076b1f5-443f-41b7-9276-a3d208d1baaa",
+      "artifact_hash": "7e49d7a7499932313cc91640c80881d57ac0c2f7a257cd5a84221813853f023b",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": "incomplete_sources"
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "lines-snake",
+      "run_id": "2e781e09-2a83-4a11-acee-a08e389a4303",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "needs_attention",
+      "error": "repair_exhausted",
+      "revision_id": null,
+      "artifact_hash": null,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_json"
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_json"
+        }
+      ]
+    },
+    {
+      "case": "blocks-snake",
+      "run_id": "1a6ae830-cbd7-40b9-8ccf-e35bf482f068",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "needs_attention",
+      "error": "repair_exhausted",
+      "revision_id": null,
+      "artifact_hash": null,
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_source_blocks"
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_source_blocks"
+        },
+        {
+          "attempt": 3,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_source_metadata"
+        }
+      ]
+    },
+    {
+      "case": "simple-snake",
+      "run_id": "eeab94b4-cdf8-4dca-b255-d7202c5021db",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "failed",
+      "error": "validator_unavailable",
+      "revision_id": "5dcf66df-598d-48ff-bbfc-b752f6199eb7",
+      "artifact_hash": "0f44db4b7c599a789bb5e69b197926955aac8c2795c261ee64539ba4b23813ef",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "failed",
+          "error": "invalid_source_blocks"
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "operation": "music",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "grid-verified",
+      "run_id": "3d250bff-9512-44cd-a0df-ab3b6822dbf9",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "failed",
+      "error": "validator_unavailable",
+      "revision_id": "35d038c7-6fa8-453f-9e4f-c75d541e81ce",
+      "artifact_hash": "f93d4745051bfa4abfbc318a7cb6305de13c25f717c53ca5239673013755b3cb",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "pro-control",
+      "run_id": "445209dc-7493-410c-a33c-67ba37cc9f98",
+      "profile": "pro",
+      "model_alias": "gpt-6-sol",
+      "status": "failed",
+      "error": "validator_unavailable",
+      "revision_id": "f53555d5-cbb7-4768-a9e0-f15b964b12ee",
+      "artifact_hash": "28b67d962f3ee96c6e487e7e198fe1a48947b8c0a83c53739168e2b230599b8c",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "plan",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "pro-edit",
+      "run_id": "5ff7da4e-9bc3-4dd5-947a-c7e794d558d9",
+      "profile": "pro",
+      "model_alias": "gpt-6-sol",
+      "status": "unverified",
+      "error": "manual_verification",
+      "revision_id": "1af317c7-9d26-4d88-ad93-7377c082c3ff",
+      "artifact_hash": "6f4e85c2e67eee90a48ee86756f99bad7c6fe2c6efde496bd82ea664e6f511c8",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "check_repair",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "snake-layout-edit",
+      "run_id": "f3e4866f-e7ff-4af0-b35c-73c964962641",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "needs_attention",
+      "error": "no_progress",
+      "revision_id": "635a4fb3-cc57-4bd0-a5cc-33acdb67de74",
+      "artifact_hash": "87fcd68c90bf28d618bc96902a9b95dc0eda95377d1f301bc11ce6870aaee123",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": "ambiguous_patch"
+        },
+        {
+          "attempt": 2,
+          "operation": "edit",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "operation": "repair",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 4,
+          "operation": "repair",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "snake-current",
+      "run_id": "bd478c47-5920-412b-ba6f-bdcc89fe8a32",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "needs_attention",
+      "error": "invalid_unchanged",
+      "revision_id": "518c6f51-c7d9-4600-8d7b-1fa6f95ad824",
+      "artifact_hash": "2a8fdfa379b0e17d43105c6413dfbb6345e5f730b55df5979973bffbdbaeea45",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "failed",
+          "error": "invalid_unchanged"
+        }
+      ]
+    },
+    {
+      "case": "grid-edit-current",
+      "run_id": "e15b76cd-0615-48a6-a2d6-0c8d29ba2f78",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "failed",
+      "error": "validator_unavailable",
+      "revision_id": "03e14025-6842-43d2-8892-445eba38f028",
+      "artifact_hash": "43aa7f19e7598e256346a8caf037c7063eb48f27d94092cf5496670bf4fc904f",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "snake-input-edit",
+      "run_id": "cf1949fe-a403-4898-95a7-e5d78ef7d71e",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "unverified",
+      "error": "manual_verification",
+      "revision_id": "b497005f-accf-46e8-adbf-553981959e1d",
+      "artifact_hash": "8483f7458b3448c7e448a67eee25be69341baf7624007a627c1207eb237b1d4b",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "check_repair",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "snake-acceptance",
+      "run_id": "853e1f38-5f7b-407c-80a2-996d73018c4e",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "unverified",
+      "error": "manual_verification",
+      "revision_id": "889b76c6-2422-4c73-afba-5758b97e5d0c",
+      "artifact_hash": "b47fb01c65f3900dc904b58ba9c0e62f5853ad8aee7fbf083f93d2db4bbf5254",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "grid-acceptance",
+      "run_id": "a4642ccb-8f55-4fe6-b101-902c1b494221",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "succeeded",
+      "error": null,
+      "revision_id": "0b738e8d-c553-42c5-9695-db39ddff1ba4",
+      "artifact_hash": "0d8f61bb4ab423d8d8b56340042c8df99f4441323c84df735f3a3e1c4cdd3129",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "operation": "repair",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "snake-dpr-edit",
+      "run_id": "5bb914e1-a44c-4d26-a429-2719f2af1915",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "needs_attention",
+      "error": "repair_exhausted",
+      "revision_id": "334465d7-7b44-4587-9c02-60147219ba1d",
+      "artifact_hash": "23f5eeb256fc6616e2e4f15655ae098a957589cc1dcdccd0f80536ab2129c90e",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    },
+    {
+      "case": "snake-release",
+      "run_id": "be0fa1b2-b18d-4e8b-87da-bda3b1bc6b91",
+      "profile": "lite",
+      "model_alias": "qwen38",
+      "status": "unverified",
+      "error": "manual_verification",
+      "revision_id": "f9203486-8096-4775-8465-afe9ff967a62",
+      "artifact_hash": "350fcb8a59efa9b90a943f039bf14954f23b97865e28062b7784dc63be007665",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 3,
+          "operation": "repair",
+          "state": "settled",
+          "error": null
+        },
+        {
+          "attempt": 4,
+          "operation": "check_repair",
+          "state": "settled",
+          "error": null
+        }
+      ]
+    }
+  ],
+  "independent_browser_reviews": [
+    {
+      "case": "grid-independent",
+      "dpr": 1,
+      "status": "passed",
+      "artifact_hash": "f93d4745051bfa4abfbc318a7cb6305de13c25f717c53ca5239673013755b3cb",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:4a07146346ca2c7907819cf0f5aec147c0f29841b99f06e38268c33a36551693:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 14.407,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "grid-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "f93d4745051bfa4abfbc318a7cb6305de13c25f717c53ca5239673013755b3cb",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 15.548,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "grid-edit-current-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "43aa7f19e7598e256346a8caf037c7063eb48f27d94092cf5496670bf4fc904f",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 11.624,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-input-edit-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "8483f7458b3448c7e448a67eee25be69341baf7624007a627c1207eb237b1d4b",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 29.04,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-input-edit-independent-dpr2-layout",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "8483f7458b3448c7e448a67eee25be69341baf7624007a627c1207eb237b1d4b",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 16.702,
+      "passed": 7,
+      "total": 7,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-acceptance-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "b47fb01c65f3900dc904b58ba9c0e62f5853ad8aee7fbf083f93d2db4bbf5254",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 22.928,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-acceptance-independent-dpr2-layout",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "b47fb01c65f3900dc904b58ba9c0e62f5853ad8aee7fbf083f93d2db4bbf5254",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 35.017,
+      "passed": 7,
+      "total": 7,
+      "failed_ids": []
+    },
+    {
+      "case": "grid-acceptance-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "0d8f61bb4ab423d8d8b56340042c8df99f4441323c84df735f3a3e1c4cdd3129",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 13.526,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-dpr-edit-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "23f5eeb256fc6616e2e4f15655ae098a957589cc1dcdccd0f80536ab2129c90e",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 27.601,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-dpr-edit-independent-dpr2-layout",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "23f5eeb256fc6616e2e4f15655ae098a957589cc1dcdccd0f80536ab2129c90e",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 16.775,
+      "passed": 7,
+      "total": 7,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-dpr-edit-independent-dpr2-endgame",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "23f5eeb256fc6616e2e4f15655ae098a957589cc1dcdccd0f80536ab2129c90e",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "elapsed_seconds": 27.481,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-release-independent-dpr2",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "350fcb8a59efa9b90a943f039bf14954f23b97865e28062b7784dc63be007665",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-2ec41486efb75d73",
+      "elapsed_seconds": 25.93,
+      "passed": 12,
+      "total": 12,
+      "failed_ids": []
+    },
+    {
+      "case": "snake-release-independent-dpr2-layout",
+      "dpr": 2,
+      "status": "passed",
+      "artifact_hash": "350fcb8a59efa9b90a943f039bf14954f23b97865e28062b7784dc63be007665",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:33382776da57a28cb9e9aafd8a5e755c735d50e4df48cd2a1e4210d8119d6e35:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-2ec41486efb75d73",
+      "elapsed_seconds": 17.635,
+      "passed": 7,
+      "total": 7,
+      "failed_ids": []
+    },
+    {
+      "case": "pro-control-recheck",
+      "dpr": 1,
+      "status": "passed",
+      "artifact_hash": "28b67d962f3ee96c6e487e7e198fe1a48947b8c0a83c53739168e2b230599b8c",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:86b91d481bef51b0a9f5d025137f1eb2a31612ec5d1998386f65332dc1779333:145.0.7632.6:native-darwin:b1ad6c5d4e131953273be65ea3eafc3b763d2c6589271e431d43b135a9b75d42",
+      "elapsed_seconds": 28.318,
+      "passed": 9,
+      "total": 9,
+      "failed_ids": []
+    },
+    {
+      "case": "pro-edit-recheck",
+      "dpr": 1,
+      "status": "passed",
+      "artifact_hash": "6f4e85c2e67eee90a48ee86756f99bad7c6fe2c6efde496bd82ea664e6f511c8",
+      "gates": {
+        "syntax": true,
+        "runtime": true,
+        "surface": true
+      },
+      "finding_codes": [],
+      "environment": "mini-browser-v1:4a07146346ca2c7907819cf0f5aec147c0f29841b99f06e38268c33a36551693:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e",
+      "elapsed_seconds": 49.151,
+      "passed": 10,
+      "total": 10,
+      "failed_ids": []
+    }
+  ],
+  "diagnostic_calls": 37,
+  "diagnostic_calls_sent": 37,
+  "diagnostic_unknown": 0,
+  "existing_unknown_calls": 13,
+  "notes": [
+    "Real configured provider calls through create_run/process_run; only asynchronous dispatch replaced by the local driver.",
+    "Games were not patched by the operator. Independent scenario routes use real input without state mutation.",
+    "DPR 2 reviews copy the validator privately and change only device_scale_factor; generated game bytes are preserved.",
+    "Pro independent R7 replay route waits for the actual end before asserting it; original model scenario is retained.",
+    "Earlier failed probes and mixed results are retained; this is not an estimate of universal model success rate.",
+    "The last fresh Snake passed independent gameplay checks, but its model-proposed wall scenario remained effect_not_causal; the application status is unverified, not automatic success.",
+    "The last fresh grid game succeeded through the normal pipeline after one CSS repair, with its music preserved.",
+    "No GPU SSH, cloud deployment, model-server changes, history rewriting, or unrelated cloud-config changes were performed.",
+    "Local diagnostic raw receipts, full reports, checks and screenshots are retained in the ignored .data/lite-recovery-20261117 directory.",
+    "The earlier Snake had a high-DPI drawing defect despite passing behavior checks. Lite corrected it in one exact edit; the unchanged corrected game passed 12 gameplay and 7 layout checks at DPR 2, and start/end screenshots were inspected. Its one-call edit retained an invalid model scenario and was not marked automatically accepted.",
+    "The final new Snake used the final Lite prompt: create, separate music, automatic CSS repair, then check repair. Its gameplay and layout passed 12/12 and 7/7 at DPR 2 with no operator source edits; the app retained unverified because its model scenario still failed causal comparison."
+  ],
+  "initial_base_commit": "a8945de",
+  "integrated_base_commit": "d2a70fde0fcdfeafa0e3eb8686b2c9646a08b6d2",
+  "diagnostic_usage": {
+    "lite": {
+      "calls": 33,
+      "input_tokens": 153143,
+      "output_tokens": 99331,
+      "cost_usd": "0.000000"
+    },
+    "pro": {
+      "calls": 4,
+      "input_tokens": 57482,
+      "output_tokens": 17283,
+      "cost_usd": "0.287794"
+    }
+  },
+  "verification": {
+    "non_browser_non_live": {
+      "passed": 1327,
+      "deselected": 164
+    },
+    "after_fast_forward_main": {
+      "passed": 29
+    },
+    "browser_transport_suite": {
+      "passed_initially": 87,
+      "docker_tests_repeated_in_fresh_isolated_container": 2,
+      "final_failures": 0
+    },
+    "pro_byte_identical_request_cases": 20,
+    "mypy_source_files": 55,
+    "ruff": "passed",
+    "django_check": "passed",
+    "migration_dry_run": "no changes",
+    "pip_check": "passed",
+    "after_final_lite_prompt": {
+      "passed": 77
+    }
+  }
+}

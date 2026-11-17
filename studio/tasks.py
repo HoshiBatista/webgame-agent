@@ -139,7 +139,10 @@ def reconcile_relay_cancellations():
             continue
         try:
             provider = PROVIDERS[inv.run.provider]
-            result = provider.unpack(provider.fetch(inv.request, cancel=True), str(inv.id))
+            from generation.lite_wire import blocks_enabled
+
+            options = {'text_response': True} if inv.run.provider == 'relay' and blocks_enabled(inv.request) else {}
+            result = provider.unpack(provider.fetch(inv.request, cancel=True), str(inv.id), **options)
             settle_invocation(inv.id, response=result["response"], raw_response=result.get("raw_response"),
                               usage=result.get("usage"),
                               provider_metadata=result.get("provider_metadata"))
@@ -482,6 +485,14 @@ def request_for(run, base, findings, last_attempt_error=None):
         "high" if run.generation_strategy == "pro" and request["operation"] in {"plan", "create", "repair"}
         else "medium" if run.generation_strategy == "pro" else "low"
     )
+    from generation.experience import enabled as media_enabled
+    from generation.lite_wire import enabled as lite_wire_enabled
+
+    if lite_eligible(request) and request.get('lite_policy') == 2 and request.get('patch_repair'):
+        request['lite_patch_lines'] = 1
+    if lite_wire_enabled(request) and request['operation'] == 'create' and not media_enabled(request):
+        request['lite_code_blocks'] = 2
+        request['lite_input_policy'] = 1
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         "response_schema_sha256": fingerprint(response_schema(request)),

@@ -7,6 +7,7 @@ import socket
 import struct
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from collections import deque
@@ -22,16 +23,21 @@ MAX_BYTES = 2_000_000
 def run_bounded(payload, cancelled=None, progress=None):
     """A hung renderer cannot block the persistent validation service forever."""
     limit = browser_watchdog_seconds(payload.get("checks"), payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False))
-    process = subprocess.Popen(
-        [sys.executable, "-m", "validation.runner"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        start_new_session=True,
-    )
+    # A seekable private input survives a slow child startup. Retrying
+    # communicate(None) after a timeout can otherwise leave its stdin incomplete.
+    with tempfile.TemporaryFile() as inputs:
+        inputs.write(json.dumps(payload).encode())
+        inputs.seek(0)
+        process = subprocess.Popen(
+            [sys.executable, "-m", "validation.runner"],
+            stdin=inputs,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
     try:
-        output, _ = communicate(process, json.dumps(payload), timeout=limit, cancelled=cancelled, progress=progress)
+        output, _ = communicate(process, timeout=limit, cancelled=cancelled, progress=progress)
         if process.returncode != 0:
             raise ValueError("browser worker exited unexpectedly")
         result = result_from_output(output)

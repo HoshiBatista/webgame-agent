@@ -35,7 +35,7 @@ PRO_BASELINES = json.loads((Path(__file__).parent / 'fixtures/pro-generation-bef
                          ids=lambda b: '-'.join(b['request'][k] for k in ['provider', 'generation_profile', 'operation']))
 def test_pro_messages_and_schemas_are_byte_identical_to_before_fix(baseline):
     request = baseline['request']
-    for version in [None, 1]:
+    for version in [None, 1, 2]:
         candidate = {**request, **({'lite_policy': version} if version else {})}
         assert digest(build_messages(candidate)) == baseline['messages_sha256']
         assert digest(response_schema(candidate)) == baseline['schema_sha256']

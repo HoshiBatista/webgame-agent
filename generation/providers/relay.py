@@ -93,7 +93,7 @@ def fetch(request, *, cancel=False):
         client.close()
 
 
-def unpack(status, ident):
+def unpack(status, ident, *, text_response=False):
     receipt = status.get("receipt")
     if receipt is None:
         raise GenerationPending(
@@ -114,6 +114,7 @@ def unpack(status, ident):
         return decode_completion(
             result["response"],
             {**(result.get("provider_metadata") or {}), "relay_job_id": ident},
+            text_response=text_response,
         )
     error = receipt["error"]
     raise GenerationError(
@@ -126,7 +127,7 @@ def unpack(status, ident):
     )
 
 
-def decode_completion(completion, metadata):
+def decode_completion(completion, metadata, *, text_response=False):
     """Game-specific interpretation belongs here, never in either transport service."""
     usage = normalize_usage(completion.get("usage"))
     choices = completion.get("choices")
@@ -160,7 +161,7 @@ def decode_completion(completion, metadata):
     try:
         if not isinstance(content, str):
             raise ValueError
-        response = json.loads(content)
+        response = {'lite_source_text': content} if text_response else json.loads(content)
         if not isinstance(response, dict):
             raise ValueError
     except (TypeError, ValueError) as exc:
@@ -175,9 +176,11 @@ def decode_completion(completion, metadata):
 
 
 def generate(request, *, on_event, is_cancelled):
+    from ..lite_wire import blocks_enabled
+
     if is_cancelled():
         # Lease loss is not user cancellation. The cancellation outbox handles explicit stops.
         raise GenerationPending("Ожидание передано следующему обработчику.")
     status = fetch(request)
     # Poll arrival time is not time-to-first-token. Actual GPU timing arrives in the receipt.
-    return unpack(status, request["relay"]["id"])
+    return unpack(status, request["relay"]["id"], text_response=blocks_enabled(request))

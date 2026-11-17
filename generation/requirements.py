@@ -55,6 +55,7 @@ def policy_snapshot():
     root = Path(__file__).parent
     paths = [
         "lite.py",
+        "lite_wire.py",
         "lite_baseline.py",
         "music.py",
         "planning.py",

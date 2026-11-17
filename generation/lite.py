@@ -3,7 +3,7 @@
 import re
 from copy import deepcopy
 
-VERSION = 1
+VERSION = 2
 
 
 def eligible(request):
@@ -14,7 +14,7 @@ def eligible(request):
 
 def enabled(request):
     # Old sent receipts retain their original wire contract. Never infer it from a reply.
-    return eligible(request) and request.get('lite_policy') == VERSION
+    return eligible(request) and request.get('lite_policy') in {1, VERSION}
 
 
 def constrain_checks(schema, request):
@@ -121,6 +121,10 @@ def system_prompt(request):
     from .prompts import PUBLIC_REPLY_GUIDANCE
 
     operation = request['operation']
+    from .lite_wire import block_prompt, blocks_enabled
+
+    if blocks_enabled(request):
+        return block_prompt(request) + PREFERENCE_GUIDANCE + PUBLIC_REPLY_GUIDANCE
     if request.get('patch_repair'):
         from .patch_repair import PROMPT
 
@@ -157,4 +161,17 @@ def system_prompt(request):
     if has_media(request):
         text += ('\nExperience.state is AUDIO context state, never game phase. Gameplay observations must use real DOM or own plain window game data. '
                  'Keep audio assertions in separate regression checks.\n')
+    from .lite_wire import PROMPT as WIRE_PROMPT
+    from .lite_wire import enabled as wire_enabled
+
+    if wire_enabled(request):
+        if request.get('patch_repair'):
+            from .lite_wire import CORRECTION_PROMPT
+
+            return text + CORRECTION_PROMPT + PUBLIC_REPLY_GUIDANCE
+        text = text.replace('File entries have only path and content.',
+                            'files maps each of index.html, styles.css and game.js to an array of source lines.')
+        text = text.replace('In JSON encode each source newline as \\n, decoded to an actual newline.',
+                            'Put each source line in a separate array item; the app joins them with real newlines.')
+        text += WIRE_PROMPT
     return text + PUBLIC_REPLY_GUIDANCE

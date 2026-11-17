@@ -100,7 +100,9 @@ def test_flag_change_cannot_retarget_a_previously_created_full_run(environment, 
     process_run(str(run.id))
     saved = run.invocations.get().request
     assert saved['generation_profile'] == 'full'
-    assert 'files' in saved['relay']['payload']['response_format']['json_schema']['schema']['properties']
+    assert saved['lite_code_blocks'] == 2
+    assert 'response_format' not in saved['relay']['payload']
+    assert 'COMPLETE literal contents of index.html, styles.css, game.js' in saved['relay']['payload']['messages'][0]['content']
     settings.GAMEFORGE_COMPACT_LITE_ENABLED = False
     executor.step()
     executor.step()

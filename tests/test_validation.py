@@ -338,6 +338,68 @@ def test_browser_watchdog_kills_hung_process_and_accepts_following_job(monkeypat
     assert children[1].returncode == 0
 
 
+
+def test_slow_validator_reads_complete_large_payload_and_streams_progress(monkeypatch):
+    from validation import daemon
+
+    real_popen = subprocess.Popen
+    program = """import json,sys,time
+ time.sleep(.5)
+ payload=json.load(sys.stdin)
+ print(json.dumps({'event':'scenario','id':'read','status':'started'}),flush=True)
+ time.sleep(.3)
+ print(json.dumps({'received':len(payload['html']),'last':payload['html'][-1:]}),flush=True)
+""".replace('\n ', '\n')
+
+    def worker(*args, **kwargs):
+        return real_popen([sys.executable, '-c', program], **kwargs)
+
+    monkeypatch.setattr(daemon.subprocess, 'Popen', worker)
+    events = []
+    payload = {'html': 'я' * 300_000 + '★', 'checks': []}
+    assert daemon.run_bounded(payload, progress=events.append) == {'received': 300_001, 'last': '★'}
+    assert events == [{'event': 'scenario', 'id': 'read', 'status': 'started'}]
+
+
+
+def test_native_slow_start_receives_complete_staged_input(monkeypatch, tmp_path):
+    import playwright
+
+    from validation import native
+
+    registry = json.loads((Path(playwright.__file__).parent / 'driver/package/browsers.json').read_text())
+    descriptor = next(b for b in registry['browsers'] if b['name'] == 'chromium-headless-shell')
+    browser = tmp_path / f"chromium_headless_shell-{descriptor['revision']}" / 'platform' / 'shell'
+    monkeypatch.setattr(native, 'browser_path', lambda: browser)
+    monkeypatch.setattr(native, 'runtime_paths', lambda _: [])
+    # Trusted echo child only; never execute game code outside the OS sandbox.
+    program = ('import sys,json,time;time.sleep(.5);p=json.load(sys.stdin);'
+               'print(json.dumps({"received":len(p["html"]),"last":p["html"][-1:]}))')
+    monkeypatch.setattr(native, 'sandbox_command', lambda *args: [sys.executable, '-c', program])
+    assert native.execute({'html': 'я' * 300_000 + '★', 'checks': []})['received'] == 300_001
+
+def test_slow_validator_remains_cancellable_before_it_reads_payload(monkeypatch):
+    import time
+
+    from validation import daemon
+
+    real_popen = subprocess.Popen
+    children = []
+
+    def worker(*args, **kwargs):
+        process = real_popen([sys.executable, '-c', 'import time;time.sleep(30)'], **kwargs)
+        children.append(process)
+        return process
+
+    monkeypatch.setattr(daemon.subprocess, 'Popen', worker)
+    monkeypatch.setattr(daemon, 'identity', lambda: 'test')
+    started = time.monotonic()
+    result = daemon.run_bounded({'html': 'x' * 500_000, 'checks': []},
+                                cancelled=lambda: time.monotonic() - started > .3)
+    assert result['status'] == 'cancelled'
+    assert children[0].poll() is not None
+    assert time.monotonic() - started < 3
+
 def test_watchdog_bounds_browser_waits_but_accepts_supported_suite():
     # Causal pairs plus exposure of all three device profiles, including landscape.
     assert 60 <= browser_watchdog_seconds(fixture_checks()) < 61

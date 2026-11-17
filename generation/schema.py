@@ -225,7 +225,11 @@ def response_schema(request):
 
         if request.get("operation") != "edit":
             raise ContractError("operation_mismatch", "Исправление фрагментов доступно только для доработки.")
-        return patch_reply_schema(request["patch_repair"], files=request.get('files') if lite_enabled(request) else None)
+        result = patch_reply_schema(request["patch_repair"], files=request.get('files') if lite_enabled(request) else None)
+        from .lite_wire import enabled as lite_wire_enabled
+        from .lite_wire import schema as lite_wire_schema
+
+        return lite_wire_schema(result, request) if lite_wire_enabled(request) else result
     if request.get("operation") in {"visual_review", "visual_patch"}:
         from .visual import PATCH_SCHEMA, REVIEW_SCHEMA
 
@@ -280,7 +284,14 @@ def response_schema(request):
     from .lite import constrain_checks
     from .lite import enabled as lite_enabled
 
-    return constrain_checks(schema, request) if lite_enabled(request) else schema
+    if lite_enabled(request):
+        schema = constrain_checks(schema, request)
+        from .lite_wire import enabled as wire_enabled
+        from .lite_wire import schema as lite_wire_schema
+
+        if wire_enabled(request):
+            schema = lite_wire_schema(schema, request)
+    return schema
 
 
 def validate_response(response, *, operation=None, schema=None, defer_check_errors=False):

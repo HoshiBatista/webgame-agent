@@ -79,16 +79,19 @@ def probe():
 
 
 def generate(request, *, on_event, is_cancelled):
+    from ..lite_wire import blocks_enabled
+
     if is_cancelled():
         raise GenerationError("cancelled", "Запуск отменён до отправки.", outcome_unknown=False)
     config = configuration()
     payload = build_payload(request, json_mode=config["json_mode"], stream=config["stream"])
     return complete(payload, config=config, on_event=on_event, is_cancelled=is_cancelled,
-                    trace_id=request.get("transport_trace_id"))
+                    trace_id=request.get("transport_trace_id"), text_response=blocks_enabled(request))
 
 
 def build_payload(request, *, json_mode="json_object", stream=True):
     """Freeze the exact model request before durable relay admission."""
+    from ..lite_wire import blocks_enabled
     from ..prompts import build_messages, schema_prompt
     from ..schema import response_schema
 
@@ -105,7 +108,12 @@ def build_payload(request, *, json_mode="json_object", stream=True):
             "provider_limits_unknown", "Нужны проверенные пределы контекста и ответа локальной модели."
         )
     payload = {"model": model, "messages": messages, "stream": stream, "max_tokens": max_output}
-    if mode == "json_schema":
+    if blocks_enabled(request):
+        # Literal source avoids escaping an entire program inside JSON. This is
+        # an explicitly frozen Lite contract, never a fallback from bad JSON.
+        mode = 'lite_code_blocks'
+        payload.update(temperature=0.2, top_p=0.9)
+    elif mode == "json_schema":
         payload["response_format"] = {
             "type": "json_schema",
             "json_schema": {"name": "mini_game", "strict": True, "schema": response_schema(request)},
@@ -138,7 +146,7 @@ def build_payload(request, *, json_mode="json_object", stream=True):
     return payload
 
 
-def complete(payload, *, config, on_event, is_cancelled, trace_id=None):
+def complete(payload, *, config, on_event, is_cancelled, trace_id=None, text_response=False):
     """One local model call. No retries, independent of Django and relay connectivity."""
     if is_cancelled():
         raise GenerationError("cancelled", "Запуск отменён до отправки.", outcome_unknown=False)
@@ -305,7 +313,7 @@ def complete(payload, *, config, on_event, is_cancelled, trace_id=None):
             )
         try:
             diagnostics.update(phase="parsing_result", finish_reason=finish)
-            response = json.loads(text)
+            response = {'lite_source_text': text} if text_response else json.loads(text)
         except ValueError as exc:
             raise GenerationError(
                 "invalid_json",

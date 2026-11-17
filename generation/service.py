@@ -57,6 +57,21 @@ def generate(request, *, on_event, is_cancelled):
                 'version': PROVENANCE_VERSION, 'changes': source_changes,
             }
     try:
+        from .lite_wire import blocks_enabled, decode_blocks
+        from .lite_wire import decode as decode_lite
+        from .lite_wire import enabled as lite_wire_enabled
+
+        validation_request = request
+        if lite_wire_enabled(request):
+            wire = original
+            if blocks_enabled(request):
+                content = original.get('lite_source_text') if isinstance(original, dict) else None
+                wire = decode_blocks(content, request, response_schema(request))
+            result['response'] = decode_lite(wire, request, response_schema(request))
+            result['provider_metadata']['lite_wire'] = 2
+            # Decode into the existing canonical contract; Pro and saved v1
+            # receipts never pass through this path.
+            validation_request = {**request, 'lite_policy': 1}
         if request.get('response_completion'):
             from .response_completion import assemble
 
@@ -77,7 +92,7 @@ def generate(request, *, on_event, is_cancelled):
             validate_wire(result["response"], request)
         else:
             validate_response(result["response"], operation=request.get("operation", "create"),
-                          schema=response_schema(request),
+                          schema=response_schema(validation_request),
                           defer_check_errors=(request.get("operation", "create") in {"create", "edit"}
                           and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
                           or bool(request.get('operation') == 'check_repair' and
@@ -89,6 +104,9 @@ def generate(request, *, on_event, is_cancelled):
                     previous_checks=request['checks'], policy=request['check_repair'])
                 result['provider_metadata']['check_repair_scope'] = {'retained_passed_checks': retained}
                 validate_response(result['response'], operation='check_repair', schema=response_schema(request))
+        from .lite_wire import require_keyboard_binding
+
+        require_keyboard_binding(result['response'], request)
         if request.get('operation') == 'plan':
             from .planning import validate_plan
 

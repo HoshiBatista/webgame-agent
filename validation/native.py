@@ -235,15 +235,20 @@ def _execute(payload, *, probe=False, cancelled=None, progress=None):
             # address or start a session daemon. /dev/null cannot be a bus socket.
             env["DBUS_SESSION_BUS_ADDRESS"] = "unix:path=/dev/null"
         timeout = 40 if probe else browser_watchdog_seconds(payload.get("checks"), payload.get("operator_criteria"), capture_visual=payload.get("capture_visual", False)) + 5
-        with (scratch / "stdout").open("w+b") as output, (scratch / "stderr").open("w+b") as errors:
-            process = subprocess.Popen(command, cwd=scratch, env=env, stdin=subprocess.PIPE,
+        with (scratch / "stdin").open("w+b") as inputs, \
+                (scratch / "stdout").open("w+b") as output, (scratch / "stderr").open("w+b") as errors:
+            # Repeated communicate timeouts do not resume a partially written
+            # stdin pipe in Python 3.12. Stage the complete private payload first.
+            inputs.write(json.dumps(payload).encode())
+            inputs.seek(0)
+            process = subprocess.Popen(command, cwd=scratch, env=env, stdin=inputs,
                                        stdout=output, stderr=errors, start_new_session=True)
             try:
                 def read_progress():
                     with (scratch / 'stdout').open('rb') as stream:
                         return stream.read(MAX_RESULT + 1)
 
-                communicate(process, json.dumps(payload).encode(), timeout=timeout, cancelled=cancelled,
+                communicate(process, timeout=timeout, cancelled=cancelled,
                             progress=progress, read_progress=read_progress)
                 output.seek(0)
                 raw = output.read(MAX_RESULT + 1)
