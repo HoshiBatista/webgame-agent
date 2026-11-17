@@ -9,6 +9,7 @@ from validation.contracts import suite_findings
 
 from .errors import ContractError
 from .experience import SCHEMA as ASSET_SCHEMA
+from .lite_wait_budget import extended_check_schema
 
 
 def obj(properties):
@@ -176,8 +177,9 @@ CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
          "expect": ABSOLUTE_EXPECT}),
 ])
 CHECK_SCHEMA["properties"]["category"]["enum"].append("restart")
+SAVED_CHECK_SCHEMA = extended_check_schema(CHECK_SCHEMA)
 APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
-APPLICATION_SCHEMA["properties"]["checks"]["items"] = CHECK_SCHEMA
+APPLICATION_SCHEMA["properties"]["checks"]["items"] = SAVED_CHECK_SCHEMA
 EXACT_PATCH = deepcopy(RESPONSE_SCHEMA["properties"]["patches"]["items"])
 MODULE_REPLACEMENT = obj({
     "action": {"enum": ["replace_module"]},
@@ -251,7 +253,10 @@ def response_schema(request):
         result = deepcopy(CHECK_REPAIR_SCHEMA)
         if request['check_repair'].get('max_checks') == MAX_SAVED_CHECKS:
             result['properties']['checks']['maxItems'] = MAX_SAVED_CHECKS
-        return constrain_checks(result, request) if lite_enabled(request) else result
+        from .lite_wait_budget import response_schema as wait_schema
+
+        result = constrain_checks(result, request) if lite_enabled(request) else result
+        return wait_schema(result, request)
     schema = deepcopy(RESPONSE_SCHEMA)
     schema["properties"]["checks"]["items"] = deepcopy(CHECK_SCHEMA)
     operation = request.get("operation", "create")
@@ -283,9 +288,12 @@ def response_schema(request):
                                                array(replacement, minItems=1, maxItems=1)]}
     from .lite import constrain_checks
     from .lite import enabled as lite_enabled
+    from .lite_wait_budget import response_schema as wait_schema
 
     if lite_enabled(request):
         schema = constrain_checks(schema, request)
+    schema = wait_schema(schema, request)
+    if lite_enabled(request):
         from .lite_wire import enabled as wire_enabled
         from .lite_wire import schema as lite_wire_schema
 
@@ -374,7 +382,7 @@ def validate_checks(checks, *, require_complete=True):
         raise ContractError("invalid_check", "Набор сценариев превышает ограничения размера или структуры.") from exc
     ids = set()
     for check in checks:
-        error = next(Draft202012Validator(CHECK_SCHEMA).iter_errors(check), None)
+        error = next(Draft202012Validator(SAVED_CHECK_SCHEMA).iter_errors(check), None)
         if error:
             raise ContractError("invalid_check", f"Неверная проверка: {error.message[:300]}")
         if check["id"] in ids:

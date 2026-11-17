@@ -348,17 +348,23 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
                                              "generation_strategy": generation_strategy,
                                              "requirement_manifest": requirement_manifest, "helper_catalog": helper_catalog or {}},
                                    files=files, previous_checks=previous_checks)
-    from .schema import response_schema
+    from .schema import SAVED_CHECK_SCHEMA, response_schema
+
+    # Wire policy was checked before decoding. Materialization consumes canonical
+    # saved checks, including an application-issued Lite wait allowance.
+    check_schema = None
+    if operation == 'check_repair':
+        check_schema = response_schema({'operation': operation, 'check_repair': check_repair,
+                                        'generation_contract': {'pipeline_version': version}})
+        check_schema['properties']['checks']['items'] = deepcopy(SAVED_CHECK_SCHEMA)
 
     if operation == 'check_repair' and (check_repair or {}).get('protected_checks'):
         from .check_repair import scoped_response
 
-        validate_response(response, operation=operation, schema=response_schema({
-            'operation': operation, 'check_repair': check_repair}), defer_check_errors=True)
+        validate_response(response, operation=operation, schema=check_schema, defer_check_errors=True)
         response, _ = scoped_response(response, previous_checks=previous_checks or [], policy=check_repair)
     validate_response(response, operation=operation,
-                      schema=response_schema({"operation": operation, "generation_contract": {"pipeline_version": version},
-                                              "check_repair": check_repair}) if operation == "check_repair" else None,
+                      schema=check_schema,
                       defer_check_errors=operation in {"create", "edit"})
     if operation == "check_repair":
         from .check_repair import repaired_checks

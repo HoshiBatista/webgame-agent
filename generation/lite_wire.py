@@ -55,7 +55,7 @@ def require_keyboard_binding(reply, request):
         )
 
 
-def check_from_lines(check, *, timed=False):
+def check_from_lines(check, *, timed=False, wait_budget_ms=10000):
     """Translate data-only input commands to the existing browser DSL."""
     result = deepcopy(check)
     steps = []
@@ -130,7 +130,7 @@ def check_from_lines(check, *, timed=False):
     # becomes an explicit canonical step in the saved suite and in BOTH causal
     # executions. Expectations, input and the total 10-second budget stay intact.
     if timed and result['category'] == 'outcome' and not any(s['action'] == 'wait_for' for s in steps):
-        remaining = 10000 - sum(s.get('ms', 0) for s in steps)
+        remaining = wait_budget_ms - sum(s.get('ms', 0) for s in steps)
         if remaining > 0 and len(steps) < 30:
             steps.append({'action': 'wait_for', 'ms': min(3000, remaining)})
     result['steps'] = steps
@@ -256,7 +256,11 @@ def decode(reply, request, wire_schema):
                 patch['new_text'] = '\n'.join(patch.pop('new_text_lines'))
         return result
     scenarios = result.pop('scenarios')
-    result['checks'] = [check_from_lines(c, timed=request.get('lite_code_blocks') == 3)
+    from .lite_wait_budget import MILLISECONDS
+    from .lite_wait_budget import enabled as long_waits
+
+    result['checks'] = [check_from_lines(c, timed=request.get('lite_code_blocks') == 3,
+                                       wait_budget_ms=MILLISECONDS if long_waits(request) else 10000)
                         for c in scenarios] if simple_checks(request) else scenarios
     if request['operation'] == 'create':
         result['files'] = [{'path': path, 'content': '\n'.join(result['files'][path])}

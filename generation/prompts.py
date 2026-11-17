@@ -357,13 +357,17 @@ def system_prompt(request):
         from .music import PROMPT
 
         return PROMPT
+    from .check_routes import guidance as route_guidance
     from .helpers import GUIDANCE
     from .lite import enabled as lite_enabled
     from .lite import system_prompt as lite_prompt
+    from .lite_wait_budget import prompt as wait_prompt
 
     operation = request.get('operation', 'create')
     if lite_enabled(request) and operation in {'create', 'edit', 'repair', 'check_repair'}:
-        return lite_prompt(request)
+        from .lite_check_delta import guidance as delta_guidance
+
+        return wait_prompt(lite_prompt(request) + route_guidance(request), request) + delta_guidance(request)
     text = _system_prompt(request)
     if operation in {'create', 'edit', 'repair', 'check_repair'} and request.get('generation_profile') != 'compact':
         text += ('\nFor held screen buttons use hold_touch(selector,x:null,y:null,ms:1..3000), real touch then release. '
@@ -373,4 +377,4 @@ def system_prompt(request):
         text += PREFERENCE_PRIORITY + GUIDANCE + QUICK_REVIEW_GUIDANCE
     if operation != 'visual_review':
         text += PUBLIC_REPLY_GUIDANCE
-    return text + JSON_FORMAT_GUIDANCE
+    return wait_prompt(text + JSON_FORMAT_GUIDANCE + route_guidance(request), request)

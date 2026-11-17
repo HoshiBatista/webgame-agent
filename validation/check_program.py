@@ -160,8 +160,11 @@ def compile_check(check, *, timer_outcome=False):
         return result('invalid_check', 'steps', 'Служебные поля не входят в сценарий.')
     if len(checkpoints) > 1:
         return result('invalid_check', 'steps', 'Допустима одна граница checkpoint между подготовкой и измеряемым вводом.')
-    if sum(s.get('ms', 0) for s in steps) > 10000:
-        return result('long_check', 'steps', 'Один smoke-сценарий может ожидать не более 10 секунд.')
+    wait_budget = check.get('wait_budget_ms', 10000)
+    if type(wait_budget) is not int or wait_budget not in {10000, 30000}:
+        return result('invalid_check', 'wait_budget_ms', 'Недопустимый предел времени сценария.')
+    if sum(s.get('ms', 0) for s in steps) > wait_budget:
+        return result('long_check', 'steps', f'Один smoke-сценарий может ожидать не более {wait_budget // 1000} секунд.')
     if len(awaits) > 1 or awaits and awaits[0] != len(steps)-1:
         return result('invalid_check', 'steps', 'wait_for допустим один раз, последним действием сценария.')
     if check.get('category') in {'control', 'outcome', 'restart'} and not (timer_outcome and check['category'] == 'outcome'):

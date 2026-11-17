@@ -78,4 +78,5 @@ def browser_watchdog_seconds(checks, criteria=None, *, capture_visual=False):
     longest = max((p.wait_seconds for p in valid), default=0)
     # Even an invalid scenario gets a bounded load/surface probe; uncovered viewports too.
     probes = len(set(VIEWPORTS) - {p.check().get('viewport') for p in programs})
-    return (45 if capture_visual else 0) + min(20 + (len(programs) + probes + 2 * len(causal)) * 5 + waiting + probes * longest, 600)
+    ceiling = 1500 if any(p.check().get('wait_budget_ms') == 30000 for p in valid) else 600
+    return (45 if capture_visual else 0) + min(20 + (len(programs) + probes + 2 * len(causal)) * 5 + waiting + probes * longest, ceiling)

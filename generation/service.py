@@ -72,6 +72,14 @@ def generate(request, *, on_event, is_cancelled):
             # Decode into the existing canonical contract; Pro and saved v1
             # receipts never pass through this path.
             validation_request = {**request, 'lite_policy': 1}
+        from .lite_wait_budget import MILLISECONDS, VERSION
+        from .lite_wait_budget import prepare as prepare_wait_budget
+
+        result['response'], budget_ids = prepare_wait_budget(result['response'], request)
+        if budget_ids:
+            result['provider_metadata']['lite_wait_budget'] = {
+                'version': VERSION, 'milliseconds': MILLISECONDS, 'check_ids': budget_ids,
+            }
         if request.get('response_completion'):
             from .response_completion import assemble
 
@@ -91,18 +99,29 @@ def generate(request, *, on_event, is_cancelled):
 
             validate_wire(result["response"], request)
         else:
+            from .lite_check_delta import assemble as assemble_check_delta
+            from .lite_check_delta import enabled as check_delta_enabled
+
             validate_response(result["response"], operation=request.get("operation", "create"),
                           schema=response_schema(validation_request),
                           defer_check_errors=(request.get("operation", "create") in {"create", "edit"}
                           and request.get("generation_contract", {}).get("pipeline_version", 6) >= 6)
+                          or check_delta_enabled(request)
                           or bool(request.get('operation') == 'check_repair' and
                                   request.get('check_repair', {}).get('protected_checks')))
+            if check_delta_enabled(request):
+                result['response'], retained = assemble_check_delta(result['response'], request)
+                result['provider_metadata']['lite_check_delta'] = {
+                    'version': request['lite_check_delta'], 'retained_check_ids': retained,
+                }
             if request.get('operation') == 'check_repair' and request.get('check_repair', {}).get('protected_checks'):
                 from .check_repair import scoped_response
 
                 result['response'], retained = scoped_response(result['response'],
                     previous_checks=request['checks'], policy=request['check_repair'])
                 result['provider_metadata']['check_repair_scope'] = {'retained_passed_checks': retained}
+                validate_response(result['response'], operation='check_repair', schema=response_schema(request))
+            elif check_delta_enabled(request):
                 validate_response(result['response'], operation='check_repair', schema=response_schema(request))
         from .lite_wire import require_keyboard_binding
 

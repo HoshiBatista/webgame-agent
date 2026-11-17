@@ -513,8 +513,19 @@ def request_for(run, base, findings, last_attempt_error=None):
         request['lite_input_policy'] = 1
     if lite_eligible(request) and request.get('lite_policy') == 2 and request['operation'] in {'create', 'edit', 'repair', 'check_repair'}:
         from generation.lite_checks import VERSION as LITE_CHECKS_VERSION
+        from generation.lite_wait_budget import VERSION as LITE_WAIT_VERSION
 
         request['lite_checks_policy'] = LITE_CHECKS_VERSION
+        request['lite_wait_budget'] = LITE_WAIT_VERSION
+        if request['operation'] == 'check_repair':
+            from generation.lite_check_delta import VERSION as LITE_DELTA_VERSION
+
+            request['lite_check_delta'] = LITE_DELTA_VERSION
+    from generation.check_routes import VERSION as CHECK_ROUTES_VERSION
+    from generation.check_routes import eligible as routes_eligible
+
+    if routes_eligible(request):
+        request['check_routes_policy'] = CHECK_ROUTES_VERSION
     request["generation_contract"] = {
         "system_prompt_sha256": hashlib.sha256(system_prompt(request).encode()).hexdigest(),
         "response_schema_sha256": fingerprint(response_schema(request)),

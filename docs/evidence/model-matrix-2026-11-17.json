@@ -1,0 +1,3273 @@
+{
+  "recorded_at": "2026-11-17T12:41:19.832261+00:00",
+  "policy": {
+    "pipeline": 9,
+    "planning": 2,
+    "runtime": 2,
+    "source_hashes": {
+      "lite.py": "ae9a87ea6dbeddfb524cfdefa2644305841fead9a9cfd5f93b4f449b0bdfd372",
+      "lite_wire.py": "8272c76c964b0a9741a524d07c40f5e9f20af45580f4528df68a71766d1c68be",
+      "lite_checks.py": "cb9a45750e6eff4d74672ab658f2e1c74d0d8be8da2a4aa4a5f2040f39fd788d",
+      "check_routes.py": "cc87af2a510bffbdda5b6c6eb2545b2e8dbf2d86af7d5e9634fcf4b501a94f32",
+      "lite_wait_budget.py": "0f47420564ca9d2200a2d094805b1c907aa7b4bf5bb336cfbd1b8f3dac2f7af3",
+      "lite_check_delta.py": "810ef069dd61db1c43c0e05219092efa8d2e43fe0407502d276d4263c817a3d3",
+      "lite_baseline.py": "cfe31dae475306203d1fd18c631066a547bb08dd549c01058e46bbcd527d29c1",
+      "music.py": "d0977c205c92ecc818dbf0accdd1d1ff256ba93d746479c5fe341cf2a7c27255",
+      "planning.py": "268109bfa16e0918153a9bb1ac833bb1cc339f22122b4dbca54fc866f14d7bb3",
+      "requirements.py": "be2e036e3f6e927a11ae5bfed01214c9cc4e47b84d9fdc4c58d28101851a770e",
+      "schema.py": "d7ace50703a0203f43cc84f2ea157a1b4a416516384dbfc4315d0011c76b2263",
+      "prompts.py": "f52af1803c65b600174944d12ab2b98e6991479333fa93770b0363d4a1833da3",
+      "audiences.py": "4e67b3aec06107f1d728c82e4a9762bf65d05fde7383c6c50f7bf19808fc1099",
+      "presentation.py": "11e7a4ff249235b1387e49402806ac85c971c6221c2ef152f11f2b2a44be5ec5",
+      "compact.py": "efdbad42e2bc0dbee52e79eae2a3032f298489269394dcea0176e6c96efffea9",
+      "helpers.py": "221a7b812ee3b594bc899cf305a4a9d86b13f4b01eb7e0ad4550b0b0c8b9bd65",
+      "experience.py": "20a76e9b252d0a78ea61df4575dd896faea5a846138c56df60a306a3beea39d7",
+      "runtime/experience-v1.js": "cba9340e23c1065852a3661c2a7bccf99ded245222a581f694683aa1b707eff9",
+      "visual.py": "91100a1d6e0b1d0739c4d9742cd61f93d86448382d7d30a9dca080ec94142aaf",
+      "feedback_image.py": "dabff2ed5bf85edfe26105b62597d3a67c117f3793f2f7ee9139edc873791609",
+      "../studio/visual.py": "d28641a00cd66fab448838c176df3c437342364cf2cbba48d910311708c1548a",
+      "runtime/motion-v1.js": "b815b0d9ee1d3a6f6a86be2466391f2d34dd5ebb9d78012d4bd6ed01d2190e11",
+      "runtime/compact-v2.js": "51c715b475aa082ff5165ca6d2a3199adca267e539eee78ed76174055b08b2b0",
+      "runtime/compact-v2.css": "8f3c4738b6d47e18574d15717510aeb019c738676594a4d5444cd09abaab75ae",
+      "artifacts.py": "f1a339d2696d8fe84b7d3a15e765f529fa03319244f8ec0e293ae82419b251ed",
+      "source_policy.py": "abdf8ddef3d31787398dd42942523918ccea9022b83ca90e5a29a75f4c3ea201",
+      "check_repair.py": "6ea9848ee673bc66dc4ba24a9a9444e34f322a879c327eea77b376ed5253ab07",
+      "patch_repair.py": "b142fcc84f27528666db9a10680ea52bcf422614df5d25947151c5b6689d50ac",
+      "response_completion.py": "5ae1f51c0a0117fd4d6db5fe28c66c2c5e8ccf96ae9ac0b9ac4053f3d5c60c1a",
+      "code_repair.py": "ca9dc8359bcdbed943991d5b2d0f98a7eabab05a01c395cabd6ff9b27779a97c",
+      "feedback.py": "e8de2976b7045c23d95839e35bbe84cdcb5b57d3a145c7b16ed05139d2c6e9ec",
+      "../studio/tasks.py": "493bb492046a5388131590b0d5ab884e6d13d02f9f9175cdbcc40625eeeb1d6f",
+      "../studio/check_repair.py": "9850c6165e55708c8eab876490a891fa34f502b892d2d4f1c79ff4bb45472ba4",
+      "../studio/patch_repair.py": "019ad85b44a742331432b44a1529eae76dc102f171dc11d2c7802453cec9f2dd",
+      "../studio/response_completion.py": "1c36c84c7e99a5610fd3c8ac062a96e57046d4e1e827053505d0978970aa5273",
+      "../studio/checks_create.py": "d535bf4111f4887c3f056a1cb480c93f2556d299ac5fb85b1a106437458571ce",
+      "../studio/acceptance.py": "21198c51b78c0bf83f8fcfa09c2363ac4ee5d35aaf61c36e100bd67ec49e2df6",
+      "../validation/checks.py": "cd6576d2820b4efdabaaa96b6dc87cc43400f39b89140dec050875a086d28fff",
+      "../validation/check_program.py": "18900b165b25b2c207a9bd97fc543d358ef047c971fc88163f6342a97aa1044e"
+    }
+  },
+  "method": {
+    "actual_models": true,
+    "normal_accounting": true,
+    "generated_sources_manually_modified": false,
+    "validation": "Native OS sandbox Chromium; production model checks plus independently authored requirements, real input and deterministic paired diagnostics; independent repeats at DPR 2.",
+    "cloud_deployed": false,
+    "gpu_server_admin_access": false,
+    "pushed": false,
+    "physical_phone_tested": false,
+    "subjective_audio_quality_asserted": false
+  },
+  "operator_requirements": {
+    "memory": [
+      "Старт: шесть карточек, ноль попыток и найденных пар",
+      "Касание открывает выбранную карточку",
+      "Клавиатура позволяет начать и открыть выбранную карточку",
+      "Повторный выбор уже открытой карточки не засчитывает попытку",
+      "Несовпавшая пара закрывается после задержки и засчитывает одну попытку",
+      "Третья карточка заблокирована во время проверки несовпадения",
+      "Совпавшая пара остаётся открытой",
+      "Найденная пара не открывается повторно и не добавляет попытки",
+      "Все три найденные пары приводят к победе",
+      "Новый раунд после победы сбрасывает прогресс",
+      "Поворот экрана сохраняет игровой прогресс и доступность управления",
+      "Музыка запускается после действия игрока"
+    ],
+    "sokoban": [
+      "Понятный старт с исходными позициями и нулём ходов",
+      "Экранная кнопка действительно передвигает игрока",
+      "Стрелки клавиатуры передвигают игрока без мыши",
+      "Стена не пропускает игрока и не добавляет успешный ход",
+      "Допустимый толчок передвигает игрока и ящик",
+      "Удаление от ящика не тянет его за игроком",
+      "Толчок ящика в стену запрещён",
+      "Задача решается настоящими ходами и доставкой ящика на цель",
+      "После победы игровой результат сохраняется",
+      "Перезапуск после победы восстанавливает исходное поле и счётчик",
+      "Поворот телефона сохраняет позиции и счётчик",
+      "Музыка запускается после действия игрока"
+    ],
+    "catch": [
+      "Старт обнуляет счёт и пропуски",
+      "Настоящее удержание экранной кнопки двигает корзину",
+      "Клавиатура запускает и двигает корзину без мыши",
+      "Корзина ограничена обоими краями поля",
+      "Настоящая ловля увеличивает счёт",
+      "Настоящий пропуск увеличивает число пропусков",
+      "Три ловли дают победу",
+      "Три пропуска дают поражение",
+      "Пауза останавливает корзину и звезду, продолжение возобновляет движение",
+      "Новый раунд после исхода обнуляет прогресс",
+      "Поворот телефона сохраняет фазу и игровой прогресс",
+      "Музыка запускается после действия игрока"
+    ]
+  },
+  "cases": [
+    {
+      "case": "lite-memory",
+      "profile": "lite",
+      "prompt": "Сделай игру «Найди пары»: шесть карточек, три пары разных рисунков. За ход открываются две карточки: совпавшие остаются открытыми, несовпавшие через короткую паузу закрываются. Нельзя открыть уже найденную пару или третью карточку во время проверки двух. Победа после всех трёх пар, счётчик попыток, понятный старт и новый раунд. Управление касаниями и клавишами 1–6. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "7902e3b3-f562-4e51-a87b-6759fefce2c7",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "model_alias": "qwen38",
+      "revision_id": "2ef074bd-6119-4edd-9f7a-b16543fad363",
+      "artifact_hash": "1c1539e63f30b968b4eabd77c431eea5b3ca8ebbef6793a275993cc716ae4e81",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3479,
+            "output_tokens": 5842,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 340.64
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 811,
+            "output_tokens": 1139,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 67.17
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_check",
+          "usage": {
+            "input_tokens": 11765,
+            "output_tokens": 2175,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 134.58
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "ctrl-touch"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "pause"
+            },
+            {
+              "code": "effect_not_causal",
+              "check_id": "outcome"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start",
+              "status": "passed"
+            },
+            {
+              "id": "ctrl-touch",
+              "status": "failed"
+            },
+            {
+              "id": "outcome",
+              "status": "unverified"
+            },
+            {
+              "id": "ctrl-keys",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause",
+              "status": "failed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "2ef074bd-6119-4edd-9f7a-b16543fad363",
+        "artifact_hash": "1c1539e63f30b968b4eabd77c431eea5b3ca8ebbef6793a275993cc716ae4e81",
+        "status": "passed",
+        "checks_sha256": "34ed2905112c530093250aa8662fb0269addc1fd3463a8333fcb23f85b69d783",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M4",
+            "status": "passed"
+          },
+          {
+            "id": "M5",
+            "status": "passed"
+          },
+          {
+            "id": "M6",
+            "status": "passed"
+          },
+          {
+            "id": "M7",
+            "status": "passed"
+          },
+          {
+            "id": "M8",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M11",
+            "status": "passed"
+          },
+          {
+            "id": "M12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-sokoban",
+      "profile": "lite",
+      "prompt": "Сделай небольшой сокобан на поле 5 на 5: один ящик и одна отмеченная цель, стены и свободный проход. Уровень должен быть решаемым. Игрок ходит по клеткам и толкает ящик; нельзя проходить сквозь стены, тянуть ящик или толкать его в занятую стеной клетку. Доставка ящика на цель завершает уровень победой. Нужны понятный старт, счётчик ходов и перезапуск. Управление стрелками на клавиатуре и крупными экранными кнопками. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "9449f331-00f0-418f-b082-bd148d5affce",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "model_alias": "qwen38",
+      "revision_id": "0fd8c3aa-95bc-46d4-b27b-dd64b655f1ca",
+      "artifact_hash": "4ee6654ef23e908361a9f665c05e788dcc8d1f97d3e0b14ddb4231ed26eb5ca3",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3505,
+            "output_tokens": 4631,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 272.68
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 808,
+            "output_tokens": 1076,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 67.11
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 9415,
+            "output_tokens": 1674,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 103.44
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_not_causal",
+              "check_id": "outcome-win"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "unverified"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "0fd8c3aa-95bc-46d4-b27b-dd64b655f1ca",
+        "artifact_hash": "4ee6654ef23e908361a9f665c05e788dcc8d1f97d3e0b14ddb4231ed26eb5ca3",
+        "status": "passed",
+        "checks_sha256": "2c5cd905075936a13500885fe68bc873d4fbf63a90cae9ff447c5fd07ea05419",
+        "facts": [
+          {
+            "id": "S1",
+            "status": "passed"
+          },
+          {
+            "id": "S2",
+            "status": "passed"
+          },
+          {
+            "id": "S3",
+            "status": "passed"
+          },
+          {
+            "id": "S4",
+            "status": "passed"
+          },
+          {
+            "id": "S5",
+            "status": "passed"
+          },
+          {
+            "id": "S6",
+            "status": "passed"
+          },
+          {
+            "id": "S7",
+            "status": "passed"
+          },
+          {
+            "id": "S8",
+            "status": "passed"
+          },
+          {
+            "id": "S9",
+            "status": "passed"
+          },
+          {
+            "id": "S10",
+            "status": "passed"
+          },
+          {
+            "id": "S11",
+            "status": "passed"
+          },
+          {
+            "id": "S12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-catch",
+      "profile": "lite",
+      "prompt": "Сделай короткую аркаду «Поймай звёзды»: корзина двигается влево и вправо внизу, сверху по одной падают звёзды. Поймай три звезды для победы; три пропуска завершают раунд поражением. Нужен спокойный темп, видимые счёт и пропуски, понятный старт, пауза и новый раунд. Управление стрелками на клавиатуре и крупными экранными кнопками влево/вправо с удержанием. Корзина не должна выходить за края поля. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "c39ac87a-a439-48f8-8745-ed7ef2dd21de",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "model_alias": "qwen38",
+      "revision_id": "2b868522-7f69-4851-bab5-995cacbeaa50",
+      "artifact_hash": "24660de0601ba56cd48a9fbd54d06abf520d1f53ca0adb0ea85b009a0de65dd0",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3507,
+            "output_tokens": 5027,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 294.29
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 758,
+            "output_tokens": 534,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 36.35
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_check",
+          "usage": {
+            "input_tokens": 10240,
+            "output_tokens": 2100,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 125.04
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "outcome-win"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "unverified"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "diagnostic": {
+        "revision_id": "2b868522-7f69-4851-bab5-995cacbeaa50",
+        "artifact_hash": "24660de0601ba56cd48a9fbd54d06abf520d1f53ca0adb0ea85b009a0de65dd0",
+        "status": "failed",
+        "checks_sha256": "78367e4bf90cecbe7652b5e314aa8618a266e1200560dba9df0b16ff41e90eb8",
+        "facts": [
+          {
+            "id": "C2",
+            "status": "passed"
+          },
+          {
+            "id": "C9",
+            "status": "failed"
+          },
+          {
+            "id": "C11",
+            "status": "passed"
+          },
+          {
+            "id": "C12",
+            "status": "passed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "missing_effects",
+            "check_id": null,
+            "after": null
+          },
+          {
+            "code": "missing_mobile_start",
+            "check_id": null,
+            "after": null
+          },
+          {
+            "code": "missing_keyboard_control",
+            "check_id": null,
+            "after": null
+          },
+          {
+            "code": "incomplete_checks",
+            "check_id": null,
+            "after": null
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "C9",
+            "after": 490.6367543786764
+          }
+        ]
+      }
+    },
+    {
+      "case": "pro-memory",
+      "profile": "pro",
+      "prompt": "Сделай игру «Найди пары»: шесть карточек, три пары разных рисунков. За ход открываются две карточки: совпавшие остаются открытыми, несовпавшие через короткую паузу закрываются. Нельзя открыть уже найденную пару или третью карточку во время проверки двух. Победа после всех трёх пар, счётчик попыток, понятный старт и новый раунд. Управление касаниями и клавишами 1–6. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "eddae7ef-0b30-4bcf-8e2c-d36039a6bdea",
+      "status": "succeeded",
+      "error_code": null,
+      "model_alias": "gpt-6-sol",
+      "revision_id": "c030a949-7b88-49af-83bf-6df87ab5e474",
+      "artifact_hash": "06052dcf042a6b663f02737361d5f6957b210a18a2347843668426de90476c63",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "plan",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3710,
+            "output_tokens": 2959,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.037010",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 68.13
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 13158,
+            "output_tokens": 9298,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.119296",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 176.94
+        }
+      ],
+      "reports": [
+        {
+          "status": "passed",
+          "gates_passed": true,
+          "findings": [],
+          "facts": [
+            {
+              "id": "R1",
+              "status": "passed"
+            },
+            {
+              "id": "R2",
+              "status": "passed"
+            },
+            {
+              "id": "R5",
+              "status": "passed"
+            },
+            {
+              "id": "R7",
+              "status": "passed"
+            },
+            {
+              "id": "R3",
+              "status": "passed"
+            },
+            {
+              "id": "R4",
+              "status": "passed"
+            },
+            {
+              "id": "R6",
+              "status": "passed"
+            },
+            {
+              "id": "R8",
+              "status": "passed"
+            },
+            {
+              "id": "A1",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "c030a949-7b88-49af-83bf-6df87ab5e474",
+        "artifact_hash": "06052dcf042a6b663f02737361d5f6957b210a18a2347843668426de90476c63",
+        "status": "passed",
+        "checks_sha256": "2620b0d5a6044c387065984c4df972debf086f2e0828623a055b3bd9ac3edff3",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M4",
+            "status": "passed"
+          },
+          {
+            "id": "M5",
+            "status": "passed"
+          },
+          {
+            "id": "M6",
+            "status": "passed"
+          },
+          {
+            "id": "M7",
+            "status": "passed"
+          },
+          {
+            "id": "M8",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M11",
+            "status": "passed"
+          },
+          {
+            "id": "M12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "pro-sokoban",
+      "profile": "pro",
+      "prompt": "Сделай небольшой сокобан на поле 5 на 5: один ящик и одна отмеченная цель, стены и свободный проход. Уровень должен быть решаемым. Игрок ходит по клеткам и толкает ящик; нельзя проходить сквозь стены, тянуть ящик или толкать его в занятую стеной клетку. Доставка ящика на цель завершает уровень победой. Нужны понятный старт, счётчик ходов и перезапуск. Управление стрелками на клавиатуре и крупными экранными кнопками. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "4664177e-f269-4cb4-8d43-65417f49e30c",
+      "status": "succeeded",
+      "error_code": null,
+      "model_alias": "gpt-6-sol",
+      "revision_id": "52079f76-4171-4f06-8457-4e6dcef96b19",
+      "artifact_hash": "68b3cd9c9ee50118377cb7d69d6f23b34ee2046ca9ce93b6b106469b37d745ad",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "plan",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3766,
+            "output_tokens": 3098,
+            "cached_input_tokens": 2304,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.034365",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 67.87
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 13019,
+            "output_tokens": 9074,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.116778",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 170.75
+        }
+      ],
+      "reports": [
+        {
+          "status": "passed",
+          "gates_passed": true,
+          "findings": [],
+          "facts": [
+            {
+              "id": "R01",
+              "status": "passed"
+            },
+            {
+              "id": "R02",
+              "status": "passed"
+            },
+            {
+              "id": "R06",
+              "status": "passed"
+            },
+            {
+              "id": "R03",
+              "status": "passed"
+            },
+            {
+              "id": "R04",
+              "status": "passed"
+            },
+            {
+              "id": "R05",
+              "status": "passed"
+            },
+            {
+              "id": "R07",
+              "status": "passed"
+            },
+            {
+              "id": "R08",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "52079f76-4171-4f06-8457-4e6dcef96b19",
+        "artifact_hash": "68b3cd9c9ee50118377cb7d69d6f23b34ee2046ca9ce93b6b106469b37d745ad",
+        "status": "passed",
+        "checks_sha256": "608a6561e22004f66b909167a337ee95c65dd3127964aa1a80968bce84f77873",
+        "facts": [
+          {
+            "id": "S1",
+            "status": "passed"
+          },
+          {
+            "id": "S2",
+            "status": "passed"
+          },
+          {
+            "id": "S3",
+            "status": "passed"
+          },
+          {
+            "id": "S4",
+            "status": "passed"
+          },
+          {
+            "id": "S5",
+            "status": "passed"
+          },
+          {
+            "id": "S6",
+            "status": "passed"
+          },
+          {
+            "id": "S7",
+            "status": "passed"
+          },
+          {
+            "id": "S8",
+            "status": "passed"
+          },
+          {
+            "id": "S9",
+            "status": "passed"
+          },
+          {
+            "id": "S10",
+            "status": "passed"
+          },
+          {
+            "id": "S11",
+            "status": "passed"
+          },
+          {
+            "id": "S12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "pro-catch",
+      "profile": "pro",
+      "prompt": "Сделай короткую аркаду «Поймай звёзды»: корзина двигается влево и вправо внизу, сверху по одной падают звёзды. Поймай три звезды для победы; три пропуска завершают раунд поражением. Нужен спокойный темп, видимые счёт и пропуски, понятный старт, пауза и новый раунд. Управление стрелками на клавиатуре и крупными экранными кнопками влево/вправо с удержанием. Корзина не должна выходить за края поля. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "f3156814-2647-49c9-bfa2-6472e457a9f8",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "model_alias": "gpt-6-sol",
+      "revision_id": "9edd7a59-a0d3-4c0f-9f2d-5b5b48bc2fc8",
+      "artifact_hash": "74a8a66ca93f00c76aec25ca1b68ea6e13677c81b05c00155f990e3f14a255fe",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "plan",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3780,
+            "output_tokens": 2961,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.037170",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 68.06
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 13226,
+            "output_tokens": 11785,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.144302",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 220.75
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 20644,
+            "output_tokens": 2499,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.066278",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 56.05
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "R4"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "R5"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "R7"
+            }
+          ],
+          "facts": [
+            {
+              "id": "R1",
+              "status": "passed"
+            },
+            {
+              "id": "R2",
+              "status": "passed"
+            },
+            {
+              "id": "R4",
+              "status": "unverified"
+            },
+            {
+              "id": "R3",
+              "status": "passed"
+            },
+            {
+              "id": "R5",
+              "status": "unverified"
+            },
+            {
+              "id": "R6",
+              "status": "passed"
+            },
+            {
+              "id": "R7",
+              "status": "unverified"
+            },
+            {
+              "id": "R8",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "9edd7a59-a0d3-4c0f-9f2d-5b5b48bc2fc8",
+        "artifact_hash": "74a8a66ca93f00c76aec25ca1b68ea6e13677c81b05c00155f990e3f14a255fe",
+        "status": "passed",
+        "checks_sha256": "089847adc8d481f8025ad19e5963f150366907f2e99775dd71dc3f950681937f",
+        "facts": [
+          {
+            "id": "C1",
+            "status": "passed"
+          },
+          {
+            "id": "C2",
+            "status": "passed"
+          },
+          {
+            "id": "C3",
+            "status": "passed"
+          },
+          {
+            "id": "C4",
+            "status": "passed"
+          },
+          {
+            "id": "C5",
+            "status": "passed"
+          },
+          {
+            "id": "C6",
+            "status": "passed"
+          },
+          {
+            "id": "C7",
+            "status": "passed"
+          },
+          {
+            "id": "C8",
+            "status": "passed"
+          },
+          {
+            "id": "C9",
+            "status": "passed"
+          },
+          {
+            "id": "C10",
+            "status": "passed"
+          },
+          {
+            "id": "C11",
+            "status": "passed"
+          },
+          {
+            "id": "C12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-memory-v2",
+      "profile": "lite",
+      "prompt": "Сделай игру «Найди пары»: шесть карточек, три пары разных рисунков. За ход открываются две карточки: совпавшие остаются открытыми, несовпавшие через короткую паузу закрываются. Нельзя открыть уже найденную пару или третью карточку во время проверки двух. Победа после всех трёх пар, счётчик попыток, понятный старт и новый раунд. Управление касаниями и клавишами 1–6. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "fc69f7a3-5a15-42d8-a940-d9f35cb30769",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "model_alias": "qwen38",
+      "revision_id": "397563fa-e88a-40f7-8ef6-81685e6671e4",
+      "artifact_hash": "b94176e8a0bdddd88eca1a71a79c417a047e5b20fef036beb1c18a332e846cc9",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 4017,
+            "output_tokens": 4880,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 283.01
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 774,
+            "output_tokens": 1046,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 67.13
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_check",
+          "usage": {
+            "input_tokens": 11091,
+            "output_tokens": 1941,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 119.15
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "outcome-win"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "touch-control",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "failed"
+            },
+            {
+              "id": "keyboard-control",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "diagnostic": {
+        "revision_id": "397563fa-e88a-40f7-8ef6-81685e6671e4",
+        "artifact_hash": "b94176e8a0bdddd88eca1a71a79c417a047e5b20fef036beb1c18a332e846cc9",
+        "status": "failed",
+        "checks_sha256": "0f38245a670a6f6e0b63be8e2089c5d0394037c21ba6ed64ba9c3030cd7a7678",
+        "facts": [
+          {
+            "id": "start",
+            "status": "passed"
+          },
+          {
+            "id": "touch",
+            "status": "passed"
+          },
+          {
+            "id": "keys",
+            "status": "passed"
+          },
+          {
+            "id": "correct-card",
+            "status": "failed"
+          },
+          {
+            "id": "second-pair",
+            "status": "failed"
+          },
+          {
+            "id": "win",
+            "status": "failed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "effect_mismatch",
+            "check_id": "correct-card",
+            "after": 0
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "second-pair",
+            "after": 1
+          },
+          {
+            "code": "effect_mismatch",
+            "check_id": "win",
+            "after": "playing"
+          }
+        ]
+      }
+    },
+    {
+      "case": "lite-sokoban-v2",
+      "profile": "lite",
+      "prompt": "Сделай небольшой сокобан на поле 5 на 5: один ящик и одна отмеченная цель, стены и свободный проход. Уровень должен быть решаемым. Игрок ходит по клеткам и толкает ящик; нельзя проходить сквозь стены, тянуть ящик или толкать его в занятую стеной клетку. Доставка ящика на цель завершает уровень победой. Нужны понятный старт, счётчик ходов и перезапуск. Управление стрелками на клавиатуре и крупными экранными кнопками. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "5588441d-c217-4c42-8350-954e522d2c09",
+      "status": "needs_attention",
+      "error_code": "no_progress",
+      "model_alias": "qwen38",
+      "revision_id": "ec3476bc-060c-42de-9fb7-65245589bfb6",
+      "artifact_hash": "ba9b2e5005ff2824feeec7de608c6b31600d583d76c67286ea1c24bc284c3382",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 4043,
+            "output_tokens": 4682,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 272.97
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 793,
+            "output_tokens": 934,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 56.87
+        },
+        {
+          "attempt": 3,
+          "operation": "repair",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 12334,
+            "output_tokens": 3110,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 196.75
+        },
+        {
+          "attempt": 4,
+          "operation": "repair",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 12136,
+            "output_tokens": 919,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 69.29
+        }
+      ],
+      "reports": [
+        {
+          "status": "failed",
+          "gates_passed": false,
+          "findings": [
+            {
+              "code": "mobile_overflow",
+              "check_id": "artifact-landscape"
+            },
+            {
+              "code": "effect_not_causal",
+              "check_id": "outcome-win"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "unverified"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "diagnostic": {
+        "revision_id": "0585cdc4-43c9-4e4a-abeb-6e5631d176cf",
+        "artifact_hash": "1a50cacd279abf1e141f8ff826d659e65999561c6d83d735c010c4b52525cb3e",
+        "status": "failed",
+        "checks_sha256": "e661eb2253ce43f21f16c5a91a22deea66b9856b5ee097934775d0fc69ab6776",
+        "facts": [
+          {
+            "id": "start-mobile",
+            "status": "passed"
+          },
+          {
+            "id": "control-touch",
+            "status": "passed"
+          },
+          {
+            "id": "control-keyboard",
+            "status": "passed"
+          },
+          {
+            "id": "goal-is-reachable",
+            "status": "failed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "effect_mismatch",
+            "check_id": "goal-is-reachable",
+            "after": "playing"
+          },
+          {
+            "code": "mobile_overflow",
+            "check_id": "artifact-landscape",
+            "after": null
+          }
+        ]
+      }
+    },
+    {
+      "case": "lite-catch-v2",
+      "profile": "lite",
+      "prompt": "Сделай короткую аркаду «Поймай звёзды»: корзина двигается влево и вправо внизу, сверху по одной падают звёзды. Поймай три звезды для победы; три пропуска завершают раунд поражением. Нужен спокойный темп, видимые счёт и пропуски, понятный старт, пауза и новый раунд. Управление стрелками на клавиатуре и крупными экранными кнопками влево/вправо с удержанием. Корзина не должна выходить за края поля. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "edb92ada-7098-4f85-af81-8a8572544434",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "model_alias": "qwen38",
+      "revision_id": "3073882f-884e-43fc-9385-8faf396cc4f7",
+      "artifact_hash": "b9c1cf8d4d03237c3c1a2447d7fa9d24c8d2bac16763d5ca559a98224917c8a3",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 4045,
+            "output_tokens": 5516,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 326.09
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 835,
+            "output_tokens": 1206,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 82.32
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_check",
+          "usage": {
+            "input_tokens": 11937,
+            "output_tokens": 2067,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 151.92
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "outcome-win"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "failed"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "pro-catch-v2",
+      "profile": "pro",
+      "prompt": "Сделай короткую аркаду «Поймай звёзды»: корзина двигается влево и вправо внизу, сверху по одной падают звёзды. Поймай три звезды для победы; три пропуска завершают раунд поражением. Нужен спокойный темп, видимые счёт и пропуски, понятный старт, пауза и новый раунд. Управление стрелками на клавиатуре и крупными экранными кнопками влево/вправо с удержанием. Корзина не должна выходить за края поля. Игра должна помещаться на телефоне в обеих ориентациях.",
+      "run_id": "0bcb2b02-d79b-454e-b247-16d573c45308",
+      "status": "needs_attention",
+      "error_code": "unchanged",
+      "model_alias": "gpt-6-sol",
+      "revision_id": "d8e700a3-8db2-45e0-b22c-6eb3a43e0bd5",
+      "artifact_hash": "17d935cd17f51f00faaff6cf6036566c301a072a55c3367767e881db01cae1b0",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "plan",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 3780,
+            "output_tokens": 2487,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.032430",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 51.76
+        },
+        {
+          "attempt": 2,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 13458,
+            "output_tokens": 10058,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.127496",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 191.98
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 18390,
+            "output_tokens": 963,
+            "cached_input_tokens": 2432,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.042033",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 32.53
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "R1"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "R2"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "R4"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "R3"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "R5"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "R7"
+            },
+            {
+              "code": "effect_mismatch",
+              "check_id": "R8"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "catch-sound"
+            }
+          ],
+          "facts": [
+            {
+              "id": "R1",
+              "status": "failed"
+            },
+            {
+              "id": "R2",
+              "status": "failed"
+            },
+            {
+              "id": "R4",
+              "status": "unverified"
+            },
+            {
+              "id": "R3",
+              "status": "failed"
+            },
+            {
+              "id": "R5",
+              "status": "unverified"
+            },
+            {
+              "id": "R6",
+              "status": "passed"
+            },
+            {
+              "id": "R7",
+              "status": "unverified"
+            },
+            {
+              "id": "R8",
+              "status": "failed"
+            },
+            {
+              "id": "audio",
+              "status": "passed"
+            },
+            {
+              "id": "catch-sound",
+              "status": "unverified"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "pro-catch-fixed",
+      "profile": "pro",
+      "prompt": "Исправь зависание игры после старта: tick каждый кадр вызывает wake(), а wake обнуляет previous, поэтому dt всегда нулевой. Сбрасывай previous только при первоначальном старте или возобновлении, не при планировании следующего кадра. Сохрани остальные правила, оформление, управление и ресурсы. Проверь сценарии по фактическому времени движения: звезда проходит от y=0.07 до 0.84 со скоростью 0.34 в секунду; между звёздами 0.14 секунды. Победный маршрут должен действительно перемещать корзину под три звезды, поражение — пропускать три; лимит ожиданий 10000 мс. Подготовку длиннее 3000 мс раздели на обычное wait и одно await_condition, без повторов коротких ожиданий. Сохрани все существующие требования и их IDs.",
+      "run_id": "9761487a-117e-4da0-abf1-0302e59a3f74",
+      "status": "succeeded",
+      "error_code": null,
+      "model_alias": "gpt-6-sol",
+      "revision_id": "02f01db5-4c14-41a6-8b87-66b36733f24f",
+      "artifact_hash": "6df0d3447c612d8b2316a1e7e62d0712fe8924e9ed7099d0648684c796a6f097",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 23288,
+            "output_tokens": 2258,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0
+          },
+          "cost_usd": "0.069156",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 50.64
+        }
+      ],
+      "reports": [
+        {
+          "status": "passed",
+          "gates_passed": true,
+          "findings": [],
+          "facts": [
+            {
+              "id": "R1",
+              "status": "passed"
+            },
+            {
+              "id": "R2",
+              "status": "passed"
+            },
+            {
+              "id": "R5",
+              "status": "passed"
+            },
+            {
+              "id": "R3",
+              "status": "passed"
+            },
+            {
+              "id": "R4",
+              "status": "passed"
+            },
+            {
+              "id": "R6",
+              "status": "passed"
+            },
+            {
+              "id": "R7",
+              "status": "passed"
+            },
+            {
+              "id": "R8",
+              "status": "passed"
+            },
+            {
+              "id": "audio",
+              "status": "passed"
+            },
+            {
+              "id": "catch-sound",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "02f01db5-4c14-41a6-8b87-66b36733f24f",
+        "artifact_hash": "6df0d3447c612d8b2316a1e7e62d0712fe8924e9ed7099d0648684c796a6f097",
+        "status": "passed",
+        "checks_sha256": "504530c8ccf661fffdb15a1bfffa05b842f5f10f8e8c1e34d66fcfd5e5d43aa0",
+        "facts": [
+          {
+            "id": "C1",
+            "status": "passed"
+          },
+          {
+            "id": "C2",
+            "status": "passed"
+          },
+          {
+            "id": "C3",
+            "status": "passed"
+          },
+          {
+            "id": "C4",
+            "status": "passed"
+          },
+          {
+            "id": "C5",
+            "status": "passed"
+          },
+          {
+            "id": "C6",
+            "status": "passed"
+          },
+          {
+            "id": "C7",
+            "status": "passed"
+          },
+          {
+            "id": "C8",
+            "status": "passed"
+          },
+          {
+            "id": "C9",
+            "status": "passed"
+          },
+          {
+            "id": "C10",
+            "status": "passed"
+          },
+          {
+            "id": "C11",
+            "status": "passed"
+          },
+          {
+            "id": "C12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      },
+      "release": {
+        "revision_id": "02f01db5-4c14-41a6-8b87-66b36733f24f",
+        "artifact_hash": "6df0d3447c612d8b2316a1e7e62d0712fe8924e9ed7099d0648684c796a6f097",
+        "status": "passed",
+        "checks_sha256": "ffa4b6b5249fe9f4756339fc3ced6347400cf1a19afbf8eabb9850ea06242c31",
+        "facts": [
+          {
+            "id": "C1",
+            "status": "passed"
+          },
+          {
+            "id": "C2",
+            "status": "passed"
+          },
+          {
+            "id": "C3",
+            "status": "passed"
+          },
+          {
+            "id": "C7",
+            "status": "passed"
+          },
+          {
+            "id": "C10",
+            "status": "passed"
+          },
+          {
+            "id": "C13",
+            "status": "passed"
+          },
+          {
+            "id": "C14",
+            "status": "passed"
+          },
+          {
+            "id": "C15",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-memory-fixed",
+      "profile": "lite",
+      "prompt": "Исправь механику найденных пар: сейчас openIndices не очищается после совпадения, третий выбор делает длину больше двух, и следующие пары никогда не считаются. Храни найденные индексы отдельно в matchedIndices, временно открытые отдельно в openIndices; после совпадения переноси оба индекса в найденные и очищай временные. Найденные карточки остаются видимыми и недоступны для повторного выбора. При несовпадении блокируй третий выбор до закрытия, затем очисти только временные. Победа строго при трёх найденных парах. Исправь касания на телефоне с DPR 2: clientX/clientY минус rect.left/top уже в CSS-пикселях, повторно делить на DPR нельзя. Сделай первый раунд обучающим с постоянным порядком [0,1,2,0,1,2], повторные раунды можно перемешивать. Сохрани оформление, музыку и остальные правила. Обнови сценарии по действительному порядку: пары 1+4,2+5,3+6; победный сценарий заканчивается последним выбором 6 без лишних действий, перезапуск ждёт реальной победы. Все существующие требования и их ID сохранить.",
+      "run_id": "d181b0e2-fbc0-4190-b134-5eccb6ab13c5",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "model_alias": "qwen38",
+      "revision_id": "d552f3d6-5259-44ef-b89f-184cb3bf36e7",
+      "artifact_hash": "a2e2c649e283734d90976c0b336a6f95d914f78d11c93c01846b5c1b5310e026",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 11944,
+            "output_tokens": 9390,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 558.82
+        },
+        {
+          "attempt": 2,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_check",
+          "usage": {
+            "input_tokens": 10967,
+            "output_tokens": 2152,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 130.48
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "outcome-win"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "touch-control",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "failed"
+            },
+            {
+              "id": "keyboard-control",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            },
+            {
+              "id": "third-card-blocked",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "lite-sokoban-fixed",
+      "profile": "lite",
+      "prompt": "Достижимость цели уже исправлена: LEVEL[1][4]=0, это сохранить. Исправь оставшееся переполнение высоты в горизонтальном режиме 844x390: квадрат #boardwrap имеет ширину 340 и высоту 340, не учитывая шапку и padding. В существующем landscape media-query задай width и height: min(340px, calc(100dvh - 84px)); max-width:100%; flex:0 0 auto. Сохрани квадратное поле, видимые инструкции и кнопки не меньше 44px. Не прячь переполнение вместо исправления размеров. Обнови outcome-win: Enter, ArrowRight, checkpoint, ArrowRight, wait 100 — победа после двух толчков, третий ход лишний. В restart: Enter, ArrowRight, ArrowRight, await_condition gameState.phase eq \"won\" (1000ms), checkpoint, click #restart, wait 100, expected playing. В pause-regression по требованию «Игнорирование хода вне активной игры» после победы попытайся двигаться и проверь неизменный moves. Не добавляй паузу. Все ID, требования, viewport, оформление, музыка и остальные правила сохранить.",
+      "run_id": "83791170-f035-4f0f-a301-d43df4f935dc",
+      "status": "needs_attention",
+      "error_code": "invalid_unchanged",
+      "model_alias": "qwen38",
+      "revision_id": "9fb764f2-8b29-43ec-95c8-36479ce11725",
+      "artifact_hash": "931148d4ce72fc5f2cbba67f27d704b94a81ad31b0c6c6bedf87e3aa964a2f1d",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 12023,
+            "output_tokens": 1548,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 95.99
+        },
+        {
+          "attempt": 2,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_unchanged",
+          "usage": {
+            "input_tokens": 11683,
+            "output_tokens": 1791,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 112.67
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "pause-regression"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "passed"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "unverified"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "9fb764f2-8b29-43ec-95c8-36479ce11725",
+        "artifact_hash": "931148d4ce72fc5f2cbba67f27d704b94a81ad31b0c6c6bedf87e3aa964a2f1d",
+        "status": "passed",
+        "checks_sha256": "e1cfd206160034a52c1f65230779ff71f70731383d297c4e638fba34852c2520",
+        "facts": [
+          {
+            "id": "S1",
+            "status": "passed"
+          },
+          {
+            "id": "S2",
+            "status": "passed"
+          },
+          {
+            "id": "S3",
+            "status": "passed"
+          },
+          {
+            "id": "S4",
+            "status": "passed"
+          },
+          {
+            "id": "S5",
+            "status": "passed"
+          },
+          {
+            "id": "S6",
+            "status": "passed"
+          },
+          {
+            "id": "S7",
+            "status": "passed"
+          },
+          {
+            "id": "S8",
+            "status": "passed"
+          },
+          {
+            "id": "S9",
+            "status": "passed"
+          },
+          {
+            "id": "S10",
+            "status": "passed"
+          },
+          {
+            "id": "S11",
+            "status": "passed"
+          },
+          {
+            "id": "S12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-memory-final",
+      "profile": "lite",
+      "prompt": "Исправь разницу первого раунда между клавиатурой и касанием: в onKey для Enter сейчас firstRound=false выполняется даже в phase=\"idle\". Замени это на firstRound = state.phase === \"idle\" перед resetGame(). Первый раунд [0,1,2,0,1,2] должен быть одинаковым при Enter и кнопке, последующие можно перемешивать. Не меняй уже исправленные matchedIndices, логику пар и CSS-координаты касаний. В outcome-win используй клавиши Enter,1,4,2,5,3, checkpoint,6 и короткое ожидание: это реальная победа. В restart сначала Enter,1,4,2,5,3,6, затем await_condition gameState.phase eq \"won\" с ms=1000, checkpoint, click #replay и ожидание playing. wait_for нельзя ставить посреди restart. Все ID/тексты/категории/viewport проверок и остальные правила сохранить. Музыку и оформление сохранить.",
+      "run_id": "e898eb25-1f7f-4a4f-ad12-344f58b0c59b",
+      "status": "needs_attention",
+      "error_code": "missing_effects",
+      "model_alias": "qwen38",
+      "revision_id": "d53be3eb-5888-425d-83db-d09b67e1a60a",
+      "artifact_hash": "a6f6be0cc57e074bf1e801c02d103d5dd1538be54f79879bbe05c60a73dce762",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 12111,
+            "output_tokens": 1669,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 113.91
+        },
+        {
+          "attempt": 2,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "missing_effects",
+          "usage": {
+            "input_tokens": 10935,
+            "output_tokens": 638,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 52.28
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "invalid_check",
+              "check_id": "outcome-win"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "touch-control",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "unverified"
+            },
+            {
+              "id": "keyboard-control",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            },
+            {
+              "id": "third-card-blocked",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "d53be3eb-5888-425d-83db-d09b67e1a60a",
+        "artifact_hash": "a6f6be0cc57e074bf1e801c02d103d5dd1538be54f79879bbe05c60a73dce762",
+        "status": "passed",
+        "checks_sha256": "712c2a154d59c62dfac9a22983f352c02d1fb093441b88206e27598bc6af16f6",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M4",
+            "status": "passed"
+          },
+          {
+            "id": "M5",
+            "status": "passed"
+          },
+          {
+            "id": "M6",
+            "status": "passed"
+          },
+          {
+            "id": "M7",
+            "status": "passed"
+          },
+          {
+            "id": "M8",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M11",
+            "status": "passed"
+          },
+          {
+            "id": "M12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      },
+      "receipt-regression": {
+        "revision_id": "d53be3eb-5888-425d-83db-d09b67e1a60a",
+        "artifact_hash": "a6f6be0cc57e074bf1e801c02d103d5dd1538be54f79879bbe05c60a73dce762",
+        "status": "passed",
+        "checks_sha256": "ff98aa71d8c9111dd254e0b4c2ff0eaa97c54864c0b778c388ce9054d3f5d889",
+        "facts": [
+          {
+            "id": "outcome-win",
+            "status": "passed"
+          },
+          {
+            "id": "restart",
+            "status": "passed"
+          },
+          {
+            "id": "start-mobile",
+            "status": "passed"
+          },
+          {
+            "id": "touch-control",
+            "status": "passed"
+          },
+          {
+            "id": "keyboard-control",
+            "status": "passed"
+          },
+          {
+            "id": "pause-regression",
+            "status": "passed"
+          },
+          {
+            "id": "third-card-blocked",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-catch-fixed",
+      "profile": "lite",
+      "prompt": "Сохрани скорость падения 120, логический мир 360x520, паузу, правила трёх поимок/трёх пропусков и музыку. Сделай первый раунд обучающим с повторяемой последовательностью x звёзд [180,120,240], последующие раунды оставь случайными. Считай номер раунда и индекс звезды в общей reset(), чтобы Enter и касание начинали одинаковый первый раунд. В каждом новом раунде индекс звезды сбрасывается. Нельзя двигать корзину автоматически или подставлять победу. Новый контракт даёт 30000 мс на сценарий при максимум 10000 мс на один wait и 3000 мс на await_condition. Для настоящей победы на desktop: Enter, wait 5000; key_down ArrowLeft, wait 250, key_up ArrowLeft; wait 4500; checkpoint; key_down ArrowRight, wait 500, key_up ArrowRight; wait 4000; итог score=3 (или phase=\"won\"). Это ловит все три звезды в спокойном темпе. В restart сначала пройди тот же маршрут до won; затем await_condition phase=\"won\" 1000, checkpoint, click #start, проверь playing и сброс счёта. В restart только один checkpoint непосредственно перед #start и никакого промежуточного wait_for. hold_touch недопустим на desktop, там key_down/wait/key_up. Сохрани все существующие ID, требования, категории и viewport проверок. Не меняй остальные работающие механики и логические координаты при resize.",
+      "run_id": "5fcf032b-cab6-4ecd-a1a9-0bdbd77971f7",
+      "status": "needs_attention",
+      "error_code": "invalid_schema",
+      "model_alias": "qwen38",
+      "revision_id": "652403d0-2aa3-46b5-b602-bf1d7e788c9b",
+      "artifact_hash": "56ef898df2fcad05750555581c25dceeda8eea26f9a32b0fb5e9a0cadbf787a9",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": "ambiguous_patch",
+          "usage": {
+            "input_tokens": 13019,
+            "output_tokens": 2581,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 156.75
+        },
+        {
+          "attempt": 2,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 5994,
+            "output_tokens": 1116,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 72.79
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error_code": "invalid_schema",
+          "usage": {
+            "input_tokens": 12865,
+            "output_tokens": 2253,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 135.9
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "outcome-win"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "failed"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "lite-memory-ready",
+      "profile": "lite",
+      "prompt": "Исправь неработающую кнопку «Новый раунд» во время игры: resetGame() показывает #replay сразу, но обработчик разрешает её только после победы. Показывай #replay только при phase=won, скрывай в idle/playing; это должно обновляться в updateUI(). Кнопка должна появиться сразу после третьей найденной пары. Не меняй работающую механику, порядок первого раунда [0,1,2,0,1,2], matchedIndices и CSS-координаты ввода. Сохрани музыку и оформление. Исправь outcome-win с сохранением его ID, текста, категории и viewport: steps в точности press Enter; press 1; press 4; press 2; press 5; press 3; checkpoint; press 6; wait_for 1000. Итог gameState.phase eq \"won\". checkpoint обязан стоять ПЕРЕД press 6, никогда после. restart остаётся с реальной победой, затем checkpoint, click #replay. Остальные проверки и их требования сохранить.",
+      "run_id": "a1317b6f-bdad-4abc-ab3a-62bea29f8f47",
+      "status": "succeeded",
+      "error_code": null,
+      "model_alias": "qwen38",
+      "revision_id": "038f827e-9fb3-4942-bbc1-4c5ae442dae3",
+      "artifact_hash": "a1d2e6966dec6c673479891219b638b6d1e8ac55f0157590aef505771a91850f",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 11956,
+            "output_tokens": 1285,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 81.89
+        }
+      ],
+      "reports": [
+        {
+          "status": "passed",
+          "gates_passed": true,
+          "findings": [],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "touch-control",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "passed"
+            },
+            {
+              "id": "keyboard-control",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            },
+            {
+              "id": "third-card-blocked",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "038f827e-9fb3-4942-bbc1-4c5ae442dae3",
+        "artifact_hash": "a1d2e6966dec6c673479891219b638b6d1e8ac55f0157590aef505771a91850f",
+        "status": "passed",
+        "checks_sha256": "712c2a154d59c62dfac9a22983f352c02d1fb093441b88206e27598bc6af16f6",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M4",
+            "status": "passed"
+          },
+          {
+            "id": "M5",
+            "status": "passed"
+          },
+          {
+            "id": "M6",
+            "status": "passed"
+          },
+          {
+            "id": "M7",
+            "status": "passed"
+          },
+          {
+            "id": "M8",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M11",
+            "status": "passed"
+          },
+          {
+            "id": "M12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      },
+      "release": {
+        "revision_id": "038f827e-9fb3-4942-bbc1-4c5ae442dae3",
+        "artifact_hash": "a1d2e6966dec6c673479891219b638b6d1e8ac55f0157590aef505771a91850f",
+        "status": "unverified",
+        "checks_sha256": "20748695939694f95fd70aecb1e043df397b0e6bf534046881ffb246d77d61a9",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M13",
+            "status": "unverified"
+          },
+          {
+            "id": "M14",
+            "status": "unverified"
+          },
+          {
+            "id": "M15",
+            "status": "passed"
+          }
+        ],
+        "findings": [
+          {
+            "code": "invalid_check",
+            "check_id": "M13",
+            "after": null
+          },
+          {
+            "code": "invalid_check",
+            "check_id": "M14",
+            "after": null
+          }
+        ]
+      }
+    },
+    {
+      "case": "lite-catch-ready",
+      "profile": "lite",
+      "prompt": "Исправь две ошибки обучающего раунда. Сейчас round начинается с 0, reset() увеличивает его до 1, но spawnStar() проверяет round===0, поэтому первый раунд всегда случайный. Используй условие round===1. Кроме того, TUTORIAL_X[starIndex] даёт undefined после трёх звёзд, если игрок часть поймал, часть пропустил. Используй TUTORIAL_X[starIndex % TUTORIAL_X.length], чтобы любая смешанная партия доходила до трёх поимок или трёх пропусков. Не меняй скорость 120, паузу, логические координаты 360x520, управление, музыку и остальные правила. В outcome-win сохраняй существующий ID/текст/категорию/viewport, правильные действия: press Enter; wait 5000; key_down ArrowLeft; wait 250; key_up ArrowLeft; wait 4500; checkpoint; key_down ArrowRight; wait 500; key_up ArrowRight; wait 4000; wait_for 1000. Итог gameState.phase eq \"won\". Для restart пройди этот же маршрут БЕЗ checkpoint и БЕЗ промежуточного wait_for, затем await_condition gameState.phase eq \"won\" 1000, checkpoint, click #start, wait 100, итог playing. Ровно один checkpoint — перед перезапуском. На desktop никаких hold_touch. Не меняй ID, текст, категорию и viewport любых проверок. При исправлении проверки с изменением source верни status=ok. Все остальные сценарии можно унаследовать.",
+      "run_id": "32588438-b416-416e-9b24-4550947d784b",
+      "status": "succeeded",
+      "error_code": null,
+      "model_alias": "qwen38",
+      "revision_id": "05b181dd-14ad-414c-9629-29757f016a1f",
+      "artifact_hash": "0b2c1f7ba47c0a4384c2576c69d971a5dd56ba7fd7812a1230bfc2ff578b9b70",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 13512,
+            "output_tokens": 1834,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 116.83
+        }
+      ],
+      "reports": [
+        {
+          "status": "passed",
+          "gates_passed": true,
+          "findings": [],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "control-touch",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "passed"
+            },
+            {
+              "id": "control-keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "05b181dd-14ad-414c-9629-29757f016a1f",
+        "artifact_hash": "0b2c1f7ba47c0a4384c2576c69d971a5dd56ba7fd7812a1230bfc2ff578b9b70",
+        "status": "passed",
+        "checks_sha256": "548966b093a53d7426edb8c9000938d23dbc89ea1356a4327ef2c13336c4cf7d",
+        "facts": [
+          {
+            "id": "C1",
+            "status": "passed"
+          },
+          {
+            "id": "C2",
+            "status": "passed"
+          },
+          {
+            "id": "C3",
+            "status": "passed"
+          },
+          {
+            "id": "C4",
+            "status": "passed"
+          },
+          {
+            "id": "C5",
+            "status": "passed"
+          },
+          {
+            "id": "C6",
+            "status": "passed"
+          },
+          {
+            "id": "C7",
+            "status": "passed"
+          },
+          {
+            "id": "C8",
+            "status": "passed"
+          },
+          {
+            "id": "C9",
+            "status": "passed"
+          },
+          {
+            "id": "C10",
+            "status": "passed"
+          },
+          {
+            "id": "C11",
+            "status": "passed"
+          },
+          {
+            "id": "C12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      },
+      "release": {
+        "revision_id": "05b181dd-14ad-414c-9629-29757f016a1f",
+        "artifact_hash": "0b2c1f7ba47c0a4384c2576c69d971a5dd56ba7fd7812a1230bfc2ff578b9b70",
+        "status": "passed",
+        "checks_sha256": "ac2eb425fbf470da299225c8604a78cd97295963fc5d3f741b66be2dc3870a2c",
+        "facts": [
+          {
+            "id": "C1",
+            "status": "passed"
+          },
+          {
+            "id": "C2",
+            "status": "passed"
+          },
+          {
+            "id": "C3",
+            "status": "passed"
+          },
+          {
+            "id": "C7",
+            "status": "passed"
+          },
+          {
+            "id": "C10",
+            "status": "passed"
+          },
+          {
+            "id": "C13",
+            "status": "passed"
+          },
+          {
+            "id": "C14",
+            "status": "passed"
+          },
+          {
+            "id": "C15",
+            "status": "passed"
+          },
+          {
+            "id": "C16",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-sokoban-v3",
+      "profile": "lite",
+      "prompt": "Сделай небольшую игру сокобан с одним ящиком на поле 5×5: игрок толкает ящик на одну цель, не проходит сквозь стены и не тянет ящик. Сделай простой первый уровень, который реально решается двумя толчками вправо: игрок (1,1), ящик (2,1), цель (4,1); клетка цели свободна, остальные внешние клетки стены. Нижняя внутренняя область 1..3 по x, 2..3 по y свободна. После победы движение заблокировано. Нужны счётчик ходов, видимый старт, перезапуск, управление стрелками и экранными кнопками. Телефон в обеих ориентациях и компьютер. В landscape квадрат поля должен учитывать свободную высоту после шапки и padding, а кнопки расположены сбоку. Все видимые кнопки должны делать то, что написано; недоступные скрыть или отключить. Проверки должны сыграть настоящую партию: клавиатурная победа Enter,Right,checkpoint,Right,wait — ровно два хода. Числовые счётчики сравнивать с числами, не с null. Сценарий перезапуска сначала доходит до won, затем checkpoint и настоящий перезапуск. Музыка штатным отдельным шагом.",
+      "run_id": "23fc3722-ba55-445f-8c5d-75a05c0c0cc4",
+      "status": "needs_attention",
+      "error_code": "invalid_check",
+      "model_alias": "qwen38",
+      "revision_id": "559f9f67-bdef-41d4-97ae-2f09ebacfed0",
+      "artifact_hash": "934852b8f469a152b93f387fb9d7225a52af20b2b24272192213e2ab85ac6dc8",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "create",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 4498,
+            "output_tokens": 4388,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 255.72
+        },
+        {
+          "attempt": 2,
+          "operation": "music",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 1018,
+            "output_tokens": 1352,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": null,
+          "lite_wait_budget": null,
+          "lite_check_delta": null,
+          "elapsed_seconds": 86.6
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "failed",
+          "error_code": "invalid_check",
+          "usage": {
+            "input_tokens": 11210,
+            "output_tokens": 1010,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": 1,
+          "elapsed_seconds": 70.63
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "effect_mismatch",
+              "check_id": "win"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "restart"
+            },
+            {
+              "code": "invalid_check",
+              "check_id": "pause"
+            }
+          ],
+          "facts": [
+            {
+              "id": "start",
+              "status": "passed"
+            },
+            {
+              "id": "touch",
+              "status": "passed"
+            },
+            {
+              "id": "win",
+              "status": "failed"
+            },
+            {
+              "id": "keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "unverified"
+            },
+            {
+              "id": "pause",
+              "status": "unverified"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "case": "lite-sokoban-ready",
+      "profile": "lite",
+      "prompt": "Исправь ошибку уровня: buildWalls() оставляет цель (4,1) стеной, поэтому второй толчок невозможен. Перед return w в buildWalls() добавь ровно w[GOAL.y][GOAL.x] = false; это делает клетку цели свободной, остальные стены сохраняются. Сохрани весь остальной код, музыку, оформление, управление, исходные требования и существующие проверки. Они должны подтверждать реальную победу двумя толчками вправо, перезапуск после победы и запрет движения после неё. В checks/scenarios можно вернуть пустой список, чтобы унаследовать прежние проверки. Не меняй ожидаемую победу на playing и не ослабляй исход. Верни точный локальный патч к buildWalls().",
+      "run_id": "48cd831f-4e03-4b4d-9bfa-d6d89693c73a",
+      "status": "succeeded",
+      "error_code": null,
+      "model_alias": "qwen38",
+      "revision_id": "50935f37-4cf1-4a0d-a52e-0796f693ff66",
+      "artifact_hash": "afd1ae580bcff601c8136e0c798d7df9d2fae0b75395c5e456b7d5a38c886038",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 11798,
+            "output_tokens": 554,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 43.7
+        }
+      ],
+      "reports": [
+        {
+          "status": "passed",
+          "gates_passed": true,
+          "findings": [],
+          "facts": [
+            {
+              "id": "start",
+              "status": "passed"
+            },
+            {
+              "id": "touch",
+              "status": "passed"
+            },
+            {
+              "id": "win",
+              "status": "passed"
+            },
+            {
+              "id": "keyboard",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "50935f37-4cf1-4a0d-a52e-0796f693ff66",
+        "artifact_hash": "afd1ae580bcff601c8136e0c798d7df9d2fae0b75395c5e456b7d5a38c886038",
+        "status": "passed",
+        "checks_sha256": "eb9b9a20eda1f04aabde4618d16b2c90f1c819c1a6aa9251b6c7352421d5e634",
+        "facts": [
+          {
+            "id": "S1",
+            "status": "passed"
+          },
+          {
+            "id": "S2",
+            "status": "passed"
+          },
+          {
+            "id": "S3",
+            "status": "passed"
+          },
+          {
+            "id": "S4",
+            "status": "passed"
+          },
+          {
+            "id": "S5",
+            "status": "passed"
+          },
+          {
+            "id": "S6",
+            "status": "passed"
+          },
+          {
+            "id": "S7",
+            "status": "passed"
+          },
+          {
+            "id": "S8",
+            "status": "passed"
+          },
+          {
+            "id": "S9",
+            "status": "passed"
+          },
+          {
+            "id": "S10",
+            "status": "passed"
+          },
+          {
+            "id": "S11",
+            "status": "passed"
+          },
+          {
+            "id": "S12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    },
+    {
+      "case": "lite-memory-verified",
+      "profile": "lite",
+      "prompt": "Исправь подтверждённую ошибку касаний после скрытия кнопок: updateUI меняет высоту flex-поля #board-wrap, но resize вызывается только при изменении окна, поэтому canvas.width/height и координаты попаданий остаются от прежней высоты. После изменения классов кнопок в конце updateUI() вызови существующую resize(), чтобы буфер Canvas и getCardRect соответствовали новому фактическому CSS-размеру. Можно также сразу render() после resize для видимого обновления. Функции уже объявлены и состояние инициализировано. Проверь касание нижней части первой карточки: x=0.17,y=0.47 от Canvas должно открывать индекс 0, включая новый раунд; до исправления оно попадало в промежуток. Сохрани всю механику, порядок первого раунда, сценарии, музыку и оформление. Верни только небольшой точный патч, scenarios=[] наследует уже прошедшие проверки. Не меняй проверки ради этого исправления.",
+      "run_id": "34f8a6f1-4f6a-4718-941a-6507ef9e710a",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "model_alias": "qwen38",
+      "revision_id": "5592991b-5ad9-40b3-b203-604d78fe5015",
+      "artifact_hash": "e9cb1de18babc107ebbe8b2f30111d2d42ae9dc97ffe50ad15dfd9d59926484e",
+      "calls": [
+        {
+          "attempt": 1,
+          "operation": "edit",
+          "state": "failed",
+          "error_code": "invalid_json",
+          "usage": {
+            "input_tokens": 10284,
+            "output_tokens": 542,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 40.51
+        },
+        {
+          "attempt": 2,
+          "operation": "edit",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 10318,
+            "output_tokens": 643,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": null,
+          "elapsed_seconds": 44.49
+        },
+        {
+          "attempt": 3,
+          "operation": "check_repair",
+          "state": "settled",
+          "error_code": null,
+          "usage": {
+            "input_tokens": 12181,
+            "output_tokens": 509,
+            "cached_input_tokens": 0
+          },
+          "cost_usd": "0.000000",
+          "check_routes_policy": 1,
+          "lite_wait_budget": 1,
+          "lite_check_delta": 1,
+          "elapsed_seconds": 41.41
+        }
+      ],
+      "reports": [
+        {
+          "status": "unverified",
+          "gates_passed": true,
+          "findings": [
+            {
+              "code": "check_suite_revised",
+              "check_id": null
+            }
+          ],
+          "facts": [
+            {
+              "id": "start-mobile",
+              "status": "passed"
+            },
+            {
+              "id": "touch-control",
+              "status": "passed"
+            },
+            {
+              "id": "outcome-win",
+              "status": "passed"
+            },
+            {
+              "id": "keyboard-control",
+              "status": "passed"
+            },
+            {
+              "id": "restart",
+              "status": "passed"
+            },
+            {
+              "id": "pause-regression",
+              "status": "passed"
+            },
+            {
+              "id": "third-card-blocked",
+              "status": "passed"
+            }
+          ]
+        }
+      ],
+      "independent": {
+        "revision_id": "5592991b-5ad9-40b3-b203-604d78fe5015",
+        "artifact_hash": "e9cb1de18babc107ebbe8b2f30111d2d42ae9dc97ffe50ad15dfd9d59926484e",
+        "status": "passed",
+        "checks_sha256": "712c2a154d59c62dfac9a22983f352c02d1fb093441b88206e27598bc6af16f6",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M4",
+            "status": "passed"
+          },
+          {
+            "id": "M5",
+            "status": "passed"
+          },
+          {
+            "id": "M6",
+            "status": "passed"
+          },
+          {
+            "id": "M7",
+            "status": "passed"
+          },
+          {
+            "id": "M8",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M11",
+            "status": "passed"
+          },
+          {
+            "id": "M12",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      },
+      "release": {
+        "revision_id": "5592991b-5ad9-40b3-b203-604d78fe5015",
+        "artifact_hash": "e9cb1de18babc107ebbe8b2f30111d2d42ae9dc97ffe50ad15dfd9d59926484e",
+        "status": "passed",
+        "checks_sha256": "20748695939694f95fd70aecb1e043df397b0e6bf534046881ffb246d77d61a9",
+        "facts": [
+          {
+            "id": "M1",
+            "status": "passed"
+          },
+          {
+            "id": "M2",
+            "status": "passed"
+          },
+          {
+            "id": "M3",
+            "status": "passed"
+          },
+          {
+            "id": "M9",
+            "status": "passed"
+          },
+          {
+            "id": "M10",
+            "status": "passed"
+          },
+          {
+            "id": "M13",
+            "status": "passed"
+          },
+          {
+            "id": "M14",
+            "status": "passed"
+          },
+          {
+            "id": "M15",
+            "status": "passed"
+          }
+        ],
+        "findings": []
+      }
+    }
+  ],
+  "total_invocations": 48,
+  "invocation_states": {
+    "settled": 39,
+    "failed": 9
+  },
+  "known_cost_usd": 0.826314,
+  "budget": {
+    "limit_usd": 50.0,
+    "spent_usd": 3.060898,
+    "reserved_usd": 0.0,
+    "unknown_usd": 14.758,
+    "available_usd": 32.181102
+  },
+  "prior_unknown_usd": 14.758,
+  "final_verification": {
+    "games": [
+      {
+        "case": "lite-memory-verified",
+        "profile": "lite",
+        "run_id": "34f8a6f1-4f6a-4718-941a-6507ef9e710a",
+        "revision_id": "5592991b-5ad9-40b3-b203-604d78fe5015",
+        "artifact_hash": "e9cb1de18babc107ebbe8b2f30111d2d42ae9dc97ffe50ad15dfd9d59926484e",
+        "normal_status": "unverified",
+        "model_checks_passed": 7,
+        "independent_requirements_passed": 15,
+        "manual_confirmation_required": true
+      },
+      {
+        "case": "lite-sokoban-ready",
+        "profile": "lite",
+        "run_id": "48cd831f-4e03-4b4d-9bfa-d6d89693c73a",
+        "revision_id": "50935f37-4cf1-4a0d-a52e-0796f693ff66",
+        "artifact_hash": "afd1ae580bcff601c8136e0c798d7df9d2fae0b75395c5e456b7d5a38c886038",
+        "normal_status": "succeeded",
+        "model_checks_passed": 6,
+        "independent_requirements_passed": 12,
+        "manual_confirmation_required": false
+      },
+      {
+        "case": "lite-catch-ready",
+        "profile": "lite",
+        "run_id": "32588438-b416-416e-9b24-4550947d784b",
+        "revision_id": "05b181dd-14ad-414c-9629-29757f016a1f",
+        "artifact_hash": "0b2c1f7ba47c0a4384c2576c69d971a5dd56ba7fd7812a1230bfc2ff578b9b70",
+        "normal_status": "succeeded",
+        "model_checks_passed": 6,
+        "independent_requirements_passed": 16,
+        "manual_confirmation_required": false
+      },
+      {
+        "case": "pro-memory",
+        "profile": "pro",
+        "run_id": "eddae7ef-0b30-4bcf-8e2c-d36039a6bdea",
+        "revision_id": "c030a949-7b88-49af-83bf-6df87ab5e474",
+        "artifact_hash": "06052dcf042a6b663f02737361d5f6957b210a18a2347843668426de90476c63",
+        "normal_status": "succeeded",
+        "model_checks_passed": 9,
+        "independent_requirements_passed": 12,
+        "manual_confirmation_required": false
+      },
+      {
+        "case": "pro-sokoban",
+        "profile": "pro",
+        "run_id": "4664177e-f269-4cb4-8d43-65417f49e30c",
+        "revision_id": "52079f76-4171-4f06-8457-4e6dcef96b19",
+        "artifact_hash": "68b3cd9c9ee50118377cb7d69d6f23b34ee2046ca9ce93b6b106469b37d745ad",
+        "normal_status": "succeeded",
+        "model_checks_passed": 8,
+        "independent_requirements_passed": 12,
+        "manual_confirmation_required": false
+      },
+      {
+        "case": "pro-catch-fixed",
+        "profile": "pro",
+        "run_id": "9761487a-117e-4da0-abf1-0302e59a3f74",
+        "revision_id": "02f01db5-4c14-41a6-8b87-66b36733f24f",
+        "artifact_hash": "6df0d3447c612d8b2316a1e7e62d0712fe8924e9ed7099d0648684c796a6f097",
+        "normal_status": "succeeded",
+        "model_checks_passed": 10,
+        "independent_requirements_passed": 15,
+        "manual_confirmation_required": false
+      }
+    ],
+    "all_model_checks_passed": 46,
+    "all_independent_requirements_passed": 82,
+    "viewports": [
+      "390x844 touch",
+      "844x390 touch",
+      "1280x800 keyboard-only controls"
+    ],
+    "independent_device_scale_factor": 2,
+    "screenshots_reviewed": true,
+    "generated_sources_manually_modified": false,
+    "manual_confirmation": "The final Lite memory probe has all seven model checks passed. Its check_repair preserves the required explicit human confirmation; no confirmation was forged or automated.",
+    "scope": "These six final artifacts and the tested generator paths; not a guarantee that every future model response is correct."
+  },
+  "regression": {
+    "server_tests_passed": 1458,
+    "server_tests_deselected": 173,
+    "native_timing_tests_passed": 3,
+    "targeted_prompt_and_contract_tests_after_last_prompt_edit": 99,
+    "pro_saved_contract_baselines": 20,
+    "ruff": "passed",
+    "mypy": "passed, 59 source files",
+    "django_check": "passed",
+    "diff_check": "passed"
+  },
+  "captured_reply_regression": {
+    "case": "lite-memory-final",
+    "native_model_checks_passed": 7,
+    "new_model_call": false,
+    "original_history_unchanged": true,
+    "description": "Actual saved partial check_repair reply replayed through the explicitly enabled new delta adapter, then strict materialization and native validation. Source bytes and all requirement identities retained."
+  },
+  "browser_timing_observation": {
+    "case": "lite-memory-verified",
+    "first_release_report_status": "unverified",
+    "findings": [
+      {
+        "code": "check_timeout",
+        "check_id": "M1",
+        "after": null
+      }
+    ],
+    "repeat_same_source_and_checks": "passed 8/8, no findings",
+    "additional_fresh_starts_passed": 10,
+    "additional_suite_facts": [
+      {
+        "id": "cold1",
+        "status": "passed"
+      },
+      {
+        "id": "cold2",
+        "status": "passed"
+      },
+      {
+        "id": "cold3",
+        "status": "passed"
+      },
+      {
+        "id": "cold4",
+        "status": "passed"
+      },
+      {
+        "id": "cold5",
+        "status": "passed"
+      },
+      {
+        "id": "cold6",
+        "status": "passed"
+      },
+      {
+        "id": "cold7",
+        "status": "passed"
+      },
+      {
+        "id": "cold8",
+        "status": "passed"
+      },
+      {
+        "id": "cold9",
+        "status": "passed"
+      },
+      {
+        "id": "cold10",
+        "status": "passed"
+      },
+      {
+        "id": "M2",
+        "status": "passed"
+      },
+      {
+        "id": "M9",
+        "status": "passed"
+      }
+    ],
+    "additional_suite_status": "unverified",
+    "additional_suite_findings": [
+      {
+        "code": "missing_keyboard_control",
+        "check_id": null
+      },
+      {
+        "code": "incomplete_checks",
+        "check_id": null
+      }
+    ],
+    "interpretation": "One 1500ms locator tap delivery timeout did not recur. The diagnostic cold-start-only suite intentionally does not establish complete keyboard coverage; complete independent and model suites above do. No game source or action timeout was changed for this repeat."
+  },
+  "resolved_defects": [
+    "Memory: separate permanent matched cards from temporary opened cards; correctly finish three pairs.",
+    "Memory: remove duplicate DPR conversion; use the same first-round deck for keyboard and touch.",
+    "Memory: show replay only when available and resynchronize Canvas size/input when button visibility changes.",
+    "Sokoban: make the goal cell traversable; size the landscape board to the available height.",
+    "Catch: preserve logical world coordinates on rotation; fix first-round indexing and cycle tutorial spawns for mixed rounds.",
+    "Pro catch: reset the animation timestamp only at start/resume so the frame delta advances.",
+    "Scenarios: derive real elapsed time and routes; one checkpoint before decisive input; proper restart setup.",
+    "Lite adapter: explicit bounded 30-second scenario allowance, canonical materialization, retained checks for partial corrections; all permissions and negative controls preserved."
+  ],
+  "delivery": {
+    "local_commit_only": true,
+    "pushed": false,
+    "cloud_changed": false,
+    "gpu_server_admin_access": false,
+    "history_rewritten": false
+  }
+}
