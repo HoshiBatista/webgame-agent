@@ -129,6 +129,7 @@ class Run(models.Model):
         maximum = 1 + self.max_repair_attempts + int(self.planning_required)
         if self.pro_parallel and self.operation == 'create':
             maximum += 2
+            maximum += int(self.pro_parallel_version == 4)
             if self.pro_parallel_version >= 2:
                 from generation.pro_partition import split
 

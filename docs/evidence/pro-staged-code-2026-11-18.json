@@ -1,0 +1,5112 @@
+{
+  "date": "2026-11-18",
+  "status": "completed_with_scenario_review_preserved",
+  "protocol": 4,
+  "prompt": "сделай рпгшку, как в проклятых землях",
+  "runs": [
+    {
+      "name": "rpg-initial",
+      "run_id": "5336efc9-f929-4df8-b403-c531d46d53b6",
+      "status": "cancelled",
+      "error_code": null,
+      "plan_hash": "f9ff9e093d4da0edb611cd138160b0a64331e8a8f9985f8926e615f4160fee01",
+      "calls": [
+        {
+          "id": "d031deb2-a257-4688-b943-78226dcf14af",
+          "attempt": 1,
+          "operation": "plan",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.058092",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 113.099778,
+          "completion": null
+        },
+        {
+          "id": "e749e939-c969-4c66-826c-cb60add575de",
+          "attempt": 2,
+          "operation": "pro_mechanics",
+          "branch": "mechanics",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.072878",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 121.722698,
+          "completion": null
+        },
+        {
+          "id": "22087fe8-be37-4bb2-b1f8-d1cc398de85d",
+          "attempt": 3,
+          "operation": "create",
+          "branch": "scene",
+          "state": "failed",
+          "error_code": "response_output_limit",
+          "cost_usd": "0.092722",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 130.663341,
+          "completion": null
+        },
+        {
+          "id": "938c16df-eec9-4c4d-b128-19a452e4473e",
+          "attempt": 4,
+          "operation": "pro_graphics",
+          "branch": "graphics",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.047376",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 75.564878,
+          "completion": null
+        },
+        {
+          "id": "3df7f843-3d85-4961-82ba-f798e040cd27",
+          "attempt": 5,
+          "operation": "pro_audio",
+          "branch": "audio",
+          "state": "unknown",
+          "error_code": "cancelled",
+          "cost_usd": null,
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 0.0,
+          "completion": null
+        }
+      ]
+    },
+    {
+      "name": "rpg",
+      "run_id": "cb488656-aa3f-4d73-b458-807173fc4317",
+      "status": "succeeded",
+      "error_code": null,
+      "plan_hash": "f9ff9e093d4da0edb611cd138160b0a64331e8a8f9985f8926e615f4160fee01",
+      "calls": [
+        {
+          "id": "30c83c19-2d12-453d-9123-64e5af5df278",
+          "attempt": 1,
+          "operation": "create",
+          "branch": "scene",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.091424",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 118.090825,
+          "completion": {
+            "source_sha256": "ca334bd64013bea21799dd956d748328fd54c79dd65854cdf89d67cd674b172d",
+            "retained_files": [
+              "index.html",
+              "styles.css"
+            ],
+            "retained_fields": [
+              "assets",
+              "checks",
+              "design",
+              "base_revision"
+            ],
+            "source_invocation": "22087fe8-be37-4bb2-b1f8-d1cc398de85d"
+          }
+        },
+        {
+          "id": "f9d2c01a-9b2f-4f9c-9a9b-2eea9d31efbb",
+          "attempt": 2,
+          "operation": "pro_audio",
+          "branch": "audio",
+          "state": "failed",
+          "error_code": "resource_ids_changed",
+          "cost_usd": "0.019570",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 20.934349,
+          "completion": null
+        },
+        {
+          "id": "fba8a3da-bf95-4ffc-9346-3bf8454472aa",
+          "attempt": 3,
+          "operation": "pro_audio",
+          "branch": "audio",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.036430",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 60.918398,
+          "completion": null
+        },
+        {
+          "id": "e16b7fae-86c8-4f6e-85d9-c2bb47dd29ae",
+          "attempt": 4,
+          "operation": "pro_checks",
+          "branch": "checks",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.110768",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 115.155147,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "eb4fa87b-d59e-4ff2-8b1d-cfd53349e69f",
+        "artifact_hash": "4f0316bcf01f91470252e13c512919e059c8887799fd8f60c353c9fb2fb7db97",
+        "accepted": true,
+        "checks_review_required": false,
+        "model_check_count": 9,
+        "report_status": "passed",
+        "findings": [],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "RG-strike-audio",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rpg-fixed",
+      "run_id": "280a0a50-ee12-4dbf-8534-80b11220802f",
+      "status": "succeeded",
+      "error_code": null,
+      "plan_hash": "f9ff9e093d4da0edb611cd138160b0a64331e8a8f9985f8926e615f4160fee01",
+      "calls": [
+        {
+          "id": "69fe9be1-edf4-4a63-92c9-f33ddcc0701e",
+          "attempt": 1,
+          "operation": "edit",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.096554",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 51.06707,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "bb3f0590-b4bb-4ccd-9d10-4273910c70fa",
+        "artifact_hash": "480245d63efa45fb7800d26c0c5c1ae656d8ab5a318aaec9b717e91d5b3635a0",
+        "accepted": true,
+        "checks_review_required": false,
+        "model_check_count": 9,
+        "report_status": "passed",
+        "findings": [],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "RG-strike-audio",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rpg-final",
+      "run_id": "7cb2b5c5-4ea8-40b8-baba-aa236e1361a2",
+      "status": "succeeded",
+      "error_code": null,
+      "plan_hash": "f9ff9e093d4da0edb611cd138160b0a64331e8a8f9985f8926e615f4160fee01",
+      "calls": [
+        {
+          "id": "dd16cfc8-d7d5-483e-a3cb-344923ffb817",
+          "attempt": 1,
+          "operation": "edit",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.090830",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 42.87223,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "10a90975-b4e3-49c2-a0db-23ec409ae345",
+        "artifact_hash": "1afb19943a96ec5444b2a7dd8130acc49a9d1406e232c1149cb48eeabd130ac2",
+        "accepted": true,
+        "checks_review_required": false,
+        "model_check_count": 9,
+        "report_status": "passed",
+        "findings": [],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "RG-strike-audio",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fresh",
+      "run_id": "85ba40ee-6f9c-47b3-b548-8830241a6717",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "plan_hash": "3453cfc940d01eb977dcb21971a8b7fac83105ae7ab3cc2af42cc0de8ee4b68d",
+      "calls": [
+        {
+          "id": "b9c18ae0-c82c-462c-9911-95dd4bb71e09",
+          "attempt": 1,
+          "operation": "plan",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.078244",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 122.424591,
+          "completion": null
+        },
+        {
+          "id": "a86b0216-b4d5-4357-b254-93ebbb930737",
+          "attempt": 2,
+          "operation": "pro_mechanics",
+          "branch": "mechanics",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.064040",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 106.108727,
+          "completion": null
+        },
+        {
+          "id": "bff09309-35ca-449b-8a6c-3d619ec6a767",
+          "attempt": 3,
+          "operation": "create",
+          "branch": "scene",
+          "state": "failed",
+          "error_code": "response_output_limit",
+          "cost_usd": "0.092612",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 130.900777,
+          "completion": null
+        },
+        {
+          "id": "1b2fbb77-a56a-4d31-bb94-b34fecb201ce",
+          "attempt": 4,
+          "operation": "pro_graphics",
+          "branch": "graphics",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.047378",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 72.281183,
+          "completion": null
+        },
+        {
+          "id": "1ad3f4a7-0fd2-4f52-a2e3-26e98d945687",
+          "attempt": 5,
+          "operation": "pro_audio",
+          "branch": "audio",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.034458",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 48.915477,
+          "completion": null
+        },
+        {
+          "id": "d5773da9-32f2-45b8-a459-64fcba53955e",
+          "attempt": 6,
+          "operation": "create",
+          "branch": "scene",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.090744",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 115.153679,
+          "completion": {
+            "source_sha256": "760474c30a77ac72e5f6d68135c04e9f3fc1c460fac24e5e0d097836a71430b1",
+            "retained_files": [
+              "index.html",
+              "styles.css"
+            ],
+            "retained_fields": [
+              "assets",
+              "checks",
+              "design",
+              "base_revision"
+            ],
+            "source_invocation": "bff09309-35ca-449b-8a6c-3d619ec6a767"
+          }
+        },
+        {
+          "id": "f587241a-13bd-4425-a3b5-f3ca8ffbe439",
+          "attempt": 7,
+          "operation": "pro_checks",
+          "branch": "checks",
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.113646",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 125.861071,
+          "completion": null
+        },
+        {
+          "id": "17aa7899-039b-46c8-9ba5-4dadc4bf2b6d",
+          "attempt": 8,
+          "operation": "check_repair",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.086834",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 51.654613,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "d5ed7df3-a3ea-4283-ba6e-2dcfb06e2bcb",
+        "artifact_hash": "a871e4fbc21f24155ad03c8cb64d344027a1e55c32885d16c38e85c43feceef7",
+        "accepted": false,
+        "checks_review_required": false,
+        "model_check_count": 9,
+        "report_status": "unverified",
+        "findings": [
+          {
+            "code": "effect_mismatch",
+            "after": "Цель: Главарь 69/95",
+            "before": null,
+            "message": "Не подтверждено: Герой сражается в реальном времени, а скрытное сближение усиливает первый удар.",
+            "check_id": "R5",
+            "expected": {
+              "value": "35/95",
+              "operator": "contains"
+            },
+            "diagnostic": {
+              "step": {
+                "ms": 1000,
+                "action": "wait_for"
+              },
+              "after": "Цель: Главарь 69/95",
+              "before": null,
+              "check_id": "R5",
+              "controls": [
+                {
+                  "id": "field",
+                  "tag": "canvas",
+                  "rect": {
+                    "x": 74,
+                    "y": 107,
+                    "width": 1132,
+                    "height": 581
+                  },
+                  "role": "",
+                  "text": "",
+                  "label": "Карта. Tab выбирает врага, пробел атакует",
+                  "selector": "#field"
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 131,
+                    "y": 696,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "▲",
+                  "label": "Вверх",
+                  "selector": null
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 76,
+                    "y": 744,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "◀",
+                  "label": "Влево",
+                  "selector": null
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 131,
+                    "y": 744,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "▼",
+                  "label": "Вниз",
+                  "selector": null
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 186,
+                    "y": 744,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "▶",
+                  "label": "Вправо",
+                  "selector": null
+                },
+                {
+                  "id": "attack",
+                  "tag": "button",
+                  "rect": {
+                    "x": 611.875,
+                    "y": 720,
+                    "width": 104,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "⚔ Удар",
+                  "label": "",
+                  "selector": "#attack"
+                },
+                {
+                  "id": "sneak",
+                  "tag": "button",
+                  "rect": {
+                    "x": 720.875,
+                    "y": 720,
+                    "width": 114.9375,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "● Тихо: вкл",
+                  "label": "",
+                  "selector": "#sneak"
+                },
+                {
+                  "id": "interact",
+                  "tag": "button",
+                  "rect": {
+                    "x": 840.8125,
+                    "y": 720,
+                    "width": 149.1875,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "✦ Взять / алтарь",
+                  "label": "",
+                  "selector": "#interact"
+                },
+                {
+                  "id": "weapon",
+                  "tag": "button",
+                  "rect": {
+                    "x": 995,
+                    "y": 720,
+                    "width": 104,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "♢ Кинжал",
+                  "label": "",
+                  "selector": "#weapon"
+                },
+                {
+                  "id": "choose",
+                  "tag": "button",
+                  "rect": {
+                    "x": 1104,
+                    "y": 720,
+                    "width": 104,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "★ Навык",
+                  "label": "",
+                  "selector": "#choose"
+                }
+              ],
+              "expected": {
+                "value": "35/95",
+                "operator": "contains"
+              },
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "truncated": false,
+              "step_index": 13,
+              "actual_type": "str",
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "observations": [
+                {
+                  "id": "obs_30e9cd01215f",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "Взгляд дозорного опасен спереди. Подкрадитесь со спины.",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  }
+                },
+                {
+                  "id": "obs_143f772dbecb",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "♥ Здоровье 72/100",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#health"
+                  }
+                },
+                {
+                  "id": "obs_23e6123a0102",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "Кинжал · без навыка",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#gear"
+                  }
+                },
+                {
+                  "id": "obs_5e369343209c",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "Цель: Главарь 69/95",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#target"
+                  }
+                },
+                {
+                  "id": "obs_f366461e5840",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "⚔ Удар",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#attack"
+                  }
+                },
+                {
+                  "id": "obs_1d98994919c2",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "● Тихо: вкл",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#sneak"
+                  }
+                },
+                {
+                  "id": "obs_a81afc3bb27b",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "✦ Взять / алтарь",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#interact"
+                  }
+                },
+                {
+                  "id": "obs_970a1face3c0",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "♢ Кинжал",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#weapon"
+                  }
+                }
+              ],
+              "selector_matches": 1,
+              "selector_visible": true,
+              "observation_skips": []
+            }
+          }
+        ],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "failed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "music-start",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fresh-fixed",
+      "run_id": "e7a6a8ca-b7ed-40f2-8807-832a39652bec",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "plan_hash": "3453cfc940d01eb977dcb21971a8b7fac83105ae7ab3cc2af42cc0de8ee4b68d",
+      "calls": [
+        {
+          "id": "d1f1968e-0103-43a1-a52e-312a66063337",
+          "attempt": 1,
+          "operation": "edit",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.056963",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 19.637454,
+          "completion": null
+        },
+        {
+          "id": "baba71f5-a028-43bb-80c8-381912894077",
+          "attempt": 2,
+          "operation": "check_repair",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.069118",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 22.724332,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "ce25752d-ffb4-461e-9705-97d1fb04e354",
+        "artifact_hash": "483404af25a8dcc3239cb8243537da07d943bf77ed8677cb8219d818e1afd746",
+        "accepted": false,
+        "checks_review_required": false,
+        "model_check_count": 9,
+        "report_status": "unverified",
+        "findings": [
+          {
+            "code": "effect_mismatch",
+            "after": "Цель: Главарь 69/95",
+            "before": null,
+            "message": "Не подтверждено: Герой сражается в реальном времени, а скрытное сближение усиливает первый удар.",
+            "check_id": "R5",
+            "expected": {
+              "value": "35/95",
+              "operator": "contains"
+            },
+            "diagnostic": {
+              "step": {
+                "ms": 1000,
+                "action": "wait_for"
+              },
+              "after": "Цель: Главарь 69/95",
+              "before": null,
+              "check_id": "R5",
+              "controls": [
+                {
+                  "id": "field",
+                  "tag": "canvas",
+                  "rect": {
+                    "x": 74,
+                    "y": 107,
+                    "width": 1132,
+                    "height": 581
+                  },
+                  "role": "",
+                  "text": "",
+                  "label": "Карта. Tab выбирает врага, пробел атакует",
+                  "selector": "#field"
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 131,
+                    "y": 696,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "▲",
+                  "label": "Вверх",
+                  "selector": null
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 76,
+                    "y": 744,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "◀",
+                  "label": "Влево",
+                  "selector": null
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 131,
+                    "y": 744,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "▼",
+                  "label": "Вниз",
+                  "selector": null
+                },
+                {
+                  "id": "",
+                  "tag": "button",
+                  "rect": {
+                    "x": 186,
+                    "y": 744,
+                    "width": 52,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "▶",
+                  "label": "Вправо",
+                  "selector": null
+                },
+                {
+                  "id": "attack",
+                  "tag": "button",
+                  "rect": {
+                    "x": 611.875,
+                    "y": 720,
+                    "width": 104,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "⚔ Удар",
+                  "label": "",
+                  "selector": "#attack"
+                },
+                {
+                  "id": "sneak",
+                  "tag": "button",
+                  "rect": {
+                    "x": 720.875,
+                    "y": 720,
+                    "width": 114.9375,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "● Тихо: вкл",
+                  "label": "",
+                  "selector": "#sneak"
+                },
+                {
+                  "id": "interact",
+                  "tag": "button",
+                  "rect": {
+                    "x": 840.8125,
+                    "y": 720,
+                    "width": 149.1875,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "✦ Взять / алтарь",
+                  "label": "",
+                  "selector": "#interact"
+                },
+                {
+                  "id": "weapon",
+                  "tag": "button",
+                  "rect": {
+                    "x": 995,
+                    "y": 720,
+                    "width": 104,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "♢ Кинжал",
+                  "label": "",
+                  "selector": "#weapon"
+                },
+                {
+                  "id": "choose",
+                  "tag": "button",
+                  "rect": {
+                    "x": 1104,
+                    "y": 720,
+                    "width": 104,
+                    "height": 48
+                  },
+                  "role": "",
+                  "text": "★ Навык",
+                  "label": "",
+                  "selector": "#choose"
+                }
+              ],
+              "expected": {
+                "value": "35/95",
+                "operator": "contains"
+              },
+              "viewport": {
+                "width": 1280,
+                "height": 800
+              },
+              "truncated": false,
+              "step_index": 13,
+              "actual_type": "str",
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "observations": [
+                {
+                  "id": "obs_30e9cd01215f",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "Взгляд дозорного опасен спереди. Подкрадитесь со спины.",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#hint"
+                  }
+                },
+                {
+                  "id": "obs_143f772dbecb",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "♥ Здоровье 72/100",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#health"
+                  }
+                },
+                {
+                  "id": "obs_23e6123a0102",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "Кинжал · без навыка",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#gear"
+                  }
+                },
+                {
+                  "id": "obs_5e369343209c",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "Цель: Главарь 69/95",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#target"
+                  }
+                },
+                {
+                  "id": "obs_f366461e5840",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "⚔ Удар",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#attack"
+                  }
+                },
+                {
+                  "id": "obs_1d98994919c2",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "● Тихо: вкл",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#sneak"
+                  }
+                },
+                {
+                  "id": "obs_a81afc3bb27b",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "✦ Взять / алтарь",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#interact"
+                  }
+                },
+                {
+                  "id": "obs_970a1face3c0",
+                  "type": "str",
+                  "phase": "diagnostic_snapshot",
+                  "value": "♢ Кинжал",
+                  "observation": {
+                    "source": "text",
+                    "selector": "#weapon"
+                  }
+                }
+              ],
+              "selector_matches": 1,
+              "selector_visible": true,
+              "observation_skips": []
+            }
+          }
+        ],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "failed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "music-start",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fresh-final",
+      "run_id": "ebb8ee9f-0cb4-4efb-895e-ad1e71683b13",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "plan_hash": "3453cfc940d01eb977dcb21971a8b7fac83105ae7ab3cc2af42cc0de8ee4b68d",
+      "calls": [
+        {
+          "id": "71967872-4f47-4404-a5ae-3e9a1869b4eb",
+          "attempt": 1,
+          "operation": "edit",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.087064",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 36.025745,
+          "completion": null
+        },
+        {
+          "id": "aabad0d9-e25a-4d76-97f6-e1f581750eee",
+          "attempt": 2,
+          "operation": "check_repair",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.076707",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 43.354684,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "3174f009-ba3d-4fa2-b0d4-7070f87d65fd",
+        "artifact_hash": "9bac4af1bc352753480272a01866c7f839dcd3a421ad87cd408b7591962f7df5",
+        "accepted": false,
+        "checks_review_required": true,
+        "model_check_count": 9,
+        "report_status": "unverified",
+        "findings": [
+          {
+            "code": "check_suite_revised",
+            "message": "Модель восстановила сценарии. Проверьте исходные игровые условия лично."
+          }
+        ],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "music-start",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fresh-landscape",
+      "run_id": "bfc2066f-0b9b-4281-b8ba-b141d0236ff6",
+      "status": "unverified",
+      "error_code": "manual_verification",
+      "plan_hash": "3453cfc940d01eb977dcb21971a8b7fac83105ae7ab3cc2af42cc0de8ee4b68d",
+      "calls": [
+        {
+          "id": "4e40655f-fbc6-4e57-a5f9-a3ba45619d95",
+          "attempt": 1,
+          "operation": "edit",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.079426",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 21.035342,
+          "completion": null
+        }
+      ],
+      "revision": {
+        "id": "12de9a15-0e81-4c1d-8051-417b7b851a71",
+        "artifact_hash": "3dcdc8af69aa2452c4ba9c111026c339758796b395c0e917d67c93c6f3048004",
+        "accepted": false,
+        "checks_review_required": true,
+        "model_check_count": 9,
+        "report_status": "unverified",
+        "findings": [
+          {
+            "code": "check_suite_revised",
+            "message": "Модель восстановила сценарии. Проверьте исходные игровые условия лично."
+          }
+        ],
+        "facts": [
+          {
+            "id": "R1",
+            "status": "passed"
+          },
+          {
+            "id": "R2",
+            "status": "passed"
+          },
+          {
+            "id": "R7",
+            "status": "passed"
+          },
+          {
+            "id": "R3",
+            "status": "passed"
+          },
+          {
+            "id": "R4",
+            "status": "passed"
+          },
+          {
+            "id": "R5",
+            "status": "passed"
+          },
+          {
+            "id": "R6",
+            "status": "passed"
+          },
+          {
+            "id": "R8",
+            "status": "passed"
+          },
+          {
+            "id": "music-start",
+            "status": "passed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "plan-feasibility",
+      "run_id": "39b79a94-531e-45e7-b933-0509f6a15767",
+      "status": "needs_attention",
+      "error_code": "repair_exhausted",
+      "plan_hash": "4403b229f99e8d7aec4c8382a1fe28684e8f7d8e21a09c8ab3244b1aface79d8",
+      "calls": [
+        {
+          "id": "e8d7d997-b486-4691-9c8e-40bc72eb7184",
+          "attempt": 1,
+          "operation": "plan",
+          "branch": null,
+          "state": "settled",
+          "error_code": null,
+          "cost_usd": "0.079390",
+          "reserved_usd": "6.280000",
+          "elapsed_seconds": 121.796368,
+          "completion": null
+        }
+      ]
+    }
+  ],
+  "bounded_completion_live_tested": true,
+  "prior_code_failures": [
+    {
+      "run_id": "098d7d7b-fca1-448e-8c1d-b53e693a7d10",
+      "status": "needs_attention",
+      "output_limit_count": 6,
+      "roles": [
+        "scene",
+        "scene",
+        "scene",
+        "scene",
+        "scene",
+        "scene"
+      ]
+    }
+  ],
+  "planning_feasibility_probe": {
+    "run_id": "39b79a94-531e-45e7-b933-0509f6a15767",
+    "scope": "Plan only; explicit model_call_limit=1, so repair_exhausted after successful plan is expected. No game generation requested in this probe.",
+    "attack_range": 44,
+    "rear_detection_range": 18,
+    "hero_starts_behind_guard": true
+  },
+  "independent": [
+    {
+      "name": "rpg-final-independent-dpr2",
+      "revision_id": "10a90975-b4e3-49c2-a0db-23ec409ae345",
+      "artifact_hash": "1afb19943a96ec5444b2a7dd8130acc49a9d1406e232c1149cb48eeabd130ac2",
+      "status": "passed",
+      "environment": "mini-browser-v1:406f5a220df383ea455c647319fd0a0773168839c511994055b8f95c70a2b5ef:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-5ff099ec5f66a03f",
+      "elapsed_seconds": 230.566,
+      "findings": [],
+      "facts": [
+        {
+          "id": "I12",
+          "status": "passed"
+        },
+        {
+          "id": "I1",
+          "status": "passed"
+        },
+        {
+          "id": "I2",
+          "status": "passed"
+        },
+        {
+          "id": "I3",
+          "status": "passed"
+        },
+        {
+          "id": "I4",
+          "status": "passed"
+        },
+        {
+          "id": "I5",
+          "status": "passed"
+        },
+        {
+          "id": "I6",
+          "status": "passed"
+        },
+        {
+          "id": "I13",
+          "status": "passed"
+        },
+        {
+          "id": "I8",
+          "status": "passed"
+        },
+        {
+          "id": "I9",
+          "status": "passed"
+        },
+        {
+          "id": "I10",
+          "status": "passed"
+        },
+        {
+          "id": "I11",
+          "status": "passed"
+        }
+      ],
+      "checks": [
+        {
+          "id": "I12",
+          "category": "start",
+          "viewport": "mobile",
+          "requirement": "Игра начинается реальным касанием кнопки старта.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "playing"
+          }
+        },
+        {
+          "id": "I1",
+          "category": "control",
+          "viewport": "mobile",
+          "requirement": "Полное прохождение: скрытный путь к реликвии, меч, сила, победа над стражем и выход.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 13,
+              "ms": 1000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 93,
+              "ms": 1000
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:first-child",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:first-child",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 1800
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 300
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 550
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-guardian-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 0
+              }
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 1000
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          }
+        },
+        {
+          "id": "I2",
+          "category": "outcome",
+          "viewport": "landscape",
+          "requirement": "Полное прохождение: скрытный путь к реликвии, меч, сила, победа над стражем и выход.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 34,
+              "y": 9,
+              "ms": 1000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 59,
+              "y": 34,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 34,
+              "y": 59,
+              "ms": 1000
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:first-child",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:first-child",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 59,
+              "y": 34,
+              "ms": 1800
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 59,
+              "y": 34,
+              "ms": 300
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 550
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-guardian-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 0
+              }
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 59,
+              "y": 34,
+              "ms": 1000
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          }
+        },
+        {
+          "id": "I3",
+          "category": "control",
+          "viewport": "desktop",
+          "requirement": "Полное прохождение: скрытный путь к реликвии, меч, сила, победа над стражем и выход.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "k"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1000
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "hold_key",
+              "key": "s",
+              "ms": 1000
+            },
+            {
+              "action": "press",
+              "key": "e"
+            },
+            {
+              "action": "press",
+              "key": "1"
+            },
+            {
+              "action": "press",
+              "key": "1"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1800
+            },
+            {
+              "action": "press",
+              "key": "k"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 300
+            },
+            {
+              "action": "press",
+              "key": "j"
+            },
+            {
+              "action": "wait",
+              "ms": 550
+            },
+            {
+              "action": "press",
+              "key": "j"
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-guardian-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 0
+              }
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1000
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "e"
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          }
+        },
+        {
+          "id": "I4",
+          "category": "restart",
+          "viewport": "mobile",
+          "requirement": "После настоящего поражения повтор восстанавливает здоровье, реликвию, снаряжение и стража.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 1500
+            },
+            {
+              "action": "wait",
+              "ms": 10000
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-phase"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "lost"
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 6
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-guardian-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 6
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-gear"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "none"
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-skill"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "none"
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-relic"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "false"
+              }
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "menu"
+          }
+        },
+        {
+          "id": "I5",
+          "category": "outcome",
+          "viewport": "desktop",
+          "requirement": "Сближение с патрулём и отказ от боя приводят к настоящему поражению.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1500
+            },
+            {
+              "action": "wait",
+              "ms": 10000
+            },
+            {
+              "action": "wait_for",
+              "ms": 3000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "lost"
+          }
+        },
+        {
+          "id": "I6",
+          "category": "control",
+          "viewport": "mobile",
+          "requirement": "Жилет и стойкость действительно увеличивают здоровье героя до одиннадцати.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 13,
+              "ms": 1000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 93,
+              "ms": 1000
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:nth-child(2)",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 9
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:nth-child(2)",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "attribute_number",
+            "selector": "#hud",
+            "attribute": "data-hp"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": 11
+          }
+        },
+        {
+          "id": "I13",
+          "category": "control",
+          "viewport": "mobile",
+          "requirement": "Обещанный скрытый удар с тыла наносит три урона базовым кинжалом без бонуса меча или силы.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 13,
+              "ms": 1000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 93,
+              "ms": 1000
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:nth-child(2)",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#panel .choices button:nth-child(2)",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 13,
+              "ms": 1500
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 93,
+              "ms": 1300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-guardian-aware"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "false"
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "attribute_number",
+            "selector": "#hud",
+            "attribute": "data-guardian-hp"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": 3
+          }
+        },
+        {
+          "id": "I8",
+          "category": "regression",
+          "viewport": "desktop",
+          "requirement": "После отпускания клавиш герой остаётся возле тайника и может взаимодействовать с ним.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "k"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1000
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "hold_key",
+              "key": "s",
+              "ms": 1000
+            },
+            {
+              "action": "wait",
+              "ms": 1500
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "e"
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "upgrade"
+          }
+        },
+        {
+          "id": "I9",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Поворот телефона сохраняет позицию героя и позволяет взять реликвию экранной кнопкой.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#crouch",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 13,
+              "ms": 1000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 93,
+              "ms": 1000
+            },
+            {
+              "action": "resize",
+              "viewport": "landscape"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#hud",
+            "attribute": "data-phase"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "upgrade"
+          }
+        },
+        {
+          "id": "I10",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Выбор снаряжения останавливает бой: раненый герой не теряет здоровье во время выбора.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 13,
+              "ms": 600
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 93,
+              "y": 53,
+              "ms": 1800
+            },
+            {
+              "action": "hold_touch",
+              "selector": "#joystick",
+              "x": 53,
+              "y": 93,
+              "ms": 600
+            },
+            {
+              "action": "wait",
+              "ms": 2000
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#hud",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "lte",
+                "value": 5
+              }
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-phase"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "upgrade"
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "wait",
+              "ms": 3000
+            }
+          ],
+          "observation": {
+            "source": "attribute_number",
+            "selector": "#hud",
+            "attribute": "data-hp"
+          },
+          "expect": {
+            "operator": "unchanged",
+            "value": null
+          }
+        },
+        {
+          "id": "I11",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Музыка запускается после жеста, графика загружается, отключение звука не изменяет состояние игры.",
+          "wait_budget_ms": 30000,
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#panel .choices button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "experience",
+                "field": "musicPlaying"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": true
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "experience",
+                "field": "graphicsReady"
+              },
+              "expect": {
+                "operator": "gte",
+                "value": 5
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#gf-player-tools button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#hud",
+                "attribute": "data-phase"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "playing"
+              }
+            }
+          ],
+          "observation": {
+            "source": "experience",
+            "field": "muted"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": true
+          }
+        }
+      ],
+      "visual_status": "captured",
+      "visual_frames": [
+        {
+          "id": "mobile_start",
+          "sha256": "5aea0db57fbd4448711bd8a929f84612e0224bb35051118c51b22b8eeeebebb9"
+        },
+        {
+          "id": "action_before",
+          "sha256": "6a68a5e4a0ebbb68e4259cb1803ab61a98c2398f0353c03fe2d0b73de0da00f6"
+        },
+        {
+          "id": "action_after",
+          "sha256": "a4794d82272cbac94d8863025fe485245c7f0356e5082d7a5766b7132415c619"
+        },
+        {
+          "id": "action_100ms",
+          "sha256": "391f418c625cd0ef9acbd2079ffa955a55a7f8ed4f6142aa1148ea22c9f060e4"
+        },
+        {
+          "id": "action_240ms",
+          "sha256": "2771aef0310527c81bd02c7c054fb0cf44d908bfb3ff6725e583898584ae3139"
+        },
+        {
+          "id": "desktop_start",
+          "sha256": "241e431d2fc873b1776d44a5b5e3fbd722fc7eb301284a24614c323565686086"
+        }
+      ]
+    },
+    {
+      "name": "fresh-fixed-independent-dpr2",
+      "revision_id": "ce25752d-ffb4-461e-9705-97d1fb04e354",
+      "artifact_hash": "483404af25a8dcc3239cb8243537da07d943bf77ed8677cb8219d818e1afd746",
+      "status": "unverified",
+      "environment": "mini-browser-v1:406f5a220df383ea455c647319fd0a0773168839c511994055b8f95c70a2b5ef:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-5ff099ec5f66a03f",
+      "elapsed_seconds": 255.869,
+      "findings": [
+        {
+          "code": "invalid_check",
+          "check_id": "F2",
+          "message": "Удержание требует один видимый элемент.",
+          "diagnostic": {
+            "check_id": "F2",
+            "step_index": 1,
+            "step": {
+              "action": "hold_touch",
+              "ms": 1700,
+              "selector": "[data-dir=\"up\"]",
+              "x": 20,
+              "y": 20
+            },
+            "observation": {
+              "attribute": "data-status",
+              "selector": "#stage",
+              "source": "attribute"
+            },
+            "before": null,
+            "after": null,
+            "expected": {
+              "operator": "eq",
+              "value": "won"
+            },
+            "actual_type": "NoneType",
+            "viewport": {
+              "width": 844,
+              "height": 390
+            },
+            "controls": [
+              {
+                "tag": "canvas",
+                "id": "field",
+                "selector": "#field",
+                "role": "",
+                "label": "Карта. Tab выбирает врага, пробел атакует",
+                "text": "",
+                "rect": {
+                  "x": 10,
+                  "y": 64,
+                  "width": 824,
+                  "height": 219
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Влево",
+                "text": "◀",
+                "rect": {
+                  "x": 12,
+                  "y": 313,
+                  "width": 52,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Вниз",
+                "text": "▼",
+                "rect": {
+                  "x": 67,
+                  "y": 313,
+                  "width": 52,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Вправо",
+                "text": "▶",
+                "rect": {
+                  "x": 122,
+                  "y": 313,
+                  "width": 52,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "attack",
+                "selector": "#attack",
+                "role": "",
+                "label": "",
+                "text": "⚔ Удар",
+                "rect": {
+                  "x": 436.34375,
+                  "y": 313,
+                  "width": 56.9375,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "sneak",
+                "selector": "#sneak",
+                "role": "",
+                "label": "",
+                "text": "◌ Тихо",
+                "rect": {
+                  "x": 498.28125,
+                  "y": 313,
+                  "width": 55.09375,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "interact",
+                "selector": "#interact",
+                "role": "",
+                "label": "",
+                "text": "✦ Взять / алтарь",
+                "rect": {
+                  "x": 558.375,
+                  "y": 313,
+                  "width": 117.359375,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "weapon",
+                "selector": "#weapon",
+                "role": "",
+                "label": "",
+                "text": "♢ Кинжал",
+                "rect": {
+                  "x": 680.734375,
+                  "y": 313,
+                  "width": 77.40625,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "choose",
+                "selector": "#choose",
+                "role": "",
+                "label": "",
+                "text": "★ Навык",
+                "rect": {
+                  "x": 763.140625,
+                  "y": 313,
+                  "width": 72.859375,
+                  "height": 48
+                }
+              }
+            ],
+            "truncated": false,
+            "observation_skips": [],
+            "observations": [
+              {
+                "id": "obs_143f772dbecb",
+                "observation": {
+                  "source": "text",
+                  "selector": "#health"
+                },
+                "type": "str",
+                "value": "♥ Здоровье 100/100",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_23e6123a0102",
+                "observation": {
+                  "source": "text",
+                  "selector": "#gear"
+                },
+                "type": "str",
+                "value": "Кинжал · без навыка",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_5e369343209c",
+                "observation": {
+                  "source": "text",
+                  "selector": "#target"
+                },
+                "type": "str",
+                "value": "Цель: Дозорный 48/48",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_f366461e5840",
+                "observation": {
+                  "source": "text",
+                  "selector": "#attack"
+                },
+                "type": "str",
+                "value": "⚔ Удар",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_1d98994919c2",
+                "observation": {
+                  "source": "text",
+                  "selector": "#sneak"
+                },
+                "type": "str",
+                "value": "◌ Тихо",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_a81afc3bb27b",
+                "observation": {
+                  "source": "text",
+                  "selector": "#interact"
+                },
+                "type": "str",
+                "value": "✦ Взять / алтарь",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_970a1face3c0",
+                "observation": {
+                  "source": "text",
+                  "selector": "#weapon"
+                },
+                "type": "str",
+                "value": "♢ Кинжал",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_0857f8aae3d2",
+                "observation": {
+                  "source": "text",
+                  "selector": "#choose"
+                },
+                "type": "str",
+                "value": "★ Навык",
+                "phase": "diagnostic_snapshot"
+              }
+            ],
+            "input_probe": {
+              "status": "hidden"
+            },
+            "selector_matches": 1,
+            "selector_visible": true
+          }
+        },
+        {
+          "code": "invalid_check",
+          "check_id": "F6",
+          "message": "Промежуточное условие сценария не выполнено; последующий ввод не исполнялся.",
+          "diagnostic": {
+            "check_id": "F6",
+            "step_index": 8,
+            "step": {
+              "action": "assert",
+              "expect": {
+                "operator": "eq",
+                "value": ""
+              },
+              "ms": 0,
+              "observation": {
+                "attribute": "data-skill",
+                "selector": "#stage",
+                "source": "attribute"
+              }
+            },
+            "observation": {
+              "attribute": "data-status",
+              "selector": "#stage",
+              "source": "attribute"
+            },
+            "before": null,
+            "after": null,
+            "expected": {
+              "operator": "eq",
+              "value": "playing"
+            },
+            "actual_type": "NoneType",
+            "viewport": {
+              "width": 390,
+              "height": 844
+            },
+            "controls": [
+              {
+                "tag": "canvas",
+                "id": "field",
+                "selector": "#field",
+                "role": "",
+                "label": "Карта. Tab выбирает врага, пробел атакует",
+                "text": "",
+                "rect": {
+                  "x": 9,
+                  "y": 102,
+                  "width": 372,
+                  "height": 574
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Вверх",
+                "text": "▲",
+                "rect": {
+                  "x": 60,
+                  "y": 712.5,
+                  "width": 50,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Влево",
+                "text": "◀",
+                "rect": {
+                  "x": 7,
+                  "y": 760.5,
+                  "width": 50,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Вниз",
+                "text": "▼",
+                "rect": {
+                  "x": 60,
+                  "y": 760.5,
+                  "width": 50,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "",
+                "selector": null,
+                "role": "",
+                "label": "Вправо",
+                "text": "▶",
+                "rect": {
+                  "x": 113,
+                  "y": 760.5,
+                  "width": 50,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "attack",
+                "selector": "#attack",
+                "role": "",
+                "label": "",
+                "text": "⚔ Удар",
+                "rect": {
+                  "x": 175,
+                  "y": 684.5,
+                  "width": 102,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "sneak",
+                "selector": "#sneak",
+                "role": "",
+                "label": "",
+                "text": "◌ Тихо",
+                "rect": {
+                  "x": 281,
+                  "y": 684.5,
+                  "width": 102,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "interact",
+                "selector": "#interact",
+                "role": "",
+                "label": "",
+                "text": "✦ Взять / алтарь",
+                "rect": {
+                  "x": 175,
+                  "y": 736.5,
+                  "width": 208,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "weapon",
+                "selector": "#weapon",
+                "role": "",
+                "label": "",
+                "text": "♢ Кинжал",
+                "rect": {
+                  "x": 175,
+                  "y": 788.5,
+                  "width": 102,
+                  "height": 48
+                }
+              },
+              {
+                "tag": "button",
+                "id": "choose",
+                "selector": "#choose",
+                "role": "",
+                "label": "",
+                "text": "★ Навык",
+                "rect": {
+                  "x": 281,
+                  "y": 788.5,
+                  "width": 102,
+                  "height": 48
+                }
+              }
+            ],
+            "truncated": false,
+            "observation_skips": [],
+            "observations": [
+              {
+                "id": "obs_30e9cd01215f",
+                "observation": {
+                  "source": "text",
+                  "selector": "#hint"
+                },
+                "type": "str",
+                "value": "Взгляд дозорного опасен спереди. Подкрадитесь со спины.",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_143f772dbecb",
+                "observation": {
+                  "source": "text",
+                  "selector": "#health"
+                },
+                "type": "str",
+                "value": "♥ Здоровье 100/100",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_23e6123a0102",
+                "observation": {
+                  "source": "text",
+                  "selector": "#gear"
+                },
+                "type": "str",
+                "value": "Кинжал · без навыка",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_5e369343209c",
+                "observation": {
+                  "source": "text",
+                  "selector": "#target"
+                },
+                "type": "str",
+                "value": "Цель: Дозорный 48/48",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_f366461e5840",
+                "observation": {
+                  "source": "text",
+                  "selector": "#attack"
+                },
+                "type": "str",
+                "value": "⚔ Удар",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_1d98994919c2",
+                "observation": {
+                  "source": "text",
+                  "selector": "#sneak"
+                },
+                "type": "str",
+                "value": "◌ Тихо",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_a81afc3bb27b",
+                "observation": {
+                  "source": "text",
+                  "selector": "#interact"
+                },
+                "type": "str",
+                "value": "✦ Взять / алтарь",
+                "phase": "diagnostic_snapshot"
+              },
+              {
+                "id": "obs_970a1face3c0",
+                "observation": {
+                  "source": "text",
+                  "selector": "#weapon"
+                },
+                "type": "str",
+                "value": "♢ Кинжал",
+                "phase": "diagnostic_snapshot"
+              }
+            ],
+            "selector_matches": 1,
+            "selector_visible": true
+          }
+        }
+      ],
+      "facts": [
+        {
+          "id": "F0",
+          "status": "passed"
+        },
+        {
+          "id": "F1",
+          "status": "passed"
+        },
+        {
+          "id": "F2",
+          "status": "unverified"
+        },
+        {
+          "id": "F3",
+          "status": "passed"
+        },
+        {
+          "id": "F4",
+          "status": "passed"
+        },
+        {
+          "id": "F5",
+          "status": "passed"
+        },
+        {
+          "id": "F6",
+          "status": "unverified"
+        },
+        {
+          "id": "F7",
+          "status": "passed"
+        },
+        {
+          "id": "F8",
+          "status": "passed"
+        },
+        {
+          "id": "F9",
+          "status": "passed"
+        },
+        {
+          "id": "F10",
+          "status": "passed"
+        },
+        {
+          "id": "F11",
+          "status": "passed"
+        }
+      ],
+      "checks": [
+        {
+          "id": "F0",
+          "category": "start",
+          "viewport": "mobile",
+          "requirement": "Начало вылазки касанием.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "playing"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F1",
+          "category": "control",
+          "viewport": "mobile",
+          "requirement": "Полное прохождение со скрытым ударом, победой над главарём и выходом.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"up\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1700
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1200
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"down\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1500
+            },
+            {
+              "action": "tap",
+              "selector": "#sneak",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"left\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1300
+            },
+            {
+              "action": "tap_fraction",
+              "selector": "#field",
+              "x": 0.5714,
+              "y": 0.5
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "35/95"
+              }
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 700
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F2",
+          "category": "outcome",
+          "viewport": "landscape",
+          "requirement": "Полное прохождение со скрытым ударом, победой над главарём и выходом.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"up\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1700
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1200
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"down\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1500
+            },
+            {
+              "action": "tap",
+              "selector": "#sneak",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"left\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1300
+            },
+            {
+              "action": "tap_fraction",
+              "selector": "#field",
+              "x": 0.42,
+              "y": 0.5
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "35/95"
+              }
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 700
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F3",
+          "category": "control",
+          "viewport": "desktop",
+          "requirement": "Полное прохождение со скрытым ударом, победой над главарём и выходом.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1700
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1200
+            },
+            {
+              "action": "hold_key",
+              "key": "s",
+              "ms": 1500
+            },
+            {
+              "action": "press",
+              "key": "q"
+            },
+            {
+              "action": "hold_key",
+              "key": "a",
+              "ms": 1300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "35/95"
+              }
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 700
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "e"
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F4",
+          "category": "regression",
+          "viewport": "desktop",
+          "requirement": "Скрытный подход сзади даёт базовому кинжалу усиленный первый удар.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1700
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1200
+            },
+            {
+              "action": "hold_key",
+              "key": "s",
+              "ms": 1500
+            },
+            {
+              "action": "press",
+              "key": "q"
+            },
+            {
+              "action": "hold_key",
+              "key": "a",
+              "ms": 1300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#target"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "35/95"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F5",
+          "category": "outcome",
+          "viewport": "desktop",
+          "requirement": "В открытом бою без ответных ударов герой проигрывает.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "wait",
+              "ms": 10000
+            },
+            {
+              "action": "wait_for",
+              "ms": 2500
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "lost"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F6",
+          "category": "restart",
+          "viewport": "mobile",
+          "requirement": "После настоящего поражения новая вылазка восстанавливает здоровье, оружие и навык.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 3000
+            },
+            {
+              "action": "wait",
+              "ms": 10000
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-status"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "lost"
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#replay",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-weapon"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "dagger"
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-skill"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": ""
+              }
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "playing"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F7",
+          "category": "control",
+          "viewport": "desktop",
+          "requirement": "Победа над разведчиком даёт саблю и выбор навыка Сила.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1000
+            },
+            {
+              "action": "wait",
+              "ms": 1800
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "press",
+              "key": "e"
+            },
+            {
+              "action": "press",
+              "key": "2"
+            },
+            {
+              "action": "press",
+              "key": "u"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "Enter"
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#gear"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "Сабля · Сила"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F8",
+          "category": "control",
+          "viewport": "mobile",
+          "requirement": "Сабля и альтернативный навык Тень доступны касаниями.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1000
+            },
+            {
+              "action": "wait",
+              "ms": 1800
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#weapon",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#shadow",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#gear"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "Сабля · Тень"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F9",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Поворот телефона сохраняет полученное снаряжение и выбранный навык.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1000
+            },
+            {
+              "action": "wait",
+              "ms": 1800
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#weapon",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#strike",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "resize",
+              "viewport": "landscape"
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#gear"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "Сабля · Сила"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F10",
+          "category": "regression",
+          "viewport": "desktop",
+          "requirement": "Потеря фокуса отпускает движение: герой остаётся в безопасной области.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1700
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1040
+            },
+            {
+              "action": "press",
+              "key": "q"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "key_down",
+              "key": "s"
+            },
+            {
+              "action": "blur"
+            },
+            {
+              "action": "wait",
+              "ms": 6000
+            },
+            {
+              "action": "key_up",
+              "key": "s"
+            }
+          ],
+          "observation": {
+            "source": "attribute_number",
+            "selector": "#stage",
+            "attribute": "data-hp"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": 100
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F11",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Музыка начинается после жеста; её можно отключить без остановки игры.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "experience",
+                "field": "musicPlaying"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": true
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "experience",
+                "field": "graphicsReady"
+              },
+              "expect": {
+                "operator": "gte",
+                "value": 5
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#gf-player-tools button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-status"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "playing"
+              }
+            }
+          ],
+          "observation": {
+            "source": "experience",
+            "field": "muted"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": true
+          },
+          "wait_budget_ms": 30000
+        }
+      ],
+      "visual_status": null,
+      "visual_frames": []
+    },
+    {
+      "name": "fresh-landscape-independent-dpr2",
+      "revision_id": "12de9a15-0e81-4c1d-8051-417b7b851a71",
+      "artifact_hash": "3dcdc8af69aa2452c4ba9c111026c339758796b395c0e917d67c93c6f3048004",
+      "status": "passed",
+      "environment": "mini-browser-v1:406f5a220df383ea455c647319fd0a0773168839c511994055b8f95c70a2b5ef:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-5ff099ec5f66a03f",
+      "elapsed_seconds": 309.655,
+      "findings": [],
+      "facts": [
+        {
+          "id": "F0",
+          "status": "passed"
+        },
+        {
+          "id": "F1",
+          "status": "passed"
+        },
+        {
+          "id": "F2",
+          "status": "passed"
+        },
+        {
+          "id": "F3",
+          "status": "passed"
+        },
+        {
+          "id": "F4",
+          "status": "passed"
+        },
+        {
+          "id": "F5",
+          "status": "passed"
+        },
+        {
+          "id": "F6",
+          "status": "passed"
+        },
+        {
+          "id": "F7",
+          "status": "passed"
+        },
+        {
+          "id": "F8",
+          "status": "passed"
+        },
+        {
+          "id": "F9",
+          "status": "passed"
+        },
+        {
+          "id": "F10",
+          "status": "passed"
+        },
+        {
+          "id": "F11",
+          "status": "passed"
+        }
+      ],
+      "checks": [
+        {
+          "id": "F0",
+          "category": "start",
+          "viewport": "mobile",
+          "requirement": "Начало вылазки касанием.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "playing"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F1",
+          "category": "control",
+          "viewport": "mobile",
+          "requirement": "Полное прохождение со скрытым ударом, победой над главарём и выходом.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"up\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1700
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1200
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"down\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1500
+            },
+            {
+              "action": "tap",
+              "selector": "#sneak",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"left\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1300
+            },
+            {
+              "action": "tap_fraction",
+              "selector": "#field",
+              "x": 0.5714,
+              "y": 0.5
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "35/95"
+              }
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 700
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F2",
+          "category": "outcome",
+          "viewport": "landscape",
+          "requirement": "Полное прохождение со скрытым ударом, победой над главарём и выходом.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"up\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1700
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 3000
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1200
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"down\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1500
+            },
+            {
+              "action": "tap",
+              "selector": "#sneak",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"left\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1300
+            },
+            {
+              "action": "tap_fraction",
+              "selector": "#field",
+              "x": 0.42,
+              "y": 0.5
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "35/95"
+              }
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 700
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F3",
+          "category": "control",
+          "viewport": "desktop",
+          "requirement": "Полное прохождение со скрытым ударом, победой над главарём и выходом.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1700
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1200
+            },
+            {
+              "action": "hold_key",
+              "key": "s",
+              "ms": 1500
+            },
+            {
+              "action": "press",
+              "key": "q"
+            },
+            {
+              "action": "hold_key",
+              "key": "a",
+              "ms": 1300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#target"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "35/95"
+              }
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 700
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "e"
+            },
+            {
+              "action": "wait_for",
+              "ms": 2000
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "won"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F4",
+          "category": "regression",
+          "viewport": "desktop",
+          "requirement": "Скрытный подход сзади даёт базовому кинжалу усиленный первый удар.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1700
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1200
+            },
+            {
+              "action": "hold_key",
+              "key": "s",
+              "ms": 1500
+            },
+            {
+              "action": "press",
+              "key": "q"
+            },
+            {
+              "action": "hold_key",
+              "key": "a",
+              "ms": 1300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#target"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "35/95"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F5",
+          "category": "outcome",
+          "viewport": "desktop",
+          "requirement": "В открытом бою без ответных ударов герой проигрывает.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 3000
+            },
+            {
+              "action": "wait",
+              "ms": 10000
+            },
+            {
+              "action": "wait_for",
+              "ms": 2500
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "lost"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F6",
+          "category": "restart",
+          "viewport": "mobile",
+          "requirement": "После настоящего поражения новая вылазка восстанавливает здоровье, оружие и навык.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 3000
+            },
+            {
+              "action": "wait",
+              "ms": 10000
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-status"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "lost"
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#replay",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute_number",
+                "selector": "#stage",
+                "attribute": "data-hp"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": 100
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-weapon"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "dagger"
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-skill"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "none"
+              }
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#stage",
+            "attribute": "data-status"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "playing"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F7",
+          "category": "control",
+          "viewport": "desktop",
+          "requirement": "Сабля и Сила увеличивают реальный урон по главарю до 46.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1000
+            },
+            {
+              "action": "wait",
+              "ms": 1800
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            },
+            {
+              "action": "press",
+              "key": "e"
+            },
+            {
+              "action": "press",
+              "key": "2"
+            },
+            {
+              "action": "press",
+              "key": "u"
+            },
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "text",
+                "selector": "#gear"
+              },
+              "expect": {
+                "operator": "contains",
+                "value": "Сабля · Сила"
+              }
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1700
+            },
+            {
+              "action": "wait",
+              "ms": 400
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "Space"
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#target"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "49/95"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F8",
+          "category": "regression",
+          "viewport": "desktop",
+          "requirement": "Escape освобождает фокус игровой карты и позволяет перейти к обычным кнопкам.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "press",
+              "key": "Tab"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "press",
+              "key": "Escape"
+            }
+          ],
+          "observation": {
+            "source": "attribute",
+            "selector": "#attack:focus",
+            "attribute": "id"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": "attack"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F9",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Поворот телефона сохраняет полученное снаряжение и выбранный навык.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "hold_touch",
+              "selector": "[data-dir=\"right\"]",
+              "x": 20,
+              "y": 20,
+              "ms": 1000
+            },
+            {
+              "action": "wait",
+              "ms": 1800
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 700
+            },
+            {
+              "action": "tap",
+              "selector": "#attack",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#interact",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#weapon",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "tap",
+              "selector": "#strike",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "resize",
+              "viewport": "landscape"
+            }
+          ],
+          "observation": {
+            "source": "text",
+            "selector": "#gear"
+          },
+          "expect": {
+            "operator": "contains",
+            "value": "Сабля · Сила"
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F10",
+          "category": "regression",
+          "viewport": "desktop",
+          "requirement": "Потеря фокуса отпускает движение: герой остаётся в безопасной области.",
+          "steps": [
+            {
+              "action": "press",
+              "key": "Enter"
+            },
+            {
+              "action": "hold_key",
+              "key": "w",
+              "ms": 1700
+            },
+            {
+              "action": "hold_key",
+              "key": "d",
+              "ms": 1040
+            },
+            {
+              "action": "press",
+              "key": "q"
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "key_down",
+              "key": "s"
+            },
+            {
+              "action": "blur"
+            },
+            {
+              "action": "wait",
+              "ms": 6000
+            },
+            {
+              "action": "key_up",
+              "key": "s"
+            }
+          ],
+          "observation": {
+            "source": "attribute_number",
+            "selector": "#stage",
+            "attribute": "data-hp"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": 100
+          },
+          "wait_budget_ms": 30000
+        },
+        {
+          "id": "F11",
+          "category": "regression",
+          "viewport": "mobile",
+          "requirement": "Музыка начинается после жеста; её можно отключить без остановки игры.",
+          "steps": [
+            {
+              "action": "tap",
+              "selector": "#begin",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "wait",
+              "ms": 300
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "experience",
+                "field": "musicPlaying"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": true
+              }
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "experience",
+                "field": "graphicsReady"
+              },
+              "expect": {
+                "operator": "gte",
+                "value": 5
+              }
+            },
+            {
+              "action": "checkpoint"
+            },
+            {
+              "action": "tap",
+              "selector": "#gf-player-tools button",
+              "x": null,
+              "y": null
+            },
+            {
+              "action": "assert",
+              "ms": 0,
+              "observation": {
+                "source": "attribute",
+                "selector": "#stage",
+                "attribute": "data-status"
+              },
+              "expect": {
+                "operator": "eq",
+                "value": "playing"
+              }
+            }
+          ],
+          "observation": {
+            "source": "experience",
+            "field": "muted"
+          },
+          "expect": {
+            "operator": "eq",
+            "value": true
+          },
+          "wait_budget_ms": 30000
+        }
+      ],
+      "visual_status": "captured",
+      "visual_frames": [
+        {
+          "id": "mobile_start",
+          "sha256": "6d117d8a0620b9f6a95d7be430594f5710f2663707744384346550bc5e28a6a3"
+        },
+        {
+          "id": "action_before",
+          "sha256": "7b619dcefee1d1dedacd5ed72d97ad36109110de05f10620f1ab4d7d6e5d16e0"
+        },
+        {
+          "id": "action_after",
+          "sha256": "c494a9f20c3cf1f9a4b965591e75dca16d5e5218fe87246a1dea9cd8586763a9"
+        },
+        {
+          "id": "action_100ms",
+          "sha256": "d8f06a2272521f694296104a5c935feacd35fe56302225dae1679af5b4952884"
+        },
+        {
+          "id": "action_240ms",
+          "sha256": "2e97b3bc553442f58be40b47960748e98d0c6c447424ce4fbbff17707cbd9065"
+        },
+        {
+          "id": "desktop_start",
+          "sha256": "11decbf56db9de0e62e999e638d80693d9ffbc62b248ead942de194cbab1e7e3"
+        }
+      ]
+    }
+  ],
+  "known_cost_usd": "1.773268",
+  "unknown_cost_liability_usd": "6.280000",
+  "local_budget_limit_usd": "100.000000",
+  "budget_consent": "User explicitly approved continuation and total local limit $100; cancelled audio liability retained.",
+  "offline_tests_passed": 1543,
+  "preserved_contracts": {
+    "ordinary_pro_lite_v1_v2": 26,
+    "v3_nonplanning": 7
+  },
+  "cloud_recovery": {
+    "terminal_receipts": {
+      "backup": "/data/backup-before-pro-staged-resume-20261118.sqlite3",
+      "terminal_rows": 431,
+      "unchanged": true,
+      "sha256": "3aa8f54ee4cd609e2209ee8a930a33fe02e77257930c4c5ec4b535a79475ccce"
+    },
+    "draining_after": false,
+    "attention_required_after": false,
+    "server_code_or_config_changed": false,
+    "gpu_contacted": false
+  },
+  "ordinary_pro_changed": false,
+  "gpu_contacted": false,
+  "limitations": [
+    "Generated source can still hit provider output limits; v4 completes missing files once and bounds repeated failures.",
+    "Scenario changes require explicit human review; this flag is preserved.",
+    "Native Chromium desktop/mobile emulation is not a physical phone test; audible signal is not a subjective music-quality rating."
+  ],
+  "final_local_health": {
+    "active_runs": 0,
+    "budget": {
+      "limit_usd": 100.0,
+      "spent_usd": 13.322492,
+      "reserved_usd": 0.0,
+      "unknown_usd": 33.598,
+      "available_usd": 53.079508
+    },
+    "local_health_status": 200
+  },
+  "server_tests_log_sha256": "e641a03c94bd2d10c837964c94115e026b4f60efb2e2c8d3bbdabd60537b73c0",
+  "final_totals": {
+    "model_scenarios_passed": 18,
+    "independent_scenarios_passed": 24,
+    "runtime_or_gameplay_failures": 0
+  },
+  "corrections": [
+    "First RPG: crouched rear approach preserves unnoticed strike; mobile camera keeps actors readable.",
+    "Second RPG: rear crouched detection reduced from 4 to 2 to permit attack range 4; original rules remain in history with explicit amendment.",
+    "Second RPG R5: route changed to avoid early frontal detection; expected 35/95 unchanged, other eight model checks identical.",
+    "Second RPG: Escape exits canvas keyboard focus; landscape CSS no longer hides upward movement."
+  ]
+}

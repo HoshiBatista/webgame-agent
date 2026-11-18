@@ -205,7 +205,7 @@ An explicit new user request overrides the earlier creative additions.
 
 
 def enabled(request):
-    return request.get('pro_parallel') == VERSION
+    return request.get('pro_parallel') in {VERSION, 4}
 
 
 def validate_brief(plan):
@@ -224,7 +224,7 @@ def role_guidance(role):
 
 def timed_checks(request):
     return (enabled(request) and request.get('generation_profile') == 'full'
-            and request.get('operation') in {'create', 'edit', 'repair', 'check_repair'}
+            and request.get('operation') in {'create', 'edit', 'repair', 'check_repair', 'pro_checks'}
             and not request.get('patch_repair') and not request.get('response_completion'))
 
 

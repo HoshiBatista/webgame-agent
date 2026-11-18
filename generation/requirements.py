@@ -65,6 +65,7 @@ def policy_snapshot():
         "pro_parallel.py",
         "pro_partition.py",
         "pro_creative.py",
+        "pro_staged.py",
         "../studio/pro_parallel.py",
         "planning.py",
         "requirements.py",

@@ -63,6 +63,8 @@ def new_run(owner, **fields):
 
 def planned(owner, **fields):
     run = new_run(owner, **fields)
+    # Existing v3 receipts keep their original fan-out and call limits.
+    run.pro_parallel_version = 3
     plan_request = request_for(run, None, [])
     plan = fake_generate(plan_request, on_event=lambda _: None, is_cancelled=lambda: False)['response']['plan']
     plan['resource_contract'] = resource_contract()
@@ -86,10 +88,10 @@ def test_explicit_opt_in_preserves_normal_pro_plan_limits_and_disabled_catalog(c
     normal = new_run(context, model_profile='pro')
     experiment = new_run(context)
     assert normal.max_model_calls == 5 and normal.max_repair_attempts == 3
-    assert experiment.max_model_calls == 10 and experiment.max_repair_attempts == 5
+    assert experiment.max_model_calls == 11 and experiment.max_repair_attempts == 5
     assert not normal.pro_parallel and experiment.pro_parallel
     assert 'pro_parallel' not in request_for(normal, None, [])
-    assert request_for(experiment, None, [])['pro_parallel'] == 3
+    assert request_for(experiment, None, [])['pro_parallel'] == 4
     assert planned(context).max_model_calls == 9
     settings.GAMEFORGE_PRO_PARALLEL_ENABLED = False
     assert 'pro_multi' not in {p['id'] for p in profile_options(None)}
@@ -220,6 +222,8 @@ def test_full_pipeline_keeps_plan_then_three_branches_then_browser(context):
     from tests.test_validation import fixture_report
 
     run = new_run(context)
+    run.pro_parallel_version = 3
+    run.save(update_fields=['pro_parallel_version'])
     requests = []
     def model(req, **kwargs):
         requests.append(req)
@@ -389,6 +393,8 @@ def test_split_pipeline_plans_once_assembles_then_uses_normal_browser_acceptance
     from tests.test_validation import fixture_report
 
     run = new_run(context)
+    run.pro_parallel_version = 3
+    run.save(update_fields=['pro_parallel_version'])
     requests = []
     def model(req, **kwargs):
         requests.append(req)

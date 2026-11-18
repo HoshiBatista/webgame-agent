@@ -152,7 +152,7 @@ def _system_prompt(request):
                             "Realize the planned player decisions and progression, including the concept's supporting mechanics. Do not reduce it to a movement-only prototype.")
         text += PRO_GUIDANCE
         if operation == "create":
-            if request.get('pro_parallel') == 3:
+            if request.get('pro_parallel') in {3, 4}:
                 from .pro_creative import CREATE_BUDGET
 
                 text += CREATE_BUDGET + 'CHECK ROUTES' + PRO_CREATE_GUIDANCE.split('CHECK ROUTES', 1)[1]
@@ -186,12 +186,12 @@ def _system_prompt(request):
     from .experience import guidance as experience_guidance
     from .pro_parallel import branch, implementation_guidance
 
-    if request.get('pro_parallel') in {2, 3} and request.get('operation') in {'edit', 'repair'}:
+    if request.get('pro_parallel') in {2, 3, 4} and request.get('operation') in {'edit', 'repair'}:
         from .pro_partition import REPAIR_GUIDANCE, split
 
         if split(request.get('game_plan')):
             text += REPAIR_GUIDANCE
-        if request['pro_parallel'] == 3:
+        if request['pro_parallel'] in {3, 4}:
             from .pro_creative import REPAIR_GUIDANCE as CREATIVE_REPAIR_GUIDANCE
 
             text += CREATIVE_REPAIR_GUIDANCE
@@ -204,7 +204,7 @@ def build_messages(request):
     from .pro_parallel import branch
     from .pro_parallel import messages as parallel_messages
 
-    if branch(request) in {'graphics', 'audio', 'mechanics'}:
+    if branch(request) in {'graphics', 'audio', 'mechanics', 'checks'}:
         return parallel_messages(request)
     if request.get('operation') == 'music':
         from .music import messages
@@ -378,8 +378,12 @@ def system_prompt(request):
     from .pro_parallel import branch
     from .pro_parallel import messages as parallel_messages
 
-    if branch(request) in {'graphics', 'audio', 'mechanics'}:
+    if branch(request) in {'graphics', 'audio', 'mechanics', 'checks'}:
         return parallel_messages(request)[0]['content']
+    from .pro_staged import source_prompt, source_request
+
+    if source_request(request):
+        return source_prompt(request)
     if request.get('operation') == 'music':
         from .music import PROMPT
 

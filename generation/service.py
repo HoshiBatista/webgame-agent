@@ -88,9 +88,7 @@ def generate(request, *, on_event, is_cancelled):
             result['provider_metadata']['pro_creative_wait_budget'] = {
                 'version': 1, 'milliseconds': 30000, 'check_ids': creative_budget_ids,
             }
-        if branch(request):
-            validate_reply(result['response'], request)
-        elif request.get('response_completion'):
+        if request.get('response_completion'):
             from .response_completion import assemble
 
             result['response'] = assemble(original, request)
@@ -100,6 +98,10 @@ def generate(request, *, on_event, is_cancelled):
                 'retained_fields': list(policy['retained_fields']),
                 'retained_files': [f['path'] for f in policy['retained_files']],
             }
+            if branch(request):
+                validate_reply(result['response'], request)
+        elif branch(request):
+            validate_reply(result['response'], request)
         elif request.get("patch_repair"):
             from .patch_repair import validate_reply
 

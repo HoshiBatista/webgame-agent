@@ -20,7 +20,7 @@ from .models import Invocation, Run
 from .services import DomainError, event, finish_run, reserve_invocation, settle_invocation
 
 
-def branch_request(run, role, error=None):
+def branch_request(run, role, error=None, *, responses=None, previous=None):
     from .tasks import request_for
 
     request = request_for(run, None, [], error)
@@ -29,6 +29,17 @@ def branch_request(run, role, error=None):
                    pro_parallel_plan_hash=digest(run.game_plan),
                    operation='create' if role in {'gameplay', 'scene'} else 'pro_' + role,
                    reasoning_effort='high')
+    if run.pro_parallel_version == 4 and role in {'gameplay', 'scene'}:
+        from generation.pro_staged import completion_policy
+
+        request['reasoning_effort'] = 'medium'
+        completion = completion_policy(previous)
+        if completion:
+            request['response_completion'] = completion
+    if run.pro_parallel_version == 4 and role == 'checks':
+        from generation.pro_staged import source_context
+
+        request.update(source_context(responses, run.game_plan))
     if role in {'mechanics', 'scene'}:
         from generation.pro_partition import interface_hash
 
@@ -138,19 +149,33 @@ def advance(run, lease, generate, materialize):
         for role in missing:
             if lease.cancelled():
                 return None
+            if role == 'checks' and any(r not in valid for r in roles if r != 'checks'):
+                continue
+            failures = [c for c in calls if c.request['pro_parallel_branch'] == role and c.state == 'failed']
+            if run.pro_parallel_version == 4 and (len(failures) >= 3 or any(
+                c.request.get('response_completion') for c in failures
+            ) or sum(
+                (c.error or {}).get('code') == 'response_output_limit' for c in failures
+            ) >= 2):
+                blocked = DomainError('parallel_branch_exhausted',
+                    'Этап повторно не завершился. Готовые части и ответы сохранены; одинаковые повторы остановлены.')
+                break
             previous = next((c for c in sorted(calls, key=lambda c: c.created_at, reverse=True)
                              if c.request['pro_parallel_branch'] == role and c.error), None)
             # Keep raw rejected content private; error is sufficient for a new
             # bounded branch response under the same frozen IDs/requirements.
             error = {k: v for k, v in previous.error.items() if k != 'raw_response'} if previous else None
             try:
-                request = branch_request(run, role, error)
+                request = branch_request(run, role, error, responses={r: c.response for r, c in valid.items()},
+                                         previous=previous)
+                branch_progress = ('Готовим проверку управления и прохождения.' if role == 'checks' else
+                    'Завершаем игровую сцену. Готовые части сохранены.' if request.get('response_completion') else progress)
                 with transaction.atomic():
                     call = reserve_invocation(run, request)
                     run.attempts = call.attempt
                     Run.objects.filter(pk=run.id, fence=run.fence).update(attempts=call.attempt,
-                        status='generating', stage='parallel', message=progress)
-                    event(run, 'parallel_branch', progress,
+                        status='generating', stage='parallel', message=branch_progress)
+                    event(run, 'parallel_branch', branch_progress,
                           {'branch': role, 'attempt': call.attempt, 'max_model_calls': run.max_model_calls})
             except DomainError as exc:
                 blocked = exc
@@ -199,6 +224,11 @@ def advance(run, lease, generate, materialize):
             call = valid[source_author]
             call.state, call.error = 'failed', error_data(exc)
             call.save(update_fields=['state', 'error'])
+            if run.pro_parallel_version == 4 and 'checks' in valid:
+                check_call = valid['checks']
+                check_call.state = 'failed'
+                check_call.error = {'code': 'parallel_source_changed', 'message': 'Исходники будут исправлены.'}
+                check_call.save(update_fields=['state', 'error'])
         defer_relay(run, 'Ресурсы сохранены. Исправляем сборку игры.')
         return None
     with transaction.atomic():

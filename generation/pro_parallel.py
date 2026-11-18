@@ -9,8 +9,8 @@ from jsonschema import Draft202012Validator
 from .errors import ContractError
 from .experience import CHECK_GUIDANCE, GUIDANCE, ID, SCHEMA, TEXT, obj, rows, validate_svg
 
-VERSION = 3
-SUPPORTED_VERSIONS = {1, 2, 3}
+VERSION = 4
+SUPPORTED_VERSIONS = {1, 2, 3, 4}
 BRANCHES = ('gameplay', 'graphics', 'audio')
 CONTRACT = obj({
     'graphics': rows(obj({'id': ID, 'purpose': TEXT,
@@ -95,7 +95,8 @@ def branch(request):
 def branches(plan, version=1):
     from .pro_partition import split
 
-    return ('mechanics', 'scene', 'graphics', 'audio') if version >= 2 and split(plan) else BRANCHES
+    roles = ('mechanics', 'scene', 'graphics', 'audio') if version >= 2 and split(plan) else BRANCHES
+    return (*roles, 'checks') if version == 4 else roles
 
 
 def author(plan, version=1):
@@ -107,7 +108,7 @@ def implementation_guidance(request):
 
     focus = ("\nKeep the keyboard cursor synchronized with real focus changes, including Tab and clicks. "
              "Arrow navigation starts from the currently focused cell, not a stale stored index.\n"
-             if request.get('pro_parallel') in {2, 3} else '')
+             if request.get('pro_parallel') in {2, 3, 4} else '')
     creative = role_guidance(branch(request)) if enabled(request) else ''
     if branch(request) == 'scene':
         from .pro_partition import SCENE_GUIDANCE
@@ -121,7 +122,15 @@ def implementation_guidance(request):
 def schema(request):
     from .schema import response_schema
 
+    if request.get('pro_parallel') == 4 and request.get('response_completion'):
+        from .response_completion import reply_schema
+
+        return reply_schema(request)
     role = branch(request)
+    if role == 'checks' and request.get('pro_parallel') == 4:
+        from .pro_staged import checks_schema
+
+        return checks_schema(request)
     if role in {'mechanics', 'scene'}:
         from .pro_partition import schema as partition_schema
 
@@ -130,6 +139,8 @@ def schema(request):
         original = {k: v for k, v in request.items() if k != 'pro_parallel_branch'}
         result = response_schema(original)
         result['properties']['assets'] = {'type': 'null'}
+        if request.get('pro_parallel') == 4:
+            result['properties']['checks']['maxItems'] = 0
         return result
     names = ['graphics'] if role == 'graphics' else ['instruments', 'sounds', 'music', 'silence_reason']
     return obj({'operation': {'const': 'pro_' + str(role)},
@@ -139,6 +150,11 @@ def schema(request):
 def messages(request):
     from .pro_creative import enabled, role_guidance
     from .pro_partition import MECHANICS_GUIDANCE
+
+    if branch(request) == 'checks' and request.get('pro_parallel') == 4:
+        from .pro_staged import checks_messages
+
+        return checks_messages(request)
 
     keys: tuple[str, ...] = ('operation', 'prompt', 'game_request', 'game_plan', 'audience', 'preferences',
                             'mechanics_interface_hash', 'last_attempt_error')
@@ -168,16 +184,25 @@ def validate_contract(value):
 
 
 def validate_reply(value, request):
+    if request.get('pro_parallel') == 4 and request.get('response_completion'):
+        from .response_completion import original_request
+
+        request = original_request(request)
     role = branch(request)
     contract = request['game_plan']['resource_contract']
     validate_contract(contract)
     error = next(Draft202012Validator(schema(request)).iter_errors(value), None)
     if error:
         raise ContractError('invalid_parallel_response', f'{list(error.path)}: {error.message[:300]}')
+    if role == 'checks' and request.get('pro_parallel') == 4:
+        from .pro_staged import validate_checks_reply
+
+        validate_checks_reply(value, request)
+        return
     if role in {'mechanics', 'scene'}:
         from .pro_partition import validate_reply as validate_partition_reply
 
-        if request.get('pro_parallel') not in {2, 3}:
+        if request.get('pro_parallel') not in {2, 3, 4}:
             raise ContractError('invalid_gameplay_partition', 'Для раздельных модулей нужен протокол v2.')
         validate_partition_reply(value, request)
         return
@@ -192,7 +217,7 @@ def validate_reply(value, request):
     if set(actual) != expected or len(actual) != len(expected):
         raise ContractError('resource_ids_changed', f'Нужны точные ID {name}: {sorted(expected)}.')
     limit = 7168 if role == 'graphics' else 6144
-    if role == 'audio' and request.get('pro_parallel') == 3:
+    if role == 'audio' and request.get('pro_parallel') in {3, 4}:
         limit = 7680
     if len(json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode()) > limit:
         raise ContractError('assets_too_large', f'Сократите {role} до {limit} байт, сохранив все ID.')
@@ -237,4 +262,10 @@ def assemble(responses, plan, version=1):
               **{key: deepcopy(responses['audio'][key]) for key in ('instruments', 'sounds', 'music', 'silence_reason')}}
     validate(assets)
     value['assets'] = assets
+    if version == 4:
+        from .pro_staged import source_context
+        expected = source_context({k: v for k, v in responses.items() if k != 'checks'}, plan)['source_hash']
+        if responses['checks']['source_hash'] != expected:
+            raise ContractError('parallel_source_changed', 'Исходники изменились после создания проверок.')
+        value['checks'] = deepcopy(responses['checks']['checks'])
     return value
