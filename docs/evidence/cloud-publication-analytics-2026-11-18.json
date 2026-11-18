@@ -1,0 +1,313 @@
+{
+  "recorded_at_utc": "2026-11-18T20:31:08.046858+00:00",
+  "release": "c5fc93c72f4398cf147dd8619b8916d0136849e9",
+  "source_archive_sha256": "6f86f39096c7f4062f341f85b858745360fa70a5c6aa904e1b91e97668c13460",
+  "site": "https://beegame.ru",
+  "release_directory": "/opt/gameforge/releases/20261118-c5fc93c",
+  "prior_release_directory": "/opt/gameforge/releases/20261030-a2e4c79-feedback134e6a3",
+  "result": "deployed_and_verified",
+  "images": {
+    "app": {
+      "tag": "gameforge-mini:cloud-c5fc93c-20261118",
+      "image_id": "sha256:626a21efe290d24fd531fb44f0773f53a5d54921080607823906fcaedf81aa43"
+    },
+    "preview": {
+      "tag": "gameforge-mini:cloud-c5fc93c-20261118",
+      "image_id": "sha256:626a21efe290d24fd531fb44f0773f53a5d54921080607823906fcaedf81aa43"
+    },
+    "worker": {
+      "tag": "gameforge-mini:cloud-c5fc93c-20261118",
+      "image_id": "sha256:626a21efe290d24fd531fb44f0773f53a5d54921080607823906fcaedf81aa43"
+    },
+    "beat": {
+      "tag": "gameforge-mini:cloud-c5fc93c-20261118",
+      "image_id": "sha256:626a21efe290d24fd531fb44f0773f53a5d54921080607823906fcaedf81aa43"
+    },
+    "validator": {
+      "tag": "gameforge-mini-validator:cloud-c5fc93c-20261118",
+      "image_id": "sha256:aa75c8db627f8c46d5268d99123faea0bd492f7c9117b83bde8cdb2955bc0d35"
+    }
+  },
+  "data_preservation": {
+    "existing_record_digests_equal_after_migration_and_smoke": true,
+    "counts": {
+      "Budget": 1,
+      "Chat": 96,
+      "CheckReport": 119,
+      "Feedback": 6,
+      "FeedbackProcessing": 4,
+      "Invocation": 359,
+      "Like": 2,
+      "Message": 322,
+      "Outbox": 162,
+      "Preference": 5,
+      "PromptTemplate": 2,
+      "Publication": 5,
+      "Revision": 112,
+      "Run": 162,
+      "RunEvent": 1849,
+      "User": 5,
+      "ValidationRequest": 100,
+      "ValidationTask": 100
+    },
+    "unknown_preserved": 12,
+    "active_before_cutover": {
+      "feedback": 0,
+      "invocations": 0,
+      "runs": 0,
+      "validation": 0
+    },
+    "new_migrations": [
+      "0025_run_pro_parallel",
+      "0026_pro_parallel_version",
+      "0027_publication_analytics"
+    ],
+    "new_run_fields_verified_defaults": {
+      "pro_parallel": false,
+      "pro_parallel_version": 1
+    },
+    "backup_path": "/opt/gameforge/backups/before-c5fc93c-20261118T202307Z.dump",
+    "backup_sha256": "18e7bce55515c659847c2a1254fb95a2a110561de6850a636613e4665afb7378",
+    "backup_archive_list_verified": true
+  },
+  "configuration": {
+    "env_preserved_except": [
+      "APP_IMAGE",
+      "VALIDATOR_IMAGE"
+    ],
+    "effective_app_preview_worker_beat_environment_values_unchanged": true,
+    "db_redis_relay_container_identity_and_start_time_preserved": true,
+    "gpu_host_access": false,
+    "pro_worker_admin_changes": false,
+    "experimental_pro_enabled": false
+  },
+  "analytics_smoke": {
+    "status": "passed",
+    "tests": [
+      "guest_csrf",
+      "cross_origin_denied",
+      "idempotent_open",
+      "bound_session_secret",
+      "cumulative_time",
+      "stale_time_ignored",
+      "rating_login_and_csrf",
+      "one_editable_rating",
+      "null_completion",
+      "legacy_like_preserved",
+      "export_and_source_unchanged",
+      "transaction_rolled_back"
+    ],
+    "model_calls": 0,
+    "persistent_records_created": 0,
+    "existing_row_counts_unchanged": true
+  },
+  "standalone_isolated_validator": {
+    "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:Chromium 156.0.8078.79 built on Debian GNU/Linux 12 (bookworm)",
+    "profiles": {
+      "full": {
+        "status": "passed",
+        "facts": 5,
+        "viewports": [
+          "mobile",
+          "landscape",
+          "desktop"
+        ],
+        "keyboard_only": true,
+        "generated_graphics_drawn": true,
+        "audio_voices_played": true,
+        "rotation_preserves_state": true,
+        "seconds": 22.239,
+        "audio_quality": "not_listened",
+        "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+      },
+      "compact": {
+        "status": "passed",
+        "facts": 6,
+        "viewports": [
+          "mobile",
+          "landscape",
+          "desktop"
+        ],
+        "keyboard_only": true,
+        "generated_graphics_drawn": true,
+        "audio_voices_played": true,
+        "rotation_preserves_state": true,
+        "seconds": 29.976,
+        "audio_quality": "not_listened",
+        "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+      }
+    },
+    "model_calls": 0,
+    "records_created": 0
+  },
+  "production_validator": {
+    "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:Chromium 156.0.8078.79 built on Debian GNU/Linux 12 (bookworm)",
+    "profiles": {
+      "full": {
+        "status": "passed",
+        "facts": 5,
+        "viewports": [
+          "mobile",
+          "landscape",
+          "desktop"
+        ],
+        "keyboard_only": true,
+        "generated_graphics_drawn": true,
+        "audio_voices_played": true,
+        "rotation_preserves_state": true,
+        "seconds": 21.73,
+        "audio_quality": "not_listened",
+        "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+      },
+      "compact": {
+        "status": "passed",
+        "facts": 6,
+        "viewports": [
+          "mobile",
+          "landscape",
+          "desktop"
+        ],
+        "keyboard_only": true,
+        "generated_graphics_drawn": true,
+        "audio_voices_played": true,
+        "rotation_preserves_state": true,
+        "seconds": 29.774,
+        "audio_quality": "not_listened",
+        "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+      }
+    },
+    "model_calls": 0,
+    "records_created": 0
+  },
+  "providers": {
+    "pro": {
+      "status": "ok",
+      "worker_online": true,
+      "draining": false,
+      "attention_required": false
+    },
+    "lite_relay_status": "ok",
+    "profiles": {
+      "pro": {
+        "model": "gpt-6-sol",
+        "available": true
+      },
+      "lite": {
+        "model": "qwen38",
+        "available": true
+      }
+    },
+    "model_calls": 0,
+    "gpu_host_access": false
+  },
+  "worker_readiness": "Celery ping passed; validator implementation hash matches current application",
+  "https_checks": {
+    "passed": true,
+    "https_verified": true,
+    "health_http": 200,
+    "guest_csrf_secure_host_only": true,
+    "guest_private_api_denied": true,
+    "homepage_exact": true,
+    "assets_exact": 19,
+    "font_binary_fallback_count": 5,
+    "gzip_js_css": true,
+    "publications_checked": 5,
+    "published_identity_and_preview_bytes_unchanged": true,
+    "analytics_mode": "live_type_range_checks",
+    "analytics_fields_valid": true,
+    "preview_isolated_no_cookie_no_api": true,
+    "canonical_www_preserves_uri": true,
+    "requests": 35,
+    "model_calls": 0,
+    "http_mutations": 0,
+    "javascript_executed": false
+  },
+  "font_content_type_check": {
+    "initial_acceptance_probe": "Overly strict font MIME allowlist rejected application/octet-stream",
+    "prior_image_mimetypes_woff2": [
+      null,
+      null
+    ],
+    "resolution": "Kept production unchanged; accepted prior binary font MIME only for WOFF/WOFF2 with exact byte hashes after independent Chromium load test",
+    "browser_proof": {
+      "passed": true,
+      "browser_version": "145.0.7632.6",
+      "font_type": "Manrope woff2 from web/dist",
+      "font_response": "application/octet-stream + X-Content-Type-Options: nosniff",
+      "result": {
+        "document_status": "loaded",
+        "latin": {
+          "faces": [
+            {
+              "family": "SmokeLatin",
+              "status": "loaded"
+            }
+          ],
+          "check": true
+        },
+        "cyrillic": {
+          "faces": [
+            {
+              "family": "SmokeCyrillic",
+              "status": "loaded"
+            }
+          ],
+          "check": true
+        }
+      },
+      "fonts": [
+        {
+          "path": "/latin.woff2",
+          "resource_type": "font",
+          "content_type": "application/octet-stream",
+          "nosniff": true
+        },
+        {
+          "path": "/cyrillic.woff2",
+          "resource_type": "font",
+          "content_type": "application/octet-stream",
+          "nosniff": true
+        }
+      ],
+      "unexpected_requests": [],
+      "console_errors": [],
+      "page_errors": [],
+      "sandbox_private_file_denied": true,
+      "sandbox_network_denied": true
+    }
+  },
+  "final_services": {
+    "roles": [
+      "app",
+      "preview",
+      "worker",
+      "beat",
+      "validator",
+      "edge"
+    ],
+    "all_running": true,
+    "all_restart_counts": 0,
+    "any_oom_killed": false,
+    "idle_memory_mib": {
+      "app": 71.24,
+      "worker": 77.76,
+      "validator": 20.27
+    },
+    "memory_is_not_a_load_test": true
+  },
+  "rollback": {
+    "used": false,
+    "prior_exact_images_and_edge_bind_recorded": true,
+    "database_restore_or_reverse_migration_performed": false,
+    "old_code_compatibility": "Rollback script conditionally sets database defaults false/1 for new NOT NULL Run columns before old images start",
+    "after_public_traffic": "Never automatically replace the database or interrupt newly accepted work"
+  },
+  "model_calls": 0,
+  "limits": [
+    "Validator checks used trusted fixtures, not a new model-generated game",
+    "Published preview HTTP bytes and isolation checked; existing game source was not changed",
+    "Successful completion analytics remains NULL by agreed scope",
+    "Old unfinished runs retain frozen policies; new calls or stale manual confirmation can require an explicit new request or recheck",
+    "No GPU changes or remote Git push"
+  ]
+}
