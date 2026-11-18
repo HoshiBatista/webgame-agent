@@ -25,6 +25,7 @@ import {
 import { Link } from 'react-router-dom';
 import { copyGameHtml } from './webview';
 import type { Publication } from './types';
+import { usePublicationSession } from './usePublicationSession';
 
 export function GameThumbnail({
   game,
@@ -166,6 +167,7 @@ export function GameFrame({
   muted,
   onLoad,
   onEscape,
+  publication,
 }: {
   url: string;
   title: string;
@@ -174,8 +176,10 @@ export function GameFrame({
   muted?: boolean;
   onLoad?: () => void;
   onEscape?: () => void;
+  publication?: Publication;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
+  const recordLoad = usePublicationSession(publication, frame);
   const controlled = muted !== undefined;
   const identity = `${artifactKey}:${controlled}`;
   function source() {
@@ -215,6 +219,7 @@ export function GameFrame({
       ref={frame}
       onLoad={() => {
         sendAudio();
+        recordLoad();
         onLoad?.();
       }}
       className={`game-frame ${className}`}
@@ -332,6 +337,7 @@ export function PhonePreview({
   muted,
   onMutedChange,
   visible = true,
+  publication,
 }: {
   url?: string;
   title: string;
@@ -347,6 +353,7 @@ export function PhonePreview({
   muted?: boolean;
   onMutedChange?: () => void;
   visible?: boolean;
+  publication?: Publication;
 }) {
   const [expanded, setExpanded] = useState(forceFullscreen);
   const [copyError, setCopyError] = useState('');
@@ -420,6 +427,7 @@ export function PhonePreview({
       url={url}
       title={title}
       muted={muted === undefined ? undefined : muted || !visible}
+      publication={publication}
     />
   ) : (
     <div className="phone-empty">

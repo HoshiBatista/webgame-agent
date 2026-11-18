@@ -203,7 +203,12 @@ export interface Chat extends ChatSummary {
   runs: Run[];
   source_publication: string | null;
 }
-export interface Publication {
+export interface PublicationRating {
+  average_rating?: number | null;
+  rating_count?: number;
+  user_rating?: number | null;
+}
+export interface Publication extends PublicationRating {
   id: string;
   title: string;
   author: { id?: string; username: string };
@@ -213,8 +218,13 @@ export interface Publication {
   artifact_hash: string;
   preview_url: string;
   thumbnail_url: string | null;
-  likes: number;
-  liked: boolean;
+  likes?: number;
+  liked?: boolean;
+  analytics?: {
+    opens: number;
+    average_duration_seconds: number | null;
+    successful_completions: number | null;
+  };
   is_owner: boolean;
   source_chat_id: string | null;
   verification: string;

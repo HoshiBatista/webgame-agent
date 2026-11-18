@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-18",
+  "scope": "Simple public-player analytics; local installation only",
+  "implemented": [
+    "One opening per public iframe load, with idempotent delivery retries",
+    "Cumulative visible session time and average per opening",
+    "One editable 1–5 rating per account and publication",
+    "Feed average rating and sorting by mean, vote count, recency"
+  ],
+  "completion_counter": {
+    "enabled": false,
+    "database_value": null,
+    "display": "—",
+    "reason": "Deferred with owner permission; existing games have no reliable universal win signal"
+  },
+  "generation": {
+    "new_model_calls": 0,
+    "generation_and_validation_source_unchanged": true,
+    "game_runtime_and_export_unchanged": true,
+    "collection_location": "Publication viewer, outside the sandboxed game iframe"
+  },
+  "server_checks": {
+    "full_non_browser_non_live_suite": {"passed": 1560, "exit_code": 0},
+    "final_analytics_suite_after_two_extra_regressions": {"passed": 19, "exit_code": 0},
+    "unique_tests_covered": 1562,
+    "ruff": "passed",
+    "mypy_changed_server_modules": "passed",
+    "django_check": "passed",
+    "makemigrations_check": "no changes"
+  },
+  "client_checks": {
+    "full_suite": {"passed": 164, "files": 19},
+    "final_session_hook_suite_after_fractional_interval_fix": {"passed": 9},
+    "typecheck": "passed",
+    "lint": "passed",
+    "production_build": "passed"
+  },
+  "browser": {
+    "type": "Real Chromium with inert fixture game and mocked APIs in OS sandbox",
+    "real_model_or_generated_game_test": false,
+    "viewports": [[390, 844], [844, 390]],
+    "healthy_opens": 3,
+    "healthy_time_updates": 3,
+    "ratings": 2,
+    "failure_retries_same_identity": 2,
+    "guest_opens": 1,
+    "no_new_open_on_rating_resize_or_fullscreen": true,
+    "game_controls_work_during_analytics_failure": true,
+    "null_completion_shows_dash": true,
+    "final_landscape_layout": "Decorative phone controls stay within the frame; statistics begins 30px below it",
+    "sandbox_private_file_denied": true,
+    "sandbox_network_denied": true,
+    "unmocked_requests": 0,
+    "page_errors": 0
+  },
+  "data_preservation": {
+    "backup_created_before_migration": true,
+    "existing_data_digests_equal_after_migration": true,
+    "counts": {
+      "User": 7,
+      "Chat": 179,
+      "Revision": 212,
+      "Publication": 0,
+      "Like": 0,
+      "Feedback": 0,
+      "Invocation": 549
+    },
+    "existing_publications_and_likes_preservation": "Covered by database regression tests; local live database had none",
+    "migration": "0027_publication_analytics; three CreateModel operations only"
+  },
+  "local_health": "App, guest session and built UI returned HTTP 200 after update",
+  "limitations": [
+    "Time measures visible viewing, not continuous active input",
+    "Final delivery is best effort; network interruption can undercount time",
+    "Session lifetime is limited to one hour; no unique-user or anti-fraud claim",
+    "Historical activity is not reconstructed; existing likes are not converted into stars",
+    "Cloud installation was not changed"
+  ]
+}

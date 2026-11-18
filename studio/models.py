@@ -303,6 +303,40 @@ class Like(models.Model):
         constraints = [models.UniqueConstraint(fields=["publication", "user"], name="studio_like_unique")]
 
 
+class PublicationStats(models.Model):
+    publication = models.OneToOneField(Publication, on_delete=models.CASCADE, related_name="stats")
+    opens = models.PositiveBigIntegerField(default=0)
+    visible_ms = models.PositiveBigIntegerField(default=0)
+    # NULL means this game has no supported completion signal, not zero wins.
+    successful_completions = models.PositiveBigIntegerField(null=True, default=None)
+
+
+class PlaySession(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False)
+    publication = models.ForeignKey(Publication, on_delete=models.CASCADE, related_name="play_sessions")
+    revision_id_snapshot = models.UUIDField()
+    artifact_hash = models.CharField(max_length=64)
+    token_hash = models.CharField(max_length=64)
+    reported_ms = models.PositiveIntegerField(default=0)
+    visible_ms = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+    last_received_at = models.DateTimeField(default=timezone.now)
+
+
+class PublicationRating(models.Model):
+    publication = models.ForeignKey(Publication, on_delete=models.CASCADE, related_name="ratings")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["publication", "user"], name="studio_publication_rating_unique"),
+            models.CheckConstraint(condition=models.Q(rating__gte=1, rating__lte=5),
+                                   name="studio_publication_rating_range"),
+        ]
+
+
 class Feedback(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

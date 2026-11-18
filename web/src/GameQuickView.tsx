@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { GameFrame, Modal, SoundButton, Spinner } from './components';
-import type { Publication } from './types';
+import type { Publication, PublicationRating } from './types';
+import { PublicationMetrics, PublicationStars, RatingSummary } from './PublicationMetrics';
 
 const screens = [
   { label: 'Вертикально', width: 390, height: 844, Icon: Smartphone },
@@ -13,9 +14,11 @@ const screens = [
 export default function GameQuickView({
   game,
   onClose,
+  onRatingChange,
 }: {
   game: Publication;
   onClose: () => void;
+  onRatingChange?: (rating: PublicationRating) => void;
 }) {
   const [mode, setMode] = useState(0);
   const [muted, setMuted] = useState(true);
@@ -86,6 +89,7 @@ export default function GameQuickView({
           }}
         >
           <GameFrame
+            publication={game}
             url={game.preview_url}
             artifactKey={game.artifact_hash}
             title={`Игра: ${game.title}`}
@@ -95,6 +99,15 @@ export default function GameQuickView({
           />
         </div>
       </div>
+      <details className="quick-view-details">
+        <summary>
+          Оценка и статистика <RatingSummary game={game} />
+        </summary>
+        <div className="quick-view-detail-content">
+          <PublicationMetrics game={game} />
+          <PublicationStars game={game} onChange={onRatingChange} />
+        </div>
+      </details>
       <div className="quick-view-footer">
         <p>
           <span className="avatar-small">{game.author.username.slice(0, 1).toUpperCase()}</span>

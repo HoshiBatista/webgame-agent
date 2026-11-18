@@ -6,6 +6,7 @@ import { errorText, post, request } from './api';
 import { Brand, ErrorNotice, PhonePreview, Spinner } from './components';
 import { chatsChanged, useSession } from './context';
 import type { Chat, Publication } from './types';
+import { PublicationMetrics, PublicationStars } from './PublicationMetrics';
 
 export default function PublicGame() {
   const { id } = useParams();
@@ -70,12 +71,22 @@ export default function PublicGame() {
           </div>
           <div className="public-preview">
             <PhonePreview
+              publication={game}
               artifactKey={game.artifact_hash}
               url={game.preview_url}
               title={game.title}
               forceFullscreen={mobileFullscreen}
               muted={soundMuted}
               onMutedChange={() => setSoundMuted((value) => !value)}
+            />
+          </div>
+          <div className="public-game-details">
+            <PublicationMetrics game={game} />
+            <PublicationStars
+              game={game}
+              onChange={(rating) =>
+                setGame((current) => (current ? { ...current, ...rating } : current))
+              }
             />
           </div>
           <p className="public-game-footnote">

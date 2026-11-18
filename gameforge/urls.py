@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from django.views.static import serve
 
 from studio import views as v
+from studio.publication_analytics import open_session_view, rating_view, update_session_view
 from studio.template_views import template_view, templates_view
 
 urlpatterns = [
@@ -35,6 +36,9 @@ urlpatterns = [
     path("api/publications/<uuid:ident>/", v.publication_view),
     path("api/publications/<uuid:ident>/thumbnail/", v.publication_thumbnail_view),
     path("api/publications/<uuid:ident>/like/", v.like_view),
+    path("api/publications/<uuid:ident>/rating/", rating_view),
+    path("api/publications/<uuid:ident>/sessions/", open_session_view),
+    path("api/publications/<uuid:ident>/sessions/<uuid:session_id>/", update_session_view),
     path("api/publications/<uuid:ident>/remix/", v.remix_view),
     path("api/preferences/", v.preferences_view),
     path("api/templates/", templates_view),

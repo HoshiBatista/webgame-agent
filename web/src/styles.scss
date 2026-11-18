@@ -3044,6 +3044,14 @@ svg {
 .public-preview .phone-device {
   height: min(650px, calc(100svh - 275px));
 }
+.public-preview .phone-stage:not(.fullscreen-preview) .phone-device::before {
+  top: min(110px, 28%);
+  height: min(46px, 12%);
+}
+.public-preview .phone-stage:not(.fullscreen-preview) .phone-device::after {
+  top: min(144px, 38%);
+  height: min(35px, 9%);
+}
 .public-preview .preview-title {
   padding-top: 5px;
   min-height: 40px;
@@ -3861,6 +3869,9 @@ svg {
   .public-game-title {
     padding: 0 20px;
     margin-top: 5px;
+  }
+  .public-game-details {
+    padding-inline: 20px;
   }
   .public-game-title h1 {
     font-size: 24px;
@@ -4969,5 +4980,133 @@ svg {
   }
   details[open] summary {
     margin-bottom: 12px;
+  }
+}
+
+.rating-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: var(--text-small);
+  svg {
+    color: var(--accent-text);
+  }
+  .rating-count {
+    color: var(--muted);
+    font-weight: 500;
+  }
+}
+.public-game-details,
+.quick-view-detail-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.public-game-details {
+  max-width: 1000px;
+  margin: 20px auto;
+}
+.publication-metrics {
+  display: flex;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+  margin: 0;
+  > div {
+    min-width: 100px;
+  }
+  dt {
+    font-size: var(--text-small);
+    color: var(--muted);
+  }
+  dd {
+    margin: 3px 0 0;
+    font-size: 18px;
+    font-weight: 800;
+  }
+}
+.publication-rating {
+  min-width: 240px;
+  max-width: 100%;
+  small {
+    color: var(--muted);
+  }
+  .text-button {
+    display: inline-block;
+    margin-top: 8px;
+  }
+}
+.publication-rating-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--text-small);
+}
+.publication-stars {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0;
+  button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--accent-text);
+    background: var(--soft);
+    &:hover,
+    &[aria-pressed='true'] {
+      border-color: var(--accent-text);
+    }
+  }
+}
+.rating-error {
+  color: var(--danger);
+  margin: 6px 0 0;
+  font-size: var(--text-small);
+}
+.quick-view-details {
+  flex: none;
+  max-height: min(240px, 35dvh);
+  overflow: auto;
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: var(--text-small);
+    font-weight: 700;
+    &::before {
+      content: '▸';
+    }
+  }
+  &[open] summary::before {
+    content: '▾';
+  }
+}
+.quick-view-detail-content {
+  padding: 12px 0 4px;
+}
+@media (max-width: 600px) {
+  .public-game-details,
+  .quick-view-detail-content {
+    gap: 12px;
+  }
+  .publication-metrics {
+    gap: 8px 16px;
+  }
+}
+@media (max-height: 500px) and (min-width: 600px) {
+  .game-quick-view .modal-inner {
+    grid-template-rows: 40px minmax(0, 1fr) auto;
+  }
+  .quick-view-details {
+    grid-column: 1 / -1;
+    max-height: 27dvh;
   }
 }

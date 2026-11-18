@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Check,
   Gamepad2,
-  Heart,
   Pencil,
   Play,
   Plus,
@@ -16,6 +15,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { errorText, post, request } from './api';
 import { ErrorNotice, GameThumbnail, Modal, Spinner } from './components';
 import GameQuickView from './GameQuickView';
+import { RatingSummary } from './PublicationMetrics';
 import { chatsChanged } from './context';
 import type { Chat, Publication } from './types';
 
@@ -48,23 +48,6 @@ export default function Feed() {
       alive = false;
     };
   }, [sort, mine]);
-  async function like(game: Publication) {
-    if (busy) return;
-    setBusy(game.id);
-    try {
-      const result = await request<{ liked: boolean; likes: number }>(
-        `/api/publications/${game.id}/like/`,
-        { method: 'PUT', body: JSON.stringify({ liked: !game.liked }) },
-      );
-      setGames((current) =>
-        current.map((item) => (item.id === game.id ? { ...item, ...result } : item)),
-      );
-    } catch (cause) {
-      setError(errorText(cause));
-    } finally {
-      setBusy(null);
-    }
-  }
   async function remix(game: Publication) {
     setBusy(game.id);
     try {
@@ -156,7 +139,7 @@ export default function Feed() {
             aria-label="Сортировка игр"
           >
             <option value="new">Сначала новые</option>
-            <option value="popular">Популярные</option>
+            <option value="popular">По оценке</option>
           </select>
         </label>
       </div>
@@ -201,18 +184,7 @@ export default function Feed() {
                   <h2>
                     <Link to={`/games/${game.id}`}>{game.title}</Link>
                   </h2>
-                  <button
-                    className={`like-button ${game.liked ? 'liked' : ''}`}
-                    onClick={() => like(game)}
-                    disabled={busy === game.id}
-                    aria-label={
-                      game.liked ? `Убрать лайк у ${game.title}` : `Поставить лайк ${game.title}`
-                    }
-                    aria-pressed={game.liked}
-                  >
-                    <Heart size={17} fill={game.liked ? 'currentColor' : 'none'} />
-                    {game.likes}
-                  </button>
+                  <RatingSummary game={game} />
                 </div>
                 <p className="game-author">
                   <span className="avatar-small">
@@ -277,7 +249,17 @@ export default function Feed() {
         </div>
       )}
       {preview && (
-        <GameQuickView key={preview.id} game={preview} onClose={() => setPreview(null)} />
+        <GameQuickView
+          key={preview.id}
+          game={preview}
+          onClose={() => setPreview(null)}
+          onRatingChange={(rating) => {
+            setGames((current) =>
+              current.map((game) => (game.id === preview.id ? { ...game, ...rating } : game)),
+            );
+            setPreview((current) => (current ? { ...current, ...rating } : current));
+          }}
+        />
       )}
       {editing && (
         <Modal title="Название в ленте" onClose={() => setEditing(null)}>

@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.core import signing
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import F
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404
@@ -477,16 +477,18 @@ def preview_view(request, token):
 def publications_view(request):
     from generation.schema import CONTRACT_VERSION
 
+    from .publication_analytics import annotated_publications
+
     if request.method == "GET":
-        qs = Publication.objects.filter(unavailable_at__isnull=True, revision__pipeline_version=CONTRACT_VERSION).select_related("owner", "revision", "source_chat").annotate(
-            like_count=Count("likes")
-        )
+        qs = annotated_publications(Publication.objects.filter(
+            unavailable_at__isnull=True, revision__pipeline_version=CONTRACT_VERSION
+        ).select_related("owner", "revision", "source_chat"), request.user)
         if request.query_params.get("mine") == "1":
             qs = qs.filter(owner=request.user)
         if revision_id := request.query_params.get("revision_id"):
             qs = qs.filter(revision_id=revision_id)
         qs = (
-            qs.order_by("-like_count", "-created_at")
+            qs.order_by(F("rating_average").desc(nulls_last=True), "-ratings_count", "-created_at")
             if request.query_params.get("sort") == "popular"
             else qs.order_by("-created_at")
         )

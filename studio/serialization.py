@@ -197,6 +197,8 @@ def chat_data(chat, detail=False):
 
 
 def publication_data(publication, user=None):
+    from .publication_analytics import analytics_data, rating_data
+
     own = bool(user and user.is_authenticated and publication.owner_id == user.id)
     auth = bool(user and user.is_authenticated)
     return {
@@ -215,6 +217,8 @@ def publication_data(publication, user=None):
         else None,
         "likes": publication.likes.count(),
         "liked": publication.likes.filter(user=user).exists() if auth else False,
+        **rating_data(publication, user),
+        "analytics": analytics_data(publication),
         "is_owner": own,
         "source_chat_id": str(publication.source_chat_id)
         if own and publication.source_chat and not publication.source_chat.deleted_at
