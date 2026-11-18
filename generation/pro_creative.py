@@ -27,16 +27,45 @@ BRIEF = obj({
 
 PLAN_GUIDANCE = """
 EXPERIMENTAL PRO v3: AUTHOR A RICH, COMPLETE GAME FROM A SHORT IDEA
-A short prompt is creative latitude, not a request for a bare demonstration. Unless the
-user specifies classic/exact/simple rules, choose experience_direction.scope=developed:
+INTERPRET THE REQUEST BEFORE INVENTING THE GAME
+A short request can be precise. A familiar named game, genre or classic ruleset carries
+meaning even when the user does not spell out its defining systems. Use your knowledge
+of the named reference. Establish its real-time/turn-based rhythm, movement/control,
+player role, core loop and character/resource progression before choosing a small scope.
+Preserve those defining properties in summary, core_loop, mechanics, progression and any
+split interface. Do not reduce a gameplay reference to its title, scenery, mood or one
+convenient mechanic. Original story and artwork do not require a different type of game.
+
+Respect the requested aspect: 'game like X' refers to gameplay; 'only the art/mood of X'
+does not import its rules. An explicit remix or change of genre/time model overrides the
+reference default. Do not force real-time onto a turn-based reference or ignore a user's
+explicit request for turn-based play. If a reference is unfamiliar or genuinely ambiguous,
+do not pretend to recognize it or invent its defining systems. Explain that uncertainty
+and use scope_refusal with one focused clarification if it prevents a faithful plan.
+
+Choose scope=faithful for a recognized gameplay reference or otherwise constrained request.
+Record observable promises for its defining gameplay, with origin=user and the exact
+reference phrase as quote; the requirement explains the implied property, not a fabricated
+verbatim user statement. New plot, map, enemy counts and optional mechanics are design.
+In scope reason explain what identifies the requested game and what CONTENT was reduced.
+Do not label all promises design and leave the reference only in request_reference.
+Before returning, check that the plan still describes the requested type of play. Replacing
+the reference's name must not be the only change needed to describe an unrelated genre.
+
+For an open-ended idea without such constraints, choose scope=developed:
 one recognizable core plus 2-3 connected supporting mechanics, a distinctive playable
 hook and a short challenge arc. Mechanics must change decisions and visibly affect one
 another (e.g. spending a resource changes the next threat), not be unrelated counters,
 decorations or a list of genres. Choose what fits THIS idea, not the same bonus/combo
 template every time. Teach through the first actions, then introduce a meaningful twist
 or escalation and a reachable satisfying ending. Keep restart and replay understandable.
-Do not require long grinding, huge maps, dozens of levels, an inventory framework, AI
-services, downloads or network play. Fit one self-contained mini-game and the real source
+Reduce content first: one encounter/quest/area, a few enemies/items and one meaningful
+upgrade can preserve an RPG loop. Keep real-time action real-time; a smaller map or simpler
+rendering is not permission to turn it into a turn-based board puzzle. A grid may organize
+world geometry without making actors wait for the player's move. Do not remove combat,
+equipment or progression when they define the request just to make implementation easier.
+Avoid long grinding, huge maps, dozens of levels, framework-sized inventories, AI services,
+downloads or network play. Fit one self-contained mini-game and the real source
 budget. Every promised mechanic must be implemented and testable through visible play.
 
 Use scope=faithful when explicit rules, a classic version, simplicity, accessibility or
@@ -75,6 +104,28 @@ scene/input are substantial independent tasks; still use the fixed mechanics API
 older instruction not to expand merely to justify splitting remains: richness serves
 the player's idea, not the number of agents. No extra planning/integrator/model calls.
 """
+
+
+def planning_base(text):
+    """Adjust scope instructions only for the current experimental planner."""
+    return text.replace(
+        'Preserve every explicit rule, genre, audience and scope constraint.',
+        'Preserve the intended game: explicit instructions and defining gameplay implied by a '
+        'familiar named reference or genre. Explicit requested changes take precedence.'
+    ).replace(
+        'For a vague request, choose a distinctive theme',
+        'Only when the idea is genuinely open-ended (not merely short), choose a distinctive theme'
+    ).replace(
+        'No RPG-sized inventory, multiplayer, external assets or backend.',
+        'Bound content and system size while preserving the requested genre: a small inventory, '
+        'equipment choice or skill upgrade is appropriate when central to it. '
+        'No multiplayer services, external assets or backend.'
+    ).replace(
+        "List only choices you added beyond the user's explicit request in assumptions.",
+        'List your content reductions and original additions in assumptions; do not treat a '
+        'different genre or time model as an innocent scope reduction.'
+    )
+
 
 CREATE_BUDGET = """
 COMPLETE EXPERIMENTAL GAME RESPONSE

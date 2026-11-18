@@ -124,10 +124,12 @@ def schema(request):
 def prompt(request):
     from .experience import enabled
     from .pro_creative import PLAN_GUIDANCE as CREATIVE_GUIDANCE
+    from .pro_creative import planning_base
     from .pro_parallel import PLAN_GUIDANCE
     from .pro_partition import PLAN_GUIDANCE as PARTITION_GUIDANCE
 
-    return PLAN_PROMPT + (PREFERENCE_GUIDANCE if request.get('plan_provenance') == PROVENANCE_VERSION else '') + (
+    base = planning_base(PLAN_PROMPT) if request.get('pro_parallel') == 3 else PLAN_PROMPT
+    return base + (PREFERENCE_GUIDANCE if request.get('plan_provenance') == PROVENANCE_VERSION else '') + (
         "\nPro: develop up to four tightly connected mechanics, a distinctive visual direction and a satisfying arc. Keep the implementation feasible as a self-contained mini-game."
         if request.get("generation_strategy") == "pro" else
         "\nLite: choose one core mechanic and at most one supporting mechanic. Keep rules explicit, implementation small, and the whole game complete."
