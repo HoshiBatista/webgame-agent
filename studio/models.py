@@ -54,10 +54,19 @@ class Chat(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class VariantBatch(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="variant_batches")
+    selected_revision = models.ForeignKey("Revision", null=True, on_delete=models.SET_NULL, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
 class Run(models.Model):
     ACTIVE = ("queued", "generating", "checking")
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name="runs")
+    variant_batch = models.ForeignKey(VariantBatch, null=True, on_delete=models.CASCADE, related_name="runs")
+    variant_index = models.PositiveSmallIntegerField(null=True)
     operation = models.CharField(max_length=16)
     prompt = models.TextField()
     audience = models.CharField(max_length=32, default="everyone")
@@ -117,9 +126,18 @@ class Run(models.Model):
             models.UniqueConstraint(fields=["chat", "idempotency_key"], name="studio_run_idempotency"),
             models.UniqueConstraint(
                 fields=["chat"],
-                condition=models.Q(status__in=("queued", "generating", "checking")),
+                condition=models.Q(variant_batch__isnull=True, status__in=("queued", "generating", "checking")),
                 name="studio_one_active_run",
             ),
+            models.CheckConstraint(
+                condition=(models.Q(variant_batch__isnull=True, variant_index__isnull=True) |
+                           models.Q(variant_batch__isnull=False, variant_index__isnull=False,
+                                    variant_index__range=(1, 4))),
+                name="studio_variant_slot",
+            ),
+            models.UniqueConstraint(fields=["variant_batch", "variant_index"],
+                condition=models.Q(variant_batch__isnull=False, status__in=("queued", "generating", "checking")),
+                name="studio_variant_one_active"),
         ]
 
     @property

@@ -11,7 +11,7 @@ from generation.pro_module_repair import saved_permission
 from generation.schema import CONTRACT_VERSION, response_schema, validate_response
 
 from .models import Chat, Invocation, Revision, Run
-from .services import DomainError, event, fingerprint, schedule
+from .services import DomainError, blocking_runs, event, fingerprint, latest_variant_attempt, schedule
 
 
 @transaction.atomic
@@ -30,10 +30,12 @@ def recover_saved_response(invocation_id, *, apply=False):
             or (source.error or {}).get("code") != "invalid_schema"
             or parent.status not in {"failed", "needs_attention"} or parent.cancel_requested):
         raise DomainError("not_recoverable", "Нужен завершённый ответ с известной ошибкой формата.", 409)
-    if chat.deleted_at or chat.runs.filter(status__in=Run.ACTIVE).exists():
+    if chat.deleted_at or blocking_runs(chat, parent.variant_batch_id, parent.variant_index).exists():
         raise DomainError("chat_busy", "Чат удалён или уже выполняет другое задание.", 409)
+    if parent.variant_batch_id and not latest_variant_attempt(parent):
+        raise DomainError("cannot_continue", "Для этого варианта уже сохранена новая попытка.", 409)
     base_id = source.request.get("base_revision")
-    if chat.current_revision_id != parent.base_revision_id:
+    if not parent.variant_batch_id and chat.current_revision_id != parent.base_revision_id:
         raise DomainError("base_changed", "Рабочая версия изменилась после сохранённого ответа.", 409)
     raw = source.raw_response if source.raw_response is not None else (source.error or {}).get("raw_response")
     try:
@@ -91,6 +93,7 @@ def recover_saved_response(invocation_id, *, apply=False):
     # The permanent policy flag also forbids inference after a crash/restart.
     run = Run.objects.create(
         chat=chat, operation=parent.operation, prompt=parent.prompt, audience=parent.audience,
+        variant_batch_id=parent.variant_batch_id, variant_index=parent.variant_index,
         provider=parent.provider, model=parent.model, model_profile=parent.model_profile,
         base_revision=parent.base_revision, continued_from=parent,
         source_revision=parent.source_revision, game_request=parent.game_request,

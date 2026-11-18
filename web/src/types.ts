@@ -133,6 +133,8 @@ export interface ApiErrorData {
 export interface Run {
   id: string;
   chat_id: string;
+  variant_batch_id?: string | null;
+  variant_index?: number | null;
   operation: string;
   generation_strategy?: 'lite' | 'pro' | 'lite_code_then_checks';
   game_plan?: {
@@ -201,7 +203,28 @@ export interface Chat extends ChatSummary {
   messages: Message[];
   revisions: Revision[];
   runs: Run[];
+  variant_batches?: VariantBatch[];
   source_publication: string | null;
+}
+export interface GameVariant {
+  index: number;
+  root_run_id: string;
+  run_id: string;
+  can_confirm: boolean;
+  status: RunStatus;
+  stage: string;
+  message: string;
+  revision: Pick<
+    Revision,
+    'id' | 'title' | 'artifact_hash' | 'accepted' | 'preview_url' | 'export_url'
+  > | null;
+}
+export interface VariantBatch {
+  id: string;
+  prompt: string;
+  created_at: string;
+  selected_revision_id: string | null;
+  variants: GameVariant[];
 }
 export interface PublicationRating {
   average_rating?: number | null;

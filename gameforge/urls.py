@@ -16,6 +16,8 @@ urlpatterns = [
     path("api/chats/", v.chats_view),
     path("api/chats/<uuid:ident>/", v.chat_view),
     path("api/chats/<uuid:ident>/runs/", v.runs_view),
+    path("api/chats/<uuid:ident>/variant-batches/", v.variant_batches_view),
+    path("api/chats/<uuid:ident>/variant-batches/<uuid:batch_id>/select/", v.select_variant_view),
     path("api/chats/<uuid:ident>/restore/", v.restore_view),
     path("api/chats/<uuid:ident>/feedback/", v.feedback_view),
     path("api/runs/<uuid:ident>/", v.run_view),

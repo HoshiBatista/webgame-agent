@@ -309,7 +309,7 @@ def store_candidate(run, materialized, base):
         pipeline_version=run.pipeline_version,
         requirement_manifest=run.requirement_manifest,
     )
-    if not chat.title_is_custom and chat.current_revision_id is None:
+    if not current.variant_batch_id and not chat.title_is_custom and chat.current_revision_id is None:
         from .titles import short_game_title
 
         chat.title = short_game_title(revision.title)
@@ -391,6 +391,8 @@ def request_for(run, base, findings, last_attempt_error=None):
 
         request["operation"] = "plan"
         request['plan_provenance'] = PROVENANCE_VERSION
+        if run.variant_batch_id:
+            request["variant_index"] = run.variant_index
     if request["operation"] == "edit":
         from .patch_repair import pending_permission
 

@@ -1,0 +1,346 @@
+"""Four ordinary Pro workers share one prompt and chat, never one mutable candidate."""
+
+import hashlib
+from concurrent.futures import ThreadPoolExecutor
+from copy import copy
+from decimal import Decimal
+from threading import Barrier
+from unittest.mock import patch
+
+import pytest
+from django.db import close_old_connections, connections
+from django.test import Client
+
+from generation.prompts import system_prompt
+from generation.providers.fake import generate as fixture_generate
+from studio.models import Budget, Chat, Invocation, Outbox, Run, User
+from studio.services import DomainError, budget_snapshot, reserve_invocation
+from studio.tasks import claim_run, process_run, request_for
+from studio.tests.test_completion import uncertain
+from studio.tests.test_staged_generation import PASS
+from studio.validation_tasks import process_validation
+
+pytestmark = pytest.mark.django_db(transaction=True)
+PROMPT = 'Сделай игру про попадание в цель'
+
+
+@pytest.fixture
+def workspace(client, settings):
+    settings.GAMEFORGE_PROVIDER = 'codex_api'
+    settings.GAMEFORGE_PRO_PROVIDER = 'codex_api'
+    settings.GAMEFORGE_PRO_ENABLED = True
+    settings.GAMEFORGE_PRO_ACCESS = 'local'
+    settings.GAMEFORGE_LOCAL_ONLY = True
+    settings.GAMEFORGE_APP_ORIGIN = 'http://127.0.0.1:8000'
+    settings.GAMEFORGE_CODEX_API_CONCURRENCY = 4
+    settings.GAMEFORGE_PRO_VISUAL_REVIEW_ENABLED = False
+    settings.GAMEFORGE_RUN_INLINE = False
+    owner = User.objects.create_user(username='four-pro-owner')
+    client.force_login(owner)
+    with (
+        patch('studio.tasks.dispatch_run'),
+        patch('studio.tasks.dispatch_outbox'),
+        patch('generation.providers.codex_api.available_models', return_value=[{'id': 'gpt-6-sol'}]),
+        patch('generation.providers.codex_api.prepare', side_effect=lambda request, job: {'job_id': job}),
+        patch('studio.services.tariff', return_value={'input': 0, 'cached': 0, 'output': 0}),
+        patch('validation.service.environment_identity', return_value='variants-test'),
+    ):
+        yield Chat.objects.create(owner=owner)
+
+
+def post(client, path, **payload):
+    return client.post(path, payload, content_type='application/json')
+
+
+def submit(client, chat, **changes):
+    payload = {'prompt': PROMPT, 'model_profile': 'pro', 'idempotency_key': 'four-first', **changes}
+    return post(client, f'/api/chats/{chat.pk}/variant-batches/', **payload)
+
+
+def create_batch(client, chat, **changes):
+    response = submit(client, chat, **changes)
+    assert response.status_code == 202, response.content
+    return response.json()
+
+
+def detail(client, chat):
+    response = client.get(f'/api/chats/{chat.pk}/')
+    assert response.status_code == 200, response.content
+    return response.json()
+
+
+def select(client, chat, batch, revision, **changes):
+    payload = {'revision_id': revision['id'], 'artifact_hash': revision['artifact_hash'],
+               'expected_current_revision_id': None, **changes}
+    return post(client, f"/api/chats/{chat.pk}/variant-batches/{batch['id']}/select/", **payload)
+
+
+def concurrently(items, action):
+    # Each thread acts like a separate worker/request on its own PostgreSQL connection.
+    def execute(item):
+        close_old_connections()
+        try:
+            return action(item)
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=len(items)) as pool:
+        return list(pool.map(execute, items))
+
+
+def test_duplicate_submissions_persist_one_prompt_and_four_ordinary_jobs(workspace):
+    clients = [Client() for _ in range(2)]
+    for client in clients:
+        client.force_login(workspace.owner)
+    entering = Barrier(2)
+
+    def same_request(client):
+        entering.wait(timeout=15)
+        return create_batch(client, workspace, audience='children')
+
+    first, other = concurrently(clients, same_request)
+    assert first['id'] == other['id']
+    assert first['selected_revision_id'] is None
+    assert [v['index'] for v in first['variants']] == [1, 2, 3, 4]
+    ids = {v['run_id'] for v in first['variants']}
+    assert len(ids) == 4 and ids == {v['run_id'] for v in other['variants']}
+    assert Run.objects.count() == Outbox.objects.count() == len(ids)
+    assert not Invocation.objects.exists()
+    assert list(workspace.messages.filter(role='user').values_list('content', flat=True)) == [PROMPT]
+    for run in workspace.runs.all():
+        assert str(run.id) in ids
+        assert (run.prompt, run.audience, run.model_profile, run.provider) == (
+            PROMPT, 'children', 'pro', 'codex_api')
+        assert run.planning_required and not run.pro_parallel
+
+    client = clients[0]
+    assert submit(client, workspace, prompt='Измени запрос').status_code == 409
+    assert submit(client, workspace, idempotency_key='different').status_code == 409
+    assert post(client, f'/api/chats/{workspace.pk}/runs/', prompt=PROMPT,
+                model_profile='pro', idempotency_key='ordinary').status_code == 409
+    assert Run.objects.count() == Outbox.objects.count() == 4
+
+
+def test_four_model_requests_overlap_and_each_game_can_be_exported_and_selected(client, workspace):
+    batch = create_batch(client, workspace)
+    rendezvous = Barrier(4)
+
+    def model(request, **kwargs):
+        if request['operation'] == 'plan':
+            rendezvous.wait(timeout=20)
+        result = fixture_generate(request, **kwargs)
+        if request['operation'] == 'create':
+            # Four distinct games make a mistaken preview/current revision observable.
+            job_id = request['codex_api']['job_id']
+            number = Invocation.objects.get(pk=job_id).run.variant_index
+            css = next(file for file in result['response']['files'] if file['path'] == 'styles.css')
+            css['content'] += f'\nbody {{ --variant-number: {number}; }}'
+        return result
+
+    with (patch('generation.service.generate', side_effect=model),
+          patch('validation.service.validate', return_value=PASS)):
+        concurrently([variant['run_id'] for variant in batch['variants']], process_run)
+    loaded = detail(client, workspace)
+    [batch] = loaded['variant_batches']
+    assert loaded['current_revision'] is None and batch['selected_revision_id'] is None
+    assert workspace.revisions.count() == 4
+    assert sorted(workspace.revisions.values_list('number', flat=True)) == [1, 2, 3, 4]
+    assert len({r['artifact_hash'] for r in loaded['revisions']}) == 4
+    ordinary_chat = Chat.objects.create(owner=workspace.owner)
+    ordinary = post(client, f'/api/chats/{ordinary_chat.pk}/runs/', prompt=PROMPT, model_profile='pro',
+                    idempotency_key='standard-pro')
+    assert ordinary.status_code == 202
+    ordinary_plan = request_for(Run.objects.get(pk=ordinary.json()['id']), None, [])
+    plans = [run.invocations.get(request__operation='plan').request
+             for run in workspace.runs.order_by('variant_index')]
+    assert all(plan['prompt'] == plan['game_request'] == PROMPT for plan in plans)
+    directions = [system_prompt(plan) for plan in plans]
+    assert directions[0] == system_prompt(ordinary_plan)
+    assert len(set(directions)) == 4
+    for entry in batch['variants']:
+        run = Run.objects.get(pk=entry['run_id'])
+        assert entry['status'] == 'succeeded', run.error
+        assert list(run.invocations.order_by('attempt').values_list('request__operation', flat=True)) == [
+            'plan', 'create']
+        revision = entry['revision']
+        assert revision['accepted'] and str(run.result_revision_id) == revision['id']
+        exported = client.get(revision['export_url'])
+        assert hashlib.sha256(exported.content).hexdigest() == revision['artifact_hash']
+        assert f"--variant-number: {entry['index']}".encode() in exported.content
+        assert revision['preview_url']
+
+    chosen = batch['variants'][2]['revision']
+    assert select(client, workspace, batch, chosen, revision_id='not-a-uuid').status_code in (400, 404)
+    assert select(client, workspace, batch, chosen, artifact_hash='0' * 64).status_code in (400, 409)
+    selected = select(client, workspace, batch, chosen)
+    assert selected.status_code == 200, selected.content
+    assert selected.json()['current_revision']['id'] == chosen['id']
+    assert select(client, workspace, batch, chosen).status_code == 200
+    other = batch['variants'][0]['revision']
+    assert select(client, workspace, batch, other).status_code == 409
+    assert select(client, workspace, batch, other, expected_current_revision_id=chosen['id']).status_code == 200
+    assert select(client, workspace, batch, chosen, expected_current_revision_id=other['id']).status_code == 200
+    assert workspace.revisions.count() == 4 and Invocation.objects.count() == 8
+    edit = post(client, f'/api/chats/{workspace.pk}/runs/', prompt='Сделай цель крупнее', idempotency_key='edit',
+                model_profile='pro', source_revision_id=chosen['id'], source_artifact_hash=chosen['artifact_hash'])
+    assert edit.status_code == 202, edit.content
+    assert edit.json()['source_revision_id'] == edit.json()['base_revision_id'] == chosen['id']
+    assert not Run.objects.get(pk=edit.json()['id']).pro_parallel
+
+
+def test_early_pick_survives_cancelled_and_late_siblings_and_four_edits_use_one_source(client, workspace):
+    batch = create_batch(client, workspace)
+    one, two, three, four = [item['run_id'] for item in batch['variants']]
+    with (patch('generation.service.generate', side_effect=fixture_generate),
+          patch('validation.service.validate', return_value=PASS)):
+        process_run(one)
+        finished = detail(client, workspace)['variant_batches'][0]['variants'][0]
+        assert finished['status'] == 'succeeded', Run.objects.get(pk=one).error
+        chosen = finished['revision']
+        assert select(client, workspace, batch, chosen).status_code == 200
+        assert post(client, f'/api/runs/{two}/cancel/').status_code == 200
+        process_run(three)
+        process_run(four)
+
+    refreshed = detail(client, workspace)
+    assert refreshed['current_revision']['id'] == chosen['id']
+    [group] = refreshed['variant_batches']
+    assert group['selected_revision_id'] == chosen['id']
+    assert [variant['status'] for variant in group['variants']] == ['succeeded', 'cancelled', 'succeeded', 'succeeded']
+    wrong_source = submit(client, workspace, idempotency_key='edits', source_revision_id=chosen['id'],
+                          source_artifact_hash='1' * 64)
+    assert wrong_source.status_code == 409
+    assert Run.objects.count() == 4
+    edits = create_batch(client, workspace, prompt='Поменяй фон', idempotency_key='edits',
+                         source_revision_id=chosen['id'], source_artifact_hash=chosen['artifact_hash'])
+    runs = Run.objects.filter(variant_batch_id=edits['id'])
+    assert runs.count() == 4 and all(str(r.base_revision_id) == str(r.source_revision_id) == chosen['id']
+                                     and r.operation == 'edit' for r in runs)
+    assert len({r['run_id'] for r in edits['variants']}) == 4
+    variant = runs.get(variant_index=3)
+    ordinary = copy(variant)
+    ordinary.variant_batch_id = ordinary.variant_index = None
+    for candidate_id, expected_op in ((None, 'edit'), (chosen['id'], 'repair')):
+        variant.candidate_revision_id = ordinary.candidate_revision_id = candidate_id
+        actual = request_for(variant, variant.source_revision, [])
+        assert actual['operation'] == expected_op and 'variant_index' not in actual
+        assert actual == request_for(ordinary, ordinary.source_revision, [])
+
+
+def test_capacity_and_aggregate_budget_govern_the_four_runs(client, workspace, settings):
+    batch = create_batch(client, workspace)
+    runs = [Run.objects.get(pk=v['run_id']) for v in batch['variants']]
+    settings.GAMEFORGE_CODEX_API_CONCURRENCY = 2
+    assert claim_run(runs[0].id) and claim_run(runs[1].id)
+    assert claim_run(runs[2].id) is False and claim_run(runs[3].id) is False
+    settings.GAMEFORGE_CODEX_API_CONCURRENCY = 4
+    assert claim_run(runs[2].id) and claim_run(runs[3].id)
+    Budget.objects.update_or_create(pk=1, defaults={'limit_usd': Decimal('2')})
+    start = Barrier(4)
+
+    def reserve(run):
+        start.wait(timeout=15)
+        try:
+            reserve_invocation(run, {'operation': 'plan'})
+        except DomainError as exc:
+            return exc.code
+        return 'admitted'
+
+    with patch('generation.service.estimate_reservation', return_value=Decimal('1')):
+        outcomes = concurrently(runs, reserve)
+    assert sorted(outcomes) == ['admitted', 'admitted', 'budget_exhausted', 'budget_exhausted']
+    assert Invocation.objects.count() == 2 and budget_snapshot()['reserved_usd'] == 2
+
+
+def test_manual_recheck_and_confirmation_only_accept_their_variant(client, workspace):
+    batch = create_batch(client, workspace)
+    one, two, *_ = [item['run_id'] for item in batch['variants']]
+    review = {**uncertain(), 'environment': 'variants-test'}
+    with patch('generation.service.generate', side_effect=fixture_generate):
+        with patch('validation.service.validate', return_value=PASS):
+            process_run(one)
+        chosen = detail(client, workspace)['variant_batches'][0]['variants'][0]['revision']
+        assert select(client, workspace, batch, chosen).status_code == 200
+        with patch('validation.service.validate', return_value=review):
+            process_run(two)
+    second = client.get(f'/api/runs/{two}/').json()
+    assert second['can_confirm'], (second['status'], second['error'])
+    revision = detail(client, workspace)['variant_batches'][0]['variants'][1]['revision']
+    assert not revision['accepted']
+    assert select(client, workspace, batch, revision, expected_current_revision_id=chosen['id']).status_code == 404
+    with (patch('studio.validation_tasks.dispatch_validation'),
+          patch('validation.service.validate', return_value=review),
+          patch('generation.service.generate') as model):
+        recheck = post(client, f"/api/revisions/{revision['id']}/validations/",
+                       idempotency_key='recheck', artifact_hash=revision['artifact_hash'])
+        assert recheck.status_code == 202, recheck.content
+        process_validation(recheck.json()['id'])
+        confirmation = client.get(f'/api/runs/{two}/').json()['confirmation']
+        assert confirmation and confirmation['report_id'] != second['confirmation']['report_id']
+        accepted = post(client, f'/api/runs/{two}/confirm/', confirmed=True, **confirmation)
+        assert accepted.status_code == 200, accepted.content
+        model.assert_not_called()
+    refreshed = detail(client, workspace)
+    assert refreshed['current_revision']['id'] == refreshed['variant_batches'][0]['selected_revision_id'] == chosen['id']
+    assert refreshed['variant_batches'][0]['variants'][1]['revision']['accepted']
+    assert select(client, workspace, batch, revision, expected_current_revision_id=chosen['id']).status_code == 200
+
+
+def test_continuation_keeps_its_slot_and_respects_unknown_cost_after_another_pick(client, workspace):
+    batch = create_batch(client, workspace)
+    one, two, *_ = [item['run_id'] for item in batch['variants']]
+    with (patch('generation.service.generate', side_effect=fixture_generate),
+          patch('validation.service.validate', return_value=PASS)):
+        process_run(one)
+    chosen = detail(client, workspace)['variant_batches'][0]['variants'][0]['revision']
+    assert select(client, workspace, batch, chosen).status_code == 200
+    stopped = Run.objects.get(pk=two)
+    stopped.status = 'unknown'
+    stopped.save(update_fields=['status'])
+    liability = Invocation.objects.create(run=stopped, state='unknown', request={}, attempt=1,
+                                         reservation_usd=Decimal('1'))
+    url = f'/api/runs/{two}/continue/'
+    assert post(client, url, idempotency_key='retry-slot').status_code == 409
+    retry = post(client, url, idempotency_key='retry-slot', accept_unknown_cost=True)
+    assert retry.status_code == 202, retry.content
+    retry_id = retry.json()['id']
+    continuation = Run.objects.get(pk=retry_id)
+    assert continuation.variant_index == stopped.variant_index
+    assert continuation.variant_batch_id == stopped.variant_batch_id
+    assert continuation.base_revision_id == stopped.base_revision_id
+    assert liability.pk in Invocation.objects.filter(state='unknown').values_list('id', flat=True)
+    assert budget_snapshot()['unknown_usd'] == 1
+    assert post(client, url, idempotency_key='second-retry', accept_unknown_cost=True).status_code == 409
+    assert post(client, url, idempotency_key='retry-slot', accept_unknown_cost=True).json()['id'] == retry_id
+    refreshed = detail(client, workspace)
+    assert refreshed['current_revision']['id'] == chosen['id']
+    [group] = refreshed['variant_batches']
+    assert group['variants'][1]['root_run_id'] == two
+    assert group['variants'][1]['run_id'] == retry_id and len(group['variants']) == 4
+    # During Django's cascade, removing the old run temporarily nulls the
+    # continuation link. Its slot must not conflict with the original run.
+    workspace.owner.delete()
+    assert not Run.objects.exists() and not Chat.objects.exists()
+
+
+def test_owner_boundary_and_explicit_pro_are_checked_before_new_work(client, workspace, settings):
+    for profile in ('lite', 'pro_multi'):
+        assert submit(client, workspace, model_profile=profile).status_code in (400, 409)
+    assert not Run.objects.exists() and not Outbox.objects.exists()
+    settings.GAMEFORGE_PRO_ACCESS = 'restricted'
+    assert submit(client, workspace).status_code == 403
+    assert not Run.objects.exists() and not Outbox.objects.exists()
+    settings.GAMEFORGE_PRO_ACCESS = 'local'
+    batch = create_batch(client, workspace)
+    foreign = User.objects.create_user(username='other-variant-owner')
+    client.force_login(foreign)
+    response = submit(client, workspace)
+    assert response.status_code == 404
+    assert client.get(f'/api/chats/{workspace.pk}/').status_code == 404
+    assert select(client, workspace, batch, {'id': batch['id'], 'artifact_hash': '0' * 64}).status_code == 404
+    assert client.get(f"/api/runs/{batch['variants'][0]['run_id']}/").status_code == 404
+    assert Run.objects.count() == 4
+    client.force_login(workspace.owner)
+    assert client.delete(f'/api/chats/{workspace.pk}/').status_code == 204
+    assert workspace.runs.filter(status='cancelled').count() == 4
+    assert submit(client, workspace).status_code == 404

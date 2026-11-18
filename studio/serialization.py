@@ -106,6 +106,8 @@ def run_data(run, budget=None):
     return {
         "id": str(run.id),
         "chat_id": str(run.chat_id),
+        "variant_batch_id": str(run.variant_batch_id) if run.variant_batch_id else None,
+        "variant_index": run.variant_index,
         "operation": run.operation,
         "generation_profile": run.generation_profile,
         "source_format": run.source_format,
@@ -132,7 +134,7 @@ def run_data(run, budget=None):
         "can_continue": run.status in ("needs_attention", "failed", "cancelled") and not unknown
         and (not candidate_report or candidate_report.assessment.get("action") != "review" or awaiting_scenarios),
         "can_retry_unknown": run.status in ("unknown", "cancelled", "needs_attention", "failed", "unverified") and unknown
-        and run.chat.current_revision_id == run.base_revision_id,
+        and (bool(run.variant_batch_id) or run.chat.current_revision_id == run.base_revision_id),
         "can_confirm": confirmation is not None,
         "confirmation": {"artifact_hash": run.candidate_revision.artifact_hash,
                          "report_id": confirmation.id,
@@ -163,12 +165,15 @@ def chat_data(chat, detail=False):
         "source_publication": str(chat.source_publication_id) if chat.source_publication_id else None,
     }
     if detail:
+        from .variants import batch_data, batches_for
+
         last = chat.runs.order_by("-created_at").first()
         data.update(
             {
                 "candidate_revision": revision_data(last.candidate_revision or (
                     last.source_revision if last.status in {"failed", "needs_attention", "cancelled", "unknown"} else None
-                )) if last else None,
+                )) if last and not last.variant_batch_id else None,
+                "variant_batches": [batch_data(batch) for batch in batches_for(chat)],
                 "messages": [
                     {
                         "id": str(m.id),

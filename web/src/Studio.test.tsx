@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Studio from './Studio';
 import { SessionContext, type StudioDraft } from './context';
 import { ApiError, post, request } from './api';
-import type { Chat, Revision, Run, Session } from './types';
+import type { Chat, GameVariant, Revision, Run, Session, VariantBatch } from './types';
 
 vi.mock('./api', async (original) => ({
   ...(await original<typeof import('./api')>()),
@@ -55,9 +55,13 @@ const session = {
   },
   budget: { limit_usd: 50, spent_usd: 0, reserved_usd: 0, unknown_usd: 0, available_usd: 50 },
 } as Session;
-function setup(path = '/chats/one', refresh = vi.fn().mockResolvedValue(undefined)) {
+function setup(
+  path = '/chats/one',
+  refresh = vi.fn().mockResolvedValue(undefined),
+  activeSession = session,
+) {
   return render(
-    <SessionContext.Provider value={{ session, updateSession: vi.fn(), refresh }}>
+    <SessionContext.Provider value={{ session: activeSession, updateSession: vi.fn(), refresh }}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route path="/chats/:id" element={<Studio />} />
@@ -1302,5 +1306,229 @@ describe('manual game confirmation', () => {
       ).not.toBeInTheDocument(),
     );
     expect(post).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('four ordinary Pro variants', () => {
+  function profile(id: string): Session {
+    return {
+      ...session,
+      preferences: { ...session.preferences, model_profile: id },
+      capabilities: {
+        ...session.capabilities,
+        model_profiles: ['pro', 'lite', 'pro_multi'].map((key) => ({
+          id: key,
+          name: key,
+          description: '',
+          available: true,
+          unavailable_reason: '',
+        })),
+      },
+    };
+  }
+  const games = Array.from({ length: 4 }, (_, i) => ({
+    ...revision,
+    id: `r-${i + 1}`,
+    title: `Игра ${i + 1}`,
+    number: i + 2,
+    artifact_hash: `hash-${i + 1}`,
+    preview_url: `http://localhost:8001/p/game-${i + 1}`,
+  }));
+  function batch(): VariantBatch {
+    return {
+      id: 'four',
+      created_at: '',
+      prompt: 'Собери планеты',
+      selected_revision_id: null,
+      variants: games.map((game, i) => ({
+        index: i + 1,
+        root_run_id: `slot-${i + 1}`,
+        run_id: `slot-${i + 1}`,
+        status: 'succeeded',
+        stage: 'done',
+        message: '',
+        can_confirm: false,
+        revision: game,
+      })),
+    };
+  }
+  function detail(group: VariantBatch, current: Revision | null = null): Chat {
+    return {
+      ...chat,
+      current_revision: current,
+      candidate_revision: null,
+      messages: [
+        { id: 'prompt', role: 'user', content: group.prompt, run_id: 'slot-1', created_at: '' },
+      ],
+      revisions: games,
+      runs: [],
+      variant_batches: [group],
+    };
+  }
+  it.each(['lite', 'pro_multi'])(
+    'offers the checkbox only for ordinary Pro, not %s',
+    async (id) => {
+      setup(undefined, undefined, profile(id));
+      await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+      expect(
+        screen.queryByRole('checkbox', { name: /четыре варианта Pro/ }),
+      ).not.toBeInTheDocument();
+    },
+  );
+  it('uses a single idempotent batch submission for the exact shown revision', async () => {
+    const group = batch();
+    vi.mocked(post).mockResolvedValue(group);
+    setup(undefined, undefined, profile('pro'));
+    const toggle = await screen.findByRole('checkbox', { name: /четыре варианта Pro/ });
+    expect(toggle).not.toBeChecked();
+    fireEvent.click(toggle);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Что изменить в игре' }), {
+      target: { value: group.prompt },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
+    await screen.findByRole('region', { name: 'Варианты игры' });
+    expect(post).toHaveBeenCalledExactlyOnceWith(
+      '/api/chats/one/variant-batches/',
+      expect.objectContaining({
+        model_profile: 'pro',
+        prompt: group.prompt,
+        idempotency_key: expect.any(String),
+        source_revision_id: revision.id,
+        source_artifact_hash: revision.artifact_hash,
+      }),
+    );
+    expect(toggle).not.toBeChecked();
+  });
+  it('reuses the key after a lost first acknowledgement rather than starting a second batch', async () => {
+    const group = batch();
+    const empty = { ...chat, id: 'new-game', current_revision: null, revisions: [] };
+    vi.mocked(request).mockResolvedValue(empty);
+    vi.mocked(post)
+      .mockResolvedValueOnce(empty)
+      .mockRejectedValueOnce(new ApiError({ code: 'network', message: 'Нет ответа' }, 0))
+      .mockResolvedValueOnce(group);
+    setup('/chats/new', undefined, profile('pro'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /четыре варианта Pro/ }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: group.prompt } });
+    fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
+    await screen.findByText('Нет ответа');
+    expect(screen.getByRole('textbox')).toHaveValue(group.prompt);
+    expect(post).toHaveBeenCalledTimes(2);
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Создать 4 варианта' })).toBeEnabled(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
+    await waitFor(() =>
+      expect(vi.mocked(post).mock.calls.map(([path]) => path)).toEqual([
+        '/api/chats/',
+        '/api/chats/new-game/variant-batches/',
+        '/api/chats/new-game/variant-batches/',
+      ]),
+    );
+    await screen.findByRole('region', { name: 'Варианты игры' });
+    const [first, retry] = vi.mocked(post).mock.calls.slice(1);
+    expect(first).toEqual([
+      '/api/chats/new-game/variant-batches/',
+      expect.objectContaining({
+        source_revision_id: null,
+        source_artifact_hash: null,
+        idempotency_key: expect.any(String),
+      }),
+    ]);
+    expect(retry).toEqual(first);
+  });
+  it('plays each saved game without changing the edit source and explicitly selects the winner', async () => {
+    const group = batch();
+    let saved = detail(group);
+    vi.mocked(request).mockImplementation(async () => saved);
+    vi.mocked(post).mockImplementation(async (path) => {
+      if (path.endsWith('/select/')) {
+        saved = detail({ ...group, selected_revision_id: games[2].id }, games[2]);
+        return saved;
+      }
+      return { id: 'followup', status: 'queued' } as Run;
+    });
+    setup(undefined, undefined, profile('pro'));
+    const list = await screen.findByRole('region', { name: 'Варианты игры' });
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    for (const [i, game] of games.entries()) {
+      fireEvent.click(within(list).getByRole('button', { name: `Играть в вариант ${i + 1}` }));
+      const player = within(screen.getByRole('dialog')).getByTitle(game.title);
+      expect(player).toHaveAttribute('src', game.preview_url + '?audio_control=1');
+      expect(player).toHaveAttribute('sandbox', 'allow-scripts');
+      fireEvent.click(screen.getByRole('button', { name: 'К вариантам' }));
+    }
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать вариант 3' }));
+    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/chats/one/variant-batches/four/select/', {
+      revision_id: games[2].id,
+      artifact_hash: games[2].artifact_hash,
+      expected_current_revision_id: null,
+    });
+    expect(within(list).getByText('Текущая версия')).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: 'Добавь монеты' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    expect(post).toHaveBeenLastCalledWith(
+      '/api/chats/one/runs/',
+      expect.objectContaining({
+        source_revision_id: games[2].id,
+        source_artifact_hash: games[2].artifact_hash,
+        source_is_historical: false,
+      }),
+    );
+  });
+  it('can try a draft, and requires consent for its exact report while another slot is active', async () => {
+    const group = batch();
+    const variant = group.variants[1];
+    Object.assign(variant, {
+      revision: { ...games[1], accepted: false },
+      status: 'unverified',
+      can_confirm: true,
+    });
+    Object.assign(group.variants[2], {
+      status: 'generating',
+      revision: null,
+    } satisfies Partial<GameVariant>);
+    Object.assign(group.variants[3], {
+      status: 'failed',
+      revision: null,
+      message: 'Исчерпан бюджет',
+    });
+    vi.mocked(request).mockImplementation(async (path) =>
+      path === '/api/runs/slot-2/'
+        ? {
+            id: 'slot-2',
+            can_confirm: true,
+            candidate_revision_id: games[1].id,
+            confirmation: {
+              artifact_hash: games[1].artifact_hash,
+              report_id: 42,
+              requirements: ['Подберите монету.'],
+            },
+          }
+        : detail(group),
+    );
+    vi.mocked(post).mockResolvedValue({});
+    setup(undefined, undefined, profile('pro'));
+    await screen.findByRole('button', { name: 'Играть в вариант 2' });
+    expect(screen.queryByRole('button', { name: 'Выбрать вариант 2' })).not.toBeInTheDocument();
+    expect(screen.getByText('Исчерпан бюджет')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Выбрать вариант 1' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Проверить результат варианта 2' }));
+    const confirm = await screen.findByRole('button', { name: 'Подтвердить результат' });
+    expect(confirm).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole('checkbox', { name: 'Я сыграл и проверил перечисленные условия' }),
+    );
+    fireEvent.click(confirm);
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/runs/slot-2/confirm/', {
+      confirmed: true,
+      artifact_hash: games[1].artifact_hash,
+      report_id: 42,
+    });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Остановить вариант 3' }));
+    expect(post).toHaveBeenLastCalledWith('/api/runs/slot-3/cancel/', {});
   });
 });

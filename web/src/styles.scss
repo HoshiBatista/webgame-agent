@@ -4744,6 +4744,115 @@ svg {
   background: var(--soft);
   color: var(--ink);
 }
+.variant-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-right: 6px;
+  padding-inline: 5px;
+  color: var(--ink);
+  font-weight: 650;
+  cursor: pointer;
+
+  input {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+}
+.variant-hint,
+.variant-status,
+.variant-batch header > span,
+.variant-info small {
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.variant-hint {
+  margin: 6px 0 0;
+}
+.variant-batch {
+  margin: 0 0 24px;
+  header,
+  li,
+  .variant-actions,
+  .variant-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header,
+  li {
+    justify-content: space-between;
+  }
+  h3 {
+    font-size: var(--text-body);
+    margin: 0;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 9px 0 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  li {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    background: var(--surface);
+    & + li {
+      border-top: 1px solid var(--border);
+    }
+    &.is-current {
+      background: var(--accent-soft);
+    }
+  }
+}
+.variant-info {
+  min-width: 0;
+  flex: 1 1 115px;
+  overflow-wrap: anywhere;
+  strong,
+  small {
+    display: block;
+  }
+  p {
+    margin: 3px 0 0;
+    font-size: var(--text-small);
+  }
+}
+.variant-actions {
+  flex-wrap: wrap;
+}
+.variant-preview {
+  width: min(920px, calc(100% - 24px));
+  max-height: 96dvh;
+  .modal-inner {
+    padding: clamp(10px, 2vw, 20px);
+  }
+  .game-frame {
+    height: min(68dvh, 720px);
+    border-radius: 8px;
+  }
+}
+.variant-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+@media (max-height: 500px) {
+  .variant-preview {
+    .modal-heading {
+      margin-bottom: 4px;
+    }
+    .game-frame {
+      height: calc(92dvh - 105px);
+    }
+  }
+}
 .template-page-controls {
   display: flex;
   align-items: center;

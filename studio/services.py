@@ -8,7 +8,7 @@ from decimal import ROUND_UP, Decimal
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -288,9 +288,27 @@ def schedule(run):
     transaction.on_commit(lambda: dispatch_run(run.id))
 
 
+def blocking_runs(chat, variant_batch_id=None, variant_index=None):
+    active = chat.runs.filter(status__in=Run.ACTIVE)
+    if variant_batch_id:
+        active = active.filter(~Q(variant_batch_id=variant_batch_id) | Q(variant_index=variant_index))
+    return active
+
+
+def latest_variant_attempt(run):
+    return (Run.objects.filter(variant_batch_id=run.variant_batch_id, variant_index=run.variant_index)
+            .order_by("-created_at", "-id").values_list("id", flat=True).first() == run.pk)
+
+
 @transaction.atomic
-def create_run(chat, data, *, continued_from=None, authorize=None, check_only=False):
+def create_run(chat, data, *, continued_from=None, authorize=None, check_only=False, variant_batch=None):
     chat = Chat.objects.select_for_update().get(pk=chat.pk, deleted_at__isnull=True)
+    variant_index = 1 if variant_batch else None
+    if continued_from and continued_from.variant_batch_id:
+        variant_batch = continued_from.variant_batch
+        variant_index = continued_from.variant_index
+    if variant_batch and variant_batch.chat_id != chat.pk:
+        raise DomainError("invalid_variant", "Серия вариантов недоступна в этом чате.", 409)
     key = data.get("idempotency_key")
     if not isinstance(key, str) or not key.strip() or len(key) > 100:
         raise DomainError("idempotency_required", "Укажите ключ запроса для защиты от повторной отправки.")
@@ -301,6 +319,9 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if not isinstance(audience, str) or audience not in AUDIENCES:
         raise DomainError("invalid_audience", "Неизвестная аудитория.")
     previous = Run.objects.filter(chat=chat, idempotency_key=key).first()
+    if previous and (previous.variant_batch_id != (variant_batch.pk if variant_batch else None)
+                     or previous.variant_index != variant_index):
+        raise DomainError("idempotency_conflict", "Этот ключ уже использован для другого запроса.", 409)
     acknowledged_run = None
     if data.get("acknowledge_unknown_run_id"):
         if continued_from or check_only:
@@ -319,6 +340,8 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     profile_id = data.get("model_profile", default_choice)
     if not isinstance(profile_id, str) or profile_id not in {"", "pro", "lite", "pro_multi"}:
         raise DomainError("invalid_model_profile", "Выберите Pro или Lite.")
+    if variant_batch and profile_id != "pro":
+        raise DomainError("invalid_model_profile", "Четыре варианта доступны для обычной Pro.")
     if inherited and profile_id == inherited.model_profile:
         provider, model = inherited.provider, inherited.model
     elif profile_id:
@@ -418,8 +441,11 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         selected_source and selected_source.pipeline_version != CONTRACT_VERSION
     ):
         raise DomainError('unsupported_game', 'Старый игровой формат больше не поддерживается. Создайте новую игру.', 409)
-    if chat.runs.filter(status__in=Run.ACTIVE).exists():
+    sibling_batch_id = continued_from.variant_batch_id if continued_from else None
+    if blocking_runs(chat, sibling_batch_id, variant_index).exists():
         raise DomainError("chat_busy", "В этом чате уже выполняется задание.", 409)
+    if sibling_batch_id and not latest_variant_attempt(continued_from):
+        raise DomainError("cannot_continue", "Для этого варианта уже сохранена новая попытка.", 409)
     if continued_from and continued_from.status not in (
         "needs_attention",
         "unverified",
@@ -442,13 +468,13 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if continued_from and (unknown or continued_from.status == "unknown") and not check_only:
         if not unknown or not accept_unknown_cost:
             raise DomainError("cannot_continue", "Сначала нужно уточнить состояние запроса.", 409)
-        if chat.current_revision_id != continued_from.base_revision_id:
+        if not variant_batch and chat.current_revision_id != continued_from.base_revision_id:
             raise DomainError(
                 "retry_base_changed",
                 "После этого запроса рабочая версия изменилась. Отправьте новое описание к текущей игре.",
                 409,
             )
-    base = chat.current_revision
+    base = continued_from.base_revision if variant_batch and continued_from else chat.current_revision
     candidate = continued_from.candidate_revision if continued_from else None
     source = continued_from.source_revision if continued_from else None
     if check_only and not candidate and continued_from and (continued_from.error or {}).get("code") == "test_only_change":
@@ -468,7 +494,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         elif chat.revisions.exists():
             raise DomainError("source_required", "Выберите версию игры для доработки.", 409)
     if check_only and (
-        not candidate or not continued_from or chat.current_revision_id != continued_from.base_revision_id
+        not candidate or not continued_from or (not variant_batch and chat.current_revision_id != continued_from.base_revision_id)
     ):
         raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
     operation = "repair" if candidate or continued_from else ("edit" if source else "create")
@@ -545,6 +571,8 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     run = Run.objects.create(
         helper_catalog=helper_catalog,
         chat=chat,
+        variant_batch=variant_batch,
+        variant_index=variant_index,
         operation=operation,
         prompt=prompt.strip(),
         audience=audience,
@@ -608,10 +636,18 @@ def cancel_run(run):
     return run
 
 
+def choose_working_revision(chat, revision):
+    """Called with the chat locked, after validating the revision and its owner."""
+    chat.current_revision = revision
+    if not chat.title_is_custom:
+        chat.title = short_game_title(revision.title)
+    chat.save(update_fields=["current_revision", "title", "updated_at"])
+
+
 @transaction.atomic
 def finish_run(run_id, fence, status, message, *, error=None, revision=None):
     chat_id = Run.objects.only("chat_id").get(pk=run_id).chat_id
-    Chat.objects.select_for_update().get(pk=chat_id)
+    chat = Chat.objects.select_for_update().get(pk=chat_id)
     run = Run.objects.select_for_update(of=("self",)).select_related("chat").get(pk=run_id)
     if run.fence != fence or run.cancel_requested or run.chat.deleted_at:
         return False
@@ -641,16 +677,12 @@ def finish_run(run_id, fence, status, message, *, error=None, revision=None):
         revision.accepted = True
         revision.verification = "automatic"
         revision.save(update_fields=["accepted", "verification"])
-        chat = Chat.objects.select_for_update().get(pk=run.chat_id)
-        # A late result can never overwrite another accepted base.
-        if chat.current_revision_id != run.base_revision_id:
-            raise DomainError(
-                "base_changed", "Рабочая версия уже изменилась. Результат сохранён как черновик.", 409
-            )
-        chat.current_revision = revision
-        if not chat.title_is_custom:
-            chat.title = short_game_title(revision.title)
-        chat.save(update_fields=["current_revision", "title", "updated_at"])
+        if not run.variant_batch_id:
+            if chat.current_revision_id != run.base_revision_id:
+                raise DomainError(
+                    "base_changed", "Рабочая версия уже изменилась. Результат сохранён как черновик.", 409
+                )
+            choose_working_revision(chat, revision)
     run.save()
     responses = run.invocations.filter(state="settled", error__isnull=True, response__isnull=False)
     if run.pro_parallel:

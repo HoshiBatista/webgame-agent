@@ -59,9 +59,19 @@ def confirmation_report(run):
         return None
     from .models import Chat, ValidationTask
 
-    if (not Chat.objects.filter(pk=run.chat_id, current_revision_id=run.base_revision_id).exists()
-            or run.chat.runs.filter(status__in=run.ACTIVE).exists()
-            or run.candidate_revision.validations.filter(status__in=ValidationTask.ACTIVE).exists()):
+    if run.variant_batch_id:
+        from .services import latest_variant_attempt
+
+        if not latest_variant_attempt(run):
+            return None
+    if run.candidate_revision.validations.filter(status__in=ValidationTask.ACTIVE).exists():
+        return None
+    # Confirming a variant only marks its own revision playable. The explicit
+    # selection is the operation that changes the working game in the chat.
+    if not run.variant_batch_id and (
+        not Chat.objects.filter(pk=run.chat_id, current_revision_id=run.base_revision_id).exists()
+        or run.chat.runs.filter(status__in=run.ACTIVE).exists()
+    ):
         return None
     report = run.candidate_revision.reports.order_by("-id").first()
     if report is None:

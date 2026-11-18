@@ -213,6 +213,23 @@ def runs_view(request, ident):
     return Response(run_data(run), status=202)
 
 
+@api_view(["POST"])
+def variant_batches_view(request, ident):
+    from .variants import batch_data, batches_for, create_batch
+
+    chat = owned_chat(request, ident)
+    batch = create_batch(chat, request.data, authorize=lambda provider: enforce_provider_boundary(request, provider))
+    return Response(batch_data(batches_for(chat).get(pk=batch.pk)), status=202)
+
+
+@api_view(["POST"])
+def select_variant_view(request, ident, batch_id):
+    from .variants import select_variant
+
+    chat = select_variant(owned_chat(request, ident), batch_id, request.data)
+    return Response(chat_data(chat, True))
+
+
 @api_view(["GET"])
 def run_view(request, ident):
     return Response(run_data(owned_run(request, ident)))
@@ -297,7 +314,7 @@ def confirm_view(request, ident):
             raise DomainError("confirmation_changed", "Результат проверки изменился. Откройте его заново.", 409)
         if environment.endswith(':unavailable') or report.identity != check_identity(run.candidate_revision, environment):
             raise DomainError("stale_verification", "Правила проверки изменились. Повторите проверку игры.", 409)
-        if (
+        if not run.variant_batch_id and (
             chat.current_revision_id != run.base_revision_id
             or chat.runs.filter(status__in=Run.ACTIVE).exists()
         ):
@@ -307,12 +324,10 @@ def confirm_view(request, ident):
         revision.verification = "manual"
         revision.checks_review_required = False
         revision.save(update_fields=["accepted", "verification", "checks_review_required"])
-        chat.current_revision = revision
-        if not chat.title_is_custom:
-            from .titles import short_game_title
+        if not run.variant_batch_id:
+            from .services import choose_working_revision
 
-            chat.title = short_game_title(revision.title)
-        chat.save(update_fields=["current_revision", "title", "updated_at"])
+            choose_working_revision(chat, revision)
         run.status = "succeeded"
         run.stage = "succeeded"
         run.result_revision = revision

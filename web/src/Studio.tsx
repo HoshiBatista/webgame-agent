@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { useSoundPreference } from './useSoundPreference';
 import {
   ArrowDownToLine,
@@ -26,7 +26,16 @@ import {
   Spinner,
 } from './components';
 import { chatsChanged, useSession } from './context';
-import type { Chat, Preferences, PromptTemplate, Publication, Revision, Run } from './types';
+import type {
+  Chat,
+  GameVariant,
+  Preferences,
+  PromptTemplate,
+  Publication,
+  Revision,
+  Run,
+  VariantBatch,
+} from './types';
 import { useSavedChat } from './useSavedChat';
 import RunMessage, { RunTime } from './RunMessage';
 import ModelSelector, { modelLabel, selectedProfile } from './ModelSelector';
@@ -34,6 +43,12 @@ import TemplatePicker from './TemplatePicker';
 import { appendTemplate } from './textLimits';
 import AudienceSelector from './AudienceSelector';
 import ValidationControls from './ValidationControls';
+import {
+  VariantBatchCard,
+  VariantPreview,
+  VariantReview,
+  variantRunning,
+} from './VariantBatchCard';
 const feedbackReasons = [
   'Более понятное управление',
   'Лучше визуальное оформление',
@@ -58,12 +73,16 @@ export default function Studio() {
     connectionError,
     notFound,
     reload: load,
+    replaceChat,
   } = useSavedChat(isNew ? undefined : id);
   const [newTitle, setNewTitle] = useState<string | null>(initialDraft?.chatTitle ?? null);
   const [error, setError] = useState('');
   const [confirmedReport, setConfirmedReport] = useState<string | null>(null);
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
+  const [fourVariants, setFourVariants] = useState(initialDraft?.fourVariants ?? false);
+  const [trial, setTrial] = useState<GameVariant | null>(null);
+  const [variantReview, setVariantReview] = useState<GameVariant | null>(null);
   const modelProfile = selectedProfile(session);
   const profiles = session.capabilities.model_profiles ?? [];
   const selectedModel = profiles.find((item) => item.id === modelProfile);
@@ -78,6 +97,8 @@ export default function Studio() {
     model_profile: string;
     previousMessages: string[];
     run?: Run;
+    four?: boolean;
+    batch?: VariantBatch;
   } | null>(null);
   const pendingHere = pending?.chatId === id || pending?.createdChatId === id ? pending : null;
   const [selectedRevision, setSelectedRevision] = useState<string | null>(
@@ -118,8 +139,8 @@ export default function Studio() {
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
   const audienceReady = useRef(isNew || initialDraft?.audience != null);
-  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle });
-  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle };
+  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle, fourVariants });
+  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle, fourVariants };
   useEffect(
     () => () => {
       if (id === 'new' && submissionChat.current === currentId.current) {
@@ -168,6 +189,8 @@ export default function Studio() {
     audienceReady.current = isNew || remembered?.audience != null;
     setSelectedRevision(remembered?.selectedRevision ?? null);
     setGameFullscreen(false);
+    setTrial(null);
+    setVariantReview(null);
     setToolsOpen(false);
     setShowShare(false);
     setShareRevision(null);
@@ -185,6 +208,7 @@ export default function Studio() {
       setBusy(false);
       setError('');
       setPrompt(remembered?.prompt ?? '');
+      setFourVariants(remembered?.fourVariants ?? false);
       idempotency.current = remembered?.idempotencyKey ?? newKey();
       lastPayload.current = remembered?.lastPayload ?? '';
     }
@@ -203,6 +227,22 @@ export default function Studio() {
       ? pendingHere.run
       : null);
   const latestRun = activeRun ?? chat?.runs[0] ?? null;
+  const savedBatches = chat?.variant_batches ?? [];
+  const batches =
+    pendingHere?.batch && !savedBatches.some((batch) => batch.id === pendingHere.batch?.id)
+      ? [pendingHere.batch, ...savedBatches]
+      : savedBatches;
+  const batchByRun = new Map<string, VariantBatch>();
+  const variantByRevision = new Map<string, { batch: VariantBatch; variant: GameVariant }>();
+  for (const batch of batches)
+    for (const variant of batch.variants) {
+      batchByRun.set(variant.root_run_id, batch);
+      batchByRun.set(variant.run_id, batch);
+      if (variant.revision) variantByRevision.set(variant.revision.id, { batch, variant });
+    }
+  const latestIsVariant =
+    !!latestRun && (!!latestRun.variant_batch_id || batchByRun.has(latestRun.id));
+  const batchRunning = batches.some((batch) => batch.variants.some(variantRunning));
   const savedSubmission = chat?.messages.find(
     (message) =>
       pendingHere &&
@@ -211,6 +251,17 @@ export default function Studio() {
       !pendingHere.previousMessages.includes(message.id),
   );
   useEffect(() => {
+    if (
+      pendingHere?.four &&
+      savedBatches.some(
+        (batch) =>
+          batch.id === pendingHere.batch?.id ||
+          batch.variants.some((v) => v.root_run_id === savedSubmission?.run_id),
+      )
+    ) {
+      setPending(null);
+      return;
+    }
     const saved = chat?.runs.find(
       (run) => run.id === (pendingHere?.run?.id ?? savedSubmission?.run_id),
     );
@@ -279,6 +330,7 @@ export default function Studio() {
   }, []);
   const candidateNeedsReview = !!(
     latestRun &&
+    !latestIsVariant &&
     chat?.candidate_revision &&
     ['unverified', 'needs_attention', 'failed', 'cancelled', 'unknown'].includes(
       latestRun.status,
@@ -293,6 +345,10 @@ export default function Studio() {
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
   const current = chat?.current_revision;
+  const needsVariantChoice =
+    !revision && batches.some((batch) => batch.variants.some((v) => v.revision?.accepted));
+  const composingBlocked =
+    busy || !!activeRun || !!pendingHere || batchRunning || needsVariantChoice;
   const feedbackDone =
     !!revision && (!!revision.feedback_rating || ratedRevisions.includes(revision.id));
   const published =
@@ -311,6 +367,7 @@ export default function Studio() {
   }
   const confirmation =
     !activeRun &&
+    !latestIsVariant &&
     latestRun?.can_confirm &&
     revision?.id === latestRun.candidate_revision_id &&
     revision?.artifact_hash === latestRun.confirmation?.artifact_hash
@@ -377,6 +434,7 @@ export default function Studio() {
         body: JSON.stringify({ model_profile: value }),
       });
       updateSession({ ...session, preferences });
+      if (view.current === startedView && value !== 'pro') setFourVariants(false);
     } catch (cause) {
       if (view.current === startedView) setError(errorText(cause));
     } finally {
@@ -385,8 +443,7 @@ export default function Studio() {
   }
   async function send(event: FormEvent) {
     event.preventDefault();
-    if (!prompt.trim() || busy || activeRun || pendingHere || modelUnavailable || (!isNew && !chat))
-      return;
+    if (!prompt.trim() || composingBlocked || modelUnavailable || (!isNew && !chat)) return;
     if (latestRun?.can_retry_unknown) {
       if (
         !window.confirm('Ответ на предыдущий запрос не получен полностью. Отправить новый запрос?')
@@ -408,7 +465,8 @@ export default function Studio() {
         : {}),
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
     };
-    const key = operationKey(payload);
+    const four = modelProfile === 'pro' && fourVariants;
+    const key = operationKey(four ? { ...payload, variants: 4 } : payload);
     pinnedToBottom.current = true;
     setPending({
       key,
@@ -417,6 +475,7 @@ export default function Studio() {
       startedAt: Date.now(),
       model_profile: modelProfile || 'lite',
       previousMessages: chat?.messages.map((m) => m.id) ?? [],
+      four,
     });
     setPrompt('');
     let targetId = chat?.id;
@@ -440,10 +499,10 @@ export default function Studio() {
         }
         chatsChanged();
       }
-      const accepted = await post<Run>(`/api/chats/${targetId}/runs/`, {
-        ...payload,
-        idempotency_key: key,
-      });
+      const body = { ...payload, idempotency_key: key };
+      const accepted = four
+        ? { batch: await post<VariantBatch>(`/api/chats/${targetId}/variant-batches/`, body) }
+        : { run: await post<Run>(`/api/chats/${targetId}/runs/`, body) };
       const savedDraft = studioDrafts?.get(id);
       if (
         isNew &&
@@ -453,7 +512,8 @@ export default function Studio() {
         studioDrafts?.delete(id);
       void refresh();
       if (!isCurrent()) return;
-      setPending((value) => (value?.key === key ? { ...value, run: accepted } : value));
+      setPending((value) => (value?.key === key ? { ...value, ...accepted } : value));
+      setFourVariants(false);
       idempotency.current = newKey();
       lastPayload.current = '';
       setPrompt('');
@@ -473,13 +533,13 @@ export default function Studio() {
       chatsChanged();
     }
   }
-  async function cancel() {
-    if (!activeRun || busy) return;
+  async function cancel(runId = activeRun?.id) {
+    if (!runId || busy) return;
     const startedView = view.current;
     setBusy(true);
     setError('');
     try {
-      await post<Run>(`/api/runs/${activeRun.id}/cancel/`, {});
+      await post<Run>(`/api/runs/${runId}/cancel/`, {});
       chatsChanged();
       void refresh();
     } catch (cause) {
@@ -491,8 +551,34 @@ export default function Studio() {
       }
     }
   }
+  async function chooseVariant(batch: VariantBatch, variant: GameVariant) {
+    if (!chat || !variant.revision?.accepted || busy) return;
+    const startedView = view.current;
+    setBusy(true);
+    setError('');
+    try {
+      const saved = await post<Chat>(`/api/chats/${chat.id}/variant-batches/${batch.id}/select/`, {
+        revision_id: variant.revision.id,
+        artifact_hash: variant.revision.artifact_hash,
+        expected_current_revision_id: chat.current_revision?.id ?? null,
+      });
+      if (view.current !== startedView) return;
+      setSelectedRevision(null);
+      replaceChat(saved);
+      chatsChanged();
+    } catch (cause) {
+      if (view.current === startedView) {
+        setError(errorText(cause));
+        load();
+      }
+    } finally {
+      if (view.current === startedView) setBusy(false);
+    }
+  }
   async function restoreRevision() {
     if (!chat || !revision?.accepted) return;
+    const source = variantByRevision.get(revision.id);
+    if (source) return chooseVariant(source.batch, source.variant);
     const startedView = view.current;
     setBusy(true);
     try {
@@ -590,6 +676,10 @@ export default function Studio() {
       if (view.current === startedView) setBusy(false);
     }
   }
+  function versionLabel(item: Revision) {
+    const slot = variantByRevision.get(item.id)?.variant;
+    return slot ? `Версия ${item.number} · Вариант ${slot.index}` : `Версия ${item.number}`;
+  }
   const gameTools = (inMenu = true) =>
     chat && (
       <div
@@ -611,13 +701,13 @@ export default function Studio() {
             }
           >
             <option value="latest">
-              {defaultRevision ? `Версия ${defaultRevision.number}` : 'Пока нет версии'}
+              {defaultRevision ? versionLabel(defaultRevision) : 'Пока нет версии'}
             </option>
             {chat.revisions
               .filter((item) => item.id !== defaultRevision?.id)
               .map((item) => (
                 <option key={item.id} value={item.id}>
-                  Версия {item.number}
+                  {versionLabel(item)}
                 </option>
               ))}
           </select>
@@ -699,6 +789,21 @@ export default function Studio() {
         </div>
       </div>
     );
+  function showBatch(batch: VariantBatch) {
+    const otherWorkActive = !!activeRun && !batch.variants.some((v) => v.run_id === activeRun.id);
+    return (
+      <VariantBatchCard
+        key={batch.id}
+        batch={batch}
+        currentId={current?.id}
+        busy={busy || otherWorkActive}
+        onPlay={setTrial}
+        onReview={setVariantReview}
+        onChoose={(variant) => void chooseVariant(batch, variant)}
+        onCancel={(runId) => void cancel(runId)}
+      />
+    );
+  }
   if (loading && !pendingHere) return <Spinner text="Открываем вашу мастерскую…" />;
   if (!isNew && notFound)
     return (
@@ -739,6 +844,18 @@ export default function Studio() {
             <span className="chat-model-name">beeGame Lite</span>
           )}
           <div className="chat-heading-actions">
+            {modelProfile === 'pro' && (
+              <label className="variant-toggle" title="Создать четыре игры по одному запросу">
+                <input
+                  type="checkbox"
+                  aria-label="4× — четыре варианта Pro"
+                  checked={fourVariants}
+                  disabled={composingBlocked || modelUnavailable}
+                  onChange={(event) => setFourVariants(event.target.checked)}
+                />
+                4×
+              </label>
+            )}
             {mobile ? (
               <button
                 className="icon-button"
@@ -805,7 +922,7 @@ export default function Studio() {
                 </button>
               </div>
             )}
-            {!chat?.messages.length && !pendingHere && (
+            {!chat?.messages.length && !pendingHere && !batches.length && (
               <div className="chat-welcome">
                 <div className="welcome-mark">
                   <Gamepad2 size={36} />
@@ -819,16 +936,35 @@ export default function Studio() {
               const run =
                 chat.runs.find((item) => item.id === message.run_id) ?? message.generation;
               const label = modelLabel(run);
+              const batch = message.run_id ? batchByRun.get(message.run_id) : undefined;
+              if (
+                batch &&
+                (message.role !== 'user' || message.run_id !== batch.variants[0]?.root_run_id)
+              )
+                return null;
               return (
-                <article className={`chat-message message-${message.role}`} key={message.id}>
-                  <span className="message-author">
-                    {message.role === 'user' ? 'Вы' : run ? `beeGame ${label}` : 'beeGame'}
-                    {message.role !== 'user' && run && <RunTime run={run} />}
-                  </span>
-                  <div>{message.content}</div>
-                </article>
+                <Fragment key={message.id}>
+                  <article className={`chat-message message-${message.role}`}>
+                    <span className="message-author">
+                      {message.role === 'user' ? 'Вы' : run ? `beeGame ${label}` : 'beeGame'}
+                      {message.role !== 'user' && run && <RunTime run={run} />}
+                    </span>
+                    <div>{message.content}</div>
+                  </article>
+                  {batch && showBatch(batch)}
+                </Fragment>
               );
             })}
+            {batches
+              .filter(
+                (batch) =>
+                  !chat?.messages.some(
+                    (m) => m.role === 'user' && m.run_id === batch.variants[0]?.root_run_id,
+                  ),
+              )
+              .slice()
+              .reverse()
+              .map(showBatch)}
             {confirmation && (
               <section className="chat-message" aria-label="Проверка результата">
                 <h3>Игра сохранена. Нужна ваша проверка</h3>
@@ -860,7 +996,7 @@ export default function Studio() {
                 </button>
               </section>
             )}
-            {latestRun?.game_plan?.summary && (
+            {!latestIsVariant && latestRun?.game_plan?.summary && (
               <details className="chat-message game-plan">
                 <summary>Замысел игры</summary>
                 <p>{latestRun.game_plan.summary}</p>
@@ -889,7 +1025,8 @@ export default function Studio() {
                 )}
               </details>
             )}
-            {latestRun?.game_plan?.summary &&
+            {!latestIsVariant &&
+              latestRun?.game_plan?.summary &&
               latestRun.can_continue &&
               !revision &&
               !activeRun &&
@@ -909,7 +1046,10 @@ export default function Studio() {
                 <div>{pendingHere.prompt}</div>
               </article>
             )}
-            {(activeRun || pendingHere) && (
+            {pendingHere?.four && !pendingHere.batch && !savedSubmission && (
+              <Spinner text="Запускаем четыре варианта Pro…" />
+            )}
+            {!pendingHere?.four && (activeRun ? !latestIsVariant : !!pendingHere) && (
               <RunMessage
                 run={
                   activeRun ?? {
@@ -924,6 +1064,7 @@ export default function Studio() {
               />
             )}
             {!activeRun &&
+              !latestIsVariant &&
               !pendingHere &&
               latestRun &&
               !chat?.messages.some(
@@ -940,11 +1081,7 @@ export default function Studio() {
           </div>
         </div>
         <form className="composer" onSubmit={send}>
-          <AudienceSelector
-            value={audience}
-            disabled={!!activeRun || busy}
-            onChange={setAudience}
-          />
+          <AudienceSelector value={audience} disabled={composingBlocked} onChange={setAudience} />
           <div className="composer-input">
             <textarea
               ref={promptInput}
@@ -957,7 +1094,7 @@ export default function Studio() {
                   : 'Опишите вашу мини-игру…'
               }
               rows={3}
-              disabled={busy || !!activeRun || !!pendingHere}
+              disabled={composingBlocked}
               onKeyDown={(event) => {
                 if (
                   event.key === 'Enter' &&
@@ -1005,13 +1142,13 @@ export default function Studio() {
                 className="composer-template-button"
                 aria-label="Использовать шаблон"
                 title="Использовать шаблон"
-                disabled={busy || !!activeRun || !!pendingHere}
+                disabled={composingBlocked}
                 onClick={() => setTemplatePickerOpen(true)}
               >
                 <FileText size={17} />
                 <span>Шаблоны</span>
               </button>
-              {activeRun ? (
+              {activeRun && !latestIsVariant ? (
                 <button
                   type="button"
                   className="send-button stop-button"
@@ -1025,20 +1162,29 @@ export default function Studio() {
                 <button
                   className="send-button"
                   disabled={
-                    !prompt.trim() ||
-                    busy ||
-                    !!activeRun ||
-                    !!pendingHere ||
-                    modelUnavailable ||
-                    (!isNew && !chat)
+                    !prompt.trim() || composingBlocked || modelUnavailable || (!isNew && !chat)
                   }
-                  aria-label={revision ? 'Отправить доработку' : 'Создать игру'}
+                  aria-label={
+                    modelProfile === 'pro' && fourVariants
+                      ? 'Создать 4 варианта'
+                      : revision
+                        ? 'Отправить доработку'
+                        : 'Создать игру'
+                  }
                 >
                   <ArrowUp size={20} />
                 </button>
               )}
             </div>
           </div>
+          {modelProfile === 'pro' && fourVariants && (
+            <p className="variant-hint">
+              Четыре отдельных задания Pro. Расход учитывается за каждое.
+            </p>
+          )}
+          {needsVariantChoice && !batchRunning && (
+            <p className="variant-hint">Выберите вариант, чтобы продолжить доработку.</p>
+          )}
         </form>
         {templatePickerOpen && (
           <TemplatePicker onClose={() => setTemplatePickerOpen(false)} onChoose={chooseTemplate} />
@@ -1054,7 +1200,7 @@ export default function Studio() {
           hideToolbar={mobile}
           muted={soundMuted}
           onMutedChange={() => setSoundMuted((value) => !value)}
-          visible={gameFullscreen || (!mobile && previewOpen)}
+          visible={!trial && (gameFullscreen || (!mobile && previewOpen))}
           forceFullscreen={gameFullscreen}
           onEnterFullscreen={() => setGameFullscreen(true)}
           onExitFullscreen={() => setGameFullscreen(false)}
@@ -1066,6 +1212,28 @@ export default function Studio() {
         />
         {!mobile && gameTools(false)}
       </aside>
+      {trial?.revision && (
+        <VariantPreview
+          index={trial.index}
+          revision={trial.revision}
+          muted={soundMuted}
+          onToggleSound={() => setSoundMuted((value) => !value)}
+          onClose={() => setTrial(null)}
+        />
+      )}
+      {variantReview && (
+        <VariantReview
+          key={variantReview.run_id}
+          variant={variantReview}
+          onClose={() => setVariantReview(null)}
+          onConfirmed={() => {
+            setVariantReview(null);
+            load();
+            chatsChanged();
+            void refresh();
+          }}
+        />
+      )}
       {showShare && shareRevision && (
         <Modal
           title={

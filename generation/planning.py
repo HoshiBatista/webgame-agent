@@ -130,6 +130,17 @@ def prompt(request):
     from .pro_staged import PLAN_GUIDANCE as STAGED_GUIDANCE
 
     base = planning_base(PLAN_PROMPT) if request.get('pro_parallel') in {3, 4} else PLAN_PROMPT
+    # The first agent provides a standard Pro interpretation. The others vary
+    # only decisions the author left open. All four keep the same request.
+    direction = {
+        2: "consider a distinctive layout or arrangement of challenges",
+        3: "consider how the player's choices could change the route to the goal",
+        4: "consider a distinctive rhythm, atmosphere and feedback for the core actions",
+    }.get(request.get("variant_index"))
+    if direction:
+        base += (f"\nFor this independent version, where the request leaves room, {direction}. "
+                 "Keep the specified genre, rules, simplicity, audience and scope. "
+                 "If these choices are already specified, follow them exactly.")
     return base + (PREFERENCE_GUIDANCE if request.get('plan_provenance') == PROVENANCE_VERSION else '') + (
         "\nPro: develop up to four tightly connected mechanics, a distinctive visual direction and a satisfying arc. Keep the implementation feasible as a self-contained mini-game."
         if request.get("generation_strategy") == "pro" else

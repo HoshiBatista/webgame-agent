@@ -43,6 +43,9 @@ export function useSavedChat(id: string | undefined) {
         // Idle reads also discover a submission whose HTTP acknowledgement was lost.
         delay =
           data.active_run ||
+          data.variant_batches?.some((batch) =>
+            batch.variants.some((v) => ['queued', 'generating', 'checking'].includes(v.status)),
+          ) ||
           data.revisions?.some(
             (r) => r.validation && ['queued', 'checking'].includes(r.validation.status),
           )
@@ -93,6 +96,15 @@ export function useSavedChat(id: string | undefined) {
     },
     [reload],
   );
+  const replaceChat = useCallback(
+    (saved: Chat) => {
+      if (saved.id !== id) return;
+      ++readVersion.current;
+      setChat(saved);
+      reload();
+    },
+    [id, reload],
+  );
   useEffect(() => {
     const renamed = (event: Event) => {
       const change = (event as CustomEvent<Pick<Chat, 'id' | 'title' | 'updated_at'>>).detail;
@@ -101,5 +113,5 @@ export function useSavedChat(id: string | undefined) {
     window.addEventListener('gameforge:chats', renamed);
     return () => window.removeEventListener('gameforge:chats', renamed);
   }, [id, updateTitle]);
-  return { chat, loading, connectionError, notFound, reload, updateTitle };
+  return { chat, loading, connectionError, notFound, reload, updateTitle, replaceChat };
 }
