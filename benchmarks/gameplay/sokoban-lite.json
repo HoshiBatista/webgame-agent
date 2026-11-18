@@ -1,0 +1,191 @@
+[
+  {
+    "id": "S1",
+    "category": "start",
+    "requirement": "Понятный старт с исходными позициями и нулём ходов",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "wait", "ms": 100},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.x"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.y"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.moves"}, "expect": {"operator": "eq", "value": 0}}
+    ],
+    "observation": {"source": "state", "path": "gameState.box.x"},
+    "expect": {"operator": "eq", "value": 2}
+  },
+  {
+    "id": "S2",
+    "category": "control",
+    "requirement": "Экранная кнопка действительно передвигает игрока",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "[data-dir=\"down\"]", "x": null, "y": null},
+      {"action": "wait", "ms": 100}
+    ],
+    "observation": {"source": "state", "path": "gameState.player.y"},
+    "expect": {"operator": "eq", "value": 2}
+  },
+  {
+    "id": "S3",
+    "category": "control",
+    "requirement": "Стрелки клавиатуры передвигают игрока без мыши",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "ArrowDown"},
+      {"action": "wait", "ms": 100}
+    ],
+    "observation": {"source": "state", "path": "gameState.player.y"},
+    "expect": {"operator": "eq", "value": 2}
+  },
+  {
+    "id": "S4",
+    "category": "regression",
+    "requirement": "Стена не пропускает игрока и не добавляет успешный ход",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"left\"]", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"up\"]", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.x"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.y"}, "expect": {"operator": "eq", "value": 1}}
+    ],
+    "observation": {"source": "state", "path": "gameState.moves"},
+    "expect": {"operator": "eq", "value": 0}
+  },
+  {
+    "id": "S5",
+    "category": "control",
+    "requirement": "Допустимый толчок передвигает игрока и ящик",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "wait", "ms": 100},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.x"}, "expect": {"operator": "eq", "value": 2}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.moves"}, "expect": {"operator": "eq", "value": 1}}
+    ],
+    "observation": {"source": "state", "path": "gameState.box.x"},
+    "expect": {"operator": "eq", "value": 3}
+  },
+  {
+    "id": "S6",
+    "category": "regression",
+    "requirement": "Удаление от ящика не тянет его за игроком",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "[data-dir=\"left\"]", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.x"}, "expect": {"operator": "eq", "value": 1}}
+    ],
+    "observation": {"source": "state", "path": "gameState.box.x"},
+    "expect": {"operator": "eq", "value": 3}
+  },
+  {
+    "id": "S7",
+    "category": "regression",
+    "requirement": "Толчок ящика в стену запрещён",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "press", "key": "ArrowDown"},
+      {"action": "press", "key": "ArrowRight"},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "ArrowUp"},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.y"}, "expect": {"operator": "eq", "value": 2}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.moves"}, "expect": {"operator": "eq", "value": 2}}
+    ],
+    "observation": {"source": "state", "path": "gameState.box.y"},
+    "expect": {"operator": "eq", "value": 1}
+  },
+  {
+    "id": "S8",
+    "category": "outcome",
+    "requirement": "Задача решается настоящими ходами и доставкой ящика на цель",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "wait", "ms": 100},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.box.x"}, "expect": {"operator": "eq", "value": 4}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.moves"}, "expect": {"operator": "eq", "value": 2}}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "won"}
+  },
+  {
+    "id": "S9",
+    "category": "regression",
+    "requirement": "После победы игровой результат сохраняется",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "press", "key": "ArrowRight"},
+      {"action": "press", "key": "ArrowRight"},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "ArrowDown"},
+      {"action": "press", "key": "ArrowLeft"},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.x"}, "expect": {"operator": "eq", "value": 3}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.box.x"}, "expect": {"operator": "eq", "value": 4}}
+    ],
+    "observation": {"source": "state", "path": "gameState.moves"},
+    "expect": {"operator": "eq", "value": 2}
+  },
+  {
+    "id": "S10",
+    "category": "restart",
+    "requirement": "Перезапуск после победы восстанавливает исходное поле и счётчик",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.phase"}, "expect": {"operator": "eq", "value": "won"}},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "#replay", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.player.x"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.box.x"}, "expect": {"operator": "eq", "value": 2}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.moves"}, "expect": {"operator": "eq", "value": 0}}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "playing"}
+  },
+  {
+    "id": "S11",
+    "category": "regression",
+    "requirement": "Поворот телефона сохраняет позиции и счётчик",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null},
+      {"action": "resize", "viewport": "landscape"},
+      {"action": "wait", "ms": 100},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.moves"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.box.x"}, "expect": {"operator": "eq", "value": 3}},
+      {"action": "tap", "selector": "[data-dir=\"right\"]", "x": null, "y": null}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "won"}
+  },
+  {
+    "id": "S12",
+    "category": "regression",
+    "requirement": "Музыка запускается после действия игрока",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "wait", "ms": 200}
+    ],
+    "observation": {"source": "experience", "field": "musicPlaying"},
+    "expect": {"operator": "eq", "value": true}
+  }
+]

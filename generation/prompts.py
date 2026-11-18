@@ -179,6 +179,10 @@ def _system_prompt(request):
         text += ("\nThe application owns the acceptance suite. Describe any still-unverified player action in message using plain language. Original game findings remain "
                  "unresolved after a rejected patch. last_attempt_error describes that rejected reply, "
                  "not a replacement for the game's defect.\n")
+    if (request.get('module_repair') or {}).get('scope') == 'one_file':
+        from .pro_module_repair import GUIDANCE as MODULE_GUIDANCE
+
+        text += MODULE_GUIDANCE
     if request.get("code_repair_basis"):
         text += ("\nThe application verified the code defect in code_repair_basis. Repair only that defect. "
                  "The inherited scenario suite may be incomplete; return checks=[] and preserve it exactly. "
@@ -286,7 +290,9 @@ def build_messages(request):
                     available[row['id']] = {'id':row['id'],'path':path[len('gfState.'):],
                                              'type':kind,'value':row.get('value'),'phase':row.get('phase')}
         context['available_observations'] = list(available.values())[:16]
-    selected = (request.get("module_repair") or {}).get("files", {})
+    module = request.get("module_repair") or {}
+    experimental_repair = module.get("scope") == "one_file"
+    selected = module["targets"] if experimental_repair else module.get("files", {})
     from .lite import enabled as lite_enabled
 
     if lite_enabled(request):
@@ -316,8 +322,9 @@ def build_messages(request):
         }
         context.pop("compact_manifest", None)
         context["checks"] = []
-        context["game_plan"] = {}
-        context["validation_evidence"] = {}  # exact defects remain in findings + last_attempt_error
+        if not experimental_repair:
+            context["game_plan"] = {}
+            context["validation_evidence"] = {}  # exact defects remain in findings + last_attempt_error
     return [
         {"role": "system", "content": system_prompt(request)},
         {"role": "user", "content": json.dumps(context, ensure_ascii=False, separators=(",", ":"))},
@@ -394,13 +401,14 @@ def system_prompt(request):
     from .lite import system_prompt as lite_prompt
     from .lite_wait_budget import prompt as wait_prompt
     from .pro_creative import check_prompt
+    from .scene import existing_game_guidance
 
     operation = request.get('operation', 'create')
     if lite_enabled(request) and operation in {'create', 'edit', 'repair', 'check_repair'}:
         from .lite_check_delta import guidance as delta_guidance
 
-        return wait_prompt(lite_prompt(request) + route_guidance(request), request) + delta_guidance(request)
-    text = _system_prompt(request)
+        return wait_prompt(lite_prompt(request) + route_guidance(request), request) + delta_guidance(request) + existing_game_guidance(request)
+    text = _system_prompt(request) + existing_game_guidance(request)
     if operation in {'create', 'edit', 'repair', 'check_repair'} and request.get('generation_profile') != 'compact':
         text += ('\nFor held screen buttons use hold_touch(selector,x:null,y:null,ms:1..3000), real touch then release. '
                  'tap is brief. Checkpoint before hold tests movement; after hold + wait tests stopping. '

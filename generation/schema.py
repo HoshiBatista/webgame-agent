@@ -293,7 +293,12 @@ def response_schema(request):
         if operation == "repair":
             props["checks"]["maxItems"] = 0
             allowed = request.get("module_repair", {}).get("files", {})
-            if allowed:
+            policy = request.get('module_repair') or {}
+            if policy.get('scope') == 'one_file':
+                from .pro_module_repair import constrain_schema
+
+                constrain_schema(props, policy)
+            elif allowed:
                 replacement = deepcopy(MODULE_REPLACEMENT)
                 replacement["properties"]["path"] = {"enum": sorted(allowed)}
                 props["patches"] = {"anyOf": [array(deepcopy(EXACT_PATCH), maxItems=80),

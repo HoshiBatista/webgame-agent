@@ -85,8 +85,11 @@ def tick(run, generator):
 
 
 def test_explicit_opt_in_preserves_normal_pro_plan_limits_and_disabled_catalog(context, settings):
+    from generation.scene import PATH as scene_path
+
     normal = new_run(context, model_profile='pro')
     experiment = new_run(context)
+    assert scene_path not in normal.helper_catalog and scene_path in experiment.helper_catalog
     assert normal.max_model_calls == 5 and normal.max_repair_attempts == 3
     assert experiment.max_model_calls == 11 and experiment.max_repair_attempts == 5
     assert not normal.pro_parallel and experiment.pro_parallel
@@ -413,3 +416,24 @@ def test_split_pipeline_plans_once_assembles_then_uses_normal_browser_acceptance
     assert [r['operation'] for r in requests] == ['plan', 'pro_mechanics', 'create', 'pro_graphics', 'pro_audio']
     assert run.attempts == 5 and run.chat.revisions.count() == 1
     assert run.result_revision.files['mechanics.js']
+
+
+def test_switching_from_experimental_scene_to_normal_pro_preserves_pinned_source(context):
+    from generation.scene import PATH
+    from studio.tasks import store_candidate
+    from tests.test_scene_helper import scene_game
+
+    run = new_run(context)
+    source = store_candidate(run, materialize(scene_game(), operation='create',
+                                              helper_catalog=run.helper_catalog), None)
+    run.status = 'needs_attention'
+    run.save(update_fields=['status'])
+    edit = create_run(run.chat, {
+        'model_profile': 'pro', 'prompt': 'Измени цвет цели', 'idempotency_key': 'edit-scene',
+        'source_revision_id': str(source.id), 'source_artifact_hash': source.artifact_hash,
+    })
+    assert not edit.pro_parallel
+    assert edit.helper_catalog[PATH] == source.helper_manifest[PATH] == run.helper_catalog[PATH]
+    from generation.prompts import system_prompt
+
+    assert 'GameForgeScene.view' in system_prompt(request_for(edit, source, []))

@@ -513,10 +513,17 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         original_request = prompt.strip()
         frozen_manifest = manifest(original_request)
     from generation.helpers import catalog
+    from generation.scene import PATH as scene_path
 
     from .preferences import validate_notes
 
-    helper_catalog = continued_from.helper_catalog if continued_from else catalog()
+    if continued_from:
+        helper_catalog = continued_from.helper_catalog
+    else:
+        helper_catalog = catalog(include_scene=pro_parallel)
+        if source and scene_path in source.helper_manifest:
+            # An edit/remix retains the actual scene pin even after switching models.
+            helper_catalog[scene_path] = source.helper_manifest[scene_path]
     if not continued_from and lite_direct({
         'provider': provider, 'generation_strategy': generation_strategy,
         'generation_profile': generation_profile,

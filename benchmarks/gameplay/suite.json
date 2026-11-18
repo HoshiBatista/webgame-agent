@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "case": "snake-lite",
+      "family": "snake",
+      "profile": "lite",
+      "run_id": "5a17ad8f-f7f1-418e-8b88-0cd96d0eea36",
+      "artifact_hash": "8bd1494eafdaf3b8fc69a0c48fb27bc45cfcfc91f102839daa11b726869fe378",
+      "seed": 13233,
+      "clock": true,
+      "checks": "snake-lite.json"
+    },
+    {
+      "case": "sokoban-lite",
+      "family": "sokoban",
+      "profile": "lite",
+      "run_id": "48cd831f-4e03-4b4d-9bfa-d6d89693c73a",
+      "artifact_hash": "afd1ae580bcff601c8136e0c798d7df9d2fae0b75395c5e456b7d5a38c886038",
+      "seed": 1337,
+      "clock": true,
+      "checks": "sokoban-lite.json"
+    },
+    {
+      "case": "sokoban-pro",
+      "family": "sokoban",
+      "profile": "pro",
+      "run_id": "4664177e-f269-4cb4-8d43-65417f49e30c",
+      "artifact_hash": "68b3cd9c9ee50118377cb7d69d6f23b34ee2046ca9ce93b6b106469b37d745ad",
+      "seed": 1337,
+      "clock": true,
+      "checks": "sokoban-pro.json"
+    },
+    {
+      "case": "shooter-pro_multi",
+      "family": "shooter",
+      "profile": "pro_multi",
+      "run_id": "306ee81e-6a9d-49fc-b82f-8b86eb3f8071",
+      "artifact_hash": "39bcbb7d8b46d3b9e5333373f177e37c6fcc7e65aa0990f70d095c731c48319e",
+      "seed": 1337,
+      "clock": true,
+      "checks": "shooter-pro_multi.json"
+    },
+    {
+      "case": "rpg-pro_multi",
+      "family": "rpg",
+      "profile": "pro_multi",
+      "run_id": "7cb2b5c5-4ea8-40b8-baba-aa236e1361a2",
+      "artifact_hash": "1afb19943a96ec5444b2a7dd8130acc49a9d1406e232c1149cb48eeabd130ac2",
+      "seed": 1337,
+      "clock": false,
+      "checks": "rpg-pro_multi.json"
+    }
+  ]
+}

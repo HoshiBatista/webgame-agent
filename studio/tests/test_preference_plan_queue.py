@@ -50,3 +50,6 @@ def test_capacity_wait_is_explained_once_and_clears_on_admission(settings):
     admitted = claim_run(waiting.pk)
     assert admitted.status == admitted.stage == 'generating'
     assert 'заняты' not in admitted.message
+    initial_wait = admitted.metrics['queue_seconds']
+    Run.objects.filter(pk=waiting.pk).update(status='queued')
+    assert claim_run(waiting.pk).metrics['queue_seconds'] == initial_wait

@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "suite_digest": "e020bdd89c024e93d93dfc03dde826da3f1ca639644a05cda750c858e398b86f",
+  "cases": [
+    {
+      "case": "snake-lite",
+      "family": "snake",
+      "profile": "lite",
+      "run_id": "5a17ad8f-f7f1-418e-8b88-0cd96d0eea36",
+      "artifact_hash": "8bd1494eafdaf3b8fc69a0c48fb27bc45cfcfc91f102839daa11b726869fe378",
+      "seed": 13233,
+      "clock": true,
+      "checks_digest": "f4ace0bf2a93bc4c1b3ca723c1597424bab6c5219b8c7f8b9623d7a4dae9b579",
+      "checks_total": 12,
+      "checks_passed": 12,
+      "revision_id": "64020f63-37fb-4ee9-8581-ff0026b951a0",
+      "generation": {
+        "runs": 1,
+        "generation_seconds": 373.614,
+        "model_operations": {
+          "create": 1,
+          "music": 1
+        },
+        "repair_calls": 0,
+        "edit_calls": 0,
+        "known_cost_usd": "0.000000",
+        "unknown_calls": 0,
+        "unknown_reserved_usd": "0",
+        "other_calls_without_cost": 0
+      },
+      "status": "passed",
+      "replay_seconds": 14.566,
+      "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-b622a13abe236741",
+      "findings": []
+    },
+    {
+      "case": "sokoban-lite",
+      "family": "sokoban",
+      "profile": "lite",
+      "run_id": "48cd831f-4e03-4b4d-9bfa-d6d89693c73a",
+      "artifact_hash": "afd1ae580bcff601c8136e0c798d7df9d2fae0b75395c5e456b7d5a38c886038",
+      "seed": 1337,
+      "clock": true,
+      "checks_digest": "eb9b9a20eda1f04aabde4618d16b2c90f1c819c1a6aa9251b6c7352421d5e634",
+      "checks_total": 12,
+      "checks_passed": 12,
+      "revision_id": "50935f37-4cf1-4a0d-a52e-0796f693ff66",
+      "generation": {
+        "runs": 2,
+        "generation_seconds": 702.249,
+        "model_operations": {
+          "edit": 1,
+          "check_repair": 1,
+          "create": 1,
+          "music": 1
+        },
+        "repair_calls": 1,
+        "edit_calls": 1,
+        "known_cost_usd": "0.000000",
+        "unknown_calls": 0,
+        "unknown_reserved_usd": "0",
+        "other_calls_without_cost": 0
+      },
+      "status": "passed",
+      "replay_seconds": 5.913,
+      "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-ee97386d513fbd6c",
+      "findings": []
+    },
+    {
+      "case": "sokoban-pro",
+      "family": "sokoban",
+      "profile": "pro",
+      "run_id": "4664177e-f269-4cb4-8d43-65417f49e30c",
+      "artifact_hash": "68b3cd9c9ee50118377cb7d69d6f23b34ee2046ca9ce93b6b106469b37d745ad",
+      "seed": 1337,
+      "clock": true,
+      "checks_digest": "608a6561e22004f66b909167a337ee95c65dd3127964aa1a80968bce84f77873",
+      "checks_total": 12,
+      "checks_passed": 12,
+      "revision_id": "52079f76-4171-4f06-8457-4e6dcef96b19",
+      "generation": {
+        "runs": 1,
+        "generation_seconds": 246.488,
+        "model_operations": {
+          "create": 1,
+          "plan": 1
+        },
+        "repair_calls": 0,
+        "edit_calls": 0,
+        "known_cost_usd": "0.151143",
+        "unknown_calls": 0,
+        "unknown_reserved_usd": "0",
+        "other_calls_without_cost": 0
+      },
+      "status": "passed",
+      "replay_seconds": 8.259,
+      "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-ee97386d513fbd6c",
+      "findings": []
+    },
+    {
+      "case": "shooter-pro_multi",
+      "family": "shooter",
+      "profile": "pro_multi",
+      "run_id": "306ee81e-6a9d-49fc-b82f-8b86eb3f8071",
+      "artifact_hash": "39bcbb7d8b46d3b9e5333373f177e37c6fcc7e65aa0990f70d095c731c48319e",
+      "seed": 1337,
+      "clock": true,
+      "checks_digest": "a235bd0ff55a4182e87b47865e999bbad75bb24934c871f5425bb9b0ab40aa0c",
+      "checks_total": 12,
+      "checks_passed": 12,
+      "revision_id": "00e2c8e5-0e4f-43d3-a78d-96ba1da2a4c3",
+      "generation": {
+        "runs": 4,
+        "generation_seconds": 1288.707,
+        "model_operations": {
+          "edit": 2,
+          "plan": 2,
+          "create": 3,
+          "pro_audio": 2,
+          "pro_graphics": 2,
+          "check_repair": 1
+        },
+        "repair_calls": 1,
+        "edit_calls": 2,
+        "known_cost_usd": "0.628548",
+        "unknown_calls": 2,
+        "unknown_reserved_usd": "12.560000",
+        "other_calls_without_cost": 0
+      },
+      "status": "passed",
+      "replay_seconds": 67.37,
+      "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-ee97386d513fbd6c",
+      "findings": []
+    },
+    {
+      "case": "rpg-pro_multi",
+      "family": "rpg",
+      "profile": "pro_multi",
+      "run_id": "7cb2b5c5-4ea8-40b8-baba-aa236e1361a2",
+      "artifact_hash": "1afb19943a96ec5444b2a7dd8130acc49a9d1406e232c1149cb48eeabd130ac2",
+      "seed": 1337,
+      "clock": false,
+      "checks_digest": "b50e5818f5b17a12e0dfcebfa99dc5df50a73a2dbe51bdc1207f29c925fd4243",
+      "checks_total": 12,
+      "checks_passed": 12,
+      "revision_id": "10a90975-b4e3-49c2-a0db-23ec409ae345",
+      "generation": {
+        "runs": 4,
+        "generation_seconds": 1030.123,
+        "model_operations": {
+          "pro_audio": 3,
+          "create": 2,
+          "pro_checks": 1,
+          "plan": 1,
+          "pro_mechanics": 1,
+          "pro_graphics": 1,
+          "edit": 2
+        },
+        "repair_calls": 0,
+        "edit_calls": 2,
+        "known_cost_usd": "0.716644",
+        "unknown_calls": 1,
+        "unknown_reserved_usd": "6.280000",
+        "other_calls_without_cost": 0
+      },
+      "status": "passed",
+      "replay_seconds": 146.467,
+      "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:145.0.7632.6:native-darwin:33d1d8886a2ef12d0f79dae9a69c4f47363dcd8323698f469308792aabf0ed4e:test-5ff099ec5f66a03f",
+      "findings": []
+    }
+  ],
+  "summary": {
+    "scheduled": 5,
+    "passed": 5,
+    "passed_fraction": 1.0,
+    "statuses": {
+      "passed": 5
+    },
+    "checks_passed": 60,
+    "checks_total": 60,
+    "measured_games": 5,
+    "generation_seconds": 3641.181,
+    "repair_calls": 2,
+    "edit_calls": 5,
+    "known_cost_usd": "1.496335",
+    "unknown_calls": 3,
+    "unknown_reserved_usd": "18.840000",
+    "other_calls_without_cost": 0
+  },
+  "profiles": {
+    "lite": {
+      "scheduled": 2,
+      "passed": 2,
+      "passed_fraction": 1.0,
+      "statuses": {
+        "passed": 2
+      },
+      "checks_passed": 24,
+      "checks_total": 24,
+      "measured_games": 2,
+      "generation_seconds": 1075.863,
+      "repair_calls": 1,
+      "edit_calls": 1,
+      "known_cost_usd": "0.000000",
+      "unknown_calls": 0,
+      "unknown_reserved_usd": "0",
+      "other_calls_without_cost": 0
+    },
+    "pro": {
+      "scheduled": 1,
+      "passed": 1,
+      "passed_fraction": 1.0,
+      "statuses": {
+        "passed": 1
+      },
+      "checks_passed": 12,
+      "checks_total": 12,
+      "measured_games": 1,
+      "generation_seconds": 246.488,
+      "repair_calls": 0,
+      "edit_calls": 0,
+      "known_cost_usd": "0.151143",
+      "unknown_calls": 0,
+      "unknown_reserved_usd": "0",
+      "other_calls_without_cost": 0
+    },
+    "pro_multi": {
+      "scheduled": 2,
+      "passed": 2,
+      "passed_fraction": 1.0,
+      "statuses": {
+        "passed": 2
+      },
+      "checks_passed": 24,
+      "checks_total": 24,
+      "measured_games": 2,
+      "generation_seconds": 2318.83,
+      "repair_calls": 1,
+      "edit_calls": 4,
+      "known_cost_usd": "1.345192",
+      "unknown_calls": 3,
+      "unknown_reserved_usd": "18.840000",
+      "other_calls_without_cost": 0
+    }
+  }
+}

@@ -233,7 +233,8 @@ def claim_run(run_id):
             if run.operation == "create"
             else "Готовим точечные изменения сохранённой игры."
         )
-        run.metrics = {**run.metrics, "queue_seconds": (timezone.now() - run.created_at).total_seconds()}
+        if "queue_seconds" not in run.metrics:
+            run.metrics = {**run.metrics, "queue_seconds": (timezone.now() - run.created_at).total_seconds()}
     if not run.allow_model_calls:
         run.status = run.stage = "checking"
         run.message = "Проверяем сохранённый ответ без нового вызова модели."
@@ -434,17 +435,25 @@ def request_for(run, base, findings, last_attempt_error=None):
                 ) from exc
             request["code_repair_basis"] = basis
         if version >= 5 and not base.accepted:
+            from generation.scene import PATH as scene_path
             from generation.source_policy import module_policy
 
-            policy = module_policy(
-                base.files, findings,
-                allowed_paths={"game.js"} if run.generation_profile == "compact" else None,
-            )
-            # A cosmetic edit must not authorize replacement of untouched working code.
             edit_source = run.source_revision or run.base_revision
-            if edit_source:
-                policy["files"] = {p: h for p, h in policy["files"].items()
-                                   if base.files[p] != edit_source.files.get(p)}
+            if run.pro_parallel and scene_path in run.helper_catalog:
+                from generation.pro_module_repair import permission as module_permission
+
+                try:
+                    policy = module_permission(base.files, findings, run.game_plan,
+                                               edit_source=edit_source.files if edit_source else None)
+                except ContractError as exc:
+                    raise DomainError(exc.code, exc.message) from exc
+            else:
+                policy = module_policy(base.files, findings,
+                    allowed_paths={"game.js"} if run.generation_profile == "compact" else None)
+                # A cosmetic edit must not authorize replacement of untouched working code.
+                if edit_source:
+                    policy["files"] = {p: h for p, h in policy["files"].items()
+                                       if base.files[p] != edit_source.files.get(p)}
             request["module_repair"] = policy
     if base is not None and findings:
         from generation.lite_checks import VERSION as LITE_CHECKS_VERSION
@@ -843,6 +852,9 @@ def _execute(run, lease, generate, materialize, validate):
                         raise ContractError("stale_visual_evidence", "Пакет кадров устарел.") from exc
                     if current_visual.get("visual_patch") != inv.request["visual_patch"]:
                         raise ContractError("stale_visual_evidence", "Разрешение визуальной правки изменилось.")
+                from generation.pro_module_repair import saved_permission
+
+                module_repair = saved_permission(inv.request, draft=bool(response_base and not response_base.accepted))
                 packaging_started = time.monotonic()
                 artifact = materialize(
                     response,
@@ -852,7 +864,7 @@ def _execute(run, lease, generate, materialize, validate):
                     previous_checks=response_base.checks if response_base else None,
                     generation_contract={**inv.request.get("generation_contract", {}),
                                          "pipeline_version": inv.request.get("generation_contract", {}).get("pipeline_version", 2)},
-                    module_repair=inv.request.get("module_repair") if response_base and not response_base.accepted else None,
+                    module_repair=module_repair,
                     check_repair=inv.request.get("check_repair"),
                     patch_repair=inv.request.get("patch_repair"),
                     checks_create=inv.request.get("checks_create"),
@@ -868,7 +880,8 @@ def _execute(run, lease, generate, materialize, validate):
                 if inv.request.get("generation_profile") == "compact" and response_base:
                     artifact.update(title=response_base.title, design={**response_base.design,
                         **({'assets': artifact['design']['assets']} if artifact.get('design', {}).get('assets') else {})})
-                if (inv.request["operation"] in {"check_repair", "checks_create", "visual_patch"} or inv.request.get("code_repair_basis")) and artifact.get("status") != "unchanged":
+                if (inv.request["operation"] in {"check_repair", "checks_create", "visual_patch"} or inv.request.get("code_repair_basis")
+                    or (module_repair or {}).get("scope") == "one_file") and artifact.get("status") != "unchanged":
                     if response_base is None:
                         raise ContractError("missing_base", "Для ремонта нужна сохранённая версия игры.")
                     artifact.update(title=response_base.title, design=response_base.design)

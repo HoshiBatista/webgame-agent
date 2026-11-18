@@ -366,11 +366,15 @@ def events_view(request, ident):
 
 @api_view(["GET"])
 def diagnostics_view(request, ident):
+    from .run_timings import run_timings
+
     run = owned_run(request, ident)
+    invocations = list(run.invocations.order_by("attempt"))
     return Response(
         {
             "run": run_data(run),
             "private_diagnostics": run.private_diagnostics,
+            "timings": run_timings(run, invocations),
             "invocations": [
                 {
                     "id": str(i.id),
@@ -390,7 +394,7 @@ def diagnostics_view(request, ident):
                     "sent_at": i.sent_at.isoformat() if i.sent_at else None,
                     "finished_at": i.finished_at.isoformat() if i.finished_at else None,
                 }
-                for i in run.invocations.order_by("attempt")
+                for i in invocations
             ],
             "revisions": [revision_data(v) for v in run.revisions.all()],
             "completion_policy": run.completion_policy,

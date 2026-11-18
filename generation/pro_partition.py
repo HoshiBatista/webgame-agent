@@ -160,7 +160,11 @@ def validate_reply(value, request):
     files = {item['path']: item['content'] for item in value['files']}
     if set(files) != {'index.html', 'styles.css', 'game.js'} or len(value['files']) != 3:
         raise ContractError('invalid_scene_files', 'Сцена возвращает ровно index.html, styles.css и game.js.')
-    scripts = BeautifulSoup(files['index.html'], 'html.parser').find_all('script')
+    validate_scene_scripts(files['index.html'])
+
+
+def validate_scene_scripts(html):
+    scripts = BeautifulSoup(html, 'html.parser').find_all('script')
     executable = [s for s in scripts if str(s.get('type', '')).lower() in
                   {'', 'text/javascript', 'application/javascript', 'module'}]
     own = [s for s in executable if s.get('src') in {'mechanics.js', 'game.js'}]

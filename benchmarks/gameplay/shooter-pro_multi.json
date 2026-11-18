@@ -1,0 +1,254 @@
+[
+  {
+    "id": "start",
+    "category": "start",
+    "viewport": "mobile",
+    "requirement": "Старт даёт три единицы корпуса и первую волну.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#hp"}, "expect": {"operator": "eq", "value": 3}}
+    ],
+    "observation": {"source": "text", "selector": "#status"},
+    "expect": {"operator": "contains", "value": "Волна 1"},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "touch",
+    "category": "control",
+    "viewport": "mobile",
+    "requirement": "Удержание пальца перемещает корабль вправо и сбивает цель.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 1600},
+      {"action": "assert", "ms": 0, "observation": {"source": "attribute_number", "selector": "#field", "attribute": "data-x"}, "expect": {"operator": "gte", "value": 700}}
+    ],
+    "observation": {"source": "text_number", "selector": "#kills"},
+    "expect": {"operator": "gte", "value": 1},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "keys",
+    "category": "control",
+    "viewport": "desktop",
+    "requirement": "Клавиатура запускает игру, смещает корабль и сбивает врага без мыши.",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "key_down", "key": "ArrowLeft"},
+      {"action": "await_condition", "ms": 1000, "observation": {"source": "attribute_number", "selector": "#field", "attribute": "data-x"}, "expect": {"operator": "lte", "value": 260}},
+      {"action": "key_up", "key": "ArrowLeft"},
+      {"action": "checkpoint"},
+      {"action": "key_down", "key": "Space"},
+      {"action": "wait", "ms": 1500},
+      {"action": "key_up", "key": "Space"}
+    ],
+    "observation": {"source": "text_number", "selector": "#kills"},
+    "expect": {"operator": "increased", "value": null},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "armor",
+    "category": "regression",
+    "viewport": "mobile",
+    "requirement": "Броня выдерживает первое обычное попадание, второе её уничтожает.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 3}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 4}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 700}
+    ],
+    "observation": {"source": "text_number", "selector": "#kills"},
+    "expect": {"operator": "eq", "value": 5},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "power",
+    "category": "regression",
+    "viewport": "mobile",
+    "requirement": "Ячейка даёт усиление, которое заканчивается примерно через четыре секунды.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 3}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 4}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 2300},
+      {"action": "assert", "ms": 0, "observation": {"source": "text", "selector": "#power"}, "expect": {"operator": "contains", "value": "УСИЛЕНИЕ"}},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 4500}
+    ],
+    "observation": {"source": "text", "selector": "#power"},
+    "expect": {"operator": "eq", "value": "Обычный огонь"},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "win",
+    "category": "outcome",
+    "viewport": "mobile",
+    "requirement": "После девяти настоящих целей корабль уничтожает флагман.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1450},
+      {"action": "wait_for", "ms": 1500}
+    ],
+    "observation": {"source": "text", "selector": "#result"},
+    "expect": {"operator": "eq", "value": "Победа"},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "loss",
+    "category": "outcome",
+    "viewport": "mobile",
+    "requirement": "Три вражеских попадания приводят к поражению.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 1450},
+      {"action": "wait", "ms": 10000},
+      {"action": "wait_for", "ms": 2000}
+    ],
+    "observation": {"source": "text", "selector": "#result"},
+    "expect": {"operator": "eq", "value": "Поражение"},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "restart",
+    "category": "restart",
+    "viewport": "mobile",
+    "requirement": "Повтор после поражения возвращает корпус, первую волну и обычный огонь.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 1450},
+      {"action": "wait", "ms": 10000},
+      {"action": "await_condition", "ms": 2000, "observation": {"source": "text", "selector": "#result"}, "expect": {"operator": "contains", "value": "Поражение"}},
+      {"action": "tap", "selector": "#again", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 0}},
+      {"action": "assert", "ms": 0, "observation": {"source": "text", "selector": "#status"}, "expect": {"operator": "contains", "value": "Волна 1"}},
+      {"action": "assert", "ms": 0, "observation": {"source": "text", "selector": "#power"}, "expect": {"operator": "eq", "value": "Обычный огонь"}}
+    ],
+    "observation": {"source": "text_number", "selector": "#hp"},
+    "expect": {"operator": "eq", "value": 3},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "rotate",
+    "category": "regression",
+    "viewport": "mobile",
+    "requirement": "Поворот сохраняет сбитую цель и позволяет продолжить стрельбу.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1000},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "resize", "viewport": "landscape"},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "hold_touch", "selector": "#field", "x": 540, "y": 180, "ms": 1400}
+    ],
+    "observation": {"source": "text_number", "selector": "#kills"},
+    "expect": {"operator": "gte", "value": 2},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "boss-hit",
+    "category": "regression",
+    "viewport": "mobile",
+    "requirement": "Один усиленный снаряд наносит флагману ровно два урона.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 3}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 4}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 2300},
+      {"action": "assert", "ms": 0, "observation": {"source": "text", "selector": "#power"}, "expect": {"operator": "contains", "value": "УСИЛЕНИЕ"}},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 80},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 700},
+      {"action": "wait", "ms": 2100},
+      {"action": "assert", "ms": 0, "observation": {"source": "text_number", "selector": "#kills"}, "expect": {"operator": "eq", "value": 9}},
+      {"action": "assert", "ms": 0, "observation": {"source": "text", "selector": "#power"}, "expect": {"operator": "contains", "value": "УСИЛЕНИЕ"}},
+      {"action": "assert", "ms": 0, "observation": {"source": "text", "selector": "#status"}, "expect": {"operator": "contains", "value": "Флагман · 4"}},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 350},
+      {"action": "wait", "ms": 700}
+    ],
+    "observation": {"source": "text", "selector": "#status"},
+    "expect": {"operator": "contains", "value": "Флагман · 2"},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "music",
+    "category": "regression",
+    "viewport": "mobile",
+    "requirement": "Музыка запускается жестом, выстрелы звучат, mute работает.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "experience", "field": "musicPlaying"}, "expect": {"operator": "eq", "value": true}},
+      {"action": "checkpoint"},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 200},
+      {"action": "wait", "ms": 700},
+      {"action": "tap", "selector": "#gf-player-tools button", "x": null, "y": null},
+      {"action": "assert", "ms": 0, "observation": {"source": "experience", "field": "muted"}, "expect": {"operator": "eq", "value": true}}
+    ],
+    "observation": {"source": "experience", "field": "effectsPlayed"},
+    "expect": {"operator": "increased", "value": null},
+    "wait_budget_ms": 30000
+  },
+  {
+    "id": "held-reset",
+    "category": "regression",
+    "viewport": "mobile",
+    "requirement": "Повтор очищает прежнюю зажатую клавишу: новая правая команда движет корабль.",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "hold_touch", "selector": "#field", "x": 92, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 183, "y": 180, "ms": 1450},
+      {"action": "hold_touch", "selector": "#field", "x": 275, "y": 180, "ms": 1450},
+      {"action": "key_down", "key": "ArrowLeft"},
+      {"action": "wait", "ms": 10000},
+      {"action": "await_condition", "ms": 2000, "observation": {"source": "text", "selector": "#result"}, "expect": {"operator": "contains", "value": "Поражение"}},
+      {"action": "press", "key": "Enter"},
+      {"action": "key_down", "key": "ArrowRight"},
+      {"action": "wait", "ms": 200},
+      {"action": "key_up", "key": "ArrowRight"}
+    ],
+    "observation": {"source": "attribute_number", "selector": "#field", "attribute": "data-x"},
+    "expect": {"operator": "gte", "value": 550},
+    "wait_budget_ms": 30000
+  }
+]

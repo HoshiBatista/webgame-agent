@@ -1,0 +1,191 @@
+[
+  {
+    "id": "S1",
+    "category": "start",
+    "requirement": "Старт касанием на телефоне",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "wait", "ms": 100}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "playing"}
+  },
+  {
+    "id": "S2",
+    "category": "control",
+    "requirement": "Кнопка вниз меняет реальную координату головы",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "#down", "x": null, "y": null},
+      {"action": "wait", "ms": 600}
+    ],
+    "observation": {"source": "state", "path": "gameState.snake.0.y"},
+    "expect": {"operator": "increased", "value": null}
+  },
+  {
+    "id": "S3",
+    "category": "control",
+    "requirement": "Клавиатура вверх меняет координату головы",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "ArrowUp"},
+      {"action": "wait", "ms": 600}
+    ],
+    "observation": {"source": "state", "path": "gameState.snake.0.y"},
+    "expect": {"operator": "decreased", "value": null}
+  },
+  {
+    "id": "S4",
+    "category": "outcome",
+    "requirement": "Столкновение со стеной заканчивает раунд",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "wait", "ms": 4000}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "over"}
+  },
+  {
+    "id": "S5",
+    "category": "restart",
+    "requirement": "Повторный раунд после столкновения сбрасывает длину и счёт",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "wait", "ms": 4000},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.phase"}, "expect": {"operator": "eq", "value": "over"}},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "#replay", "x": null, "y": null},
+      {"action": "wait", "ms": 100},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.snake.length"}, "expect": {"operator": "eq", "value": 3}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.score"}, "expect": {"operator": "eq", "value": 0}}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "playing"}
+  },
+  {
+    "id": "S6",
+    "category": "regression",
+    "requirement": "Пауза останавливает симуляцию",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "wait", "ms": 500},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "Space"},
+      {"action": "wait", "ms": 1000},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.phase"}, "expect": {"operator": "eq", "value": "paused"}}
+    ],
+    "observation": {"source": "state", "path": "gameState.snake.0.x"},
+    "expect": {"operator": "unchanged", "value": null}
+  },
+  {
+    "id": "S7",
+    "category": "control",
+    "requirement": "Возобновление после паузы возвращает движение",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "press", "key": "Space"},
+      {"action": "wait", "ms": 100},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "Space"},
+      {"action": "wait", "ms": 600}
+    ],
+    "observation": {"source": "state", "path": "gameState.snake.0.x"},
+    "expect": {"operator": "increased", "value": null}
+  },
+  {
+    "id": "S8",
+    "category": "regression",
+    "requirement": "Две реально съеденные еды увеличивают счёт и длину",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "press", "key": "ArrowDown"},
+      {"action": "await_condition", "ms": 1200, "observation": {"source": "state", "path": "gameState.snake.0.y"}, "expect": {"operator": "eq", "value": 8}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.score"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.snake.length"}, "expect": {"operator": "eq", "value": 4}},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "ArrowRight"},
+      {"action": "await_condition", "ms": 1200, "observation": {"source": "state", "path": "gameState.snake.0.x"}, "expect": {"operator": "eq", "value": 8}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.snake.length"}, "expect": {"operator": "eq", "value": 5}}
+    ],
+    "observation": {"source": "state", "path": "gameState.score"},
+    "expect": {"operator": "eq", "value": 2}
+  },
+  {
+    "id": "S9",
+    "category": "regression",
+    "requirement": "Столкновение с собственным телом заканчивает игру",
+    "viewport": "desktop",
+    "steps": [
+      {"action": "press", "key": "Enter"},
+      {"action": "press", "key": "ArrowDown"},
+      {"action": "await_condition", "ms": 1200, "observation": {"source": "state", "path": "gameState.snake.0.y"}, "expect": {"operator": "eq", "value": 8}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.score"}, "expect": {"operator": "eq", "value": 1}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.snake.length"}, "expect": {"operator": "eq", "value": 4}},
+      {"action": "press", "key": "ArrowRight"},
+      {"action": "await_condition", "ms": 1200, "observation": {"source": "state", "path": "gameState.snake.0.x"}, "expect": {"operator": "eq", "value": 8}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.snake.length"}, "expect": {"operator": "eq", "value": 5}},
+      {"action": "press", "key": "ArrowUp"},
+      {"action": "await_condition", "ms": 1200, "observation": {"source": "state", "path": "gameState.snake.0.y"}, "expect": {"operator": "eq", "value": 7}},
+      {"action": "checkpoint"},
+      {"action": "press", "key": "ArrowLeft"},
+      {"action": "wait", "ms": 600}
+    ],
+    "observation": {"source": "state", "path": "gameState.phase"},
+    "expect": {"operator": "eq", "value": "over"}
+  },
+  {
+    "id": "S10",
+    "category": "regression",
+    "requirement": "Поворот телефона сохраняет паузу, счёт и длину",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "tap", "selector": "#down", "x": null, "y": null},
+      {"action": "await_condition", "ms": 1200, "observation": {"source": "state", "path": "gameState.snake.0.y"}, "expect": {"operator": "eq", "value": 8}},
+      {"action": "tap", "selector": "#pause", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "resize", "viewport": "landscape"},
+      {"action": "wait", "ms": 100},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.phase"}, "expect": {"operator": "eq", "value": "paused"}},
+      {"action": "assert", "ms": 0, "observation": {"source": "state", "path": "gameState.snake.length"}, "expect": {"operator": "eq", "value": 4}}
+    ],
+    "observation": {"source": "state", "path": "gameState.score"},
+    "expect": {"operator": "eq", "value": 1}
+  },
+  {
+    "id": "S11",
+    "category": "control",
+    "requirement": "Управление на горизонтальном телефоне",
+    "viewport": "landscape",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "checkpoint"},
+      {"action": "tap", "selector": "#down", "x": null, "y": null},
+      {"action": "wait", "ms": 600}
+    ],
+    "observation": {"source": "state", "path": "gameState.snake.0.y"},
+    "expect": {"operator": "increased", "value": null}
+  },
+  {
+    "id": "S12",
+    "category": "regression",
+    "requirement": "Музыка запускается после действия игрока",
+    "viewport": "mobile",
+    "steps": [
+      {"action": "tap", "selector": "#start", "x": null, "y": null},
+      {"action": "wait", "ms": 600}
+    ],
+    "observation": {"source": "experience", "field": "musicPlaying"},
+    "expect": {"operator": "eq", "value": true}
+  }
+]

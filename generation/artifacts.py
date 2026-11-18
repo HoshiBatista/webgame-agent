@@ -387,6 +387,7 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
         if response["base_revision"] != str(base_revision):
             raise ContractError("stale_revision", "Ответ «без изменений» относится к другой версии игры.")
         return {"status": "unchanged", "message": response["message"]}
+    scoped_path = None
     inherited_incomplete = False
     if original:
         if operation == "repair" and code_repair_basis is not None:
@@ -417,6 +418,10 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
         if response["base_revision"] != str(base_revision):
             raise ContractError("stale_revision", "Патч относится к другой версии игры.")
         policy = module_repair if operation == "repair" else None
+        if (policy or {}).get("scope") == "one_file":
+            from .pro_module_repair import check_response
+
+            scoped_path = check_response(response, policy, original)
         result = apply_patches(original, response["patches"], module_repair=policy)
     else:
         if response["operation"] != "create" or response["patches"] or response["base_revision"] is not None:
@@ -475,6 +480,13 @@ def materialize(response, *, operation, base_revision=None, files=None, previous
 
     result = attach(result, required=operation == 'create' and experience_path in (helper_catalog or {}))
     result = resolve(result, helper_catalog)
+    if scoped_path:
+        if any(result.get(p) != original.get(p) for p in (result.keys() | original.keys()) - {scoped_path}):
+            raise ContractError("module_scope", "Исправление затронуло соседний файл или общий ресурс.")
+        if scoped_path == "index.html" and module_repair.get("split"):
+            from .pro_partition import validate_scene_scripts
+
+            validate_scene_scripts(result[scoped_path])
     try:
         document = bundle(result)
     except ContractError as exc:

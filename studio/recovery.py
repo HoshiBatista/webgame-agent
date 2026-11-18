@@ -7,6 +7,7 @@ from django.db import transaction
 
 from generation.artifacts import materialize
 from generation.normalization import VERSION, normalize_response
+from generation.pro_module_repair import saved_permission
 from generation.schema import CONTRACT_VERSION, response_schema, validate_response
 
 from .models import Chat, Invocation, Revision, Run
@@ -61,11 +62,12 @@ def recover_saved_response(invocation_id, *, apply=False):
 
         if base is None or code_repair_basis(parent, base) != basis:
             raise DomainError('stale_code_repair_basis', 'Свидетельство для ремонта кода изменилось; нужна повторная проверка.', 409)
+    module_repair = saved_permission(saved_request, draft=bool(base and not base.accepted))
     artifact = materialize(
         response, operation=source.request["operation"], base_revision=base_id,
         files=base.files if base else None, previous_checks=base.checks if base else None,
         generation_contract=saved_request["generation_contract"],
-        module_repair=source.request.get("module_repair") if base and not base.accepted else None,
+        module_repair=module_repair,
         generation_profile=parent.generation_profile, compact_manifest=saved_request.get('compact_manifest'),
         source_format=parent.source_format, check_repair=saved_request.get('check_repair'),
         code_repair_basis=basis,
@@ -76,6 +78,8 @@ def recover_saved_response(invocation_id, *, apply=False):
     if parent.generation_profile == 'compact' and base:
         artifact.update(title=base.title, design={**base.design,
             **({'assets': artifact['design']['assets']} if artifact.get('design', {}).get('assets') else {})})
+    if base and (module_repair or {}).get('scope') == 'one_file':
+        artifact.update(title=base.title, design=base.design)
     audit = {"source_invocation": str(source.id), "source_run": str(parent.id),
              "raw_sha256": fingerprint(raw), "normalization_version": VERSION, "paths": paths}
     summary = {"source_invocation": str(source.id), "changes": paths,

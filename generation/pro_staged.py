@@ -29,6 +29,8 @@ def source_prompt(request):
     from .presentation import implementation_prompt
     from .pro_parallel import implementation_guidance
     from .prompts import COMMON_PROMPT, PLAN_GUIDANCE, PREFERENCE_PRIORITY, SOURCE_V5_PROMPT
+    from .scene import GUIDANCE as SCENE_API
+    from .scene import PATH as scene_path
 
     text = COMMON_PROMPT.split('SHORT HONEST CHECKS')[0]
     text = text.replace('no separate planning turn', 'follow the frozen game plan')
@@ -59,6 +61,8 @@ the canvas, so the player can still reach ordinary controls and sound settings.
 Return complete valid JSON and all source files. Keep title/design/message concise and
 in Russian. A previous output-limit failure calls for removing repetition, not features.
 """
+    if scene_path in request.get('helper_catalog', {}):
+        prompt += SCENE_API
     if request.get('response_completion'):
         from .response_completion import PROMPT
 
@@ -93,6 +97,8 @@ def checks_messages(request):
     from .experience import CHECK_GUIDANCE
     from .pro_creative import check_prompt
     from .prompts import CHECK_V4_PROMPT, COMMON_PROMPT, PLAN_CHECK_CONTEXT
+    from .scene import GUIDANCE as SCENE_API
+    from .scene import PATH as scene_path
 
     prompt = """EXPERIMENTAL PRO v4: SCENARIOS FOR FROZEN SOURCE
 Return only operation=pro_checks, source_hash copied exactly, and checks. You have no
@@ -111,6 +117,8 @@ the final position alone. Use safe margins inside interaction ranges and away fr
 hazards, and boundary anchors where the source supports them. Never adjust expected
 damage or outcomes to excuse a route that violates the mechanic's precondition.
 """ + COMMON_PROMPT.split('SHORT HONEST CHECKS', 1)[1] + CHECK_V4_PROMPT + PLAN_CHECK_CONTEXT + CHECK_GUIDANCE
+    if scene_path in request.get('helper_catalog', {}) and scene_path in request.get('files', {}).get('index.html', ''):
+        prompt += SCENE_API
     context = {k: request.get(k) for k in ('game_request', 'game_plan', 'requirement_manifest',
         'source_hash', 'files', 'design', 'assets', 'last_attempt_error')}
     return [{'role': 'system', 'content': check_prompt(prompt + guidance(request), request)},

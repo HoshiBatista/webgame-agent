@@ -5,6 +5,7 @@ threads or speculative retries. Every response and charge is a normal Invocation
 """
 
 import hashlib
+import time
 
 from django.db import transaction
 from django.utils import timezone
@@ -208,12 +209,14 @@ def advance(run, lease, generate, materialize):
         else:
             defer_relay(run, 'Сохранили готовые части. Продолжаем оставшиеся этапы.')
         return None
+    packaging_started = time.monotonic()
     try:
         response = assemble({role: call.response for role, call in valid.items()}, run.game_plan, run.pro_parallel_version)
         request = valid[source_author].request
         artifact = materialize(response, operation='create', generation_contract=request['generation_contract'],
             generation_strategy='pro', requirement_manifest=run.requirement_manifest,
             helper_catalog=run.helper_catalog, generation_profile='full', source_format='string')
+        packaging_seconds = time.monotonic() - packaging_started
     except ContractError as exc:
         # Source packaging may fail although the reply schema was correct. Keep
         # both validated resource branches and retry only the gameplay author.
@@ -238,7 +241,9 @@ def advance(run, lease, generate, materialize):
         Invocation.objects.filter(pk__in=[c.pk for c in valid.values()], state='settled').update(
             revision=revision, state='settled')
         current = Run.objects.select_for_update().get(pk=run.id)
-        current.metrics = {**current.metrics, 'pro_parallel': {
+        current.metrics = {**current.metrics,
+            'packaging_seconds': current.metrics.get('packaging_seconds', 0) + packaging_seconds,
+            'pro_parallel': {
             'version': run.pro_parallel_version, 'plan_hash': digest(run.game_plan),
             'gameplay_mode': 'split' if source_author == 'scene' else 'single',
             'assembled_revision': str(revision.id),
