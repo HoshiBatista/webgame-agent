@@ -71,6 +71,11 @@ HOLD_TOUCH = obj({
     'ms': {'type': 'integer', 'minimum': 1, 'maximum': 3000,
            'description': 'Real finger held on the target, then released. Counts toward the total wait budget.'},
 })
+HOLD_KEY = obj({
+    'action': {'enum': ['hold_key']},
+    'key': string(minLength=1, maxLength=40),
+    'ms': {'type': 'integer', 'minimum': 1, 'maximum': 3000},
+})
 WAIT = obj({"action": {"enum": ["wait"]}, "ms": {"type": "integer", "minimum": 0, "maximum": 10000}})
 BLUR = obj({"action": {"enum": ["blur"]}})
 RESIZE = obj({"action": {"enum": ["resize"]}, "viewport": {"enum": ["mobile", "landscape", "desktop"]}})
@@ -178,6 +183,7 @@ CHECK_SCHEMA["properties"]["steps"]["items"]["anyOf"].extend([
 ])
 CHECK_SCHEMA["properties"]["category"]["enum"].append("restart")
 SAVED_CHECK_SCHEMA = extended_check_schema(CHECK_SCHEMA)
+SAVED_CHECK_SCHEMA['properties']['steps']['items']['anyOf'].append(HOLD_KEY)
 APPLICATION_SCHEMA = deepcopy(RESPONSE_SCHEMA)
 APPLICATION_SCHEMA["properties"]["checks"]["items"] = SAVED_CHECK_SCHEMA
 EXACT_PATCH = deepcopy(RESPONSE_SCHEMA["properties"]["patches"]["items"])

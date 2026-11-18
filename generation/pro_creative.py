@@ -99,6 +99,9 @@ Use layered depth and theme-specific effects where they clarify play. Limit part
 trails, retire completed effects, reset cosmetic state on restart and preserve rules on
 resize. Keep one animation scheduler and bounded elapsed seconds; idle/static screens do
 not need a permanent loop. Respect reduced motion with calmer/instant equivalent feedback.
+Every declared effect needs a real rendering path; terminal transitions must keep advancing
+their cosmetic effects. Reset held-key bookkeeping on restart as well as visible state.
+Each projectile/contact applies its intended damage once per target, never once per frame.
 Never lock gameplay for cosmetic choreography. A rules cue/telegraph may affect timing only
 when explicitly agreed in the frozen mechanics contract, not from animation completion.
 Implement the full challenge arc and real choices, not just labels for unimplemented
@@ -177,10 +180,24 @@ def timed_checks(request):
 def check_schema(schema, request):
     if not timed_checks(request):
         return schema
-    from .lite_wait_budget import extended_check_schema
+    from .schema import HOLD_KEY
+
+    def variants(check):
+        if 'anyOf' in check:
+            return [variant for child in check['anyOf'] for variant in variants(child)]
+        ordinary = deepcopy(check)
+        ordinary['properties']['steps']['items']['anyOf'].append(deepcopy(HOLD_KEY))
+        ordinary['properties'].pop('wait_budget_ms', None)
+        ordinary['required'] = [key for key in ordinary['required'] if key != 'wait_budget_ms']
+        timed = deepcopy(ordinary)
+        timed['properties']['wait_budget_ms'] = {'type': 'integer', 'const': 30000}
+        timed['required'].append('wait_budget_ms')
+        return [ordinary, timed]
 
     result = deepcopy(schema)
-    result['properties']['checks']['items'] = extended_check_schema(result['properties']['checks']['items'])
+    # Pro Structured Outputs requires every declared property to be required.
+    # Two closed shapes preserve untouched old checks without an optional field.
+    result['properties']['checks']['items'] = {'anyOf': variants(result['properties']['checks']['items'])}
     return result
 
 
@@ -215,4 +232,10 @@ per scenario <=30000ms; each wait <=10000ms; await_condition/wait_for/hold_touch
 Use wait during setup and one wait_for only as the last step. Never speed up game rules,
 assign state, remove mechanics or weaken outcomes to fit the route. Derive timing from
 real speeds/spawns; an intermediate await is fail-fast, not a loop to accumulate time.
+For precise keyboard movement use hold_key with key and ms (1..3000): the browser holds
+and releases that physical key in one bounded action. It counts toward the total budget;
+the comparison without input waits the same duration. Separate key_down/await/key_up
+can overshoot while diagnostic observations run between steps. Do not hold the same key
+both ways at once. Derive durations from the real speed; use visible boundaries to
+re-anchor a long route. A final wait_for still waits for the actual outcome.
 """

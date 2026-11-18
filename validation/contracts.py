@@ -33,7 +33,7 @@ def suite_findings(checks: list[dict[str, Any]], *, require_keyboard=False) -> l
         and check.get('observation', {}).get('source') != 'experience'
         and check.get("viewport") == "mobile"
         and any(step.get("action") in {"tap", "tap_fraction", "hold_touch"} for step in check.get("steps", []))
-        and not any(step.get("action") in {"press", "key_down", "key_up"} for step in check.get("steps", []))
+        and not any(step.get("action") in {"press", "key_down", "key_up", "hold_key"} for step in check.get("steps", []))
         for check in checks
     ):
         findings.append(
@@ -44,7 +44,7 @@ def suite_findings(checks: list[dict[str, Any]], *, require_keyboard=False) -> l
         )
     if require_keyboard and not any(c.get('category') == 'control' and c.get('viewport') == 'desktop'
             and c.get('observation', {}).get('source') != 'experience'
-            and any(s.get('action') in {'press', 'key_down'} for s in c.get('steps', []))
+            and any(s.get('action') in {'press', 'key_down', 'hold_key'} for s in c.get('steps', []))
             and not any(s.get('action') in {'click', 'tap', 'hold_touch', 'click_fraction', 'tap_fraction'} for s in c.get('steps', []))
             for c in checks):
         findings.append({'code': 'missing_keyboard_control',

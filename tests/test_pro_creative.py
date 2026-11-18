@@ -167,3 +167,34 @@ def test_new_budget_is_recorded_without_rewriting_provider_receipt(monkeypatch):
     assert all(c['wait_budget_ms'] == 30000 for c in result['response']['checks'])
     assert result['provider_metadata']['pro_creative_wait_budget']['check_ids'] == [
         c['id'] for c in original['checks']]
+
+
+@pytest.mark.parametrize('operation', ['create', 'edit', 'repair', 'check_repair'])
+def test_v3_output_schema_requires_every_declared_property_without_changing_old_checks(operation):
+    from jsonschema import Draft202012Validator
+
+    from generation.schema import response_schema
+    from tests.test_lite_wait_budget import long_check
+
+    old = long_check()
+    timed = {**old, 'wait_budget_ms': 30000}
+    req = creative_request('gameplay')
+    req.pop('pro_parallel_branch')
+    req.update(operation=operation, checks=[old, timed], check_repair={'protected_checks': [old]})
+    schema = response_schema(req)
+
+    def inspect(node):
+        if isinstance(node, dict):
+            if 'properties' in node:
+                assert set(node['required']) == set(node['properties'])
+                assert node['additionalProperties'] is False
+            for value in node.values():
+                inspect(value)
+        elif isinstance(node, list):
+            for value in node:
+                inspect(value)
+
+    inspect(schema)
+    validator = Draft202012Validator(schema['properties']['checks']['items'])
+    assert validator.is_valid(old) and validator.is_valid(timed)
+    assert not validator.is_valid({**old, 'wait_budget_ms': 10000})

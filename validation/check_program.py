@@ -82,7 +82,7 @@ class CheckProgram:
         if not meaningful:
             return None
         index = meaningful[-1]
-        if steps[index]['action'] == 'hold_touch':
+        if steps[index]['action'] in {'hold_touch', 'hold_key'}:
             # Keep elapsed time identical: a timer-only effect must not be
             # mistaken for a response to holding the finger on a control.
             return {**check, 'steps': [({'action': 'wait', 'ms': s['ms']} if i == index else s)
@@ -220,6 +220,8 @@ def compile_check(check, *, timer_outcome=False):
         if kind == 'hold_touch' and (check['viewport'] == 'desktop' or type(step.get('ms')) is not int
                                      or not 1 <= step['ms'] <= 3000):
             return result('invalid_check', 'steps', 'Удержание касания требует сенсорный экран и длительность 1–3000 мс.')
+        if kind == 'hold_key' and (type(step.get('ms')) is not int or not 1 <= step['ms'] <= 3000):
+            return result('invalid_check', 'steps.ms', 'Удержание клавиши требует длительность 1–3000 мс.')
         if kind in {'click','tap', 'hold_touch'} and ((step.get('x') is None) != (step.get('y') is None)
                                       or not step.get('selector') and step.get('x') is None):
             return result('invalid_pointer', 'steps', 'Укажите selector или обе координаты действия.')
@@ -230,7 +232,7 @@ def compile_check(check, *, timer_outcome=False):
             not step.get('selector') or any(not numeric(v) or not 0 <= v <= 1 for v in (step.get('x'), step.get('y')))
         ):
             return result('invalid_pointer', 'steps', 'Доли координат требуют selector и x/y от 0 до 1.')
-        if kind in {'press', 'key_down', 'key_up'} and not supported_key(step.get('key'), kind):
+        if kind in {'press', 'key_down', 'key_up', 'hold_key'} and not supported_key(step.get('key'), kind):
             return result('invalid_check', 'steps.key', 'Неподдерживаемая физическая клавиша. Используйте ArrowUp/Down/Left/Right, Space или клавиши латинской раскладки.')
         if kind == 'resize' and step.get('viewport') not in VIEWPORTS:
             return result('invalid_check', 'steps.viewport', 'Неизвестный размер контрольного viewport.')

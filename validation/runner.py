@@ -369,7 +369,7 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
             (page.touchscreen.tap if kind == "tap" else page.mouse.click)(x, y)
         else:
             raise InvalidCheck("Указаны не все координаты действия.")
-    elif kind in {"press", "key_down", "key_up"}:
+    elif kind in {"press", "key_down", "key_up", "hold_key"}:
         # Move browser focus without clicking arbitrary game coordinates: such a
         # click could satisfy a keyboard check even when the game ignores keys.
         if page.evaluate("document.activeElement.tagName") != "IFRAME":
@@ -377,7 +377,17 @@ def action(page, frame, step, contract=None, *, touch_enabled=True):
         key = step.get("key")
         if not isinstance(key, str) or not key:
             raise InvalidCheck("Отсутствует клавиша.")
-        {"press": page.keyboard.press, "key_down": page.keyboard.down, "key_up": page.keyboard.up}[kind](key)
+        if kind == 'hold_key':
+            ms = step.get('ms')
+            if type(ms) is not int or not 1 <= ms <= 3000:
+                raise InvalidCheck('Удержание клавиши должно длиться 1–3000 мс.')
+            page.keyboard.down(key)
+            try:
+                wait(page, ms)
+            finally:
+                page.keyboard.up(key)
+        else:
+            {"press": page.keyboard.press, "key_down": page.keyboard.down, "key_up": page.keyboard.up}[kind](key)
     elif kind == "wait":
         ms = step.get("ms", 0)
         if not isinstance(ms, (int, float)) or not 0 <= ms <= 10000:
