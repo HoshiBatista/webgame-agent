@@ -1,0 +1,155 @@
+{
+  "date": "2026-10-30",
+  "timezone": "Europe/Moscow",
+  "scope": "www.beegame.ru DNS, TLS and canonical redirect only",
+  "dns": {
+    "provider": "Beget",
+    "name": "www.beegame.ru",
+    "type": "A",
+    "previous": "5.101.152.161",
+    "current": "212.57.126.215",
+    "google_confirmed": true,
+    "cloudflare_confirmed": true
+  },
+  "redirect": {
+    "from": [
+      "http://www.beegame.ru",
+      "https://www.beegame.ru"
+    ],
+    "to": "https://beegame.ru{uri}",
+    "status": 308,
+    "preserves_path_and_query": true,
+    "http_acme_challenge_exempt": true
+  },
+  "certificate": {
+    "issuer": "Lets Encrypt",
+    "lineage": "beegame.ru",
+    "domains": [
+      "beegame.ru",
+      "lite.beegame.ru",
+      "preview.beegame.ru",
+      "www.beegame.ru"
+    ],
+    "not_after_utc": "2027-01-28T03:17:38Z",
+    "renewal_timer": "enabled",
+    "renewal_dry_run": "passed with --run-deploy-hooks",
+    "renewal_dry_run_completed_utc": "2026-10-30T04:21:11Z"
+  },
+  "direct_server_checks": {
+    "checked_at_utc": "2026-10-30T04:16:40.533263+00:00",
+    "dns_override": true,
+    "checks": [
+      {
+        "url": "http://www.beegame.ru/",
+        "status": 308,
+        "location": "https://beegame.ru/",
+        "tls_verification": false
+      },
+      {
+        "url": "http://www.beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "status": 308,
+        "location": "https://beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "tls_verification": false
+      },
+      {
+        "url": "https://www.beegame.ru/",
+        "status": 308,
+        "location": "https://beegame.ru/",
+        "tls_verification": true
+      },
+      {
+        "url": "https://www.beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "status": 308,
+        "location": "https://beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "tls_verification": true
+      },
+      {
+        "url": "http://www.beegame.ru/api/health/",
+        "redirect_followed": true,
+        "health": {
+          "status": "ok"
+        }
+      },
+      {
+        "url": "https://www.beegame.ru/api/health/",
+        "redirect_followed": true,
+        "health": {
+          "status": "ok"
+        }
+      }
+    ]
+  },
+  "ordinary_dns_checks": {
+    "checked_at_utc": "2026-10-30T04:17:19.904368+00:00",
+    "dns_override": false,
+    "checks": [
+      {
+        "url": "http://www.beegame.ru/",
+        "status": 308,
+        "location": "https://beegame.ru/",
+        "tls_verification": false
+      },
+      {
+        "url": "http://www.beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "status": 308,
+        "location": "https://beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "tls_verification": false
+      },
+      {
+        "url": "https://www.beegame.ru/",
+        "status": 308,
+        "location": "https://beegame.ru/",
+        "tls_verification": true
+      },
+      {
+        "url": "https://www.beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "status": 308,
+        "location": "https://beegame.ru/games/e7b97665-3ea9-421e-a6f3-79b490366b65?source=www-test&value=a%20b",
+        "tls_verification": true
+      },
+      {
+        "url": "http://www.beegame.ru/api/health/",
+        "redirect_followed": true,
+        "health": {
+          "status": "ok"
+        }
+      },
+      {
+        "url": "https://www.beegame.ru/api/health/",
+        "redirect_followed": true,
+        "health": {
+          "status": "ok"
+        }
+      }
+    ]
+  },
+  "browser": {
+    "name": "Firefox",
+    "entered": "https://www.beegame.ru/",
+    "landed": "https://beegame.ru/",
+    "title": "beeGame",
+    "certificate_warning": false
+  },
+  "regression": {
+    "main_http": 200,
+    "preview_root_http": 404,
+    "lite_root_http": 404,
+    "tls_verification": true,
+    "caddy_active": true,
+    "local_config_caddy_validation": "passed",
+    "git_diff_check": "passed"
+  },
+  "remote_config_sha256": "e84dcd21f176aa850700e7c7db3f890a643c98703114ff5a081eeef7f6678fd8",
+  "backups": [
+    "/opt/gameforge/backups/www-redirect-http-20261030T041327Z",
+    "/opt/gameforge/backups/www-redirect-https-20261030T041622Z"
+  ],
+  "deployed_config": "/etc/caddy/Caddyfile",
+  "release_config_updated": "/opt/gameforge/current/deploy/Caddyfile.cloud",
+  "application_containers_recreated": false,
+  "application_data_changed": false,
+  "model_calls": 0,
+  "notes": [
+    "The VPS system DNS cache temporarily retained the old address; Google/Cloudflare and ordinary local HTTPS requests confirmed the new address. Other clients may retain cached records until expiry."
+  ]
+}

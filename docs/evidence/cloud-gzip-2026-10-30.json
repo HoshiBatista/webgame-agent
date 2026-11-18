@@ -1,0 +1,202 @@
+{
+  "changed_at_utc": "20261030T114653Z",
+  "scope": "NGINX response compression only",
+  "files": [
+    {
+      "path": "/opt/gameforge/releases/20261030-a2e4c79/deploy/cloud.nginx.conf",
+      "backup": "/opt/gameforge/backups/http-gzip-20261030T114653Z/original-0.conf",
+      "old_sha256": "7d742297ab5653af722913f40a29730c048890ed49556c709b7d82e4124da1d4",
+      "new_sha256": "72f0776afdcbb9cc27052a1ef9723151f0749c849a6591289c6999fd713797b7"
+    },
+    {
+      "path": "/opt/gameforge/releases/20261030-a2e4c79-feedback134e6a3/deploy/cloud.nginx.conf",
+      "backup": "/opt/gameforge/backups/http-gzip-20261030T114653Z/original-1.conf",
+      "old_sha256": "7d742297ab5653af722913f40a29730c048890ed49556c709b7d82e4124da1d4",
+      "new_sha256": "72f0776afdcbb9cc27052a1ef9723151f0749c849a6591289c6999fd713797b7"
+    }
+  ],
+  "runtime_before": {
+    "/gameforge-mini-worker-1": {
+      "id": "ca4d8c09fee73fc27f3349cf3b8acea178f9d53e932592a8d31d7817ae30e4ea",
+      "started_at": "2026-10-30T01:57:03.228009224Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-20261030"
+    },
+    "/gameforge-mini-app-1": {
+      "id": "84f24cffab9a4fd3551c707deb8e574977029f0721f24153b44076768223a4e5",
+      "started_at": "2026-10-30T01:57:04.968297931Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-feedback134e6a3"
+    },
+    "/gameforge-mini-preview-1": {
+      "id": "fc6add695a5b782ca6dc3b10a68e830b002b5c2eea6d5ca672bc84f396ff4189",
+      "started_at": "2026-10-30T01:57:06.152196812Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-20261030"
+    },
+    "/gameforge-mini-beat-1": {
+      "id": "ccfa774ec2c9532181474ddaee15e5f010b8e6d105d6a39675fd2cf4e5be96e7",
+      "started_at": "2026-10-30T01:57:03.98977877Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-20261030"
+    },
+    "/gameforge-mini-edge-1": {
+      "id": "0d1a49a38e5870442cda311e66029e740e9502d7dcc6eed8d0e8aa5aae3e6e66",
+      "started_at": "2026-10-29T21:37:58.824592743Z",
+      "restart_count": 0,
+      "image": "nginx:1.28-alpine"
+    },
+    "/gameforge-mini-validator-1": {
+      "id": "01197d68fc9ec77c8d6e329c4a9b85245489d2d2ef9bd6a0e0d8ca451316bd78",
+      "started_at": "2026-10-29T17:02:08.289456456Z",
+      "restart_count": 0,
+      "image": "gameforge-mini-validator:cloud-d942174-20261029"
+    },
+    "/llm-relay-relay-1": {
+      "id": "6721c0e16e82b001357219358e4b15839c31548a879e6bd3b7864f529397a7ed",
+      "started_at": "2026-10-23T19:36:44.090956333Z",
+      "restart_count": 0,
+      "image": "sha256:a7a9e3e9124703a63229b8ea313757bc8bad90e8f6312be2cf5e6037c75d9c43"
+    },
+    "/gameforge-mini-db-1": {
+      "id": "dad7109bd6106cab8d7cd3234739a4efa56c5381cc922efc2a772385ae17626b",
+      "started_at": "2026-10-23T19:33:33.224041967Z",
+      "restart_count": 0,
+      "image": "postgres:18-alpine"
+    },
+    "/gameforge-mini-redis-1": {
+      "id": "33815cabb7ae4c9262f7f172fa02c76018f49fc03fc5e51c9afe61da0e3d0014",
+      "started_at": "2026-10-23T19:33:33.761549481Z",
+      "restart_count": 0,
+      "image": "redis:7-alpine"
+    }
+  },
+  "checks": [
+    {
+      "path": "/api/health/",
+      "status": 200,
+      "encoding": "",
+      "wire_bytes": 15,
+      "decoded_bytes": 15,
+      "vary": "Accept, Cookie"
+    },
+    {
+      "path": "/assets/index-DHciqqtj.js",
+      "status": 200,
+      "encoding": "gzip",
+      "wire_bytes": 121430,
+      "decoded_bytes": 384720,
+      "vary": "Accept-Encoding"
+    },
+    {
+      "path": "/assets/index-oc5eWrb8.css",
+      "status": 200,
+      "encoding": "gzip",
+      "wire_bytes": 20154,
+      "decoded_bytes": 81586,
+      "vary": "Accept-Encoding"
+    }
+  ],
+  "runtime_after": {
+    "/gameforge-mini-worker-1": {
+      "id": "ca4d8c09fee73fc27f3349cf3b8acea178f9d53e932592a8d31d7817ae30e4ea",
+      "started_at": "2026-10-30T01:57:03.228009224Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-20261030"
+    },
+    "/gameforge-mini-app-1": {
+      "id": "84f24cffab9a4fd3551c707deb8e574977029f0721f24153b44076768223a4e5",
+      "started_at": "2026-10-30T01:57:04.968297931Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-feedback134e6a3"
+    },
+    "/gameforge-mini-preview-1": {
+      "id": "fc6add695a5b782ca6dc3b10a68e830b002b5c2eea6d5ca672bc84f396ff4189",
+      "started_at": "2026-10-30T01:57:06.152196812Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-20261030"
+    },
+    "/gameforge-mini-beat-1": {
+      "id": "ccfa774ec2c9532181474ddaee15e5f010b8e6d105d6a39675fd2cf4e5be96e7",
+      "started_at": "2026-10-30T01:57:03.98977877Z",
+      "restart_count": 0,
+      "image": "gameforge-mini:cloud-a2e4c79-20261030"
+    },
+    "/gameforge-mini-edge-1": {
+      "id": "0d1a49a38e5870442cda311e66029e740e9502d7dcc6eed8d0e8aa5aae3e6e66",
+      "started_at": "2026-10-29T21:37:58.824592743Z",
+      "restart_count": 0,
+      "image": "nginx:1.28-alpine"
+    },
+    "/gameforge-mini-validator-1": {
+      "id": "01197d68fc9ec77c8d6e329c4a9b85245489d2d2ef9bd6a0e0d8ca451316bd78",
+      "started_at": "2026-10-29T17:02:08.289456456Z",
+      "restart_count": 0,
+      "image": "gameforge-mini-validator:cloud-d942174-20261029"
+    },
+    "/llm-relay-relay-1": {
+      "id": "6721c0e16e82b001357219358e4b15839c31548a879e6bd3b7864f529397a7ed",
+      "started_at": "2026-10-23T19:36:44.090956333Z",
+      "restart_count": 0,
+      "image": "sha256:a7a9e3e9124703a63229b8ea313757bc8bad90e8f6312be2cf5e6037c75d9c43"
+    },
+    "/gameforge-mini-db-1": {
+      "id": "dad7109bd6106cab8d7cd3234739a4efa56c5381cc922efc2a772385ae17626b",
+      "started_at": "2026-10-23T19:33:33.224041967Z",
+      "restart_count": 0,
+      "image": "postgres:18-alpine"
+    },
+    "/gameforge-mini-redis-1": {
+      "id": "33815cabb7ae4c9262f7f172fa02c76018f49fc03fc5e51c9afe61da0e3d0014",
+      "started_at": "2026-10-23T19:33:33.761549481Z",
+      "restart_count": 0,
+      "image": "redis:7-alpine"
+    }
+  },
+  "result": "applied",
+  "public_json_check": {
+    "url": "https://beegame.ru/api/publications/cb4c181b-6a86-4078-966c-0a7b75980493/",
+    "accept": "application/json; indent=8",
+    "status": 200,
+    "encoding": "gzip",
+    "wire_bytes": 615,
+    "decoded_bytes": 1029,
+    "content_type": "application/json",
+    "json_valid": true,
+    "expected_publication": true,
+    "vary": "Accept-Encoding"
+  },
+  "public_checks": {
+    "http_version": "HTTP/2",
+    "gzip_files": {
+      "/assets/index-DHciqqtj.js": {
+        "before": 384720,
+        "after": 121430,
+        "decoded_content_equal": true
+      },
+      "/assets/index-oc5eWrb8.css": {
+        "before": 81586,
+        "after": 20154,
+        "decoded_content_equal": true
+      },
+      "/assets/beeline-logo.svg": {
+        "before": 2387,
+        "after": 1197,
+        "decoded_content_equal": true
+      }
+    },
+    "root_status": 200,
+    "health_status": 200,
+    "health_body": {
+      "status": "ok"
+    },
+    "guest_session_status": 200,
+    "guest_chats_status": 403
+  },
+  "limits": [
+    "No claim of a stable network speedup; external TLS and transfer times still vary.",
+    "Private chat API contents were not changed. JSON transport verified using an existing public publication with indented rendering to exceed the 1024-byte compression threshold.",
+    "No application or worker release, database mutation, new session or model call was performed by this change."
+  ],
+  "backup_directory": "/opt/gameforge/backups/http-gzip-20261030T114653Z"
+}

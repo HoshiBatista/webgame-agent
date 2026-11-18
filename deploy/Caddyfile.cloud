@@ -8,6 +8,21 @@ http://beegame.ru, http://preview.beegame.ru, http://lite.beegame.ru {
     }
 }
 
+http://www.beegame.ru {
+    handle /.well-known/acme-challenge/* {
+        root * /var/lib/caddy/certbot-webroot
+        file_server
+    }
+    handle {
+        redir https://beegame.ru{uri} 308
+    }
+}
+
+www.beegame.ru {
+    tls /etc/caddy/certbot/beegame.ru/current/fullchain.pem /etc/caddy/certbot/beegame.ru/current/privkey.pem
+    redir https://beegame.ru{uri} 308
+}
+
 beegame.ru {
     tls /etc/caddy/certbot/beegame.ru/current/fullchain.pem /etc/caddy/certbot/beegame.ru/current/privkey.pem
     reverse_proxy 127.0.0.1:8080
