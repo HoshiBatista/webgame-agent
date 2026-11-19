@@ -31,23 +31,6 @@
   }
 }
 
-.model-info-jump {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 36px;
-  margin-top: 6px;
-  font-size: var(--text-small);
-  font-weight: 680;
-  text-decoration: underline;
-  text-decoration-color: var(--border);
-  text-underline-offset: 4px;
-
-  &:hover {
-    text-decoration-color: currentColor;
-  }
-}
-
 .model-info-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

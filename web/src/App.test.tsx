@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import App from './App';
@@ -367,7 +367,7 @@ it('does not let a delayed session refresh undo a saved model choice', async () 
 
 const guestSession: Session = { ...session, user: null };
 
-it('opens the model guide from the landing in the same tab', async () => {
+it('opens the model guide in the same tab and returns to the landing through the brand', async () => {
   vi.mocked(getSession).mockResolvedValue(guestSession);
   setup('/');
   const link = await screen.findByRole('link', { name: 'О моделях' });
@@ -380,6 +380,13 @@ it('opens the model guide from the landing in the same tab', async () => {
     expect(screen.getByRole('heading', { name })).toBeInTheDocument();
   }
   expect(document.title).toBe('Модели beeGame');
+  const header = within(screen.getByRole('banner'));
+  const home = header.getByRole('link', { name: 'beeGame, главная' });
+  expect(home).toHaveAttribute('href', '/');
+  expect(header.getByRole('link', { name: 'Войти' })).toHaveAttribute('href', '/login');
+  fireEvent.click(home);
+  await screen.findByRole('link', { name: 'Создать свою игру' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/$/);
 });
 
 it('keeps signed-in readers in the studio when they follow a public guide link', async () => {

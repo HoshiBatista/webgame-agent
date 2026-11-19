@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Brand, BrandDisclaimer } from './components';
@@ -68,15 +68,13 @@ export default function ModelInfo() {
         )}
       </header>
       <main className="model-info-main">
-        <header className="model-info-intro">
+        <div className="model-info-intro">
           <h1>Модели beeGame</h1>
-          <div>
-            <p>
-              Выберите модель в шапке чата или в настройках. Можно начать работу с одной моделью и
-              переключиться на другую для последующей доработки.
-            </p>В h
-          </div>
-        </header>
+          <p>
+            Выберите модель в шапке чата или в настройках. Можно начать работу с одной моделью и
+            переключиться на другую для последующей доработки.
+          </p>
+        </div>
         <div className="model-info-grid">
           {models.map(({ name, art, description }) => (
             <article className="model-info-model" key={name}>
@@ -99,9 +97,9 @@ export default function ModelInfo() {
           <div className="model-info-variant-copy">
             <h2 id="variants-title">Четыре варианта одной игры</h2>
             <p>
-              У модели Pro режим <strong>4×</strong> включён по умолчанию. По одному запросу параллельно
-              создаются четыре независимые версии. Можно играть в готовую версию, пока остальные
-              ещё создаются.
+              У модели Pro режим <strong>4×</strong> включён по умолчанию. По одному запросу
+              параллельно создаются четыре независимые версии. Можно играть в готовую версию, пока
+              остальные ещё создаются.
             </p>
             <p>
               Выберите понравившийся вариант в чате, чтобы продолжить работу с ним. Если нужна одна
