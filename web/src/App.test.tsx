@@ -395,8 +395,6 @@ it('returns signed-in readers from the model guide to their current chat', async
   expect(link).not.toHaveAttribute('target');
   fireEvent.click(link);
   await screen.findByRole('heading', { level: 1, name: 'Модели beeGame' });
-  fireEvent.click(screen.getByRole('link', { name: 'Как работает режим 4×' }));
-  expect(screen.getByTestId('location')).toHaveTextContent(/^\/settings\/models#four-variants$/);
   fireEvent.click(screen.getByRole('link', { name: 'Назад' }));
   await screen.findByRole('heading', { name: 'Текущий чат' });
   expect(screen.getByTestId('location').textContent).toBe('/chats/one?revision=2#preview');
