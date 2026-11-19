@@ -5256,6 +5256,21 @@ svg {
     }
   }
 }
+:root:not([data-theme='dark']) {
+  :is(.rating-summary, .publication-stars, .rating-stars, .preview-actions .rated) svg {
+    color: var(--accent);
+    filter: drop-shadow(0 1px 0 color-mix(in srgb, var(--ink) 42%, transparent));
+  }
+  :is(.publication-stars, .rating-stars) button:enabled:is(:hover, :focus-visible) svg {
+    color: var(--accent-hover);
+  }
+  .publication-stars button:is(:hover, [aria-pressed='true']) {
+    border-color: var(--accent);
+  }
+  .preview-actions .rated {
+    color: var(--ink);
+  }
+}
 .rating-error {
   grid-column: 1 / -1;
   color: var(--danger);
