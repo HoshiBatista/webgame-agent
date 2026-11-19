@@ -20,8 +20,8 @@ def create_batch(chat, data, *, authorize):
     chat = Chat.objects.select_for_update().get(pk=chat.pk, deleted_at__isnull=True)
     if data.get("model_profile") != "pro":
         raise services.DomainError("invalid_model_profile", "Режим 4× доступен для обычной Pro.")
-    experiment = data.get("analytics_experiment", False)
-    if type(experiment) is not bool:
+    experiment = data.get("analytics_experiment")
+    if "analytics_experiment" in data and type(experiment) is not bool:
         raise services.DomainError("invalid_analytics_experiment", "Для эксперимента передайте true или false.")
     key = data.get("idempotency_key")
     if not isinstance(key, str) or not key.strip() or len(key) > 100:
@@ -30,7 +30,7 @@ def create_batch(chat, data, *, authorize):
     if previous and (previous.variant_index != 1 or previous.continued_from_id):
         raise services.DomainError("idempotency_conflict", "Этот ключ уже использован для другого запроса.", 409)
     batch = previous.variant_batch if previous else VariantBatch.objects.create(chat=chat)
-    if previous and experiment != hasattr(batch, "analytics_experiment"):
+    if previous and experiment is not None and experiment != hasattr(batch, "analytics_experiment"):
         raise services.DomainError("idempotency_conflict", "Этот ключ уже использован для другого запроса.", 409)
     if previous and "audience" not in data:
         data = {**data, "audience": previous.audience}
@@ -39,9 +39,10 @@ def create_batch(chat, data, *, authorize):
     first = services.create_run(chat, data, authorize=authorize, variant_batch=batch)
     if previous:
         return batch
-    if experiment:
-        if first.operation != "create" or not first.planning_required:
-            raise services.DomainError("invalid_analytics_experiment", "Эксперимент доступен при создании новой игры в Pro 4×.")
+    eligible = first.operation == "create" and first.planning_required
+    if experiment and not eligible:
+        raise services.DomainError("invalid_analytics_experiment", "Эксперимент доступен при создании новой игры в Pro 4×.")
+    if eligible and experiment is not False:
         from .analytics_hints import choose_analytics_hint
 
         hint = choose_analytics_hint(prompt=first.prompt, audience=first.audience)

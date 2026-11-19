@@ -70,12 +70,12 @@ function setup(
     </SessionContext.Provider>,
   );
 }
-function setupNavigation(path = '/chats/one') {
+function setupNavigation(path = '/chats/one', activeSession = session) {
   const studioDrafts = new Map<string, StudioDraft>();
   return render(
     <StrictMode>
       <SessionContext.Provider
-        value={{ session, updateSession: vi.fn(), refresh: vi.fn(), studioDrafts }}
+        value={{ session: activeSession, updateSession: vi.fn(), refresh: vi.fn(), studioDrafts }}
       >
         <MemoryRouter initialEntries={[path]}>
           <nav>
@@ -1416,15 +1416,15 @@ describe('four ordinary Pro variants', () => {
     const trigger = screen.getByLabelText('Выбрать модель: pro');
     if (!trigger.closest('details')?.open) fireEvent.click(trigger);
   }
-  it('opts in only for this draft and clears the choice when four variants is turned off', () => {
-    const pro = profile('pro');
-    const studio = setup('/chats/new', undefined, pro);
+  it('starts enabled for new games and preserves a draft’s explicit opt-out', async () => {
+    vi.mocked(request).mockResolvedValue({ ...chat, current_revision: null, revisions: [] });
+    setupNavigation('/chats/new', profile('pro'));
     openProOptions();
     const option = screen.getByRole('checkbox', { name: experimentLabel });
-    expect(option).not.toBeChecked();
+    expect(option).toBeChecked();
     expect(option).toHaveAccessibleDescription(/один из четырёх вариантов/);
     fireEvent.click(option);
-    expect(option).toBeChecked();
+    expect(option).not.toBeChecked();
     const toggle = screen.getByRole('checkbox', { name: /четыре варианта Pro/ });
     fireEvent.click(toggle);
     expect(screen.queryByLabelText(experimentLabel)).not.toBeInTheDocument();
@@ -1432,9 +1432,12 @@ describe('four ordinary Pro variants', () => {
     openProOptions();
     const restored = screen.getByRole('checkbox', { name: experimentLabel });
     expect(restored).not.toBeChecked();
-    fireEvent.click(restored);
-    studio.unmount();
-    setup('/chats/new', undefined, { ...pro, user: { ...pro.user!, id: 'second' } });
+    fireEvent.click(screen.getByRole('link', { name: 'Чат один' }));
+    await screen.findByLabelText('Выбрать модель: pro');
+    openProOptions();
+    expect(await screen.findByRole('checkbox', { name: experimentLabel })).toBeChecked();
+    fireEvent.click(screen.getByRole('link', { name: 'Настройки' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Новый чат' }));
     openProOptions();
     expect(screen.getByRole('checkbox', { name: experimentLabel })).not.toBeChecked();
   });
@@ -1574,8 +1577,8 @@ describe('four ordinary Pro variants', () => {
       expect(screen.getByRole('checkbox', { name: /четыре варианта Pro/ })).toBeChecked();
       openProOptions();
       const experiment = screen.getByRole('checkbox', { name: experimentLabel });
-      expect(experiment).not.toBeChecked();
-      if (optIn) fireEvent.click(experiment);
+      expect(experiment).toBeChecked();
+      if (!optIn) fireEvent.click(experiment);
       fireEvent.change(screen.getByRole('textbox'), { target: { value: group.prompt } });
       fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
       await screen.findByText('Нет ответа');
@@ -1612,8 +1615,7 @@ describe('four ordinary Pro variants', () => {
         }),
       ]);
       expect(retry).toEqual(first);
-      if (optIn) expect(first[1]).toHaveProperty('analytics_experiment', true);
-      else expect(first[1]).not.toHaveProperty('analytics_experiment');
+      expect(first[1]).toHaveProperty('analytics_experiment', optIn);
     },
   );
   it('reports an opted-in draft choice without losing the local selection on failure', async () => {

@@ -93,7 +93,7 @@ export default function Studio() {
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
   const [fourVariants, setFourVariants] = useProVariantPreference(session.user?.id ?? '');
   const [analyticsExperiment, setAnalyticsExperiment] = useState(
-    initialDraft?.analyticsExperiment ?? false,
+    initialDraft?.analyticsExperiment ?? true,
   );
   const [trialPreview, setTrialPreview] = useState<{
     variant: GameVariant;
@@ -234,16 +234,13 @@ export default function Studio() {
       setBusy(false);
       setError('');
       setPrompt(remembered?.prompt ?? '');
-      setAnalyticsExperiment(remembered?.analyticsExperiment ?? false);
+      setAnalyticsExperiment(remembered?.analyticsExperiment ?? true);
       idempotency.current = remembered?.idempotencyKey ?? newKey();
       lastPayload.current = remembered?.lastPayload ?? '';
     }
     if (remembered?.audience != null) setAudience(remembered.audience);
     else if (isNew) setAudience('everyone');
   }, [id, isNew, studioDrafts]);
-  useEffect(() => {
-    if (modelProfile !== 'pro' || !fourVariants) setAnalyticsExperiment(false);
-  }, [id, modelProfile, fourVariants]);
   useEffect(() => {
     if (chat && !audienceReady.current) {
       setAudience(chat.audience);
@@ -536,7 +533,7 @@ export default function Studio() {
         ? { acknowledge_unknown_run_id: latestRun.id, accept_unknown_cost: true }
         : {}),
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
-      ...(canRunAnalyticsExperiment && analyticsExperiment ? { analytics_experiment: true } : {}),
+      ...(canRunAnalyticsExperiment ? { analytics_experiment: analyticsExperiment } : {}),
     };
     const four = modelProfile === 'pro' && fourVariants;
     const key = operationKey(four ? { ...payload, variants: 4 } : payload);
@@ -591,7 +588,7 @@ export default function Studio() {
       lastPayload.current = '';
       setPrompt('');
       setSelectedRevision(null);
-      setAnalyticsExperiment(false);
+      setAnalyticsExperiment(true);
       rememberDraft(null);
       chatsChanged();
     } catch (cause) {

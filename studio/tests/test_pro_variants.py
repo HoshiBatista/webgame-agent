@@ -370,7 +370,7 @@ def test_owner_boundary_and_explicit_pro_are_checked_before_new_work(client, wor
     assert submit(client, workspace).status_code == 404
 
 
-def test_experiment_is_opt_in_and_retries_preserve_assignment(client, workspace):
+def test_experiment_defaults_on_and_retries_preserve_assignment(client, workspace):
     hint = {'text': 'Сначала предложи короткую цель.', 'hint_key': 'first_goal'}
     with (patch('studio.analytics_hints.choose_analytics_hint', return_value=hint) as lookup,
           patch('studio.variants.secrets.randbelow', return_value=2) as draw):
@@ -381,7 +381,7 @@ def test_experiment_is_opt_in_and_retries_preserve_assignment(client, workspace)
 
         def submit_experiment(instance):
             gate.wait(timeout=15)
-            return create_batch(instance, workspace, analytics_experiment=True)
+            return create_batch(instance, workspace)
 
         first, retry = concurrently(clients, submit_experiment)
         assert first == retry
@@ -389,7 +389,8 @@ def test_experiment_is_opt_in_and_retries_preserve_assignment(client, workspace)
         experiment = VariantAnalyticsExperiment.objects.get(batch_id=first['id'])
         assert experiment.hint_variant_index == 3 and experiment.hint == hint
         assert experiment.first_choice_at is None
-        assert submit(client, workspace).status_code == 409
+        assert create_batch(client, workspace, analytics_experiment=True) == first
+        assert submit(client, workspace, analytics_experiment=False).status_code == 409
         lookup.assert_called_once_with(prompt=PROMPT, audience='everyone')
         draw.assert_called_once_with(4)
         ordinary = Chat.objects.create(owner=workspace.owner)
@@ -398,15 +399,17 @@ def test_experiment_is_opt_in_and_retries_preserve_assignment(client, workspace)
         assert post(client, f'/api/chats/{ordinary.pk}/runs/', prompt=PROMPT, model_profile='pro',
                     analytics_experiment=True, idempotency_key='single').status_code == 400
         assert not ordinary.runs.exists()
-        normal = create_batch(client, ordinary)
+        normal = create_batch(client, ordinary, analytics_experiment=False)
         assert 'analytics_experiment' not in normal
+        # A missing field on replay also preserves batches created before the default changed.
+        assert create_batch(client, ordinary) == normal
         assert create_batch(client, ordinary, analytics_experiment=False)['id'] == normal['id']
         assert submit(client, ordinary, analytics_experiment=True).status_code == 409
         lookup.assert_called_once()
     with (patch('studio.analytics_hints.choose_analytics_hint', return_value=None) as lookup,
           patch('studio.variants.secrets.randbelow') as draw):
         empty = Chat.objects.create(owner=workspace.owner)
-        result = create_batch(client, empty, analytics_experiment=True)
+        result = create_batch(client, empty)
         assert result['analytics_experiment'] == {'status': 'insufficient_data'}
         assert len(result['variants']) == 4
         experiment = VariantAnalyticsExperiment.objects.get(batch_id=result['id'])
@@ -426,6 +429,11 @@ def test_experiment_rejects_edits_without_creating_jobs(client, workspace):
     assert response.status_code == 400 and response.json()['error']['code'] == 'invalid_analytics_experiment'
     assert not workspace.runs.exists() and not workspace.variant_batches.exists()
     assert not workspace.messages.exists() and not Outbox.objects.exists()
+    with patch('studio.analytics_hints.choose_analytics_hint') as lookup:
+        edit = create_batch(client, workspace, source_revision_id=str(revision.pk), source_artifact_hash=revision.artifact_hash)
+        assert 'analytics_experiment' not in edit
+        assert workspace.runs.filter(operation='edit').count() == 4
+        lookup.assert_not_called()
 
 
 @pytest.mark.parametrize(('pick_draft', 'shown_indexes', 'ready'), [
