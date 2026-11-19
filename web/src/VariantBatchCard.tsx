@@ -59,6 +59,7 @@ export function VariantBatchCard({
   batch,
   currentId,
   busy,
+  choicePending,
   onPlay,
   onChoose,
   onCancel,
@@ -67,6 +68,7 @@ export function VariantBatchCard({
   batch: VariantBatch;
   currentId?: string;
   busy: boolean;
+  choicePending: boolean;
   onPlay: (variant: GameVariant) => void;
   onChoose: (variant: GameVariant) => void;
   onCancel: (runId: string) => void;
@@ -79,6 +81,13 @@ export function VariantBatchCard({
         <h3>Варианты игры</h3>
         <span role="status">Доступно для игры {ready} из 4</span>
       </header>
+      {batch.analytics_experiment && (
+        <p className="field-help">
+          {batch.analytics_experiment.status === 'applied'
+            ? 'Для одного из вариантов подобрана подсказка по опыту игроков.'
+            : 'Пока мало данных о похожих играх. Для всех вариантов действуют обычные правила Pro.'}
+        </p>
+      )}
       <ul>
         {batch.variants.map((variant) => {
           const revision = variant.revision;
@@ -133,7 +142,7 @@ export function VariantBatchCard({
                     type="button"
                     className="button button-small button-outline"
                     aria-label={`Выбрать вариант ${variant.index}${playableDraft ? ' для доработки' : ''}`}
-                    disabled={busy}
+                    disabled={busy || choicePending}
                     onClick={() => onChoose(variant)}
                   >
                     {playableDraft ? 'Для доработки' : 'Выбрать'}

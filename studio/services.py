@@ -27,6 +27,7 @@ from .models import (
     Revision,
     Run,
     RunEvent,
+    VariantAnalyticsExperiment,
 )
 from .replies import BUDGET_EXHAUSTED_REPLY, assistant_reply, run_reply
 from .titles import DEFAULT_CHAT_TITLE, short_game_title, title_from_prompt
@@ -163,6 +164,17 @@ def reserve_invocation(run, request):
     if not run.allow_model_calls:
         raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
     request = {**request, "provider": run.provider, "model": run.model_for(request.get("operation"))}
+    if request.get("operation") == "plan" and run.variant_batch_id and run.model_profile == "pro":
+        hint = VariantAnalyticsExperiment.objects.filter(
+            batch_id=run.variant_batch_id, hint_variant_index=run.variant_index,
+        ).values_list("hint", flat=True).first()
+        if hint:
+            request["design"] = {**(request.get("design") or {}), "optional_analytics_hint": {
+                "suggestion": hint["text"],
+                "guidance": "Use only if compatible with the game request and saved preferences. "
+                            "If adopted, treat it as an optional design assumption with origin=design, "
+                            "never as a user requirement.",
+            }}
     import uuid
 
     invocation_id = uuid.uuid4()
@@ -311,6 +323,8 @@ def budget_blocked_before_multiagent_plan(run):
 
 @transaction.atomic
 def create_run(chat, data, *, continued_from=None, authorize=None, check_only=False, variant_batch=None):
+    if data.get("analytics_experiment", False) is not False and (not variant_batch or continued_from):
+        raise DomainError("invalid_analytics_experiment", "Эксперимент доступен при создании новой игры в Pro 4×.")
     chat = Chat.objects.select_for_update().get(pk=chat.pk, deleted_at__isnull=True)
     variant_index = 1 if variant_batch else None
     if continued_from and continued_from.variant_batch_id:

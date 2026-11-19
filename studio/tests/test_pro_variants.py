@@ -13,7 +13,7 @@ from django.test import Client
 
 from generation.prompts import system_prompt
 from generation.providers.fake import generate as fixture_generate
-from studio.models import Budget, Chat, Invocation, Outbox, Run, User
+from studio.models import Budget, Chat, Invocation, Outbox, Revision, Run, User, VariantAnalyticsExperiment
 from studio.services import DomainError, budget_snapshot, reserve_invocation
 from studio.tasks import claim_run, process_run, request_for
 from studio.tests.test_completion import uncertain
@@ -368,3 +368,132 @@ def test_owner_boundary_and_explicit_pro_are_checked_before_new_work(client, wor
     assert client.delete(f'/api/chats/{workspace.pk}/').status_code == 204
     assert workspace.runs.filter(status='cancelled').count() == 4
     assert submit(client, workspace).status_code == 404
+
+
+def test_experiment_is_opt_in_and_retries_preserve_assignment(client, workspace):
+    hint = {'text': 'Сначала предложи короткую цель.', 'hint_key': 'first_goal'}
+    with (patch('studio.analytics_hints.choose_analytics_hint', return_value=hint) as lookup,
+          patch('studio.variants.secrets.randbelow', return_value=2) as draw):
+        clients = [Client() for _ in range(2)]
+        for instance in clients:
+            instance.force_login(workspace.owner)
+        gate = Barrier(2)
+
+        def submit_experiment(instance):
+            gate.wait(timeout=15)
+            return create_batch(instance, workspace, analytics_experiment=True)
+
+        first, retry = concurrently(clients, submit_experiment)
+        assert first == retry
+        assert first['analytics_experiment'] == {'status': 'applied'}
+        experiment = VariantAnalyticsExperiment.objects.get(batch_id=first['id'])
+        assert experiment.hint_variant_index == 3 and experiment.hint == hint
+        assert experiment.first_choice_at is None
+        assert submit(client, workspace).status_code == 409
+        lookup.assert_called_once_with(prompt=PROMPT, audience='everyone')
+        draw.assert_called_once_with(4)
+        ordinary = Chat.objects.create(owner=workspace.owner)
+        for bad in ('true', 1, None, {}):
+            assert submit(client, ordinary, analytics_experiment=bad).status_code == 400
+        assert post(client, f'/api/chats/{ordinary.pk}/runs/', prompt=PROMPT, model_profile='pro',
+                    analytics_experiment=True, idempotency_key='single').status_code == 400
+        assert not ordinary.runs.exists()
+        normal = create_batch(client, ordinary)
+        assert 'analytics_experiment' not in normal
+        assert create_batch(client, ordinary, analytics_experiment=False)['id'] == normal['id']
+        assert submit(client, ordinary, analytics_experiment=True).status_code == 409
+        lookup.assert_called_once()
+    with (patch('studio.analytics_hints.choose_analytics_hint', return_value=None) as lookup,
+          patch('studio.variants.secrets.randbelow') as draw):
+        empty = Chat.objects.create(owner=workspace.owner)
+        result = create_batch(client, empty, analytics_experiment=True)
+        assert result['analytics_experiment'] == {'status': 'insufficient_data'}
+        assert len(result['variants']) == 4
+        experiment = VariantAnalyticsExperiment.objects.get(batch_id=result['id'])
+        assert experiment.hint is None and experiment.hint_variant_index is None
+        assert create_batch(client, empty, analytics_experiment=True) == result
+        lookup.assert_called_once()
+        draw.assert_not_called()
+
+
+def test_experiment_rejects_edits_without_creating_jobs(client, workspace):
+    revision = Revision.objects.create(chat=workspace, number=1, title='Игра', files={},
+                                       html='', artifact_hash='a'*64, accepted=True)
+    workspace.current_revision = revision
+    workspace.save(update_fields=['current_revision'])
+    response = submit(client, workspace, source_revision_id=str(revision.pk),
+                      source_artifact_hash=revision.artifact_hash, analytics_experiment=True)
+    assert response.status_code == 400 and response.json()['error']['code'] == 'invalid_analytics_experiment'
+    assert not workspace.runs.exists() and not workspace.variant_batches.exists()
+    assert not workspace.messages.exists() and not Outbox.objects.exists()
+
+
+@pytest.mark.parametrize(('pick_draft', 'shown_indexes', 'ready'), [
+    (False, [1, 2, 3, 4], 4),
+    (False, [1, 2], 2),  # Two more finished after the last chat poll.
+    (False, [1, 2, 3, 0], 3),  # A UUID from outside the batch does not count.
+    (False, None, None),  # Older client with no snapshot.
+    (True, [1, 2, 3, 4], 3),  # Slot one is still an unaccepted draft.
+    (True, [], 0),
+    (True, None, None),
+])
+def test_first_experimental_choice_survives_later_selections(client, workspace, pick_draft, shown_indexes, ready):
+    with patch('studio.analytics_hints.choose_analytics_hint', return_value={'text': 'Подсказка'}):
+        batch = create_batch(client, workspace, analytics_experiment=True)
+    slots = list(workspace.runs.order_by('variant_index'))
+    revisions = []
+    for run in slots:
+        draft = pick_draft and run.variant_index == 1
+        revision = Revision.objects.create(chat=workspace, run=run, number=run.variant_index, title='Игра',
+            files={}, html='', artifact_hash=str(run.variant_index)*64, accepted=not draft)
+        run.status = 'unverified' if draft else 'succeeded'
+        if draft:
+            run.candidate_revision = revision
+        else:
+            run.result_revision = revision
+        run.save()
+        revisions.append({'id': str(revision.pk), 'artifact_hash': revision.artifact_hash})
+    draft_url = f"/api/chats/{workspace.pk}/variant-batches/{batch['id']}/draft-choice/"
+    snapshot = {} if shown_indexes is None else {'ready_revision_ids': [
+        revisions[index - 1]['id'] if index else str(workspace.pk) for index in shown_indexes
+    ]}
+    if pick_draft:
+        fields = {'revision_id': revisions[0]['id'], 'artifact_hash': revisions[0]['artifact_hash'], **snapshot}
+        assert post(client, draft_url, **{**fields, 'artifact_hash': 'a'*64}).status_code == 409
+        assert post(client, draft_url, revision_id=revisions[1]['id'],
+                    artifact_hash=revisions[1]['artifact_hash']).status_code == 409
+        assert post(client, draft_url, **fields).status_code == 204
+        # A subsequent poll or retry cannot change the first observation.
+        fields['ready_revision_ids'] = [item['id'] for item in revisions[1:]]
+        assert post(client, draft_url, **fields).status_code == 204
+        workspace.refresh_from_db()
+        assert workspace.current_revision_id is None
+    else:
+        assert select(client, workspace, batch, revisions[0], **snapshot).status_code == 200
+    experiment = VariantAnalyticsExperiment.objects.get(batch_id=batch['id'])
+    assert experiment.first_choice_index == 1 and str(experiment.first_choice_revision_id) == revisions[0]['id']
+    assert experiment.first_choice_at and experiment.ready_at_first_choice == ready
+    first_choice_at = experiment.first_choice_at
+    assert select(client, workspace, batch, revisions[1],
+                  expected_current_revision_id=None if pick_draft else revisions[0]['id']).status_code == 200
+    experiment.refresh_from_db()
+    assert experiment.first_choice_index == 1 and experiment.first_choice_at == first_choice_at
+    assert experiment.ready_at_first_choice == ready
+    assert str(experiment.batch.selected_revision_id) == revisions[1]['id']
+
+
+def test_invalid_displayed_snapshot_cannot_change_first_choice(client, workspace):
+    batch = create_batch(client, workspace, analytics_experiment=True)
+    run = workspace.runs.get(variant_index=1)
+    revision = Revision.objects.create(chat=workspace, run=run, number=1, title='Игра', files={}, html='',
+                                       artifact_hash='a' * 64, accepted=True)
+    run.status, run.result_revision = 'succeeded', revision
+    run.save()
+    picked = {'id': str(revision.pk), 'artifact_hash': revision.artifact_hash}
+    for invalid in (None, str(revision.pk), ['invalid'], [str(revision.pk)] * 2, [str(revision.pk)] * 5):
+        reply = select(client, workspace, batch, picked, ready_revision_ids=invalid)
+        assert reply.status_code == 400 and reply.json()['error']['code'] == 'invalid_ready_revisions'
+    workspace.refresh_from_db()
+    assert workspace.current_revision_id is None
+    experiment = VariantAnalyticsExperiment.objects.get(batch_id=batch['id'])
+    assert experiment.batch.selected_revision_id is None and experiment.first_choice_at is None

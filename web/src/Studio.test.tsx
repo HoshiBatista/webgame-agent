@@ -1411,6 +1411,38 @@ describe('four ordinary Pro variants', () => {
       variant_batches: [group],
     };
   }
+  const experimentLabel = 'Учесть опыт игроков';
+  function openProOptions() {
+    const trigger = screen.getByLabelText('Выбрать модель: pro');
+    if (!trigger.closest('details')?.open) fireEvent.click(trigger);
+  }
+  it('opts in only for this draft and clears the choice when four variants is turned off', () => {
+    const pro = profile('pro');
+    const studio = setup('/chats/new', undefined, pro);
+    openProOptions();
+    const option = screen.getByRole('checkbox', { name: experimentLabel });
+    expect(option).not.toBeChecked();
+    expect(option).toHaveAccessibleDescription(/один из четырёх вариантов/);
+    fireEvent.click(option);
+    expect(option).toBeChecked();
+    const toggle = screen.getByRole('checkbox', { name: /четыре варианта Pro/ });
+    fireEvent.click(toggle);
+    expect(screen.queryByLabelText(experimentLabel)).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    openProOptions();
+    const restored = screen.getByRole('checkbox', { name: experimentLabel });
+    expect(restored).not.toBeChecked();
+    fireEvent.click(restored);
+    studio.unmount();
+    setup('/chats/new', undefined, { ...pro, user: { ...pro.user!, id: 'second' } });
+    openProOptions();
+    expect(screen.getByRole('checkbox', { name: experimentLabel })).not.toBeChecked();
+  });
+  it.each(['lite', 'pro_multi'])('keeps the experiment out of new %s games', (id) => {
+    setup('/chats/new', undefined, profile(id));
+    fireEvent.click(screen.getByLabelText(`Выбрать модель: ${id}`));
+    expect(screen.queryByLabelText(experimentLabel)).not.toBeInTheDocument();
+  });
   it('distinguishes a queued variant from jobs already sent to the model', async () => {
     const group = batch();
     const states = [
@@ -1488,6 +1520,8 @@ describe('four ordinary Pro variants', () => {
     expect(toggle).toBeChecked();
     expect(screen.queryByText(/Четыре отдельных задания Pro/)).not.toBeInTheDocument();
     expect(screen.getByTitle('Создать четыре игры по одному запросу')).toContainElement(toggle);
+    openProOptions();
+    expect(screen.queryByLabelText(experimentLabel)).not.toBeInTheDocument();
     fireEvent.change(screen.getByRole('textbox', { name: 'Что изменить в игре' }), {
       target: { value: group.prompt },
     });
@@ -1504,70 +1538,142 @@ describe('four ordinary Pro variants', () => {
       }),
     );
     expect(toggle).toBeChecked();
+    expect(vi.mocked(post).mock.calls[0][1]).not.toHaveProperty('analytics_experiment');
   });
-  it('reuses the key after a lost first acknowledgement rather than starting a second batch', async () => {
+  it.each([false, true])(
+    'retries the identical new-game request after a lost acknowledgement (experiment %s)',
+    async (optIn) => {
+      const group = batch();
+      if (optIn) group.analytics_experiment = { status: 'insufficient_data' };
+      const empty = { ...chat, id: 'new-game', current_revision: null, revisions: [] };
+      vi.mocked(request).mockResolvedValue(empty);
+      vi.mocked(post)
+        .mockResolvedValueOnce(empty)
+        .mockRejectedValueOnce(new ApiError({ code: 'network', message: 'Нет ответа' }, 0))
+        .mockResolvedValueOnce(group);
+      let allowNavigation = false;
+      let release!: () => void;
+      const navigation = new Promise<void>((resolve) => (release = resolve));
+      function DelayedStudio() {
+        if (useLocation().pathname !== '/chats/new' && !allowNavigation) throw navigation;
+        return <Studio />;
+      }
+      render(
+        <SessionContext.Provider
+          value={{ session: profile('pro'), updateSession: vi.fn(), refresh: vi.fn() }}
+        >
+          <MemoryRouter initialEntries={['/chats/new']}>
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/chats/:id" element={<DelayedStudio />} />
+              </Routes>
+            </Suspense>
+          </MemoryRouter>
+        </SessionContext.Provider>,
+      );
+      expect(screen.getByRole('checkbox', { name: /четыре варианта Pro/ })).toBeChecked();
+      openProOptions();
+      const experiment = screen.getByRole('checkbox', { name: experimentLabel });
+      expect(experiment).not.toBeChecked();
+      if (optIn) fireEvent.click(experiment);
+      fireEvent.change(screen.getByRole('textbox'), { target: { value: group.prompt } });
+      fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
+      await screen.findByText('Нет ответа');
+      expect(screen.getByRole('textbox')).toHaveValue(group.prompt);
+      const retryWhileNavigating = screen.getByRole('button', { name: 'Создать 4 варианта' });
+      expect(retryWhileNavigating).toBeDisabled();
+      fireEvent.click(retryWhileNavigating);
+      expect(post).toHaveBeenCalledTimes(2);
+      await act(async () => {
+        allowNavigation = true;
+        release();
+      });
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Создать 4 варианта' })).toBeEnabled(),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
+      await waitFor(() =>
+        expect(vi.mocked(post).mock.calls.map(([path]) => path)).toEqual([
+          '/api/chats/',
+          '/api/chats/new-game/variant-batches/',
+          '/api/chats/new-game/variant-batches/',
+        ]),
+      );
+      const list = await screen.findByRole('region', { name: 'Варианты игры' });
+      if (optIn) expect(within(list).getByText(/Пока мало данных о похожих играх/)).toBeVisible();
+      else expect(within(list).queryByText(/подсказка|мало данных/i)).not.toBeInTheDocument();
+      const [first, retry] = vi.mocked(post).mock.calls.slice(1);
+      expect(first).toEqual([
+        '/api/chats/new-game/variant-batches/',
+        expect.objectContaining({
+          source_revision_id: null,
+          source_artifact_hash: null,
+          idempotency_key: expect.any(String),
+        }),
+      ]);
+      expect(retry).toEqual(first);
+      if (optIn) expect(first[1]).toHaveProperty('analytics_experiment', true);
+      else expect(first[1]).not.toHaveProperty('analytics_experiment');
+    },
+  );
+  it('reports an opted-in draft choice without losing the local selection on failure', async () => {
     const group = batch();
-    const empty = { ...chat, id: 'new-game', current_revision: null, revisions: [] };
-    vi.mocked(request).mockResolvedValue(empty);
-    vi.mocked(post)
-      .mockResolvedValueOnce(empty)
-      .mockRejectedValueOnce(new ApiError({ code: 'network', message: 'Нет ответа' }, 0))
-      .mockResolvedValueOnce(group);
-    let allowNavigation = false;
-    let release!: () => void;
-    const navigation = new Promise<void>((resolve) => (release = resolve));
-    function DelayedStudio() {
-      if (useLocation().pathname !== '/chats/new' && !allowNavigation) throw navigation;
-      return <Studio />;
-    }
-    render(
-      <SessionContext.Provider
-        value={{ session: profile('pro'), updateSession: vi.fn(), refresh: vi.fn() }}
-      >
-        <MemoryRouter initialEntries={['/chats/new']}>
-          <Suspense fallback={null}>
-            <Routes>
-              <Route path="/chats/:id" element={<DelayedStudio />} />
-            </Routes>
-          </Suspense>
-        </MemoryRouter>
-      </SessionContext.Provider>,
+    group.analytics_experiment = { status: 'applied' };
+    const draft = { ...games[1], accepted: false };
+    Object.assign(group.variants[1], { status: 'unverified', revision: draft });
+    vi.mocked(request).mockResolvedValue({ ...detail(group), revisions: [draft] });
+    let rejectChoice!: (reason: Error) => void;
+    vi.mocked(post).mockReturnValueOnce(new Promise((_, reject) => (rejectChoice = reject)));
+    setup(undefined, undefined, profile('pro'));
+    const list = await screen.findByRole('region', { name: 'Варианты игры' });
+    expect(within(list).getByText(/подобрана подсказка по опыту игроков/)).toBeVisible();
+    expect(within(list).getByRole('list')).not.toHaveTextContent(/подсказка/i);
+    fireEvent.click(within(list).getByRole('button', { name: 'Выбрать вариант 2 для доработки' }));
+    expect(post).toHaveBeenCalledExactlyOnceWith(
+      '/api/chats/one/variant-batches/four/draft-choice/',
+      {
+        revision_id: draft.id,
+        artifact_hash: draft.artifact_hash,
+        ready_revision_ids: [games[0].id, games[2].id, games[3].id],
+      },
     );
-    expect(screen.getByRole('checkbox', { name: /четыре варианта Pro/ })).toBeChecked();
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: group.prompt } });
-    fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
-    await screen.findByText('Нет ответа');
-    expect(screen.getByRole('textbox')).toHaveValue(group.prompt);
-    const retryWhileNavigating = screen.getByRole('button', { name: 'Создать 4 варианта' });
-    expect(retryWhileNavigating).toBeDisabled();
-    fireEvent.click(retryWhileNavigating);
-    expect(post).toHaveBeenCalledTimes(2);
-    await act(async () => {
-      allowNavigation = true;
-      release();
+    await within(list).findByText('Выбран для доработки');
+    const composer = screen.getByRole('textbox', { name: 'Что изменить в игре' });
+    expect(composer).toBeEnabled();
+    fireEvent.change(composer, { target: { value: 'Добавь монеты' } });
+    expect(screen.getByRole('button', { name: 'Создать 4 варианта' })).toBeEnabled();
+    const otherChoice = within(list).getByRole('button', { name: 'Выбрать вариант 1' });
+    expect(otherChoice).toBeDisabled();
+    await act(async () => rejectChoice(new Error('Нет связи')));
+    expect(otherChoice).toBeEnabled();
+    expect(composer).toHaveValue('Добавь монеты');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+  it('counts only the accepted games visible before entering a variant preview', async () => {
+    const group = batch();
+    group.analytics_experiment = { status: 'applied' };
+    const incomplete = {
+      ...group,
+      variants: group.variants.map((v) =>
+        v.index === 4 ? { ...v, status: 'generating' as const, revision: null } : v,
+      ),
+    };
+    vi.mocked(request).mockResolvedValue(detail(incomplete));
+    vi.mocked(post).mockResolvedValue(detail(group, games[2]));
+    setup(undefined, undefined, profile('pro'));
+    const list = await screen.findByRole('region', { name: 'Варианты игры' });
+    fireEvent.click(within(list).getByRole('button', { name: 'Играть в вариант 3' }));
+    const dialog = screen.getByRole('dialog');
+    vi.mocked(request).mockResolvedValue(detail(group));
+    act(() => window.dispatchEvent(new Event('focus')));
+    await within(list).findByText('Доступно для игры 4 из 4');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Выбрать вариант 3' }));
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/chats/one/variant-batches/four/select/', {
+      revision_id: games[2].id,
+      artifact_hash: games[2].artifact_hash,
+      expected_current_revision_id: null,
+      ready_revision_ids: [games[0].id, games[1].id, games[2].id],
     });
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Создать 4 варианта' })).toBeEnabled(),
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
-    await waitFor(() =>
-      expect(vi.mocked(post).mock.calls.map(([path]) => path)).toEqual([
-        '/api/chats/',
-        '/api/chats/new-game/variant-batches/',
-        '/api/chats/new-game/variant-batches/',
-      ]),
-    );
-    await screen.findByRole('region', { name: 'Варианты игры' });
-    const [first, retry] = vi.mocked(post).mock.calls.slice(1);
-    expect(first).toEqual([
-      '/api/chats/new-game/variant-batches/',
-      expect.objectContaining({
-        source_revision_id: null,
-        source_artifact_hash: null,
-        idempotency_key: expect.any(String),
-      }),
-    ]);
-    expect(retry).toEqual(first);
   });
   it('plays each saved game without changing the edit source and explicitly selects the winner', async () => {
     const group = batch();

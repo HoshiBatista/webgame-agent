@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 import type { ModelProfile, Session } from './types';
 
@@ -45,7 +45,7 @@ export function ModelChoices({ options, value, disabled, onChange }: Props) {
   );
 }
 
-export default function ModelSelector(props: Props) {
+export default function ModelSelector({ children, ...props }: Props & { children?: ReactNode }) {
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const close = (event: PointerEvent) => {
@@ -82,6 +82,7 @@ export default function ModelSelector(props: Props) {
           }}
         />
         <p>Выбор сохраняется для следующих запросов и продолжений.</p>
+        {children}
       </div>
     </details>
   );

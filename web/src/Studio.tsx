@@ -62,6 +62,13 @@ const feedbackReasons = [
   'Крупнее текст и элементы управления',
 ];
 
+function readyExperimentRevisionIds(batch: VariantBatch) {
+  if (!batch.analytics_experiment) return undefined;
+  return batch.variants.flatMap(({ revision, status }) =>
+    status === 'succeeded' && revision?.accepted ? [revision.id] : [],
+  );
+}
+
 export default function Studio() {
   const { id = 'new' } = useParams();
   const isNew = id === 'new';
@@ -85,7 +92,15 @@ export default function Studio() {
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
   const [fourVariants, setFourVariants] = useProVariantPreference(session.user?.id ?? '');
-  const [trial, setTrial] = useState<GameVariant | null>(null);
+  const [analyticsExperiment, setAnalyticsExperiment] = useState(
+    initialDraft?.analyticsExperiment ?? false,
+  );
+  const [trialPreview, setTrialPreview] = useState<{
+    variant: GameVariant;
+    readyRevisionIds?: string[];
+  } | null>(null);
+  const trial = trialPreview?.variant;
+  const [recordingDraftChoices, setRecordingDraftChoices] = useState<string[]>([]);
   const [variantReview, setVariantReview] = useState<GameVariant | null>(null);
   const [draftChoice, rememberDraft] = useVariantDraft(session.user?.id ?? '', id);
   const modelProfile = selectedProfile(session);
@@ -144,8 +159,14 @@ export default function Studio() {
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
   const audienceReady = useRef(isNew || initialDraft?.audience != null);
-  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle });
-  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle };
+  const draft = useRef({
+    prompt,
+    audience,
+    selectedRevision,
+    chatTitle: newTitle,
+    analyticsExperiment,
+  });
+  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle, analyticsExperiment };
   useEffect(
     () => () => {
       if (id === 'new' && submissionChat.current === currentId.current) {
@@ -194,7 +215,7 @@ export default function Studio() {
     audienceReady.current = isNew || remembered?.audience != null;
     setSelectedRevision(remembered?.selectedRevision ?? null);
     setGameFullscreen(false);
-    setTrial(null);
+    setTrialPreview(null);
     setVariantReview(null);
     setToolsOpen(false);
     setShowShare(false);
@@ -213,12 +234,16 @@ export default function Studio() {
       setBusy(false);
       setError('');
       setPrompt(remembered?.prompt ?? '');
+      setAnalyticsExperiment(remembered?.analyticsExperiment ?? false);
       idempotency.current = remembered?.idempotencyKey ?? newKey();
       lastPayload.current = remembered?.lastPayload ?? '';
     }
     if (remembered?.audience != null) setAudience(remembered.audience);
     else if (isNew) setAudience('everyone');
   }, [id, isNew, studioDrafts]);
+  useEffect(() => {
+    if (modelProfile !== 'pro' || !fourVariants) setAnalyticsExperiment(false);
+  }, [id, modelProfile, fourVariants]);
   useEffect(() => {
     if (chat && !audienceReady.current) {
       setAudience(chat.audience);
@@ -374,6 +399,11 @@ export default function Studio() {
   const revision: Revision | null = selectedRevision
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
+  const canRunAnalyticsExperiment =
+    modelProfile === 'pro' &&
+    fourVariants &&
+    !revision &&
+    (isNew || (!!chat && !chat.revisions.length && !chat.source_publication));
   const chosenVariantId =
     draftRevision && draftRevision.id !== current?.id
       ? draftRevision.accepted
@@ -506,6 +536,7 @@ export default function Studio() {
         ? { acknowledge_unknown_run_id: latestRun.id, accept_unknown_cost: true }
         : {}),
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
+      ...(canRunAnalyticsExperiment && analyticsExperiment ? { analytics_experiment: true } : {}),
     };
     const four = modelProfile === 'pro' && fourVariants;
     const key = operationKey(four ? { ...payload, variants: 4 } : payload);
@@ -560,6 +591,7 @@ export default function Studio() {
       lastPayload.current = '';
       setPrompt('');
       setSelectedRevision(null);
+      setAnalyticsExperiment(false);
       rememberDraft(null);
       chatsChanged();
     } catch (cause) {
@@ -594,8 +626,19 @@ export default function Studio() {
       }
     }
   }
-  async function chooseVariant(batch: VariantBatch, variant: GameVariant) {
-    if (!chat || !variant.revision || !canChooseVariant(variant) || busy) return;
+  async function chooseVariant(
+    batch: VariantBatch,
+    variant: GameVariant,
+    readyRevisionIds = readyExperimentRevisionIds(batch),
+  ) {
+    if (
+      !chat ||
+      !variant.revision ||
+      !canChooseVariant(variant) ||
+      busy ||
+      recordingDraftChoices.includes(batch.id)
+    )
+      return;
     if (playableVariantDraft(variant)) {
       rememberDraft({
         id: variant.revision.id,
@@ -605,7 +648,21 @@ export default function Studio() {
       });
       setError('');
       setSelectedRevision(null);
-      setTrial(null);
+      setTrialPreview(null);
+      if (batch.analytics_experiment) {
+        setRecordingDraftChoices((pending) => [...pending, batch.id]);
+        try {
+          await post(`/api/chats/${chat.id}/variant-batches/${batch.id}/draft-choice/`, {
+            revision_id: variant.revision.id,
+            artifact_hash: variant.revision.artifact_hash,
+            ready_revision_ids: readyRevisionIds,
+          });
+        } catch {
+          // The draft is already selected. A delayed retry could count a different set of ready games.
+        } finally {
+          setRecordingDraftChoices((pending) => pending.filter((id) => id !== batch.id));
+        }
+      }
       return;
     }
     const startedView = view.current;
@@ -616,16 +673,17 @@ export default function Studio() {
         revision_id: variant.revision.id,
         artifact_hash: variant.revision.artifact_hash,
         expected_current_revision_id: chat.current_revision?.id ?? null,
+        ...(readyRevisionIds ? { ready_revision_ids: readyRevisionIds } : {}),
       });
       if (view.current !== startedView) return;
       setSelectedRevision(null);
       rememberDraft(null);
-      setTrial(null);
+      setTrialPreview(null);
       replaceChat(saved);
       chatsChanged();
     } catch (cause) {
       if (view.current === startedView) {
-        setTrial(null);
+        setTrialPreview(null);
         setError(errorText(cause));
         load();
       }
@@ -803,7 +861,13 @@ export default function Studio() {
             <button
               type="button"
               className="button button-small button-outline"
-              disabled={busy || !!activeRun}
+              disabled={
+                busy ||
+                !!activeRun ||
+                recordingDraftChoices.some(
+                  (id) => id === variantByRevision.get(revision.id)?.batch.id,
+                )
+              }
               onClick={restoreRevision}
             >
               Восстановить
@@ -856,7 +920,10 @@ export default function Studio() {
         batch={batch}
         currentId={chosenVariantId}
         busy={busy || otherWorkActive}
-        onPlay={setTrial}
+        choicePending={recordingDraftChoices.includes(batch.id)}
+        onPlay={(variant) =>
+          setTrialPreview({ variant, readyRevisionIds: readyExperimentRevisionIds(batch) })
+        }
         onReview={setVariantReview}
         onChoose={(variant) => void chooseVariant(batch, variant)}
         onCancel={(runId) => void cancel(runId)}
@@ -898,7 +965,26 @@ export default function Studio() {
               value={modelProfile}
               onChange={(value) => void chooseModel(value)}
               disabled={busy}
-            />
+            >
+              {canRunAnalyticsExperiment && (
+                <div className="model-experiment-choice">
+                  <label>
+                    <input
+                      type="checkbox"
+                      aria-describedby="model-experiment-help"
+                      checked={analyticsExperiment}
+                      disabled={composingBlocked || modelUnavailable}
+                      onChange={(event) => setAnalyticsExperiment(event.target.checked)}
+                    />
+                    Учесть опыт игроков
+                  </label>
+                  <p id="model-experiment-help">
+                    Если у похожих игр достаточно оценок и игровых сеансов, один из четырёх
+                    вариантов получит подсказку при планировании.
+                  </p>
+                </div>
+              )}
+            </ModelSelector>
           ) : (
             <span className="chat-model-name">beeGame Lite</span>
           )}
@@ -1274,14 +1360,23 @@ export default function Studio() {
           revision={trial.revision}
           muted={soundMuted}
           onToggleSound={() => setSoundMuted((value) => !value)}
-          onClose={() => setTrial(null)}
-          busy={busy || (!!activeRun && batchByRun.get(activeRun.id)?.id !== trialChoice?.batch.id)}
+          onClose={() => setTrialPreview(null)}
+          busy={
+            busy ||
+            (!!trialChoice && recordingDraftChoices.includes(trialChoice.batch.id)) ||
+            (!!activeRun && batchByRun.get(activeRun.id)?.id !== trialChoice?.batch.id)
+          }
           draft={!!trialChoice && playableVariantDraft(trialChoice.variant)}
           onChoose={
             trialChoice &&
             canChooseVariant(trialChoice.variant) &&
             trial.revision.id !== chosenVariantId
-              ? () => void chooseVariant(trialChoice.batch, trialChoice.variant)
+              ? () =>
+                  void chooseVariant(
+                    trialChoice.batch,
+                    trialChoice.variant,
+                    trialPreview?.readyRevisionIds,
+                  )
               : undefined
           }
         />

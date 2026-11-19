@@ -61,6 +61,17 @@ class VariantBatch(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class VariantAnalyticsExperiment(models.Model):
+    batch = models.OneToOneField(VariantBatch, primary_key=True, on_delete=models.CASCADE,
+                                 related_name="analytics_experiment")
+    hint = models.JSONField(null=True)
+    hint_variant_index = models.PositiveSmallIntegerField(null=True)
+    first_choice_index = models.PositiveSmallIntegerField(null=True)
+    first_choice_revision_id = models.UUIDField(null=True)
+    first_choice_at = models.DateTimeField(null=True)
+    ready_at_first_choice = models.PositiveSmallIntegerField(null=True)
+
+
 class Run(models.Model):
     ACTIVE = ("queued", "generating", "checking")
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

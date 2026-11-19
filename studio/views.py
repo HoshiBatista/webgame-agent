@@ -231,6 +231,14 @@ def select_variant_view(request, ident, batch_id):
     return Response(chat_data(chat, True))
 
 
+@api_view(["POST"])
+def draft_choice_view(request, ident, batch_id):
+    from .variants import record_draft_choice
+
+    record_draft_choice(owned_chat(request, ident), batch_id, request.data)
+    return Response(status=204)
+
+
 @api_view(["GET"])
 def run_view(request, ident):
     return Response(run_data(owned_run(request, ident)))
