@@ -23,25 +23,25 @@ export function RatingSummary({ game }: { game: PublicationRating }) {
   );
 }
 
+function sessionTime(value?: number | null) {
+  if (value == null) return '—';
+  const seconds = Math.round(value);
+  if (seconds < 60) return `${seconds} с`;
+  const minutes = `${Math.floor(seconds / 60)} мин`;
+  return seconds % 60 ? `${minutes} ${seconds % 60} с` : minutes;
+}
+
 export function PublicationMetrics({ game }: { game: Publication }) {
   const stats = game.analytics;
-  const seconds =
-    stats?.average_duration_seconds == null ? null : Math.round(stats.average_duration_seconds);
-  const time =
-    seconds == null
-      ? '—'
-      : seconds < 60
-        ? `${seconds} с`
-        : `${Math.floor(seconds / 60)} мин ${seconds % 60} с`;
   return (
     <dl className="publication-metrics" aria-label="Статистика игры">
       <div>
         <dt>Открытия</dt>
         <dd>{stats?.opens ?? 0}</dd>
       </div>
-      <div title="Среднее время, пока открытая игра видна на экране">
+      <div title="Учитываются сеансы от 30 секунд видимого времени">
         <dt>Среднее время сеанса</dt>
-        <dd>{time}</dd>
+        <dd>{sessionTime(stats?.average_duration_seconds)}</dd>
       </div>
       <div
         title={
@@ -53,28 +53,28 @@ export function PublicationMetrics({ game }: { game: Publication }) {
         <dt>Успешные прохождения</dt>
         <dd>{stats?.successful_completions ?? '—'}</dd>
       </div>
+      <div>
+        <dt>Оценка игроков</dt>
+        <dd>
+          <RatingSummary game={game} />
+        </dd>
+      </div>
     </dl>
   );
 }
 
-export function PublicationStars({
-  game,
-  onChange,
-}: {
-  game: Publication;
-  onChange?: (rating: PublicationRating) => void;
-}) {
+export function PublicationStars({ game }: { game: Publication }) {
   const { session } = useSession();
   const location = useLocation();
-  const [rating, setRating] = useState<PublicationRating>(game);
+  const [userRating, setUserRating] = useState(game.user_rating);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const current = useRef(game.id);
   current.current = game.id;
   useEffect(() => {
-    setRating(game);
+    setUserRating(game.user_rating);
     setError('');
-  }, [game.id, game.average_rating, game.rating_count, game.user_rating]);
+  }, [game.id, game.user_rating]);
   useEffect(() => setBusy(false), [game.id]);
   async function choose(value: number) {
     if (busy) return;
@@ -87,8 +87,7 @@ export function PublicationStars({
         body: JSON.stringify({ rating: value }),
       });
       if (current.current !== id) return;
-      setRating(result);
-      onChange?.(result);
+      setUserRating(result.user_rating);
     } catch (cause) {
       if (current.current === id) setError(errorText(cause));
     } finally {
@@ -97,12 +96,11 @@ export function PublicationStars({
   }
   return (
     <section className="publication-rating" aria-label="Оценка игры">
-      <div className="publication-rating-heading">
-        <span>Оценка игроков</span>
-        <RatingSummary game={rating} />
-      </div>
       {session?.user ? (
         <>
+          <small role="status">
+            {userRating ? `Ваша оценка: ${userRating} из 5.` : 'Как вам игра?'}
+          </small>
           <div className="publication-stars" role="group" aria-label="Ваша оценка от 1 до 5">
             {[1, 2, 3, 4, 5].map((value) => (
               <button
@@ -110,22 +108,17 @@ export function PublicationStars({
                 key={value}
                 disabled={busy}
                 aria-label={`Оценить на ${value} из 5`}
-                aria-pressed={rating.user_rating === value}
+                aria-pressed={userRating === value}
                 onClick={() => void choose(value)}
               >
                 <Star
                   size={23}
-                  fill={value <= (rating.user_rating ?? 0) ? 'currentColor' : 'none'}
+                  fill={value <= (userRating ?? 0) ? 'currentColor' : 'none'}
                   aria-hidden="true"
                 />
               </button>
             ))}
           </div>
-          <small>
-            {rating.user_rating
-              ? `Ваша оценка: ${rating.user_rating} из 5. Её можно изменить.`
-              : 'Как вам игра?'}
-          </small>
         </>
       ) : (
         <Link

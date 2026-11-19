@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from django.apps import apps
 from django.db import connection
-from django.test import Client, RequestFactory
+from django.test import Client, RequestFactory, override_settings
 
 from generation.service import estimate_reservation
 from studio.model_profiles import can_use_pro
@@ -30,7 +30,7 @@ def profiles(settings):
     settings.GAMEFORGE_APP_ORIGIN = 'http://127.0.0.1:8000'
     settings.ALLOWED_HOSTS = ['testserver', 'public.test', '127.0.0.1']
     with (patch('studio.services.schedule'),
-          patch('generation.providers.codex.available_models', return_value=[{'id': 'gpt-6-sol'}]),
+          patch('generation.providers.codex.available_models', return_value=[{'id': 'gpt-6.2-sol'}]),
           patch('generation.providers.codex.verify_cli_contract', return_value='verified')):
         yield
 
@@ -55,7 +55,7 @@ def test_preferences_choose_exact_sol_without_generation(client_chat):
     assert caps['default_model_profile'] == 'pro'
     assert client.get('/api/preferences/').json()['model_profile'] == 'pro'
     assert [(p['id'], p['model'], p['available']) for p in caps['model_profiles']] == [
-        ('pro', 'gpt-6-sol', True), ('lite', 'qwen38', True)]
+        ('pro', 'gpt-6.2-sol', True), ('lite', 'qwen38', True)]
     saved = client.patch('/api/preferences/', {'model_profile': 'pro'}, content_type='application/json')
     assert saved.status_code == 200
     assert saved.json()['model_profile'] == 'pro'
@@ -63,7 +63,7 @@ def test_preferences_choose_exact_sol_without_generation(client_chat):
     result = submit(client, chat)
     assert result.status_code == 202
     assert result.json()['provider'] == 'codex'
-    assert result.json()['model'] == 'gpt-6-sol'
+    assert result.json()['model'] == 'gpt-6.2-sol'
     assert result.json()['model_label'] == 'Pro'
 
 
@@ -86,6 +86,23 @@ def test_explicit_choice_overrides_default_and_freezes_run(client_chat, settings
     assert request_for(run, None, [])['model'] == 'qwen38'
     assert submit(client, chat, model_profile='pro').status_code == 409
     assert Run.objects.count() == 1
+
+
+def test_existing_pro_run_keeps_original_sol_on_replay_and_continue(client_chat):
+    client, chat = client_chat
+    with (override_settings(GAMEFORGE_PRO_MODEL='gpt-6-sol'),
+          patch('generation.providers.codex.available_models', return_value=[{'id': 'gpt-6-sol'}])):
+        first = submit(client, chat, model_profile='pro')
+    assert first.status_code == 202
+    run = Run.objects.get(pk=first.json()['id'])
+    retry = submit(client, chat, model_profile='pro')
+    assert retry.status_code == 202 and retry.json()['id'] == str(run.pk)
+    run.status = 'needs_attention'
+    run.save(update_fields=['status'])
+    child = client.post(f'/api/runs/{run.pk}/continue/', {'idempotency_key': 'continue'},
+                        content_type='application/json')
+    assert child.status_code == 202
+    assert child.json()['model'] == request_for(run, None, [])['model'] == 'gpt-6-sol'
 
 
 def test_retry_without_profile_ignores_changed_preference(client_chat):
@@ -111,7 +128,7 @@ def test_continue_on_pro_preserves_candidate_and_old_run(client_chat):
                     content_type='application/json')
     assert r.status_code == 202
     repair = Run.objects.get(pk=r.json()['id'])
-    assert (repair.provider, repair.model, repair.operation) == ('codex', 'gpt-6-sol', 'repair')
+    assert (repair.provider, repair.model, repair.operation) == ('codex', 'gpt-6.2-sol', 'repair')
     assert repair.candidate_revision == candidate and repair.continued_from == old
     old.refresh_from_db()
     assert (old.provider, old.model_profile, old.status) == ('relay', 'lite', 'needs_attention')
@@ -188,7 +205,7 @@ def test_all_cloud_accounts_get_pro_including_accounts_created_later(client_chat
     settings.GAMEFORGE_PRO_PROVIDER = provider
     # A leftover allowlist must not prevent later accounts from using Pro.
     extra = {'secure': True, 'HTTP_HOST': 'public.test', 'REMOTE_ADDR': '203.0.113.7'}
-    with patch('generation.providers.codex_api.available_models', return_value=[{'id': 'gpt-6-sol'}]):
+    with patch('generation.providers.codex_api.available_models', return_value=[{'id': 'gpt-6.2-sol'}]):
         for user in [chat.owner, User.objects.create_user(username='new-member')]:
             client.force_login(user)
             session = client.get('/api/session/', **extra).json()
@@ -215,6 +232,31 @@ def test_saved_lite_is_preserved_for_new_chats_and_notes_updates(client_chat):
     fresh_chat = Chat.objects.create(owner=chat.owner)
     result = submit(client, fresh_chat)
     assert result.status_code == 202 and result.json()['model_profile'] == 'lite'
+
+
+def test_saved_multiagent_survives_login_and_temporary_unavailability(client_chat, settings):
+    client, chat = client_chat
+    settings.GAMEFORGE_PRO_PROVIDER = 'codex_api'
+    settings.GAMEFORGE_PRO_PARALLEL_ENABLED = True
+    catalog = [
+        {'id': 'gpt-6.2-sol'},
+        {'id': 'gpt-6.2-astra', 'reasoning_efforts': [{'effort': 'high'}]},
+    ]
+    with patch('generation.providers.codex_api.available_models', return_value=catalog) as available:
+        saved = client.patch('/api/preferences/', {'model_profile': 'pro_multi'}, content_type='application/json')
+        assert saved.status_code == 200
+        client.logout()
+        client.force_login(chat.owner)
+        available.return_value = []
+        session = client.get('/api/session/').json()
+        assert session['capabilities']['default_model_profile'] == 'pro'
+        assert session['preferences']['model_profile'] == 'pro_multi'
+        assert not next(p for p in session['capabilities']['model_profiles'] if p['id'] == 'pro_multi')['available']
+        assert submit(client, chat).status_code == 409
+        available.return_value = catalog
+        result = submit(client, chat)
+        assert result.status_code == 202
+        assert result.json()['model_profile'] == 'pro_multi'
 
 
 def test_unset_preferences_migrate_to_pro_without_rewriting_saved_choices_or_runs(client_chat):
@@ -268,7 +310,7 @@ def test_explicit_cloud_member_can_use_pro_without_staff(client_chat, settings):
         'prompt': 'Game', 'idempotency_key': 'cloud', 'model_profile': 'pro',
     }, content_type='application/json', **extra)
     assert result.status_code == 202
-    assert result.json()['model'] == 'gpt-6-sol'
+    assert result.json()['model'] == 'gpt-6.2-sol'
     assert result.json()['provider'] == 'codex'
 
 
@@ -344,10 +386,11 @@ def test_fixture_mode_does_not_accidentally_select_a_real_model(client_chat, set
     assert result.status_code == 202 and result.json()['provider'] == 'fake'
 
 
-def test_sol_has_accountable_tariff_and_reservation():
-    price = tariff('codex', 'gpt-6-sol')
-    assert price['cached'] == .20
-    assert estimate_reservation({'provider':'codex', 'model':'gpt-6-sol'}, price) == Decimal('6.28')
+@pytest.mark.parametrize('model,cached,reserve', [('gpt-6-sol', .20, '6.28'), ('gpt-6.2-sol', .10, '6.53')])
+def test_sol_has_accountable_tariff_and_reservation(model, cached, reserve):
+    price = tariff('codex', model)
+    assert price['cached'] == cached
+    assert estimate_reservation({'provider': 'codex', 'model': model}, price) == Decimal(reserve)
 
 
 def test_switching_provider_keeps_unknown_cost_confirmation(client_chat):

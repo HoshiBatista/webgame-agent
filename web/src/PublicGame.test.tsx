@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { StrictMode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { post, request } from './api';
@@ -20,6 +21,7 @@ beforeEach(() => {
     author: { username: 'tester2' },
     artifact_hash: 'published-hash',
     preview_url: 'http://localhost:8001/preview/signed',
+    analytics: { opens: 11, average_duration_seconds: 38, successful_completions: null },
   });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -30,11 +32,13 @@ function setup(mobile: boolean) {
     <SessionContext.Provider
       value={{ session: { user: null } as Session, updateSession: vi.fn(), refresh: vi.fn() }}
     >
-      <MemoryRouter initialEntries={['/games/published']}>
-        <Routes>
-          <Route path="/games/:id" element={<PublicGame />} />
-        </Routes>
-      </MemoryRouter>
+      <StrictMode>
+        <MemoryRouter initialEntries={['/games/published']}>
+          <Routes>
+            <Route path="/games/:id" element={<PublicGame />} />
+          </Routes>
+        </MemoryRouter>
+      </StrictMode>
     </SessionContext.Provider>,
   );
 }
@@ -78,4 +82,24 @@ it('offers sound immediately in the mobile fullscreen player and keeps it on ret
   expect(screen.getByRole('button', { name: 'Включить звук' })).toBeInTheDocument();
   expect(screen.getByTitle('Собери звёзды')).toBe(frame);
   expect(post).not.toHaveBeenCalled();
+});
+
+it('keeps the opening snapshot even if a session receipt carries newer totals', async () => {
+  setup(false);
+  const frame = await screen.findByTitle('Собери звёзды');
+  vi.mocked(request).mockResolvedValueOnce({
+    analytics: { opens: 12, average_duration_seconds: 8, successful_completions: null },
+  });
+  await act(async () => fireEvent.load(frame));
+  const metrics = screen.getByLabelText('Статистика игры');
+  expect(within(metrics).getByText('11')).toBeInTheDocument();
+  expect(within(metrics).getByText('38 с')).toBeInTheDocument();
+  expect(request).toHaveBeenCalledWith(
+    '/api/publications/published/sessions/',
+    expect.objectContaining({ method: 'POST' }),
+  );
+  expect(
+    vi.mocked(request).mock.calls.filter(([path]) => path === '/api/publications/published/'),
+  ).toHaveLength(1);
+  expect(screen.getByTitle('Собери звёзды')).toBe(frame);
 });

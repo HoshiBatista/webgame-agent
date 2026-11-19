@@ -1,12 +1,15 @@
 from datetime import timedelta
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 import pytest
+from django.test import override_settings
 from django.utils import timezone
 
 from generation.artifacts import materialize
 from generation.errors import ContractError, GenerationError, GenerationPending
 from generation.pro_parallel import BRANCHES, validate_contract
+from generation.providers.codex_api import prepare as prepare_worker_request
 from generation.providers.fake import fixture_assets, fixture_response
 from generation.providers.fake import generate as fake_generate
 from generation.requirements import digest, manifest
@@ -14,7 +17,7 @@ from studio.capacity import capacity_full
 from studio.model_profiles import configured_profiles, profile_options, unavailable_reason
 from studio.models import Chat, Invocation, Run, User
 from studio.pro_parallel import advance, branch_request
-from studio.services import DomainError, cancel_run, create_run, finish_run
+from studio.services import DomainError, cancel_run, create_run, finish_run, reserve_invocation, tariff
 from studio.tasks import Lease, claim_run, request_for
 from tests.test_pro_creative import creative_brief
 
@@ -49,7 +52,10 @@ def context(db, settings):
     settings.GAMEFORGE_RUN_INLINE = False
     owner = User.objects.create_user(username='parallel-owner')
     with (patch('studio.services.schedule'), patch('studio.tasks.dispatch_outbox'),
-          patch('generation.providers.codex_api.available_models', return_value=[{'id': 'gpt-6-sol'}]),
+          patch('generation.providers.codex_api.available_models', return_value=[
+              {'id': 'gpt-6-sol'}, {'id': 'gpt-6.2-sol'},
+              {'id': 'gpt-6.2-astra', 'reasoning_efforts': [{'effort': 'high'}]},
+          ]),
           patch('generation.providers.codex_api.prepare', side_effect=lambda r, ident: {'job_id': ident}),
           patch('studio.services.tariff', return_value={'input': 0, 'output': 0})):
         yield owner
@@ -94,11 +100,14 @@ def test_explicit_opt_in_preserves_normal_pro_plan_limits_and_disabled_catalog(c
     assert experiment.max_model_calls == 11 and experiment.max_repair_attempts == 5
     assert not normal.pro_parallel and experiment.pro_parallel
     assert 'pro_parallel' not in request_for(normal, None, [])
-    assert request_for(experiment, None, [])['pro_parallel'] == 4
+    assert request_for(experiment, None, [])['pro_parallel'] == 5
     assert planned(context).max_model_calls == 9
+    assert [(p['id'], p['name']) for p in profile_options(None)] == [
+        ('pro', 'Pro'), ('lite', 'Lite'), ('pro_multi', 'Multiagent'),
+    ]
     settings.GAMEFORGE_PRO_PARALLEL_ENABLED = False
-    assert 'pro_multi' not in {p['id'] for p in profile_options(None)}
-    with pytest.raises(DomainError, match='не включена'):
+    assert [p['id'] for p in profile_options(None)] == ['pro', 'lite']
+    with pytest.raises(DomainError, match='Multiagent выключен'):
         new_run(context)
     settings.GAMEFORGE_PRO_PARALLEL_ENABLED = True
     profile = {**configured_profiles()['pro_multi'], 'provider': 'codex'}
@@ -107,6 +116,46 @@ def test_explicit_opt_in_preserves_normal_pro_plan_limits_and_disabled_catalog(c
         new_run(context, generation_profile='compact')
     with pytest.raises(DomainError):
         new_run(context, model_profile='pro', model_call_limit=9)
+
+
+def test_separate_planner_is_pinned_and_reserved_at_its_own_rate(context, settings):
+    with override_settings(GAMEFORGE_PRO_PARALLEL_MODEL='gpt-6-sol', GAMEFORGE_PRO_PARALLEL_PLANNER_MODEL=''):
+        legacy = new_run(context)
+    catalog = [{'id': 'gpt-6-sol'}, {'id': 'gpt-6.2-sol'}]
+    with patch('generation.providers.codex_api.available_models', return_value=catalog):
+        assert new_run(context, model_profile='pro').model_for('plan') == 'gpt-6.2-sol'
+        with pytest.raises(DomainError, match='планировщика'):
+            new_run(context)
+        catalog.append({'id': 'gpt-6.2-astra', 'reasoning_efforts': [{'effort': 'high'}]})
+        run = new_run(context)
+        game = planned(context)
+    assert run.generation_strategy == 'pro'
+    settings.GAMEFORGE_PRO_PARALLEL_MODEL = settings.GAMEFORGE_PRO_PARALLEL_PLANNER_MODEL = ''
+    run.refresh_from_db()
+    req = request_for(run, None, [])
+    assert (req['model'], req['operation'], req['reasoning_effort']) == ('gpt-6.2-astra', 'plan', 'high')
+    req['model'] = 'gpt-6-sol'
+    with (patch('studio.services.tariff', tariff),
+          patch('generation.providers.codex_api.prepare', prepare_worker_request),
+          patch('generation.providers.codex_api.configuration', return_value=('https://pro.test', 'a' * 32))):
+        call = reserve_invocation(run, req)
+        assert (call.request['model'], call.price['output'], call.reservation_usd) == (
+            'gpt-6.2-astra', 40, Decimal('26.12'))
+        assert call.request['codex_api']['payload']['model'] == 'gpt-6.2-astra'
+        branch = branch_request(game, 'graphics')
+        assert branch['model'] == 'gpt-6.2-sol'
+        call = reserve_invocation(game, branch)
+        assert (call.request['model'], call.price['output'], call.reservation_usd) == (
+            'gpt-6.2-sol', 10, Decimal('6.53'))
+        assert call.request['codex_api']['payload']['model'] == 'gpt-6.2-sol'
+    assert legacy.planner_model is None and request_for(legacy, None, [])['model'] == 'gpt-6-sol'
+    for original in (legacy, run):
+        original.invocations.update(state='failed', cost_usd=0)
+        original.status = 'needs_attention'
+        original.save(update_fields=['status'])
+        continued = create_run(original.chat, {'idempotency_key': 'continue'}, continued_from=original)
+        assert continued.model == original.model
+        assert request_for(continued, None, [])['model'] == original.model_for('plan')
 
 
 def test_all_three_jobs_are_sent_before_any_receipt_then_assembled_once(context):

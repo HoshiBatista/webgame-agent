@@ -72,6 +72,7 @@ class Run(models.Model):
     audience = models.CharField(max_length=32, default="everyone")
     provider = models.CharField(max_length=32)
     model = models.CharField(max_length=100, blank=True)
+    planner_model = models.CharField(max_length=100, null=True, blank=True)
     model_profile = models.CharField(max_length=10, blank=True, default="")
     status = models.CharField(max_length=32, default="queued")
     stage = models.CharField(max_length=40, default="queued")
@@ -140,6 +141,11 @@ class Run(models.Model):
                 name="studio_variant_one_active"),
         ]
 
+    def model_for(self, operation):
+        if self.pro_parallel and operation == "plan" and self.planner_model:
+            return self.planner_model
+        return self.model
+
     @property
     def max_model_calls(self):
         from .lite_music import enabled as music_enabled
@@ -147,7 +153,7 @@ class Run(models.Model):
         maximum = 1 + self.max_repair_attempts + int(self.planning_required)
         if self.pro_parallel and self.operation == 'create':
             maximum += 2
-            maximum += int(self.pro_parallel_version == 4)
+            maximum += int(self.pro_parallel_version in {4, 5})
             if self.pro_parallel_version >= 2:
                 from generation.pro_partition import split
 

@@ -40,7 +40,7 @@ def workspace(client, settings):
     with (
         patch('studio.tasks.dispatch_run'),
         patch('studio.tasks.dispatch_outbox'),
-        patch('generation.providers.codex_api.available_models', return_value=[{'id': 'gpt-6-sol'}]),
+        patch('generation.providers.codex_api.available_models', return_value=[{'id': 'gpt-6.2-sol'}]),
         patch('generation.providers.codex_api.prepare', side_effect=lambda request, job: {'job_id': job}),
         patch('studio.services.tariff', return_value={'input': 0, 'cached': 0, 'output': 0}),
         patch('validation.service.environment_identity', return_value='variants-test'),
@@ -111,6 +111,7 @@ def test_duplicate_submissions_persist_one_prompt_and_four_ordinary_jobs(workspa
         assert str(run.id) in ids
         assert (run.prompt, run.audience, run.model_profile, run.provider) == (
             PROMPT, 'children', 'pro', 'codex_api')
+        assert run.model == "gpt-6.2-sol" and run.model_for("plan") == run.model
         assert run.planning_required and not run.pro_parallel
 
     client = clients[0]
@@ -284,6 +285,29 @@ def test_manual_recheck_and_confirmation_only_accept_their_variant(client, works
     assert refreshed['current_revision']['id'] == refreshed['variant_batches'][0]['selected_revision_id'] == chosen['id']
     assert refreshed['variant_batches'][0]['variants'][1]['revision']['accepted']
     assert select(client, workspace, batch, revision, expected_current_revision_id=chosen['id']).status_code == 200
+
+
+def test_editing_a_saved_variant_draft_preserves_acceptance_and_exact_source(client, workspace):
+    batch = create_batch(client, workspace)
+    first, second, third, fourth = [item['run_id'] for item in batch['variants']]
+    with patch('generation.service.generate', side_effect=fixture_generate):
+        with patch('validation.service.validate', return_value=uncertain()):
+            process_run(first)
+        with patch('validation.service.validate', return_value=PASS):
+            process_run(second)
+    for sibling in (third, fourth):
+        assert post(client, f'/api/runs/{sibling}/cancel/').status_code == 200
+    refreshed = detail(client, workspace)
+    candidate = refreshed['variant_batches'][0]['variants'][0]['revision']
+    assert not candidate['accepted'] and refreshed['current_revision'] is None
+    payload = dict(prompt='Добавь монету', model_profile='pro', idempotency_key='edit-draft',
+                   source_revision_id=candidate['id'], source_is_historical=True)
+    url = f'/api/chats/{workspace.pk}/runs/'
+    assert post(client, url, **payload, source_artifact_hash='1' * 64).status_code == 409
+    edit = post(client, url, **payload, source_artifact_hash=candidate['artifact_hash'])
+    assert edit.status_code == 202, edit.content
+    assert edit.json()['source_revision_id'] == candidate['id'] and edit.json()['base_revision_id'] is None
+    assert not workspace.revisions.get(pk=candidate['id']).accepted
 
 
 def test_continuation_keeps_its_slot_and_respects_unknown_cost_after_another_pick(client, workspace):

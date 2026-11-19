@@ -46,7 +46,7 @@ def create_batch(chat, data, *, authorize):
 def batches_for(chat):
     revision_fields = ("id", "title", "artifact_hash", "accepted")
     runs = Run.objects.select_related("candidate_revision", "result_revision").only(
-        "id", "variant_batch_id", "variant_index", "prompt", "status", "stage", "message",
+        "id", "variant_batch_id", "variant_index", "prompt", "status", "stage", "message", "error",
         *(f"{rel}__{field}" for rel in ("candidate_revision", "result_revision") for field in revision_fields),
     ).order_by("variant_index", "created_at", "id")
     return chat.variant_batches.order_by("-created_at", "-id").prefetch_related(Prefetch("runs", queryset=runs))
@@ -68,6 +68,7 @@ def batch_data(batch):
         variants.append({
             "index": index, "root_run_id": roots[index], "run_id": str(run.id),
             "status": run.status, "stage": run.stage, "message": run.message,
+            "error_code": (run.error or {}).get("code", ""),
             "can_confirm": confirmation_report(run) is not None,
             "revision": {
                 "id": str(revision.id), "title": revision.title, "accepted": revision.accepted,

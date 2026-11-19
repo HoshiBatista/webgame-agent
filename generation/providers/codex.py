@@ -25,9 +25,10 @@ from ..schema import response_schema
 MAX_CONTEXT_BYTES = 256000
 CONTEXT_WINDOW = 872000
 AUTO_COMPACT_TOKEN_LIMIT = 800000
+CLI_169 = "codex-cli 0.169.0-alpha.11.1"
 VERIFIED_CLI_VERSIONS = {
     "codex-cli 0.163.0-alpha.10.2", "codex-cli 0.163.0-alpha.11.2",
-    "codex-cli 0.164.0-alpha.11.1",
+    "codex-cli 0.164.0-alpha.11.1", CLI_169,
 }
 
 DISABLED_FEATURES = (
@@ -62,6 +63,15 @@ DISABLED_FEATURES = (
     "skill_search",
     "code_mode_only",
     "async_compaction",
+)
+
+
+DISABLED_FEATURES_169 = (
+    "agent_message_board", "agent_message_board_mcp", "artifact", "cli_daybreak",
+    "code_mode_host_grpc", "daemon_auto_start", "enable_mcp_apps",
+    "executor_capability_discovery", "executor_capability_discovery_v2", "external_agent_memory_import",
+    "in_app_local_automation", "multi_agent_v2_dynamic_tools", "multi_env_copy_file",
+    "remote_plugin", "runtime_agent_instances", "skill_mcp_dependency_install", "standalone_web_search",
 )
 
 
@@ -157,9 +167,10 @@ def verify_cli_contract():
     return version
 
 
-def command(catalog_path):
+def command(catalog_path, cli_version):
     args = [binary(), "app-server", "--stdio"]
-    for feature in DISABLED_FEATURES:
+    disabled = DISABLED_FEATURES + DISABLED_FEATURES_169 if cli_version == CLI_169 else DISABLED_FEATURES
+    for feature in disabled:
         args.extend(["-c", f"features.{feature}=false"])
     settings = {
         "model_catalog_json": str(catalog_path),
@@ -191,18 +202,21 @@ def command(catalog_path):
         "otel.log_user_prompt": False,
         "otel.log_agent_responses": False,
     }
+    if cli_version == CLI_169:
+        settings.update({"skills.bundled.enabled": False, "skills.include_instructions": False,
+                         "include_permissions_instructions": False})
     for key, value in settings.items():
         args.extend(["-c", f"{key}={json.dumps(value)}"])
     return args
 
 
 class Connection:
-    def __init__(self, cwd):
+    def __init__(self, cwd, cli_version):
         self.events: queue.Queue[dict[str, Any]] = queue.Queue()
         self.next_id = 0
         self.pending = []
         self.process = subprocess.Popen(
-            command(sanitized_catalog(cwd)),
+            command(sanitized_catalog(cwd), cli_version),
             cwd=cwd,
             env=child_environment(),
             stdin=subprocess.PIPE,
@@ -338,7 +352,7 @@ def generate(request, *, on_event, is_cancelled):
             "model_unavailable",
             "Модель отсутствует в доступном каталоге Codex. Обновите вход/каталог в Codex.",
         )
-    verify_cli_contract()
+    cli_version = verify_cli_contract()
     messages = build_messages(request)
     schema = response_schema(request)
     effort = request.get("reasoning_effort", "low")
@@ -360,7 +374,7 @@ def generate(request, *, on_event, is_cancelled):
     usage, text, started, thread_id, turn_id = None, "", False, None, None
     with tempfile.TemporaryDirectory(prefix="gameforge-model-") as cwd:
         try:
-            connection = Connection(cwd)
+            connection = Connection(cwd, cli_version)
         except OSError as exc:
             raise GenerationError("codex_unavailable", "Не удалось запустить локальный Codex CLI.") from exc
         try:

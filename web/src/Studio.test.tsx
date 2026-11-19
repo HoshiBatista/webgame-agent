@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { StrictMode } from 'react';
-import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
+import { StrictMode, Suspense } from 'react';
+import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Studio from './Studio';
 import { SessionContext, type StudioDraft } from './context';
@@ -964,6 +964,13 @@ describe('simple conversation', () => {
     vi.mocked(request).mockResolvedValue({ ...chat, runs: [{ ...run, status: 'cancelled' }] });
     vi.mocked(post).mockResolvedValue({});
     fireEvent.click(screen.getByRole('button', { name: 'Остановить генерацию' }));
+    const dialog = screen.getByRole('dialog', { name: 'Остановить генерацию?' });
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Продолжить генерацию' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(post).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Остановить генерацию' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Остановить' }));
     await waitFor(() =>
       expect(
         screen.queryByRole('link', { name: 'поиграть в игры сообщества' }),
@@ -1225,6 +1232,34 @@ it('shows the saved concept and continues it idempotently before any game revisi
   expect(vi.mocked(post).mock.calls[1]).toEqual(['/api/runs/planned/continue/', payload]);
 });
 
+it('offers a manual continuation for a budget denial before the first plan', async () => {
+  vi.mocked(request).mockResolvedValue({
+    ...chat,
+    current_revision: null,
+    revisions: [],
+    runs: [
+      {
+        id: 'budgeted',
+        status: 'needs_attention',
+        model_profile: 'pro_multi',
+        game_plan: {},
+        can_continue: true,
+        error: { code: 'budget_exhausted' },
+      },
+    ],
+  });
+  setup();
+  const button = await screen.findByRole('button', { name: 'Продолжить создание' });
+  expect(screen.queryByText('Замысел игры')).not.toBeInTheDocument();
+  expect(post).not.toHaveBeenCalled();
+  fireEvent.click(button);
+  await waitFor(() =>
+    expect(post).toHaveBeenCalledExactlyOnceWith('/api/runs/budgeted/continue/', {
+      idempotency_key: expect.any(String),
+    }),
+  );
+});
+
 describe('manual game confirmation', () => {
   const candidate = {
     ...revision,
@@ -1256,6 +1291,10 @@ describe('manual game confirmation', () => {
   it('requires a personal check and sends the exact displayed report once', async () => {
     vi.mocked(request).mockResolvedValue(awaiting());
     setup();
+    const summary = await screen.findByText('Принять эту версию');
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+    expect(screen.queryByText('Игра сохранена. Нужна ваша проверка')).not.toBeInTheDocument();
+    fireEvent.click(summary);
     const button = await screen.findByRole('button', { name: 'Подтвердить результат' });
     expect(button).toBeDisabled();
     expect(screen.getByText(run.confirmation!.requirements[0])).toBeInTheDocument();
@@ -1274,6 +1313,7 @@ describe('manual game confirmation', () => {
   it('never confirms a historical version and resets agreement when returning', async () => {
     vi.mocked(request).mockResolvedValue(awaiting());
     setup();
+    fireEvent.click(await screen.findByText('Принять эту версию'));
     await screen.findByRole('button', { name: 'Подтвердить результат' });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.change(screen.getAllByRole('combobox', { name: 'Версия игры' })[0], {
@@ -1284,6 +1324,7 @@ describe('manual game confirmation', () => {
     fireEvent.change(screen.getAllByRole('combobox', { name: 'Версия игры' })[0], {
       target: { value: '' },
     });
+    fireEvent.click(await screen.findByText('Принять эту версию'));
     expect(await screen.findByRole('button', { name: 'Подтвердить результат' })).toBeDisabled();
   });
   it('refreshes a rejected confirmation without submitting it again', async () => {
@@ -1292,6 +1333,7 @@ describe('manual game confirmation', () => {
       new ApiError({ code: 'confirmation_changed', message: 'Проверка изменилась' }, 409),
     );
     setup();
+    fireEvent.click(await screen.findByText('Принять эту версию'));
     const button = await screen.findByRole('button', { name: 'Подтвердить результат' });
     fireEvent.click(screen.getByRole('checkbox'));
     vi.mocked(request).mockResolvedValue({
@@ -1310,6 +1352,10 @@ describe('manual game confirmation', () => {
 });
 
 describe('four ordinary Pro variants', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
   function profile(id: string): Session {
     return {
       ...session,
@@ -1365,6 +1411,30 @@ describe('four ordinary Pro variants', () => {
       variant_batches: [group],
     };
   }
+  it('distinguishes a queued variant from jobs already sent to the model', async () => {
+    const group = batch();
+    const states = [
+      ['queued', ''],
+      ['waiting_model', 'Запуск новых заданий Pro приостановлен.'],
+      ['waiting_model', 'Pro создаёт ответ.'],
+      ['waiting_admin', ''],
+    ];
+    group.variants.forEach((variant, i) => {
+      const [stage, message] = states[i];
+      Object.assign(variant, { status: 'queued', stage, message, revision: null });
+    });
+    vi.mocked(request).mockResolvedValue(detail(group));
+    setup(undefined, undefined, profile('pro'));
+    for (const [i, label] of [
+      'В очереди',
+      'Запуск новых заданий Pro приостановлен.',
+      'Pro создаёт ответ.',
+      'Ожидание восстановления подключения к модели',
+    ].entries()) {
+      const row = await screen.findByRole('listitem', { name: `Вариант ${i + 1}` });
+      expect(within(row).getByText(label)).toBeInTheDocument();
+    }
+  });
   it.each(['lite', 'pro_multi'])(
     'offers the checkbox only for ordinary Pro, not %s',
     async (id) => {
@@ -1373,15 +1443,51 @@ describe('four ordinary Pro variants', () => {
       expect(
         screen.queryByRole('checkbox', { name: /четыре варианта Pro/ }),
       ).not.toBeInTheDocument();
+      vi.mocked(post).mockResolvedValue({ id: 'edit', status: 'queued' });
+      fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Добавь монеты' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+      await waitFor(() =>
+        expect(post).toHaveBeenCalledExactlyOnceWith(
+          '/api/chats/one/runs/',
+          expect.objectContaining({ model_profile: id }),
+        ),
+      );
     },
   );
+  it('remembers an explicit single-version choice for this account across chats and reloads', async () => {
+    const checkbox = () => screen.getByRole('checkbox', { name: /четыре варианта Pro/ });
+    const pro = profile('pro');
+    const initial = setup('/chats/new', undefined, pro);
+    expect(checkbox()).toBeChecked();
+    fireEvent.click(checkbox());
+    initial.unmount();
+
+    const other = setup('/chats/new', undefined, { ...pro, user: { ...pro.user!, id: 'other' } });
+    expect(checkbox()).toBeChecked();
+    other.unmount();
+
+    vi.mocked(post).mockResolvedValue({ id: 'edit', status: 'queued' });
+    setup('/chats/one', undefined, pro);
+    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    expect(checkbox()).not.toBeChecked();
+    fireEvent.change(input, { target: { value: 'Одну версию' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledExactlyOnceWith(
+        '/api/chats/one/runs/',
+        expect.objectContaining({ model_profile: 'pro' }),
+      ),
+    );
+    expect(checkbox()).not.toBeChecked();
+  });
   it('uses a single idempotent batch submission for the exact shown revision', async () => {
     const group = batch();
     vi.mocked(post).mockResolvedValue(group);
     setup(undefined, undefined, profile('pro'));
     const toggle = await screen.findByRole('checkbox', { name: /четыре варианта Pro/ });
-    expect(toggle).not.toBeChecked();
-    fireEvent.click(toggle);
+    expect(toggle).toBeChecked();
+    expect(screen.queryByText(/Четыре отдельных задания Pro/)).not.toBeInTheDocument();
+    expect(screen.getByTitle('Создать четыре игры по одному запросу')).toContainElement(toggle);
     fireEvent.change(screen.getByRole('textbox', { name: 'Что изменить в игре' }), {
       target: { value: group.prompt },
     });
@@ -1397,7 +1503,7 @@ describe('four ordinary Pro variants', () => {
         source_artifact_hash: revision.artifact_hash,
       }),
     );
-    expect(toggle).not.toBeChecked();
+    expect(toggle).toBeChecked();
   });
   it('reuses the key after a lost first acknowledgement rather than starting a second batch', async () => {
     const group = batch();
@@ -1407,13 +1513,39 @@ describe('four ordinary Pro variants', () => {
       .mockResolvedValueOnce(empty)
       .mockRejectedValueOnce(new ApiError({ code: 'network', message: 'Нет ответа' }, 0))
       .mockResolvedValueOnce(group);
-    setup('/chats/new', undefined, profile('pro'));
-    fireEvent.click(screen.getByRole('checkbox', { name: /четыре варианта Pro/ }));
+    let allowNavigation = false;
+    let release!: () => void;
+    const navigation = new Promise<void>((resolve) => (release = resolve));
+    function DelayedStudio() {
+      if (useLocation().pathname !== '/chats/new' && !allowNavigation) throw navigation;
+      return <Studio />;
+    }
+    render(
+      <SessionContext.Provider
+        value={{ session: profile('pro'), updateSession: vi.fn(), refresh: vi.fn() }}
+      >
+        <MemoryRouter initialEntries={['/chats/new']}>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/chats/:id" element={<DelayedStudio />} />
+            </Routes>
+          </Suspense>
+        </MemoryRouter>
+      </SessionContext.Provider>,
+    );
+    expect(screen.getByRole('checkbox', { name: /четыре варианта Pro/ })).toBeChecked();
     fireEvent.change(screen.getByRole('textbox'), { target: { value: group.prompt } });
     fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
     await screen.findByText('Нет ответа');
     expect(screen.getByRole('textbox')).toHaveValue(group.prompt);
+    const retryWhileNavigating = screen.getByRole('button', { name: 'Создать 4 варианта' });
+    expect(retryWhileNavigating).toBeDisabled();
+    fireEvent.click(retryWhileNavigating);
     expect(post).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      allowNavigation = true;
+      release();
+    });
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Создать 4 варианта' })).toBeEnabled(),
     );
@@ -1446,9 +1578,9 @@ describe('four ordinary Pro variants', () => {
         saved = detail({ ...group, selected_revision_id: games[2].id }, games[2]);
         return saved;
       }
-      return { id: 'followup', status: 'queued' } as Run;
+      return { ...batch(), id: 'followup' };
     });
-    setup(undefined, undefined, profile('pro'));
+    const first = setup(undefined, undefined, profile('pro'));
     const list = await screen.findByRole('region', { name: 'Варианты игры' });
     expect(screen.getByRole('textbox')).toBeDisabled();
     for (const [i, game] of games.entries()) {
@@ -1459,24 +1591,162 @@ describe('four ordinary Pro variants', () => {
       fireEvent.click(screen.getByRole('button', { name: 'К вариантам' }));
     }
     expect(post).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Выбрать вариант 3' }));
-    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+    fireEvent.click(within(list).getByRole('button', { name: 'Играть в вариант 3' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Выбрать вариант 3' }),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(post).toHaveBeenCalledExactlyOnceWith('/api/chats/one/variant-batches/four/select/', {
       revision_id: games[2].id,
       artifact_hash: games[2].artifact_hash,
       expected_current_revision_id: null,
     });
     expect(within(list).getByText('Текущая версия')).toBeInTheDocument();
+    first.unmount();
+    setup(undefined, undefined, profile('pro'));
+    const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
     fireEvent.change(input, { target: { value: 'Добавь монеты' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
     expect(post).toHaveBeenLastCalledWith(
-      '/api/chats/one/runs/',
+      '/api/chats/one/variant-batches/',
       expect.objectContaining({
         source_revision_id: games[2].id,
         source_artifact_hash: games[2].artifact_hash,
         source_is_historical: false,
       }),
     );
+  });
+  it.each(['unverified', 'needs_attention'] as const)(
+    'keeps a chosen %s build as the edit source after reloading and a sibling finishing',
+    async (status) => {
+      const group = batch();
+      const drafts = games.map((game) => ({ ...game, accepted: false }));
+      group.variants.forEach((variant, index) =>
+        Object.assign(variant, {
+          status,
+          revision: drafts[index],
+          error_code: 'check_review_required',
+        }),
+      );
+      Object.assign(group.variants[3], { status: 'generating', revision: null });
+      const saved = () => ({ ...detail(group), revisions: drafts });
+      vi.mocked(request).mockImplementation(async () => saved());
+      vi.mocked(post).mockResolvedValue({ id: 'edit', status: 'queued' });
+      const first = setup(undefined, undefined, profile('pro'));
+      const list = await screen.findByRole('region', { name: 'Варианты игры' });
+      expect(screen.getByRole('textbox')).toBeDisabled();
+      fireEvent.click(
+        within(list).getByRole('button', { name: 'Выбрать вариант 2 для доработки' }),
+      );
+      await within(list).findByText('Выбран для доработки');
+      expect(post).not.toHaveBeenCalled();
+      first.unmount();
+      Object.assign(group.variants[3], { status, revision: drafts[3] });
+      setup(undefined, undefined, profile('pro'));
+      const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+      expect(input).toBeEnabled();
+      expect(screen.getByTitle(drafts[1].title)).toHaveAttribute(
+        'src',
+        drafts[1].preview_url + '?audio_control=1',
+      );
+      expect(
+        within(screen.getByRole('listitem', { name: 'Вариант 2' })).getByText(
+          'Выбран для доработки',
+        ),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('checkbox', { name: /четыре варианта Pro/ }));
+      fireEvent.change(input, { target: { value: 'Добавь монеты' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+      await waitFor(() =>
+        expect(post).toHaveBeenCalledExactlyOnceWith(
+          '/api/chats/one/runs/',
+          expect.objectContaining({
+            source_revision_id: drafts[1].id,
+            source_artifact_hash: drafts[1].artifact_hash,
+            source_is_historical: true,
+          }),
+        ),
+      );
+    },
+  );
+  it('discards a stored draft when its build changes and never selects the replacement from a stale trial', async () => {
+    const group = batch();
+    const draft = { ...games[1], accepted: false };
+    Object.assign(group.variants[1], { revision: draft, status: 'unverified' });
+    let saved = {
+      ...detail(group),
+      revisions: [draft, ...games.filter((game) => game.id !== draft.id)],
+    };
+    vi.mocked(request).mockImplementation(async () => saved);
+    const first = setup(undefined, undefined, profile('pro'));
+    const firstList = await screen.findByRole('region', { name: 'Варианты игры' });
+    fireEvent.click(
+      within(firstList).getByRole('button', { name: 'Выбрать вариант 2 для доработки' }),
+    );
+    await within(firstList).findByText('Выбран для доработки');
+    first.unmount();
+    const changed = { ...draft, artifact_hash: 'different-build' };
+    Object.assign(group.variants[1], { revision: changed });
+    saved = {
+      ...detail(group),
+      revisions: [changed, ...games.filter((game) => game.id !== draft.id)],
+    };
+    setup(undefined, undefined, profile('pro'));
+    const list = await screen.findByRole('region', { name: 'Варианты игры' });
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    fireEvent.click(within(list).getByRole('button', { name: 'Играть в вариант 2' }));
+    const dialog = screen.getByRole('dialog');
+    expect(
+      within(dialog).getByRole('button', { name: 'Выбрать вариант 2 для доработки' }),
+    ).toBeEnabled();
+    const replacement = {
+      ...group.variants[1],
+      run_id: 'new-attempt',
+      revision: { ...changed, id: 'new-version' },
+    };
+    saved = {
+      ...saved,
+      variant_batches: [
+        { ...group, variants: group.variants.map((v) => (v.index === 2 ? replacement : v)) },
+      ],
+    };
+    act(() => window.dispatchEvent(new Event('focus')));
+    await waitFor(() =>
+      expect(
+        within(dialog).queryByRole('button', { name: /Выбрать вариант/ }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(post).not.toHaveBeenCalled();
+  });
+  it('edits the chosen game when the last sibling was cancelled with unknown cost', async () => {
+    const group = batch();
+    Object.assign(group.variants[3], { status: 'cancelled', revision: null });
+    group.selected_revision_id = games[1].id;
+    vi.mocked(request).mockResolvedValue({
+      ...detail(group, games[1]),
+      runs: [
+        { id: 'slot-4', status: 'cancelled', variant_batch_id: group.id, can_retry_unknown: true },
+      ],
+    });
+    vi.mocked(post).mockResolvedValue({ id: 'edit', status: 'queued' });
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    try {
+      setup(undefined, undefined, profile('pro'));
+      const input = await screen.findByRole('textbox', { name: 'Что изменить в игре' });
+      fireEvent.click(screen.getByRole('checkbox', { name: /четыре варианта Pro/ }));
+      fireEvent.change(input, { target: { value: 'Добавь монеты' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Отправить доработку' }));
+      await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+      const [, payload] = vi.mocked(post).mock.calls[0];
+      expect(payload).toMatchObject({
+        source_revision_id: games[1].id,
+        source_artifact_hash: games[1].artifact_hash,
+      });
+      expect(payload).not.toHaveProperty('acknowledge_unknown_run_id');
+      expect(confirm).not.toHaveBeenCalled();
+    } finally {
+      confirm.mockRestore();
+    }
   });
   it('can try a draft, and requires consent for its exact report while another slot is active', async () => {
     const group = batch();
@@ -1529,6 +1799,9 @@ describe('four ordinary Pro variants', () => {
     });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Остановить вариант 3' }));
+    const stop = screen.getByRole('dialog', { name: 'Остановить вариант 3?' });
+    expect(post).not.toHaveBeenCalledWith('/api/runs/slot-3/cancel/', {});
+    fireEvent.click(within(stop).getByRole('button', { name: 'Остановить' }));
     expect(post).toHaveBeenLastCalledWith('/api/runs/slot-3/cancel/', {});
   });
 });

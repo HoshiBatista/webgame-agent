@@ -1,6 +1,7 @@
 import json
 import uuid
 from datetime import timedelta
+from decimal import Decimal
 from unittest.mock import patch
 
 import httpx
@@ -95,6 +96,29 @@ def test_lost_submission_reply_retrieves_same_uuid_without_second_put(api, monke
     assert sum(method == "PUT" for method, _ in api.calls) == 1
 
 
+def test_paused_job_resumes_polling_the_same_saved_uuid(api):
+    request = request_for_api()
+    ident = request["codex_api"]["id"]
+    codex_api.fetch(request)
+    api.calls.clear()
+    row = api.jobs[ident]
+    for state, paused, expected in [
+        ("queued", True, "Запуск новых заданий Pro приостановлен"),
+        ("queued", False, "Ожидаем исполнителя"),
+        ("running", False, "Pro создаёт ответ"),
+    ]:
+        row["state"] = state
+        if paused:
+            row["queue_paused"] = True
+        else:
+            row.pop("queue_paused", None)
+        with pytest.raises(GenerationPending) as error:
+            codex_api.unpack(codex_api.fetch(request), ident)
+        assert expected in error.value.message
+        assert not error.value.operator_required and error.value.retry_after == 5
+    assert api.calls == [("GET", "/jobs/" + ident)] * 3
+
+
 @pytest.mark.parametrize("variable,value", [("GAMEFORGE_CODEX_API_URL", "https://changed.test"),
                                              ("GAMEFORGE_CODEX_API_KEY", "y" * 32)])
 def test_changed_origin_or_principal_never_reposts(api, monkeypatch, variable, value):
@@ -166,7 +190,7 @@ def test_api_outage_preserves_identity(api, status):
 
 def test_web_reads_only_non_secret_fresh_catalog(api, monkeypatch):
     monkeypatch.delenv("GAMEFORGE_CODEX_API_KEY")
-    assert codex_api.available_models()[0]["id"] == "gpt-6-sol"
+    assert codex_api.available_models()[0]["id"] == "gpt-6.2-sol"
     import os
     from pathlib import Path
 
@@ -238,6 +262,28 @@ def test_cancelled_run_preserves_late_receipt_without_applying_game(run, api):
 
 
 @pytest.mark.django_db(transaction=True)
+def test_acknowledged_stop_retains_partial_usage_and_full_reservation(run, api):
+    from studio.services import budget_snapshot
+
+    with patch("generation.service.estimate_reservation", return_value=Decimal("1.25")):
+        process_run(str(run.id))
+    invocation = run.invocations.get()
+    job_id = str(invocation.id)
+    cancel_run(run)
+    api.finish(job_id, state="cancelled")
+    job = api.jobs[job_id]
+    job["receipt"]["metadata"]["turn_status"] = "interrupted"
+    job["receipt_hash"] = digest(job["receipt"])
+    reconcile_relay_cancellations()
+    invocation.refresh_from_db()
+    assert invocation.state == "unknown" and invocation.cost_usd is None
+    assert invocation.raw_response == "partial" and invocation.usage["output_tokens"] == 50
+    assert invocation.provider_metadata["turn_status"] == "interrupted"
+    assert budget_snapshot()["unknown_usd"] == 1.25
+    assert api.inferences == 1 and not Revision.objects.filter(run=run).exists()
+
+
+@pytest.mark.django_db(transaction=True)
 def test_remote_pro_obeys_same_user_boundary_and_keeps_local_codex_option(run, api, settings):
     client = WebClient()
     client.force_login(run.chat.owner)
@@ -252,7 +298,7 @@ def test_remote_pro_obeys_same_user_boundary_and_keeps_local_codex_option(run, a
     assert Invocation.objects.count() == 0
     settings.GAMEFORGE_LOCAL_ONLY = True
     settings.GAMEFORGE_PRO_PROVIDER = 'codex'
-    with patch('generation.providers.codex.available_models', return_value=[{'id':'gpt-6-sol'}]), \
+    with patch('generation.providers.codex.available_models', return_value=[{'id':'gpt-6.2-sol'}]), \
          patch('generation.providers.codex.verify_cli_contract'):
         caps = client.get('/api/session/').json()['capabilities']
     assert caps['model_profiles'][0]['provider'] == 'codex' and caps['model_profiles'][0]['available']

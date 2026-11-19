@@ -22,7 +22,7 @@ class CodexDouble:
             return httpx.Response(200, json={"status": "ok", "protocol": 1, "worker_online": True,
                                             "draining": False, "attention_required": False})
         if path == "/models":
-            return httpx.Response(200, json={"models": [{"id": "gpt-6-sol", "name": "Sol",
+            return httpx.Response(200, json={"models": [{"id": "gpt-6.2-sol", "name": "Sol 6.2",
                                                         "efforts": ["low", "medium", "high"]}]})
         parts = path.strip("/").split("/")
         ident = parts[1]
@@ -51,7 +51,7 @@ class CodexDouble:
             "input_tokens": 100, "cached_input_tokens": 10, "cache_write_input_tokens": 0, "output_tokens": 50,
         } if usage and submitted else None, "metadata": {"environment_access": False}}
         if state == "completed":
-            receipt.update(model="gpt-6-sol", response=response, raw_response=json.dumps(response))
+            receipt.update(model=row["payload"]["model"], response=response, raw_response=json.dumps(response))
         else:
             receipt.update(error={"code": "cancelled" if state == "cancelled" else "worker_lost",
                                   "outcome_unknown": submitted}, partial_response="partial" if submitted else None)

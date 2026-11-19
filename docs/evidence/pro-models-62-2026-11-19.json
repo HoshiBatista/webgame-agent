@@ -1,0 +1,127 @@
+{
+  "tested_on": "2026-11-19",
+  "integration": "Local GameForge with the deployed HTTPS Codex Worker and real model responses",
+  "worker_release": "models62-010010e49581",
+  "ordinary_pro_model": "gpt-6-sol",
+  "runs": [
+    {
+      "run": "d202bf55-e176-4a71-b23e-d98e5e0a8fa4",
+      "revision": "ef31117d-4e8b-4240-8221-9c7fa32ec350",
+      "artifact_sha256": "8434e00bcb85f0a48f4b6e0142c538a8a5331b50da56444c7d0fc9ff4284d71d",
+      "started": "2026-11-18 23:11:36.271415+00:00",
+      "ended": "2026-11-18 23:18:47.019000+00:00",
+      "application_status": "unverified",
+      "application_verification": "none",
+      "reports": [
+        {
+          "report": 339,
+          "status": "unverified",
+          "decision": "review",
+          "codes": [
+            [
+              "check_suite_revised",
+              null
+            ]
+          ]
+        }
+      ],
+      "model_receipts": [
+        {
+          "operation": "plan",
+          "model": "gpt-6.2-astra",
+          "cost_usd": "0.180536"
+        },
+        {
+          "operation": "create",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.096000"
+        },
+        {
+          "operation": "pro_graphics",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.038430"
+        },
+        {
+          "operation": "pro_audio",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.009964"
+        },
+        {
+          "operation": "pro_checks",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.094700"
+        },
+        {
+          "operation": "check_repair",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.083684"
+        }
+      ],
+      "cost_usd": "0.503314",
+      "chromium": "145.0.7632.6",
+      "independent_checks": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true,
+        "audio": true
+      },
+      "review_reason": "The original roundAudio scenario repeated a sound within the 60 ms same-effect debounce. The revised checks required review."
+    },
+    {
+      "run": "367e20e7-1b13-4ce7-bcf3-e9a1530ed9dd",
+      "revision": "d9a7fcc9-a495-440d-acc7-9e6c6b7ded24",
+      "artifact_sha256": "cc41040542aee576f8833fd73eb9ff162feb7c5852f21c37d048be266dec3b17",
+      "started": "2026-11-18 23:21:35.085493+00:00",
+      "ended": "2026-11-18 23:27:34.801697+00:00",
+      "application_status": "succeeded",
+      "application_verification": "automatic",
+      "reports": [
+        {
+          "report": 340,
+          "status": "passed",
+          "decision": "accept",
+          "codes": []
+        }
+      ],
+      "model_receipts": [
+        {
+          "operation": "plan",
+          "model": "gpt-6.2-astra",
+          "cost_usd": "0.175456"
+        },
+        {
+          "operation": "create",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.104054"
+        },
+        {
+          "operation": "pro_graphics",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.037264"
+        },
+        {
+          "operation": "pro_audio",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.011074"
+        },
+        {
+          "operation": "pro_checks",
+          "model": "gpt-6.2-sol",
+          "cost_usd": "0.090354"
+        }
+      ],
+      "cost_usd": "0.418202",
+      "chromium": "145.0.7632.6",
+      "independent_checks": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true,
+        "audio": true
+      },
+      "passed_application_scenarios": 7
+    }
+  ],
+  "total_cost_usd": "0.921516"
+}

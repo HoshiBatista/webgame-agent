@@ -32,6 +32,13 @@ const profiles = [
     available: true,
     unavailable_reason: '',
   },
+  {
+    id: 'pro_multi',
+    name: 'Multiagent',
+    description: 'После плана агенты параллельно создают геймплей, графику и звук.',
+    available: true,
+    unavailable_reason: '',
+  },
 ];
 const session: Session = {
   user: { id: 'u', username: 'operator', is_staff: true },
@@ -106,8 +113,8 @@ const newAccountSession: Session = {
 
 it('shows Pro in a new account settings without a preference write or generation', () => {
   setup('settings', newAccountSession);
-  expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked();
-  expect(screen.getByRole('radio', { name: /Pro/ })).toBeEnabled();
+  expect(screen.getByRole('radio', { name: 'Pro' })).toBeChecked();
+  expect(screen.getByRole('radio', { name: 'Pro' })).toBeEnabled();
   expect(request).not.toHaveBeenCalled();
   expect(post).not.toHaveBeenCalled();
 });
@@ -115,25 +122,33 @@ it('shows Pro in a new account settings without a preference write or generation
 it('starts a new account chat with Pro without needing to choose it first', async () => {
   setup('studio', newAccountSession, '/chats/new');
   await screen.findByLabelText('Выбрать модель: Pro');
+  expect(screen.getByRole('checkbox', { name: /четыре варианта Pro/ })).toBeChecked();
   expect(post).not.toHaveBeenCalled();
   vi.mocked(post).mockResolvedValueOnce(chat);
   fireEvent.change(screen.getByLabelText('Описание вашей игры'), {
     target: { value: 'Собрать звёзды' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
   await screen.findByText('Соединение потеряно');
   expect(post).toHaveBeenNthCalledWith(
     2,
-    '/api/chats/one/runs/',
+    '/api/chats/one/variant-batches/',
     expect.objectContaining({ model_profile: 'pro' }),
   );
 });
 
-it('saves the chat choice without generating, then uses it and retains the retry key', async () => {
+it('saves the Multiagent chat choice without generating, then uses it and retains the retry key', async () => {
   setup('studio');
   fireEvent.click(await screen.findByText('beeGame', { selector: 'summary' }));
-  fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
-  await waitFor(() => expect(screen.getByLabelText('Выбрать модель: Pro')).toBeInTheDocument());
+  expect(screen.getAllByRole<HTMLInputElement>('radio').map((option) => option.value)).toEqual([
+    'pro',
+    'lite',
+    'pro_multi',
+  ]);
+  fireEvent.click(screen.getByRole('radio', { name: 'Multiagent' }));
+  await waitFor(() =>
+    expect(screen.getByLabelText('Выбрать модель: Multiagent')).toBeInTheDocument(),
+  );
   expect(post).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText('Описание вашей игры'), {
     target: { value: 'Сделай змейку' },
@@ -147,7 +162,7 @@ it('saves the chat choice without generating, then uses it and retains the retry
     source_artifact_hash: null,
     source_is_historical: false,
     audience: 'everyone',
-    model_profile: 'pro',
+    model_profile: 'pro_multi',
     idempotency_key: expect.any(String),
   });
   fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
@@ -175,28 +190,33 @@ it('continues Lite with the newly selected Pro, without automatically generating
   );
   setup('studio');
   fireEvent.click(await screen.findByLabelText('Выбрать модель: Lite'));
-  fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Pro' }));
   await screen.findByLabelText('Выбрать модель: Pro');
   expect(post).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText('Описание вашей игры'), {
     target: { value: 'Продолжи создание' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Создать игру' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Создать 4 варианта' }));
   await waitFor(() => expect(post).toHaveBeenCalled());
-  expect(vi.mocked(post).mock.calls[0][0]).toBe('/api/chats/one/runs/');
+  expect(vi.mocked(post).mock.calls[0][0]).toBe('/api/chats/one/variant-batches/');
   expect(vi.mocked(post).mock.calls[0][1]).toMatchObject({ model_profile: 'pro' });
 });
 
-it('saves the default immediately in settings without saving the draft notes', async () => {
+it('saves the Multiagent default immediately in settings without saving the draft notes', async () => {
   setup('settings');
   fireEvent.change(screen.getByLabelText('Что учитывать в новых играх'), {
     target: { value: 'Черновик' },
   });
-  fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
-  await waitFor(() => expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked());
+  expect(screen.getAllByRole<HTMLInputElement>('radio').map((option) => option.value)).toEqual([
+    'pro',
+    'lite',
+    'pro_multi',
+  ]);
+  fireEvent.click(screen.getByRole('radio', { name: 'Multiagent' }));
+  await waitFor(() => expect(screen.getByRole('radio', { name: 'Multiagent' })).toBeChecked());
   expect(request).toHaveBeenCalledWith('/api/preferences/', {
     method: 'PATCH',
-    body: JSON.stringify({ model_profile: 'pro' }),
+    body: JSON.stringify({ model_profile: 'pro_multi' }),
   });
   expect(request).toHaveBeenCalledTimes(1);
   expect(screen.getByLabelText('Что учитывать в новых играх')).toHaveValue('Черновик');
@@ -206,7 +226,7 @@ it('saves the default immediately in settings without saving the draft notes', a
     method: 'PATCH',
     body: JSON.stringify({ notes: ['Черновик'] }),
   });
-  expect(screen.getByRole('radio', { name: /Pro/ })).toBeChecked();
+  expect(screen.getByRole('radio', { name: 'Multiagent' })).toBeChecked();
   expect(post).not.toHaveBeenCalled();
 });
 
@@ -214,7 +234,7 @@ it('keeps a failed preference change visible and does not change the selected mo
   setup('studio');
   fireEvent.click(await screen.findByLabelText('Выбрать модель: Lite'));
   vi.mocked(request).mockRejectedValueOnce(new Error('Не удалось сохранить выбор'));
-  fireEvent.click(screen.getByRole('radio', { name: /Pro/ }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Pro' }));
   await screen.findByText('Не удалось сохранить выбор');
   expect(screen.getByLabelText('Выбрать модель: Lite')).toBeInTheDocument();
   expect(post).not.toHaveBeenCalled();
@@ -234,9 +254,9 @@ it('shows unavailable Pro and never silently substitutes Lite for a saved Pro pr
   });
   await screen.findByLabelText('Выбрать модель: Pro');
   fireEvent.click(screen.getByLabelText('Выбрать модель: Pro'));
-  expect(screen.getByRole('radio', { name: /Pro/ })).toBeDisabled();
+  expect(screen.getByRole('radio', { name: /Pro.*Только локально/ })).toBeDisabled();
   fireEvent.change(screen.getByLabelText('Описание вашей игры'), { target: { value: 'Игра' } });
-  expect(screen.getByRole('button', { name: 'Создать игру' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Создать 4 варианта' })).toBeDisabled();
   expect(post).not.toHaveBeenCalled();
 });
 

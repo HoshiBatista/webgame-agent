@@ -347,3 +347,100 @@ def test_missing_keyboard_admission_keeps_model_receipt_and_usage(monkeypatch):
                          on_event=lambda _: None, is_cancelled=lambda: False)
     assert failure.value.code == 'incomplete_sources'
     assert failure.value.raw_response == text and failure.value.usage == {'output_tokens': 400}
+
+
+@pytest.mark.parametrize('command', ['start_button .start', 'start_button #start 0',
+                                    'start_button #start 9', 'start_button #start,body'])
+def test_lite_keyboard_start_is_explicit_and_bounded(command):
+    wire = {'category': 'control', 'viewport': 'desktop', 'steps': [command],
+            'observation': {'source': 'state', 'path': 'gameState.score'}}
+    with pytest.raises(ContractError):
+        lite_wire.check_from_lines(wire, keyboard_start=True)
+
+
+def test_lite_keyboard_start_preserves_literal_shortcuts_and_older_requests():
+    wire = {'category': 'control', 'viewport': 'desktop', 'steps': ['start_button #start'],
+            'observation': {'source': 'state', 'path': 'gameState.score'}}
+    with pytest.raises(ContractError):
+        lite_wire.check_from_lines(wire)
+    wire['steps'] = ['press Enter']
+    assert lite_wire.check_from_lines(wire, keyboard_start=True)['steps'] == [{'action': 'press', 'key': 'Enter'}]
+
+
+def test_lite_decodes_keyboard_setup_through_the_source_response_contract():
+    from generation.schema import validate_checks
+
+    req = request(lite_code_blocks=3, lite_keyboard_start=1)
+    schema = response_schema(req)
+    wire = lite_wire.decode_blocks(block_reply(fixture_response(), simple=True), req, schema)
+    control = next(c for c in wire['scenarios'] if c['category'] == 'control')
+    keyboard = {**control, 'id': 'keyboard', 'viewport': 'desktop',
+                'steps': ['start_button #play 2', 'checkpoint', 'press Space']}
+    wire['scenarios'].append(keyboard)
+    decoded = lite_wire.decode(wire, req, schema)['checks']
+    validate_checks(decoded)
+    actual = next(c for c in decoded if c['id'] == keyboard['id'])
+    assert [s['action'] for s in actual['steps']] == ['press', 'press', 'assert', 'press', 'checkpoint', 'press']
+    assert actual['expect'] == keyboard['expect']
+
+
+@pytest.mark.native_browser
+def test_lite_native_keyboard_start_checks_real_focus_and_gameplay(monkeypatch):
+    from validation.service import validate
+
+    monkeypatch.setenv('VALIDATOR_BACKEND', 'native')
+    html = '''<canvas width="240" height="100"></canvas><button id="help">Help</button>
+    <button id="play">Start</button><p id="score">Ready</p><script>
+    let running=false;document.querySelector('#play').onclick=()=>{running=true};
+    onkeydown=e=>{if(running && e.code==='Space'){e.preventDefault();document.querySelector('#score').textContent='One'}};
+    document.querySelector('canvas').getContext('2d').fillRect(3,3,30,30);</script>'''
+
+    def route(ident, setup, action='Space'):
+        return lite_wire.check_from_lines({
+            'id': ident, 'category': 'control', 'requirement': 'Отдельное нажатие пробела добавляет очко',
+            'viewport': 'desktop', 'steps': [setup, 'checkpoint', 'press ' + action],
+            'observation': {'source': 'text', 'selector': '#score'}, 'expect': {'operator': 'eq', 'value': 'One'},
+        }, keyboard_start=True)
+
+    checks = [route('correct', 'start_button #play 2'), route('wrongFocus', 'start_button #play'),
+              route('literalShortcut', 'press Enter'), route('brokenControl', 'start_button #play 2', 'ArrowUp')]
+    facts = validate(html, checks, artifact_hash=sha256(html))['facts']
+    assert [f['status'] == 'passed' for f in facts] == [True, False, False, False], facts
+    assert facts[0]['causal_evidence']['control']['comparison'] is False
+
+
+def test_physical_regression_tap_preserves_old_and_non_regression_checks():
+    wire = {'category': 'regression', 'viewport': 'mobile', 'steps': ['tap #light'],
+            'observation': {'source': 'text', 'selector': '#score'}}
+    original = [{'action': 'tap', 'selector': '#light', 'x': None, 'y': None}]
+    assert lite_wire.check_from_lines(wire)['steps'] == original
+    assert lite_wire.check_from_lines({**wire, 'category': 'control'}, regression_touch=True)['steps'] == original
+    updated = lite_wire.check_from_lines(wire, regression_touch=True)
+    assert updated['steps'][0]['observation']['selector'] == '#light'
+    assert updated['steps'][1] == {'action': 'tap_fraction', 'selector': '#light', 'x': 0.5, 'y': 0.5}
+
+
+@pytest.mark.native_browser
+def test_physical_regression_tap_works_on_disabled_controls_and_rejects_wrong_targets(monkeypatch):
+    from validation.service import validate
+
+    monkeypatch.setenv('VALIDATOR_BACKEND', 'native')
+    html = '''<style>button,.covered{width:70px;height:50px}.covered{position:relative;display:inline-block}
+    .cover{position:absolute;inset:0;background:gray}#hidden{visibility:hidden}</style>
+    <canvas width="90" height="40"></canvas><button id="ignored" disabled>Wait</button>
+    <button id="bad" disabled>Bad</button><span class="covered"><button id="blocked" disabled>Off</button>
+    <span class="cover"></span></span><button id="hidden" disabled>Hide</button><p id="score">0</p>
+    <script>document.querySelector('canvas').getContext('2d').fillRect(2,2,20,20);
+    document.addEventListener('touchstart',e=>{if(e.target.id==='bad'){document.querySelector('#score').textContent='1'}},
+    {capture:true,passive:true});</script>'''
+    checks = [lite_wire.check_from_lines({
+        'id': ident, 'category': 'regression', 'viewport': 'mobile',
+        'requirement': 'До начала раунда касание отключённой кнопки сохраняет нулевой счёт',
+        'steps': [f'tap #{ident}'], 'observation': {'source': 'text', 'selector': '#score'},
+        'expect': {'operator': 'eq', 'value': '0'}}, regression_touch=True)
+        for ident in ('ignored', 'bad', 'blocked', 'hidden')]
+    report = validate(html, checks, artifact_hash=sha256(html))
+    assert [f['status'] == 'passed' for f in report['facts']] == [True, False, False, False], report['findings']
+    codes = {(f.get('check_id'), f['code']) for f in report['findings']}
+    assert ('blocked', 'input_obstructed') in codes
+    assert ('bad', 'effect_mismatch') in codes

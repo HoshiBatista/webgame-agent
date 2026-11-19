@@ -1,0 +1,417 @@
+{
+  "date": "2026-11-19",
+  "environment": "Local GameForge, configured relay and Codex Worker, isolated native Chromium",
+  "scenarios": [
+    {
+      "profile": "lite",
+      "test": "lite-1-continued",
+      "initial_run": "4b07612e-352c-4f6b-b602-eadb5e603690",
+      "completed_run": "0d9d6077-d8f0-41e9-80b4-076e0addbb5c",
+      "revision": "970e1bc4-a896-4565-9b12-839640f19748",
+      "artifact_hash": "375ed6995c7488d313369adf967478e8047e7e073288beeeee613bfd3f6e06dd",
+      "status": "unverified",
+      "verification": "none",
+      "known_cost_usd": "0.000000",
+      "unknown_calls": 0,
+      "operations": [
+        "create",
+        "check_repair"
+      ],
+      "application_checks": [
+        {
+          "status": "unverified",
+          "facts": [
+            [
+              "start",
+              "passed"
+            ],
+            [
+              "touch",
+              "passed"
+            ],
+            [
+              "outcome",
+              "passed"
+            ],
+            [
+              "keyboard",
+              "passed"
+            ],
+            [
+              "restart",
+              "passed"
+            ],
+            [
+              "pause",
+              "unverified"
+            ]
+          ]
+        }
+      ],
+      "findings": [
+        [
+          "invalid_check",
+          "pause"
+        ]
+      ],
+      "chromium": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true
+      },
+      "continuation_reason": "generation_policy_changed"
+    },
+    {
+      "profile": "lite",
+      "test": "lite-2",
+      "initial_run": "87b102ea-6b9d-462a-b879-cc53897a35b3",
+      "completed_run": "87b102ea-6b9d-462a-b879-cc53897a35b3",
+      "revision": "4aa677f6-6f77-42a1-97d6-27a960f7d02b",
+      "artifact_hash": "7cca846a0b0c55e045e7c122da944ba01836b014f60d8e491d1480665127fbca",
+      "status": "succeeded",
+      "verification": "automatic",
+      "known_cost_usd": "0.000000",
+      "unknown_calls": 0,
+      "operations": [
+        "create",
+        "music"
+      ],
+      "application_checks": [
+        {
+          "status": "passed",
+          "facts": [
+            [
+              "start-mobile",
+              "passed"
+            ],
+            [
+              "control-touch",
+              "passed"
+            ],
+            [
+              "outcome-win",
+              "passed"
+            ],
+            [
+              "control-keyboard",
+              "passed"
+            ],
+            [
+              "restart",
+              "passed"
+            ],
+            [
+              "pause-regression",
+              "passed"
+            ]
+          ]
+        }
+      ],
+      "findings": [],
+      "chromium": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true
+      }
+    },
+    {
+      "profile": "lite",
+      "test": "lite-final",
+      "initial_run": "6719de81-122b-488a-a8b8-6dc5352e5b23",
+      "completed_run": "6719de81-122b-488a-a8b8-6dc5352e5b23",
+      "revision": "cc3b850f-6312-4fce-8710-e5c4f5065186",
+      "artifact_hash": "fd4264afad5d07aeb850ad9efb0b16bb919d6f304d958b9d00e4f31ad26bb1a5",
+      "status": "succeeded",
+      "verification": "automatic",
+      "known_cost_usd": "0.000000",
+      "unknown_calls": 0,
+      "operations": [
+        "create",
+        "music"
+      ],
+      "application_checks": [
+        {
+          "status": "passed",
+          "facts": [
+            [
+              "s1",
+              "passed"
+            ],
+            [
+              "s2",
+              "passed"
+            ],
+            [
+              "s4",
+              "passed"
+            ],
+            [
+              "s3",
+              "passed"
+            ],
+            [
+              "s5",
+              "passed"
+            ],
+            [
+              "s6",
+              "passed"
+            ]
+          ]
+        }
+      ],
+      "findings": [],
+      "chromium": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true
+      }
+    },
+    {
+      "profile": "pro_multi",
+      "test": "pro-audio-1-continued",
+      "initial_run": "4d68656c-6121-41f5-9f41-4d6598f425b0",
+      "completed_run": "1c410ab7-599c-44d4-9e18-d0bcb4b9e402",
+      "revision": "a798147f-9e3a-4dc0-8294-881124d44f04",
+      "artifact_hash": "0425dabd3b5c373217659b9da458e35c849c3adc1c2686419502982486fb43c1",
+      "status": "unverified",
+      "verification": "none",
+      "known_cost_usd": "0.304336",
+      "unknown_calls": 0,
+      "operations": [
+        "plan",
+        "create",
+        "pro_graphics",
+        "pro_audio",
+        "pro_checks",
+        "check_repair"
+      ],
+      "application_checks": [
+        {
+          "status": "unverified",
+          "facts": [
+            [
+              "R1",
+              "passed"
+            ],
+            [
+              "R2",
+              "passed"
+            ],
+            [
+              "R5",
+              "passed"
+            ],
+            [
+              "R3",
+              "passed"
+            ],
+            [
+              "R4",
+              "unverified"
+            ],
+            [
+              "R6",
+              "passed"
+            ],
+            [
+              "R7",
+              "failed"
+            ]
+          ]
+        }
+      ],
+      "findings": [
+        [
+          "invalid_check",
+          "R4"
+        ],
+        [
+          "effect_mismatch",
+          "R7"
+        ]
+      ],
+      "chromium": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true,
+        "audio": true
+      },
+      "continuation_reason": "generation_policy_changed",
+      "audio_call": {
+        "seconds": 31.9,
+        "state": "settled",
+        "usd": "0.018442",
+        "reply_chars": 1168,
+        "packet_fields": [
+          "score"
+        ],
+        "output_tokens": 1439,
+        "completion": null
+      },
+      "soundtrack": {
+        "voices": 3,
+        "fx": [
+          "beacon_ignite",
+          "round_win"
+        ],
+        "notes": 44,
+        "beats": 24,
+        "bpm": 108
+      },
+      "music_signal": {
+        "samples": 96,
+        "maxPeak": 0.2659898102283478,
+        "audible": 95
+      },
+      "muted_signal": {
+        "samples": 35,
+        "maxPeak": 0,
+        "audible": 0
+      },
+      "resumed_signal": {
+        "samples": 140,
+        "maxPeak": 0.40743061900138855,
+        "audible": 140
+      }
+    },
+    {
+      "profile": "pro_multi",
+      "test": "pro-audio-2",
+      "initial_run": "6f2db9c3-942c-413f-b65b-2a7800485cde",
+      "completed_run": "6f2db9c3-942c-413f-b65b-2a7800485cde",
+      "revision": "67b5e66f-7fc3-480a-84bc-a6b509a096db",
+      "artifact_hash": "70780178b112345a2ea8355bec4b5b2c115dd98ae7941f3767117a000203862a",
+      "status": "succeeded",
+      "verification": "automatic",
+      "known_cost_usd": "0.233200",
+      "unknown_calls": 0,
+      "operations": [
+        "plan",
+        "create",
+        "pro_graphics",
+        "pro_audio",
+        "pro_checks"
+      ],
+      "application_checks": [
+        {
+          "status": "passed",
+          "facts": [
+            [
+              "R1",
+              "passed"
+            ],
+            [
+              "R2",
+              "passed"
+            ],
+            [
+              "R4",
+              "passed"
+            ],
+            [
+              "R3",
+              "passed"
+            ],
+            [
+              "R5",
+              "passed"
+            ],
+            [
+              "R6",
+              "passed"
+            ],
+            [
+              "R7",
+              "passed"
+            ]
+          ]
+        }
+      ],
+      "findings": [],
+      "chromium": {
+        "touch": true,
+        "keyboard": true,
+        "mixed": true,
+        "rotation": true,
+        "audio": true
+      },
+      "audio_call": {
+        "seconds": 23.1,
+        "state": "settled",
+        "usd": "0.015164",
+        "reply_chars": 1167,
+        "packet_fields": [
+          "score"
+        ],
+        "output_tokens": 1085,
+        "completion": null
+      },
+      "soundtrack": {
+        "voices": 3,
+        "fx": [
+          "light_chime",
+          "win_fanfare"
+        ],
+        "notes": 44,
+        "beats": 24,
+        "bpm": 104
+      },
+      "music_signal": {
+        "samples": 95,
+        "maxPeak": 0.33300668001174927,
+        "audible": 95
+      },
+      "muted_signal": {
+        "samples": 34,
+        "maxPeak": 0,
+        "audible": 0
+      },
+      "resumed_signal": {
+        "samples": 137,
+        "maxPeak": 0.30579429864883423,
+        "audible": 137
+      }
+    }
+  ],
+  "previous_audio_incident": {
+    "code": "codex_turn_failed",
+    "partial_chars": 466423,
+    "contiguous_whitespace_chars": 466334,
+    "unknown_cost_reservation_usd": "6.28",
+    "retried_old_invocation": false
+  },
+  "cost": {
+    "confirmed_usd": "0.537536",
+    "new_unknown": 0
+  },
+  "stored_request_compatibility": {
+    "groups": {
+      "pro": 56,
+      "pro_multi-v1": 16,
+      "lite": 118,
+      "pro_multi-v2": 30,
+      "pro_multi-v3": 48,
+      "pro_multi-v4": 37,
+      "pro_multi": 6
+    },
+    "computed_ok": 311,
+    "different": {},
+    "missing": [],
+    "total": 311
+  },
+  "server_tests": {
+    "passed": 1630,
+    "excluded_browser_platform_live": 179
+  },
+  "controls": {
+    "keyboard": "wrong focus, a missing shortcut and an ineffective game input were rejected",
+    "touch": "hidden and covered controls and unexpected response of a disabled control were rejected",
+    "audio": "disconnected output and identical ordinary/winning effects were detected"
+  },
+  "deployment": "Local workspace only"
+}

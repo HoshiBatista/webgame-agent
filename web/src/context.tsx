@@ -2,7 +2,6 @@ import { createContext, useContext } from 'react';
 import type { ChatSummary, Session } from './types';
 export interface StudioDraft {
   chatTitle?: string | null;
-  fourVariants?: boolean;
   prompt: string;
   audience: string | null;
   selectedRevision: string | null;

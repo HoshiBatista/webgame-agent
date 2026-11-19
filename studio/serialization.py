@@ -3,7 +3,7 @@ from django.core import signing
 from django.utils import timezone
 
 from .continuations import unacknowledged_unknowns
-from .replies import run_reply
+from .replies import chat_message_content, run_reply
 from .services import budget_snapshot
 
 
@@ -99,6 +99,8 @@ def run_data(run, budget=None):
     message, error = run.message, run.error
     if run.status not in run.ACTIVE:
         message = run_reply(run)
+        if error and error.get("code") == "budget_exhausted":
+            error = {**error, "message": message}
     if run.status == "unknown":
         message = "Полный результат запроса не подтверждён. Сохранённые данные не потеряны."
         if error and error.get("code") == "codex_turn_failed":
@@ -117,7 +119,7 @@ def run_data(run, budget=None):
         "model_profile": run.model_profile,
         "model": run.model,
         "provider": run.provider,
-        "model_label": {"pro": "Pro", "lite": "Lite", "pro_multi": "Pro · эксперимент"}.get(run.model_profile, run.model),
+        "model_label": {"pro": "Pro", "lite": "Lite", "pro_multi": "Multiagent"}.get(run.model_profile, run.model),
         "status": run.status,
         "stage": run.stage,
         "message": message,
@@ -178,7 +180,7 @@ def chat_data(chat, detail=False):
                     {
                         "id": str(m.id),
                         "role": m.role,
-                        "content": m.content,
+                        "content": chat_message_content(m),
                         "created_at": m.created_at.isoformat(),
                         "run_id": str(m.run_id) if m.run_id else None,
                         "generation": {

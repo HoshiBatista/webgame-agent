@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDuration } from './api';
+import { modelLabel } from './ModelSelector';
 import type { Run } from './types';
 
 export function RunTime({
@@ -73,16 +74,11 @@ export default function RunMessage({
   sending = false,
 }: {
   run: Pick<Run, 'id' | 'status' | 'elapsed_seconds' | 'model_label' | 'model_profile'> &
-    Partial<Pick<Run, 'stage' | 'operation'>>;
+    Partial<Pick<Run, 'stage' | 'message' | 'operation'>>;
   startedAt?: number;
   sending?: boolean;
 }) {
-  const label =
-    run.model_profile === 'pro_multi'
-      ? 'Pro · эксперимент'
-      : run.model_label === 'Pro' || run.model_profile === 'pro'
-        ? 'Pro'
-        : 'Lite';
+  const label = modelLabel(run);
   const progress = sending
     ? 'Отправляю запрос…'
     : run.stage === 'waiting_capacity'
@@ -90,7 +86,7 @@ export default function RunMessage({
       : run.stage === 'waiting_admin'
         ? 'Ожидаю восстановления подключения к модели…'
         : run.stage === 'waiting_model'
-          ? 'Ожидаю ответ модели…'
+          ? run.message || 'Ожидаю ответ модели…'
           : run.stage === 'planning'
             ? 'Продумываю механику и игровой замысел…'
             : run.stage === 'repairing_checks'

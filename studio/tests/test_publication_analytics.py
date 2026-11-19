@@ -3,6 +3,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
+from unittest.mock import patch
 
 import pytest
 from django.db import close_old_connections, connections
@@ -79,6 +80,7 @@ def test_repeat_open_is_new_session_but_network_retry_is_not(public_game):
     data, session = opened(public_game, client)
     retry = client.post(f"/api/publications/{public_game.pk}/sessions/", data, content_type="application/json")
     assert retry.status_code == 200 and retry.json()["session_id"] == str(session.pk)
+    assert retry.json()["analytics"] == {"opens": 1, "average_duration_seconds": None, "successful_completions": None}
     assert "token" not in retry.json() and "token_hash" not in retry.json()
     assert session.token_hash != data["token"]
     opened(public_game, client)
@@ -129,10 +131,62 @@ def test_cumulative_duration_ignores_retries_and_stale_updates(public_game, monk
     current += timedelta(seconds=5)
     assert send_time(public_game, data, 5000).json()["visible_ms"] == 5000
     assert send_time(public_game, data, 4000).json()["visible_ms"] == 5000
-    assert send_time(public_game, data, 10000).json()["visible_ms"] == 10000
-    assert analytics_data(Publication.objects.get(pk=public_game.pk))["average_duration_seconds"] == 10
+    receipt = send_time(public_game, data, 10000).json()
+    assert receipt["visible_ms"] == 10000
+    assert receipt["analytics"] == {"opens": 1, "average_duration_seconds": None, "successful_completions": None}
+    current += timedelta(seconds=15)
+    send_time(public_game, data, 25000)
+    current += timedelta(milliseconds=4999)
+    assert send_time(public_game, data, 29999).json()["analytics"]["average_duration_seconds"] is None
+    current += timedelta(milliseconds=1)
+    assert send_time(public_game, data, 30000).json()["analytics"]["average_duration_seconds"] == 30
+    assert send_time(public_game, data, 29999).json()["analytics"]["average_duration_seconds"] == 30
+    current += timedelta(seconds=6)
+    assert send_time(public_game, data, 36000).json()["analytics"]["average_duration_seconds"] == 36
     opened(public_game)
-    assert analytics_data(Publication.objects.get(pk=public_game.pk))["average_duration_seconds"] == 5
+    assert analytics_data(public_game) == {"opens": 2, "average_duration_seconds": 36, "successful_completions": None}
+
+
+@pytest.mark.django_db
+def test_historical_sessions_use_full_credited_duration_in_feed_and_detail(public_game):
+    for milliseconds in (0, 29000, 30000, 45000):
+        _, session = opened(public_game)
+        PlaySession.objects.filter(pk=session.pk).update(visible_ms=milliseconds, reported_ms=milliseconds)
+    # The old total included the 29s session. A second publication must not affect this average.
+    PublicationStats.objects.filter(publication=public_game).update(visible_ms=104000)
+    other = Publication.objects.create(owner=public_game.owner, revision=public_game.revision, title="Other")
+    _, other_session = opened(other)
+    PlaySession.objects.filter(pk=other_session.pk).update(visible_ms=60000, reported_ms=60000)
+    expected = {"opens": 4, "average_duration_seconds": 37.5, "successful_completions": None}
+    client = Client()
+    assert client.get(f"/api/publications/{public_game.pk}/").json()["analytics"] == expected
+    client.force_login(public_game.owner)
+    feed = client.get("/api/publications/?sort=popular").json()["results"]
+    assert {p["id"]: p["analytics"] for p in feed} == {
+        str(public_game.pk): expected,
+        str(other.pk): {"opens": 1, "average_duration_seconds": 60, "successful_completions": None},
+    }
+
+
+@pytest.mark.django_db
+def test_minimal_session_receipts_skip_analytics_and_record_activity(public_game, monkeypatch):
+    client, data = Client(), body(public_game)
+    path = f"/api/publications/{public_game.pk}/sessions/"
+    minimal = {"HTTP_PREFER": "return=minimal", "content_type": "application/json"}
+    with patch("studio.publication_analytics.analytics_data") as calculate:
+        for _ in range(2):
+            response = client.post(path, data, **minimal)
+            assert response.status_code == 204 and not response.content
+            assert response["Preference-Applied"] == "return=minimal"
+        session = PlaySession.objects.get(pk=data["session_id"])
+        current = session.created_at
+        monkeypatch.setattr("studio.publication_analytics.timezone.now", lambda: current)
+        for elapsed in (15000, 30000):
+            current = session.created_at + timedelta(milliseconds=elapsed)
+            response = client.put(f"{path}{session.pk}/", {"token": data["token"], "visible_ms": elapsed}, **minimal)
+            assert response.status_code == 204 and not response.content
+        calculate.assert_not_called()
+    assert analytics_data(public_game) == {"opens": 1, "average_duration_seconds": 30, "successful_completions": None}
 
 
 @pytest.mark.django_db
@@ -147,6 +201,7 @@ def test_suspended_tabs_cannot_credit_hours_or_replay_discarded_time(public_game
     current = session.created_at + timedelta(milliseconds=MAX_SESSION_MS + 1)
     assert send_time(public_game, data, 1_000_001).status_code == 410
     assert PublicationStats.objects.get().visible_ms == 20000
+    assert analytics_data(public_game)["average_duration_seconds"] is None
 
 
 @pytest.mark.django_db
@@ -262,7 +317,7 @@ def test_unavailable_publications_reject_collection(public_game):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_concurrent_retries_increment_one_open(public_game):
+def test_concurrent_retries_count_one_open_and_one_qualifying_session(public_game, monkeypatch):
     gate = Barrier(2)
     data = body(public_game)
     def submit():
@@ -277,3 +332,22 @@ def test_concurrent_retries_increment_one_open(public_game):
         statuses = sorted(pool.map(lambda _: submit(), range(2)))
     assert statuses == [200, 201]
     assert PlaySession.objects.count() == 1 and PublicationStats.objects.get().opens == 1
+
+    session = PlaySession.objects.get()
+    current = session.created_at + timedelta(seconds=15)
+    monkeypatch.setattr("studio.publication_analytics.timezone.now", lambda: current)
+    assert send_time(public_game, data, 15000).json()["analytics"]["average_duration_seconds"] is None
+    current += timedelta(seconds=15)
+
+    def reach_threshold():
+        close_old_connections()
+        try:
+            gate.wait(timeout=5)
+            return send_time(public_game, data, 30000).json()["analytics"]["average_duration_seconds"]
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        averages = list(pool.map(lambda _: reach_threshold(), range(2)))
+    assert averages == [30, 30]
+    assert PublicationStats.objects.get().visible_ms == 30000

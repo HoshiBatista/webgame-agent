@@ -152,7 +152,7 @@ def _system_prompt(request):
                             "Realize the planned player decisions and progression, including the concept's supporting mechanics. Do not reduce it to a movement-only prototype.")
         text += PRO_GUIDANCE
         if operation == "create":
-            if request.get('pro_parallel') in {3, 4}:
+            if request.get('pro_parallel') in {3, 4, 5}:
                 from .pro_creative import CREATE_BUDGET
 
                 text += CREATE_BUDGET + 'CHECK ROUTES' + PRO_CREATE_GUIDANCE.split('CHECK ROUTES', 1)[1]
@@ -190,12 +190,12 @@ def _system_prompt(request):
     from .experience import guidance as experience_guidance
     from .pro_parallel import branch, implementation_guidance
 
-    if request.get('pro_parallel') in {2, 3, 4} and request.get('operation') in {'edit', 'repair'}:
+    if request.get('pro_parallel') in {2, 3, 4, 5} and request.get('operation') in {'edit', 'repair'}:
         from .pro_partition import REPAIR_GUIDANCE, split
 
         if split(request.get('game_plan')):
             text += REPAIR_GUIDANCE
-        if request['pro_parallel'] in {3, 4}:
+        if request['pro_parallel'] in {3, 4, 5}:
             from .pro_creative import REPAIR_GUIDANCE as CREATIVE_REPAIR_GUIDANCE
 
             text += CREATIVE_REPAIR_GUIDANCE

@@ -9,8 +9,8 @@ from jsonschema import Draft202012Validator
 from .errors import ContractError
 from .experience import CHECK_GUIDANCE, GUIDANCE, ID, SCHEMA, TEXT, obj, rows, validate_svg
 
-VERSION = 4
-SUPPORTED_VERSIONS = {1, 2, 3, 4}
+VERSION = 5
+SUPPORTED_VERSIONS = {1, 2, 3, 4, 5}
 BRANCHES = ('gameplay', 'graphics', 'audio')
 CONTRACT = obj({
     'graphics': rows(obj({'id': ID, 'purpose': TEXT,
@@ -96,7 +96,7 @@ def branches(plan, version=1):
     from .pro_partition import split
 
     roles = ('mechanics', 'scene', 'graphics', 'audio') if version >= 2 and split(plan) else BRANCHES
-    return (*roles, 'checks') if version == 4 else roles
+    return (*roles, 'checks') if version in {4, 5} else roles
 
 
 def author(plan, version=1):
@@ -108,7 +108,7 @@ def implementation_guidance(request):
 
     focus = ("\nKeep the keyboard cursor synchronized with real focus changes, including Tab and clicks. "
              "Arrow navigation starts from the currently focused cell, not a stale stored index.\n"
-             if request.get('pro_parallel') in {2, 3, 4} else '')
+             if request.get('pro_parallel') in {2, 3, 4, 5} else '')
     creative = role_guidance(branch(request)) if enabled(request) else ''
     if branch(request) == 'scene':
         from .pro_partition import SCENE_GUIDANCE
@@ -122,12 +122,12 @@ def implementation_guidance(request):
 def schema(request):
     from .schema import response_schema
 
-    if request.get('pro_parallel') == 4 and request.get('response_completion'):
+    if request.get('pro_parallel') in {4, 5} and request.get('response_completion'):
         from .response_completion import reply_schema
 
         return reply_schema(request)
     role = branch(request)
-    if role == 'checks' and request.get('pro_parallel') == 4:
+    if role == 'checks' and request.get('pro_parallel') in {4, 5}:
         from .pro_staged import checks_schema
 
         return checks_schema(request)
@@ -139,9 +139,18 @@ def schema(request):
         original = {k: v for k, v in request.items() if k != 'pro_parallel_branch'}
         result = response_schema(original)
         result['properties']['assets'] = {'type': 'null'}
-        if request.get('pro_parallel') == 4:
+        if request.get('pro_parallel') in {4, 5}:
             result['properties']['checks']['maxItems'] = 0
         return result
+    if role == 'audio' and request.get('pro_parallel') == 5:
+        from .pro_audio import SCHEMA as AUDIO_SCORE_SCHEMA
+        from .pro_audio import SILENCE_SCHEMA
+
+        return deepcopy(SILENCE_SCHEMA if request['game_plan']['resource_contract']['silence_reason'] else AUDIO_SCORE_SCHEMA)
+    return asset_schema(role)
+
+
+def asset_schema(role):
     names = ['graphics'] if role == 'graphics' else ['instruments', 'sounds', 'music', 'silence_reason']
     return obj({'operation': {'const': 'pro_' + str(role)},
                 **{name: deepcopy(SCHEMA['properties'][name]) for name in names}})
@@ -151,10 +160,15 @@ def messages(request):
     from .pro_creative import enabled, role_guidance
     from .pro_partition import MECHANICS_GUIDANCE
 
-    if branch(request) == 'checks' and request.get('pro_parallel') == 4:
+    if branch(request) == 'checks' and request.get('pro_parallel') in {4, 5}:
         from .pro_staged import checks_messages
 
         return checks_messages(request)
+
+    if branch(request) == 'audio' and request.get('pro_parallel') == 5:
+        from .pro_audio import messages as audio_messages
+
+        return audio_messages(request)
 
     keys: tuple[str, ...] = ('operation', 'prompt', 'game_request', 'game_plan', 'audience', 'preferences',
                             'mechanics_interface_hash', 'last_attempt_error')
@@ -184,7 +198,7 @@ def validate_contract(value):
 
 
 def validate_reply(value, request):
-    if request.get('pro_parallel') == 4 and request.get('response_completion'):
+    if request.get('pro_parallel') in {4, 5} and request.get('response_completion'):
         from .response_completion import original_request
 
         request = original_request(request)
@@ -194,7 +208,7 @@ def validate_reply(value, request):
     error = next(Draft202012Validator(schema(request)).iter_errors(value), None)
     if error:
         raise ContractError('invalid_parallel_response', f'{list(error.path)}: {error.message[:300]}')
-    if role == 'checks' and request.get('pro_parallel') == 4:
+    if role == 'checks' and request.get('pro_parallel') in {4, 5}:
         from .pro_staged import validate_checks_reply
 
         validate_checks_reply(value, request)
@@ -202,7 +216,7 @@ def validate_reply(value, request):
     if role in {'mechanics', 'scene'}:
         from .pro_partition import validate_reply as validate_partition_reply
 
-        if request.get('pro_parallel') not in {2, 3, 4}:
+        if request.get('pro_parallel') not in {2, 3, 4, 5}:
             raise ContractError('invalid_gameplay_partition', 'Для раздельных модулей нужен протокол v2.')
         validate_partition_reply(value, request)
         return
@@ -211,13 +225,20 @@ def validate_reply(value, request):
 
         validate_response(value, operation='create', schema=schema(request), defer_check_errors=True)
         return
+    if role == 'audio' and request.get('pro_parallel') == 5:
+        from .pro_audio import decode
+
+        value = decode(value, contract)
+        error = next(Draft202012Validator(asset_schema('audio')).iter_errors(value), None)
+        if error:
+            raise ContractError('invalid_audio_score', f'{list(error.path)}: {error.message[:200]}')
     name = 'graphics' if role == 'graphics' else 'sounds'
     expected = {row['id'] for row in contract[name]}
     actual = [row['id'] for row in value[name]]
     if set(actual) != expected or len(actual) != len(expected):
         raise ContractError('resource_ids_changed', f'Нужны точные ID {name}: {sorted(expected)}.')
     limit = 7168 if role == 'graphics' else 6144
-    if role == 'audio' and request.get('pro_parallel') in {3, 4}:
+    if role == 'audio' and request.get('pro_parallel') in {3, 4, 5}:
         limit = 7680
     if len(json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode()) > limit:
         raise ContractError('assets_too_large', f'Сократите {role} до {limit} байт, сохранив все ID.')
@@ -245,7 +266,7 @@ def validate_reply(value, request):
         raise ContractError('invalid_assets', 'Сохраните запрошенную тишину.')
 
 
-def assemble(responses, plan, version=1):
+def assemble_source(responses, plan, version):
     """No inference, source rewriting, new checks or fallback media during assembly."""
     from .experience import validate
 
@@ -257,14 +278,24 @@ def assemble(responses, plan, version=1):
         value = deepcopy(responses['gameplay'])
     if value['status'] == 'scope_refusal':
         return value
+    audio = responses['audio']
+    if version == 5:
+        from .pro_audio import decode
+
+        audio = decode(audio, plan['resource_contract'])
     assets = {'version': 1, 'audience_adaptations': plan['resource_contract']['audience_adaptations'],
               'graphics': deepcopy(responses['graphics']['graphics']),
-              **{key: deepcopy(responses['audio'][key]) for key in ('instruments', 'sounds', 'music', 'silence_reason')}}
+              **{key: deepcopy(audio[key]) for key in ('instruments', 'sounds', 'music', 'silence_reason')}}
     validate(assets)
     value['assets'] = assets
-    if version == 4:
-        from .pro_staged import source_context
-        expected = source_context({k: v for k, v in responses.items() if k != 'checks'}, plan)['source_hash']
+    return value
+
+
+def assemble(responses, plan, version=1):
+    value = assemble_source(responses, plan, version)
+    if version in {4, 5} and value['status'] != 'scope_refusal':
+        from .pro_staged import artifact_context
+        expected = artifact_context(value, plan)['source_hash']
         if responses['checks']['source_hash'] != expected:
             raise ContractError('parallel_source_changed', 'Исходники изменились после создания проверок.')
         value['checks'] = deepcopy(responses['checks']['checks'])

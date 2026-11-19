@@ -515,7 +515,27 @@ svg {
   font-size: var(--text-small);
   letter-spacing: 0.2px;
 }
-.landing-header > .button {
+.landing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2.5vw, 32px);
+}
+.landing-info-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-size: var(--text-small);
+  font-weight: 650;
+  white-space: nowrap;
+}
+.landing-info-link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 0.3em;
+  text-decoration-thickness: 2px;
+}
+.landing-header .button {
   font-size: var(--text-small);
   padding: 10px 17px;
 }
@@ -4476,9 +4496,34 @@ svg {
 .game-tools-content .button {
   flex: 1;
 }
-.stop-button {
-  background: var(--ink);
-  color: var(--surface);
+.stop-generation {
+  gap: 7px;
+}
+.stop-symbol {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  svg {
+    color: var(--danger);
+    opacity: 0;
+  }
+}
+.stop-generation:not(:disabled):is(:hover, :focus-visible) .stop-symbol svg {
+  opacity: 1;
+}
+@media (hover: none) {
+  .stop-symbol svg {
+    opacity: 1;
+  }
+}
+.stop-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .settings-side:not(:empty) {
   margin-top: 24px;
@@ -4724,7 +4769,7 @@ svg {
   margin: 2px 0 0;
   accent-color: var(--accent-text);
 }
-.sidebar-templates-link {
+.sidebar-feed-link + .sidebar-feed-link {
   margin-top: 4px;
 }
 .composer-template-button {
@@ -4762,15 +4807,11 @@ svg {
     accent-color: var(--accent);
   }
 }
-.variant-hint,
 .variant-status,
 .variant-batch header > span,
 .variant-info small {
   font-size: var(--text-small);
   color: var(--muted);
-}
-.variant-hint {
-  margin: 6px 0 0;
 }
 .variant-batch {
   margin: 0 0 24px;
@@ -4839,6 +4880,8 @@ svg {
 }
 .variant-preview-footer {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
   justify-content: space-between;
   margin-top: 8px;
@@ -5109,55 +5152,65 @@ svg {
 }
 .public-game-details,
 .quick-view-detail-content {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
+  container-type: inline-size;
+  display: grid;
+  gap: 14px;
 }
 .public-game-details {
-  max-width: 1000px;
+  max-width: 700px;
   margin: 20px auto;
 }
 .publication-metrics {
-  display: flex;
-  gap: 12px 24px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 16px;
   margin: 0;
   > div {
-    min-width: 100px;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 2px;
+    overflow-wrap: anywhere;
   }
   dt {
     font-size: var(--text-small);
     color: var(--muted);
   }
   dd {
-    margin: 3px 0 0;
-    font-size: 18px;
+    margin: 0;
+    font-size: 1.25rem;
     font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+  }
+  .rating-summary {
+    font-size: inherit;
+    flex-wrap: wrap;
+    vertical-align: top;
+  }
+  .rating-count {
+    font-size: var(--text-small);
   }
 }
 .publication-rating {
-  min-width: 240px;
-  max-width: 100%;
+  display: grid;
+  grid-template-columns: 10rem minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
   small {
     color: var(--muted);
+    font-variant-numeric: tabular-nums;
   }
   .text-button {
-    display: inline-block;
-    margin-top: 8px;
+    grid-column: 1 / -1;
+    justify-self: start;
   }
-}
-.publication-rating-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: var(--text-small);
 }
 .publication-stars {
   display: flex;
   gap: 4px;
-  margin: 4px 0;
   button {
     display: grid;
     place-items: center;
@@ -5175,39 +5228,73 @@ svg {
   }
 }
 .rating-error {
+  grid-column: 1 / -1;
   color: var(--danger);
-  margin: 6px 0 0;
+  margin: 0;
   font-size: var(--text-small);
 }
 .quick-view-details {
   flex: none;
-  max-height: min(240px, 35dvh);
-  overflow: auto;
-  summary {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    font-size: var(--text-small);
-    font-weight: 700;
-    &::before {
-      content: '▸';
-    }
+  min-width: 0;
+}
+.quick-view-details-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: var(--text-small);
+  font-weight: 700;
+  > svg {
+    transform: rotate(-90deg);
+    transition: transform 180ms ease-out;
   }
-  &[open] summary::before {
-    content: '▾';
+  &[aria-expanded='true'] > svg {
+    transform: rotate(0);
   }
+  &[aria-expanded='true'] .rating-summary {
+    visibility: hidden;
+  }
+}
+.quick-view-detail-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 180ms ease-out,
+    opacity 160ms ease-out;
+}
+.quick-view-details-toggle[aria-expanded='true'] + .quick-view-detail-reveal {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.quick-view-detail-clip {
+  overflow: hidden;
+  min-height: 0;
 }
 .quick-view-detail-content {
-  padding: 12px 0 4px;
+  padding: 8px 6px;
+  max-height: min(19rem, 48dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
-@media (max-width: 600px) {
-  .public-game-details,
-  .quick-view-detail-content {
-    gap: 12px;
-  }
+@container (max-width: 38rem) {
   .publication-metrics {
-    gap: 8px 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (max-width: 27rem) {
+  .publication-rating {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quick-view-detail-reveal,
+  .quick-view-details-toggle > svg {
+    transition: none;
   }
 }
 @media (max-height: 500px) and (min-width: 600px) {
@@ -5216,6 +5303,8 @@ svg {
   }
   .quick-view-details {
     grid-column: 1 / -1;
-    max-height: 27dvh;
+  }
+  .quick-view-detail-content {
+    max-height: 33dvh;
   }
 }

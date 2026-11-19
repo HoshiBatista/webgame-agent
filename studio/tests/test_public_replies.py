@@ -1,11 +1,12 @@
+from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
 
 from generation.providers.fake import generate as fake_generate
-from studio.models import Chat, CheckReport, Invocation, User
+from studio.models import Budget, Chat, CheckReport, Invocation, User
 from studio.replies import run_reply
-from studio.serialization import run_data
+from studio.serialization import chat_data, run_data
 from studio.services import create_run, finish_run
 from studio.tasks import process_run
 from tests.test_validation import fixture_report
@@ -53,6 +54,44 @@ def test_completion_keeps_player_quality_text_and_adds_actual_verification(compl
 
 
 @pytest.mark.django_db
+def test_budget_denial_before_planning_is_visible_in_current_and_archived_chats(settings):
+    settings.GAMEFORGE_PROVIDER = "fake"
+    settings.GAMEFORGE_MODEL = "fixture"
+    Budget.objects.update_or_create(pk=1, defaults={"limit_usd": Decimal("0.50")})
+    chat = Chat.objects.create(owner=User.objects.create_user(username="budget-owner"))
+    with (
+        patch("studio.services.schedule"),
+        patch("studio.tasks.dispatch_outbox"),
+        patch("studio.tasks.dispatch_run"),
+        patch("generation.service.estimate_reservation", return_value=Decimal("1")),
+        patch("generation.providers.fake.generate") as model,
+    ):
+        run = create_run(chat, {"prompt": "Собрать звёзды", "idempotency_key": "budget"})
+        run.planning_required = True
+        run.save(update_fields=["planning_required"])
+        process_run(str(run.id))
+    run.refresh_from_db()
+    model.assert_not_called()
+    assert run.status == "needs_attention" and run.error["code"] == "budget_exhausted"
+    assert not run.invocations.exists() and not run.game_plan and not run.candidate_revision_id
+    reply = run.chat_messages.get(role="assistant").content
+    assert "бюджета недостаточно" in reply and "после пополнения или освобождения бюджета" in reply
+    assert run_data(run)["message"] == reply
+    assert run.error["message"] == reply
+
+    legacy = "Не удалось завершить подготовку игрового замысла. Сохранённый запрос доступен для продолжения."
+    run.chat_messages.update(content=legacy)
+    run.error["message"] = "Недостаточно бюджета для следующего вызова. Черновик сохранён."
+    run.save(update_fields=["error"])
+    data = chat_data(chat, detail=True)
+    by_role = {message["role"]: message["content"] for message in data["messages"]}
+    assert by_role["assistant"] == data["runs"][0]["message"] == reply
+    assert data["runs"][0]["error"]["message"] == reply
+    assert data["runs"][0]["can_continue"] is True
+    assert by_role["user"] == legacy and run.chat_messages.get(role="assistant").content == legacy
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("problem", ["missing", "stale", "checks", "failed", "later_failure", "gates", "action", "other_version"])
 def test_success_label_is_not_enough_to_announce_passed_checks(completed_run, problem):
     run = completed_run
@@ -78,8 +117,31 @@ def test_success_label_is_not_enough_to_announce_passed_checks(completed_run, pr
             report.assessment["gates_passed" if problem == "gates" else "action"] = False if problem == "gates" else "review"
         report.save()
     reply = run_reply(run, "Всё проверено!")
-    assert "подтвердить не удалось" in reply
+    assert reply == "Версия игры сохранена. Можно сыграть."
     assert "пройдены" not in reply and "Всё проверено" not in reply
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("status,code,legacy", [
+    ("unverified", "manual_verification", "Игра сохранена. Проверьте отмеченные условия в preview и подтвердите результат."),
+    ("needs_attention", "check_review_required", "Версия игры сохранена, но её работу пока не удалось полностью проверить. Попробуйте сыграть. Если что-то нужно исправить, напишите об этом."),
+])
+def test_saved_review_reply_and_status_offer_the_same_preview(completed_run, status, code, legacy):
+    run = completed_run
+    run.status, run.error = status, {"code": code}
+    run.result_revision = None
+    run.save(update_fields=["status", "error", "result_revision"])
+    run.candidate_revision.accepted = False
+    run.candidate_revision.verification = "none"
+    run.candidate_revision.save(update_fields=["accepted", "verification"])
+    run.chat_messages.update(content=legacy)
+    data = chat_data(run.chat, detail=True)
+    by_role = {message["role"]: message["content"] for message in data["messages"]}
+    assert by_role["assistant"] == data["runs"][0]["message"] == "Версия игры сохранена. Можно сыграть."
+    assert by_role["user"] == legacy
+    assert data["candidate_revision"]["preview_url"]
+    assert data["candidate_revision"]["accepted"] is False
+    assert run.chat_messages.get(role="assistant").content == legacy
 
 
 @pytest.mark.django_db

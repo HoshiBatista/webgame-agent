@@ -21,7 +21,7 @@ examples. Resolve contradictions in the plan without deleting promised mechanics
 
 
 def source_request(request):
-    return request.get('pro_parallel') == 4 and request.get('pro_parallel_branch') in {'gameplay', 'scene'}
+    return request.get('pro_parallel') in {4, 5} and request.get('pro_parallel_branch') in {'gameplay', 'scene'}
 
 
 def source_prompt(request):
@@ -117,6 +117,17 @@ the final position alone. Use safe margins inside interaction ranges and away fr
 hazards, and boundary anchors where the source supports them. Never adjust expected
 damage or outcomes to excuse a route that violates the mechanic's precondition.
 """ + COMMON_PROMPT.split('SHORT HONEST CHECKS', 1)[1] + CHECK_V4_PROMPT + PLAN_CHECK_CONTEXT + CHECK_GUIDANCE
+    if request.get('pro_audio_check_timing') == 1:
+        prompt += """
+For playback checks, GameForgeExperience.sound(id) suppresses the same effect ID
+within 60 ms of its last playback. A separate click/key step does not advance
+that much time. Before repeating an input that should play the same sound, add
+a short wait (e.g. 120 ms, or longer if game code requires it). Waiting after
+a suppressed event cannot recover it. Follow the actual handlers and timers:
+measure effectsPlayed at the relevant gameplay transition and await the expected
+increment after a delayed cue. Count distinct cues promised for victory as well
+as the action that triggered it. Check gameplay progress separately.
+"""
     if scene_path in request.get('helper_catalog', {}) and scene_path in request.get('files', {}).get('index.html', ''):
         prompt += SCENE_API
     context = {k: request.get(k) for k in ('game_request', 'game_plan', 'requirement_manifest',
@@ -125,11 +136,14 @@ damage or outcomes to excuse a route that violates the mechanic's precondition.
             {'role': 'user', 'content': json.dumps(context, ensure_ascii=False)}]
 
 
-def source_context(responses, plan):
-    from .pro_parallel import assemble
+def source_context(responses, plan, version=4):
+    from .pro_parallel import assemble_source
 
-    # v3 assembly only joins the authors' bytes; it does not invoke a model or execute JS.
-    result = assemble(responses, plan, 3)
+    result = assemble_source(responses, plan, version)
+    return artifact_context(result, plan)
+
+
+def artifact_context(result, plan):
     files = {f['path']: f['content'] for f in result['files']}
     return {'files': files, 'design': result['design'], 'assets': result['assets'],
             'source_hash': digest({'files': files, 'plan': plan, 'assets': result['assets']})}

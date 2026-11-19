@@ -3,7 +3,7 @@ import { Check, ChevronDown } from 'lucide-react';
 import type { ModelProfile, Session } from './types';
 
 export function modelLabel(run?: { model_profile?: string; model_label?: string } | null) {
-  if (run?.model_profile === 'pro_multi') return 'Pro · эксперимент';
+  if (run?.model_profile === 'pro_multi') return 'Multiagent';
   return run?.model_label === 'Pro' || run?.model_profile === 'pro' ? 'Pro' : 'Lite';
 }
 

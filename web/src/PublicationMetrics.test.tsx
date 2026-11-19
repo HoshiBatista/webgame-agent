@@ -17,14 +17,14 @@ const game = {
 function content(
   publication = game,
   user: Session['user'] = { id: 'reader', username: 'Reader', is_staff: false },
-  onChange = vi.fn(),
 ) {
   return (
     <SessionContext.Provider
       value={{ session: { user } as Session, updateSession: vi.fn(), refresh: vi.fn() }}
     >
       <MemoryRouter initialEntries={['/games/publication']}>
-        <PublicationStars game={publication} onChange={onChange} />
+        <PublicationMetrics game={publication} />
+        <PublicationStars game={publication} />
       </MemoryRouter>
     </SessionContext.Provider>
   );
@@ -35,7 +35,7 @@ describe('publication rating and statistics', () => {
     render(<PublicationMetrics game={game} />);
     const metrics = screen.getByText('Открытия').parentElement;
     expect(metrics).toHaveTextContent('Открытия12');
-    expect(screen.getByText('2 мин 0 с')).toBeInTheDocument();
+    expect(screen.getByText('2 мин')).toBeInTheDocument();
     expect(screen.getByText('Успешные прохождения').parentElement).toHaveTextContent('—');
     expect(screen.getByText('Успешные прохождения').parentElement).toHaveAttribute(
       'title',
@@ -43,9 +43,8 @@ describe('publication rating and statistics', () => {
     );
   });
 
-  it('saves a rating and lets the same user change it, using the returned aggregate', async () => {
-    const onChange = vi.fn();
-    render(content(game, { id: 'reader', username: 'Reader', is_staff: false }, onChange));
+  it('saves a rating and lets the same user change it while keeping the original average', async () => {
+    render(content());
     expect(screen.getByRole('button', { name: 'Оценить на 3 из 5' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -56,16 +55,11 @@ describe('publication rating and statistics', () => {
       user_rating: 5,
     });
     fireEvent.click(screen.getByRole('button', { name: 'Оценить на 5 из 5' }));
-    expect(await screen.findByText('Ваша оценка: 5 из 5. Её можно изменить.')).toBeInTheDocument();
-    expect(screen.getByText('4,5')).toBeInTheDocument();
+    expect(await screen.findByText('Ваша оценка: 5 из 5.')).toBeInTheDocument();
+    expect(screen.getByText('3,5')).toBeInTheDocument();
     expect(request).toHaveBeenLastCalledWith('/api/publications/publication/rating/', {
       method: 'PUT',
       body: '{"rating":5}',
-    });
-    expect(onChange).toHaveBeenLastCalledWith({
-      average_rating: 4.5,
-      rating_count: 2,
-      user_rating: 5,
     });
     vi.mocked(request).mockResolvedValueOnce({
       average_rating: 3,
@@ -73,7 +67,7 @@ describe('publication rating and statistics', () => {
       user_rating: 2,
     });
     fireEvent.click(screen.getByRole('button', { name: 'Оценить на 2 из 5' }));
-    expect(await screen.findByText('Ваша оценка: 2 из 5. Её можно изменить.')).toBeInTheDocument();
+    expect(await screen.findByText('Ваша оценка: 2 из 5.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Оценить на 5 из 5' })).toHaveAttribute(
       'aria-pressed',
       'false',
@@ -120,7 +114,7 @@ describe('publication rating and statistics', () => {
     expect(screen.getByRole('button', { name: 'Оценить на 5 из 5' })).toBeEnabled();
     await act(async () => finish({ average_rating: 4.5, rating_count: 2, user_rating: 5 }));
     const rating = within(screen.getByRole('region', { name: 'Оценка игры' }));
-    expect(rating.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('Оценка игроков').parentElement).toHaveTextContent('—');
     expect(rating.getByRole('button', { name: 'Оценить на 5 из 5' })).toHaveAttribute(
       'aria-pressed',
       'false',

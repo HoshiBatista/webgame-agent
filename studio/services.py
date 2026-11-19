@@ -14,7 +14,7 @@ from django.utils.dateparse import parse_datetime
 
 from generation.audiences import AUDIENCES
 
-from .continuations import delivery_state, unacknowledged_unknowns
+from .continuations import delivery_state, lineage_ids, unacknowledged_unknowns
 from .model_profiles import configured_profiles, unavailable_reason
 from .models import (
     Budget,
@@ -28,7 +28,7 @@ from .models import (
     Run,
     RunEvent,
 )
-from .replies import assistant_reply, run_reply
+from .replies import BUDGET_EXHAUSTED_REPLY, assistant_reply, run_reply
 from .titles import DEFAULT_CHAT_TITLE, short_game_title, title_from_prompt
 
 
@@ -114,6 +114,10 @@ def tariff(provider, model):
         # https://developers.openai.com/api/docs/models/gpt-6-sol (2026-10-24).
         "gpt-6-sol": {"input": 2, "cached": 0.20, "cache_write": 2.5, "output": 10},
         "gpt-6.1-sol": {"input": 2, "cached": 0.10, "cache_write": 2.5, "output": 10},
+        # Standard with 30-minute cache writes (2026-11-19). Both model pages
+        # specify max input 922k, output 128k, and the same long-context uplift.
+        "gpt-6.2-sol": {"input": 2, "cached": 0.10, "cache_write": 2.5, "output": 10},
+        "gpt-6.2-astra": {"input": 8, "cached": 0.40, "cache_write": 10, "output": 40},
     }
     if provider not in {"codex", "codex_api"}:
         prices = {}
@@ -158,7 +162,7 @@ def usage_cost(usage, price):
 def reserve_invocation(run, request):
     if not run.allow_model_calls:
         raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
-    request = {**request, "provider": run.provider, "model": run.model}
+    request = {**request, "provider": run.provider, "model": run.model_for(request.get("operation"))}
     import uuid
 
     invocation_id = uuid.uuid4()
@@ -189,7 +193,7 @@ def reserve_invocation(run, request):
         raise DomainError("model_deadline", "Время новых модельных вызовов истекло. Кандидат сохранён.", 409)
     if current.invocations.count() >= current.max_model_calls:
         raise DomainError("repair_exhausted", "Лимит исправлений этого запуска исчерпан. Черновик сохранён.", 409)
-    price = tariff(run.provider, run.model)
+    price = tariff(run.provider, request["model"])
     if run.provider != "fake" and not price:
         raise DomainError(
             "pricing_unavailable",
@@ -201,11 +205,7 @@ def reserve_invocation(run, request):
     # There is exactly one current admission contract; unknown bounds fail closed.
     amount = Decimal(str(estimate_reservation(request, price)))
     if Decimal(str(budget_snapshot()["available_usd"])) < amount:
-        raise DomainError(
-            "budget_exhausted",
-            "Доступного бюджета недостаточно для следующего запроса. Черновик сохранён.",
-            409,
-        )
+        raise DomainError("budget_exhausted", BUDGET_EXHAUSTED_REPLY, 409)
     from .capacity import capacity_full
 
     if capacity_full(current, include_current_calls=bool(request.get('pro_parallel_branch'))):
@@ -300,6 +300,15 @@ def latest_variant_attempt(run):
             .order_by("-created_at", "-id").values_list("id", flat=True).first() == run.pk)
 
 
+def budget_blocked_before_multiagent_plan(run):
+    return (
+        run.pro_parallel and run.operation == "create" and run.planning_required and not run.game_plan
+        and run.status == "needs_attention" and (run.error or {}).get("code") == "budget_exhausted"
+        and not (run.base_revision_id or run.source_revision_id or run.candidate_revision_id)
+        and not Invocation.objects.filter(run_id__in=lineage_ids(run)).exists()
+    )
+
+
 @transaction.atomic
 def create_run(chat, data, *, continued_from=None, authorize=None, check_only=False, variant_batch=None):
     chat = Chat.objects.select_for_update().get(pk=chat.pk, deleted_at__isnull=True)
@@ -339,7 +348,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     )
     profile_id = data.get("model_profile", default_choice)
     if not isinstance(profile_id, str) or profile_id not in {"", "pro", "lite", "pro_multi"}:
-        raise DomainError("invalid_model_profile", "Выберите Pro или Lite.")
+        raise DomainError("invalid_model_profile", "Выберите модель из списка доступных.")
     if variant_batch and profile_id != "pro":
         raise DomainError("invalid_model_profile", "Четыре варианта доступны для обычной Pro.")
     if inherited and profile_id == inherited.model_profile:
@@ -354,7 +363,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         provider, model = settings.GAMEFORGE_PROVIDER, settings.GAMEFORGE_MODEL
     if data.get("model"):
         if profile_id and data["model"] != model:
-            raise DomainError("invalid_model", "Модель определяется выбранным режимом Pro / Lite.")
+            raise DomainError("invalid_model", "Модель определяется выбранным режимом генерации.")
         model = data["model"]
     if not isinstance(model, str) or len(model) > 100:
         raise DomainError("invalid_model", "Некорректная модель.")
@@ -381,12 +390,16 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     if continued_from and generation_profile != continued_from.generation_profile:
         raise DomainError('profile_mismatch', 'Продолжение сохраняет формат исходной игры.', 409)
     pro_parallel = profile_id == 'pro_multi'
+    planner_model = None
+    if pro_parallel:
+        planner_model = (inherited.planner_model if inherited and inherited.pro_parallel
+                         else settings.GAMEFORGE_PRO_PARALLEL_PLANNER_MODEL or None)
     from generation.pro_parallel import VERSION as PRO_PARALLEL_VERSION
 
     pro_parallel_version = (continued_from.pro_parallel_version if continued_from and continued_from.pro_parallel
                             else PRO_PARALLEL_VERSION if pro_parallel else 1)
     if pro_parallel and (provider != 'codex_api' or generation_profile != 'full'):
-        raise DomainError('invalid_generation_profile', 'Экспериментальная Pro использует полный формат и Pro API.')
+        raise DomainError('invalid_generation_profile', 'Режим Multiagent использует полный формат и Pro API.')
     if continued_from and continued_from.pro_parallel != pro_parallel and not (
         continued_from.candidate_revision_id or continued_from.source_revision_id
     ):
@@ -405,7 +418,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         )})
     call_limit = data.get("model_call_limit")
     deadline_text = data.get("model_call_deadline")
-    maximum_calls = (11 if pro_parallel_version == 4 else 10 if pro_parallel_version >= 2 else 9) if pro_parallel else 5
+    maximum_calls = (11 if pro_parallel_version in {4, 5} else 10 if pro_parallel_version >= 2 else 9) if pro_parallel else 5
     if call_limit is not None and (type(call_limit) is not int or not 1 <= call_limit <= maximum_calls):
         raise DomainError("invalid_call_budget", f"Лимит вызовов должен быть целым числом от 1 до {maximum_calls}.")
     try:
@@ -498,6 +511,20 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     ):
         raise DomainError("cannot_recheck", "Нет актуального кандидата для повторной проверки.", 409)
     operation = "repair" if candidate or continued_from else ("edit" if source else "create")
+    if continued_from and pro_parallel and not check_only and budget_blocked_before_multiagent_plan(continued_from):
+        if base or continued_from.continuations.exists():
+            raise DomainError("cannot_continue", "В чате уже есть версия игры или продолжение этого задания.", 409)
+        # No model call was admitted. Resume the original creation with its full set of stages
+        # and keep any caller-imposed limits, even if the client only supplies an idempotency key.
+        operation = "create"
+        if continued_from.model_call_limit is not None:
+            if call_limit is not None and call_limit > continued_from.model_call_limit:
+                raise DomainError("invalid_call_budget", "Продолжение сохраняет исходный предел вызовов.")
+            call_limit = call_limit or continued_from.model_call_limit
+        if continued_from.model_call_deadline:
+            if deadline and deadline > continued_from.model_call_deadline:
+                raise DomainError("invalid_call_budget", "Продолжение сохраняет исходный срок вызовов.")
+            deadline = deadline or continued_from.model_call_deadline
     from generation.planning import should_plan, strategy
     from generation.requirements import manifest, policy_snapshot
 
@@ -538,6 +565,22 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
     else:
         original_request = prompt.strip()
         frozen_manifest = manifest(original_request)
+        if pro_parallel:
+            frozen_manifest["touch_control_guidance"] = {
+                "version": 1,
+                "plan": "For every required touch control, put a reachable player action and its observable gameplay "
+                        "effect in the frozen requirement example. Record the actual controls in player_experience.input "
+                        "and in the scene/mechanics interface when split. The mobile checker can tap a visible control, "
+                        "tap_fraction on its displayed box, or hold_touch at one stationary point for up to 3000 ms.",
+                "gestures": "For wheels, joysticks or sliders, provide a real tap or stationary-hold way to control the "
+                            "same mechanic, such as pressing the left or right half of the helm to turn. Keep explicitly "
+                            "requested drag gestures playable. A tap can demonstrate steering but cannot prove dragging. "
+                            "If the user requires gesture-only input, preserve it and state the manual verification "
+                            "limit in assumptions. Desktop key input cannot prove a mobile control.",
+                "effects": "Give independent mechanics their own playable actions and observable consequences. Verify "
+                           "a change of heading, collected item or spent resource through its actual state or HUD. "
+                           "A highlighted control or unrelated animation alone cannot demonstrate these effects.",
+            }
     from generation.helpers import catalog
     from generation.scene import PATH as scene_path
 
@@ -577,6 +620,7 @@ def create_run(chat, data, *, continued_from=None, authorize=None, check_only=Fa
         prompt=prompt.strip(),
         audience=audience,
         model=model,
+        planner_model=planner_model,
         provider=provider,
         model_profile=profile_id,
         idempotency_key=key,

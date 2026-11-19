@@ -29,6 +29,7 @@ from .model_profiles import (
 )
 from .models import Chat, Feedback, Like, Message, Preference, Publication, Revision, Run, User
 from .preferences import validate_notes
+from .publication_analytics import annotated_publications
 from .serialization import chat_data, preview_url, publication_data, revision_data, run_data
 from .services import (
     DomainError,
@@ -496,8 +497,6 @@ def preview_view(request, token):
 def publications_view(request):
     from generation.schema import CONTRACT_VERSION
 
-    from .publication_analytics import annotated_publications
-
     if request.method == "GET":
         qs = annotated_publications(Publication.objects.filter(
             unavailable_at__isnull=True, revision__pipeline_version=CONTRACT_VERSION
@@ -554,7 +553,10 @@ def require_available_publication(publication):
 def publication_view(request, ident):
     from generation.schema import CONTRACT_VERSION
 
-    publication = get_object_or_404(Publication, pk=ident)
+    queryset = Publication.objects.all()
+    if request.method == "GET":
+        queryset = annotated_publications(queryset.select_related("owner", "revision", "source_chat"), request.user)
+    publication = get_object_or_404(queryset, pk=ident)
     if request.method != "DELETE":
         require_available_publication(publication)
     if request.method == "GET":
@@ -655,7 +657,7 @@ def preferences_view(request):
         if "model_profile" in request.data:
             profile_id = request.data["model_profile"]
             if not isinstance(profile_id, str) or profile_id not in configured_profiles():
-                raise DomainError("invalid_model_profile", "Выберите Pro или Lite.")
+                raise DomainError("invalid_model_profile", "Выберите модель из списка доступных.")
             reason = unavailable_reason(configured_profiles()[profile_id], request)
             if reason:
                 raise DomainError("model_unavailable", reason, 409)

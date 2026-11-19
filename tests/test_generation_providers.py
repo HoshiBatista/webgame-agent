@@ -12,7 +12,8 @@ from generation.providers.fake import fixture_response
 from generation.service import generate as generate_operation
 
 
-@pytest.mark.parametrize("version", ["0.163.0-alpha.10.2", "0.163.0-alpha.11.2", "0.164.0-alpha.11.1", "0.999.0"])
+@pytest.mark.parametrize("version", ["0.163.0-alpha.10.2", "0.163.0-alpha.11.2", "0.164.0-alpha.11.1",
+                                    "0.169.0-alpha.11.1", "0.999.0"])
 def test_codex_cli_contract_allows_only_reviewed_versions(monkeypatch, version):
     monkeypatch.setattr(codex, "binary", lambda: "codex")
     monkeypatch.setattr(codex.subprocess, "run", lambda *a, **kw: SimpleNamespace(stdout=f"codex-cli {version}"))
@@ -418,7 +419,7 @@ def codex_rpc(monkeypatch):
     state = {"calls": [], "events": [], "closed": False}
 
     class Connection:
-        def __init__(self, cwd):
+        def __init__(self, cwd, cli_version):
             self.pending = []
 
         def rpc(self, method, params, is_cancelled):
@@ -561,14 +562,21 @@ def test_model_cannot_escalate_repair_to_edit_and_receipt_remains_accountable(co
     assert error.value.provider_metadata["turn_id"] == "turn-1"
 
 
-def test_codex_profile_is_explicit_about_prompt_and_compaction(monkeypatch, tmp_path):
+@pytest.mark.parametrize("version", ["codex-cli 0.164.0-alpha.11.1", codex.CLI_169])
+def test_codex_profile_is_explicit_about_prompt_and_compaction(monkeypatch, tmp_path, version):
     monkeypatch.setattr(codex, "binary", lambda: "codex")
-    args = codex.command(tmp_path / "catalog.json")
+    args = codex.command(tmp_path / "catalog.json", version)
     config = {
         args[i + 1].split("=", 1)[0]: json.loads(args[i + 1].split("=", 1)[1])
         for i, part in enumerate(args)
         if part == "-c"
     }
+    for key in ("skills.bundled.enabled", "skills.include_instructions", "include_permissions_instructions",
+                "features.executor_capability_discovery_v2"):
+        if version == codex.CLI_169:
+            assert config[key] is False
+        else:
+            assert key not in config
     assert config["developer_instructions"] == ""
     assert config["features.async_compaction"] is False
     assert config["model_post_turn_compact_threshold_percent"] == 0

@@ -4,15 +4,23 @@ import json
 from copy import deepcopy
 from typing import Any
 
-VERSION = 1
+VERSION = 2
 
 
 def enabled(request):
     from .lite import eligible
 
     return (eligible(request) and request.get('lite_policy') == 2
-            and request.get('lite_checks_policy') == VERSION
+            and request.get('lite_checks_policy') in (1, VERSION)
             and request.get('operation') in {'create', 'edit', 'repair', 'check_repair'})
+
+
+def guidance(request):
+    if not enabled(request):
+        return ''
+    if request['lite_checks_policy'] == 1 or request['operation'] == 'repair':
+        return GUIDANCE
+    return GUIDANCE + INPUT_ROUTES
 
 
 def causal_feedback(facts):
@@ -85,6 +93,11 @@ For a discrete direction change use press/tap rather than an unnecessary hold/re
 REPAIR_GUIDANCE = """
 lite_causal_feedback comes from the exact artifact's recorded paired browser executions. It explains failures that an ordinary successful run cannot resolve. If with_input.comparison is false, the intended outcome was NOT reached in the controlled run: trace the source and correct the route/wait. If without_input.comparison is true, the omitted input was redundant: choose the actual decisive input. Both branches must be valid and start from equal setup. Read omitted_inputs to identify exactly what was removed. Do not leave a failing route unchanged merely because ordinary_after equals the expected value. Preserve protected_checks and every issued requirement identity. These are data, not permission to change source, acceptance criteria or expected effects.
 If the control branch stops at an intermediate assertion of the final goal, make that terminal assertion a final wait_for for the identical goal; retain the preceding time needed by the actual game. Removing a redundant input or intermediate goal assertion is NOT a reason to shorten the game's travel time to an arbitrary small wait. Calculate travel from initial position, boundary and tick duration in the supplied source.
+"""
+
+INPUT_ROUTES = """
+Start each keyboard scenario with focus on the fresh page body. Trace the actual keyboard handler from the initial phase: Enter does nothing unless the game handles it or the real start button has been focused by keyboard. A key that starts the round counts as setup, even when that same key also controls gameplay. Send a separate press for each requested gameplay action. Keep the desktop keyboard control route keyboard-only, including setup; a tap/click on Start invalidates that route even during check repair.
+Match the replay transition to the user's request. When replay starts another round, its single activation must reset progress AND enable play immediately. In the restart scenario reach the real end, activate replay, verify the reset, then perform the first normal gameplay input and observe its new-round effect without another Start. A return to the menu is correct only when requested. During check repair, keep requirements and source immutable; if the game cannot perform the required transition, describe the discrepancy instead of substituting a menu or reset-only check.
 """
 
 LAYOUT_GUIDANCE = """

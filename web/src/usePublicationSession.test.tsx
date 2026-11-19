@@ -118,6 +118,8 @@ describe('public player sessions', () => {
     });
     const options = calls('POST')[0][1]!;
     expect(new Headers(options.headers).get('X-CSRFToken')).toBe('guest-csrf-token');
+    expect(new Headers(options.headers).get('Prefer')).toBe('return=minimal');
+    expect(options.keepalive).toBe(true);
     expect(options.credentials).toBe('same-origin');
     view.rerender(
       <StrictMode>
@@ -150,23 +152,26 @@ describe('public player sessions', () => {
   it('counts only visible time, pauses offscreen/hidden, and flushes on close with the same secret', async () => {
     const view = mount();
     await load();
-    await advance(5000);
-    expect(bodies('PUT').at(-1)?.visible_ms).toBe(5000);
+    await advance(9999);
+    expect(bodies('PUT')).toHaveLength(0);
+    await advance(1);
+    expect(bodies('PUT').at(-1)?.visible_ms).toBe(10000);
     hidden = true;
     fireEvent(document, new Event('visibilitychange'));
-    await advance(5000);
+    await advance(10000);
     expect(bodies('PUT')).toHaveLength(1);
     hidden = false;
     fireEvent(document, new Event('visibilitychange'));
-    await advance(5000);
-    expect(bodies('PUT').at(-1)?.visible_ms).toBe(10000);
+    await advance(10000);
+    expect(bodies('PUT').at(-1)?.visible_ms).toBe(20000);
     intersect(0.2);
-    await advance(5000);
+    await advance(10000);
     expect(bodies('PUT')).toHaveLength(2);
     intersect(1);
     await advance(2300);
     await act(async () => view.unmount());
-    expect(bodies('PUT').at(-1)).toEqual({ token: bodies('POST')[0].token, visible_ms: 12300 });
+    expect(bodies('PUT').at(-1)).toEqual({ token: bodies('POST')[0].token, visible_ms: 22300 });
+    expect(new Headers(calls('PUT').at(-1)?.[1]?.headers).get('Prefer')).toBe('return=minimal');
     expect(calls('PUT').at(-1)?.[1]?.keepalive).toBe(true);
     expect(new Headers(calls('PUT').at(-1)?.[1]?.headers).get('X-CSRFToken')).toBe(
       'guest-csrf-token',
@@ -231,7 +236,7 @@ describe('public player sessions', () => {
     await load();
     await advance(2500);
     view.unmount();
-    await act(async () => finish(response()));
+    await act(async () => finish(new Response(null, { status: 204 })));
     expect(bodies('POST')).toHaveLength(1);
     expect(bodies('PUT')).toEqual([{ token: bodies('POST')[0].token, visible_ms: 2500 }]);
     expect(calls('PUT')[0][1]?.keepalive).toBe(true);

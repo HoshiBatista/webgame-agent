@@ -18,9 +18,14 @@ export default function Landing() {
     <div className="landing">
       <header className="landing-header">
         <Brand />
-        <Link className="button button-outline" to="/login">
-          Войти <ArrowUpRight size={17} />
-        </Link>
+        <nav className="landing-header-actions" aria-label="Навигация по сайту">
+          <Link className="landing-info-link" to="/info">
+            О моделях
+          </Link>
+          <Link className="button button-outline" to="/login">
+            Войти <ArrowUpRight size={17} />
+          </Link>
+        </nav>
       </header>
       <main>
         <section className="hero">

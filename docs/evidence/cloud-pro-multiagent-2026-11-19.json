@@ -1,0 +1,242 @@
+{
+  "url": "https://beegame.ru",
+  "release": {
+    "content_sha256": "d0576f8da0f2265defbd9ba74180d8a2c4eae83d856ed6ea7010cf71444d860c",
+    "archive_sha256": "2c6c4ce952d2bf4d94964423fede42bac8b892bebbd40a9ab94ed25cfe144e7a",
+    "number_of_files": 572,
+    "base_commit": "b51bb451fcc698386d7596295b5ab05e5fb72224",
+    "tag": "multi62-d0576f8da0f2"
+  },
+  "release_path": "/opt/gameforge/releases/20261119-multi62-d0576f8da0f2",
+  "previous": "/opt/gameforge/releases/20261118-c5fc93c",
+  "database_backup": "/opt/gameforge/backups/before-multi62-d0576f8da0f2-20261118T235901Z.dump",
+  "backup_sha256": "586b816e5dbb196a78b3f951e9bc9bba00d3545b8f2bc389046a05a57a766d67",
+  "migrations_applied": [
+    "0028_pro_variant_batches",
+    "0029_run_planner_model"
+  ],
+  "previous_records_preserved": true,
+  "prior_row_counts": {
+    "Budget": 1,
+    "Chat": 96,
+    "CheckReport": 119,
+    "Feedback": 6,
+    "FeedbackProcessing": 4,
+    "Invocation": 359,
+    "Like": 2,
+    "Message": 322,
+    "Outbox": 162,
+    "PlaySession": 12,
+    "Preference": 5,
+    "PromptTemplate": 2,
+    "Publication": 5,
+    "PublicationRating": 3,
+    "PublicationStats": 2,
+    "Revision": 112,
+    "Run": 162,
+    "RunEvent": 1849,
+    "User": 5,
+    "ValidationRequest": 100,
+    "ValidationTask": 100
+  },
+  "existing_unknown_calls_preserved": 12,
+  "provider_routing": {
+    "provider_health": {
+      "codex": "ok",
+      "lite": "ok"
+    },
+    "profiles": {
+      "pro": {
+        "name": "Pro",
+        "model": "gpt-6.2-sol",
+        "available": true
+      },
+      "pro_multi": {
+        "name": "Pro Multiagent",
+        "model": "gpt-6.2-sol",
+        "available": true
+      },
+      "lite": {
+        "name": "Lite",
+        "model": "qwen38",
+        "available": true
+      }
+    },
+    "reservations_rolled_back": [
+      {
+        "operation": "plan",
+        "model": "gpt-6.2-sol",
+        "effort": "high",
+        "reservation_usd": "6.53"
+      },
+      {
+        "operation": "plan",
+        "model": "gpt-6.2-astra",
+        "effort": "high",
+        "reservation_usd": "26.12"
+      },
+      {
+        "operation": "pro_graphics",
+        "model": "gpt-6.2-sol",
+        "effort": "high",
+        "reservation_usd": "6.53"
+      }
+    ],
+    "four_way_plans": 4,
+    "all_variants_model": "gpt-6.2-sol",
+    "budget_before_equals_after": true,
+    "inference_submitted": 0,
+    "persisted_smoke_users": 0
+  },
+  "native_validator": {
+    "environment": "mini-browser-v1:e196a63d1525a1e41094ac122f428c58651c4176c10379118694b63c8fe32ba7:Chromium 156.0.8078.79 built on Debian GNU/Linux 12 (bookworm)",
+    "profiles": {
+      "full": {
+        "status": "passed",
+        "facts": 5,
+        "viewports": [
+          "mobile",
+          "landscape",
+          "desktop"
+        ],
+        "keyboard_only": true,
+        "generated_graphics_drawn": true,
+        "audio_voices_played": true,
+        "rotation_preserves_state": true,
+        "seconds": 20.038,
+        "audio_quality": "not_listened",
+        "artifact_hash": "69e61d1ae40e6314d47bf0e0fbf97cc2c64ceee4a91866fd2688e51d1ae51574"
+      },
+      "compact": {
+        "status": "passed",
+        "facts": 6,
+        "viewports": [
+          "mobile",
+          "landscape",
+          "desktop"
+        ],
+        "keyboard_only": true,
+        "generated_graphics_drawn": true,
+        "audio_voices_played": true,
+        "rotation_preserves_state": true,
+        "seconds": 36.502,
+        "audio_quality": "not_listened",
+        "artifact_hash": "4a09aa8eaac320111c935c662058f802fd39a5d7fdbcc96de414c376d62076cd"
+      }
+    },
+    "model_calls": 0,
+    "records_created": 0
+  },
+  "analytics_smoke": {
+    "status": "passed",
+    "tests": [
+      "guest_csrf",
+      "cross_origin_denied",
+      "idempotent_open",
+      "bound_session_secret",
+      "cumulative_time",
+      "stale_time_ignored",
+      "rating_login_and_csrf",
+      "one_editable_rating",
+      "null_completion",
+      "legacy_like_preserved",
+      "export_and_source_unchanged",
+      "transaction_rolled_back"
+    ],
+    "model_calls": 0,
+    "persistent_records_created": 0,
+    "existing_row_counts_unchanged": true
+  },
+  "public_https": {
+    "passed": true,
+    "https_verified": true,
+    "health_http": 200,
+    "guest_csrf_secure_host_only": true,
+    "guest_private_api_denied": true,
+    "homepage_exact": true,
+    "assets_exact": 19,
+    "font_binary_fallback_count": 5,
+    "gzip_js_css": true,
+    "publications_checked": 5,
+    "published_identity_and_preview_bytes_unchanged": true,
+    "analytics_mode": "live_type_range_checks",
+    "analytics_fields_valid": true,
+    "preview_isolated_no_cookie_no_api": true,
+    "canonical_www_preserves_uri": true,
+    "requests": 35,
+    "model_calls": 0,
+    "http_mutations": 0,
+    "javascript_executed": false
+  },
+  "services": {
+    "app": {
+      "state": "running",
+      "health": null
+    },
+    "preview": {
+      "state": "running",
+      "health": null
+    },
+    "worker": {
+      "state": "running",
+      "health": null
+    },
+    "beat": {
+      "state": "running",
+      "health": null
+    },
+    "edge": {
+      "state": "running",
+      "health": null
+    },
+    "db": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "redis": {
+      "state": "running",
+      "health": "healthy"
+    },
+    "validator": {
+      "state": "running",
+      "health": null
+    }
+  },
+  "public_browser": {
+    "https": "https://beegame.ru",
+    "signed_in": true,
+    "chat_picker": "Pro Multiagent",
+    "settings": "Pro Multiagent",
+    "sol": "gpt-6.2-sol",
+    "lite_available": true,
+    "browser": "145.0.7632.6",
+    "game_jobs_created": 0
+  },
+  "live_ordinary_pro": {
+    "location": "local GameForge through the live Codex Worker",
+    "run": "2c4f86e8-34af-4c65-a085-2638634dfe3c",
+    "model_receipts": [
+      {
+        "operation": "plan",
+        "model": "gpt-6.2-sol",
+        "status": "settled",
+        "cost_usd": "0.029312"
+      },
+      {
+        "operation": "create",
+        "model": "gpt-6.2-sol",
+        "status": "settled",
+        "cost_usd": "0.130308"
+      }
+    ],
+    "verification": "automatic",
+    "revision": "a5340be4-1f53-4302-8067-3f81364c0938",
+    "artifact_sha256": "6ff41ea5bd866793c1fb948c23582af8ccd3255b6acce9863988e4bca531c88a",
+    "browser_checks": {
+      "touch": true,
+      "keyboard": true,
+      "mixed": true,
+      "rotation": true
+    }
+  }
+}

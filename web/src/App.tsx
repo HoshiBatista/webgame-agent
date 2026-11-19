@@ -7,12 +7,22 @@ import {
   useState,
   type FormEvent,
 } from 'react';
-import { ChevronLeft, ChevronRight, FileText, Gamepad2, Menu, Plus, X } from 'lucide-react';
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Gamepad2,
+  Menu,
+  Plus,
+  X,
+} from 'lucide-react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { errorText, getSession, post, request, setCsrfToken } from './api';
 import { Brand, ErrorNotice, Modal, Spinner } from './components';
 import { SessionContext, useSession, type StudioDraft, type ChatTitleChange } from './context';
 import Landing from './Landing';
+import ModelInfo from './ModelInfo';
 import Login, { loginDestination } from './Login';
 import Feed from './Feed';
 import Templates from './Templates';
@@ -154,7 +164,7 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
       window.removeEventListener('focus', load);
     };
   }, []);
-  useEffect(() => setMobileOpen(false), [location.pathname]);
+  useLayoutEffect(() => setMobileOpen(false), [location.pathname]);
   const activeChatIds = chats
     .filter((chat) => chat.active_run)
     .map((chat) => chat.id)
@@ -251,13 +261,23 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
           <span>Игры сообщества</span>
         </Link>
         <Link
-          className={`sidebar-feed-link sidebar-templates-link ${location.pathname === '/templates' ? 'active' : ''}`}
+          className={`sidebar-feed-link ${location.pathname === '/templates' ? 'active' : ''}`}
           to="/templates"
           title="Мои шаблоны"
           aria-label="Мои шаблоны"
         >
           <FileText size={19} />
           <span>Мои шаблоны</span>
+        </Link>
+        <Link
+          className="sidebar-feed-link"
+          to="/settings/models"
+          state={{ from: location.pathname + location.search + location.hash }}
+          title="О моделях"
+          aria-label="О моделях"
+        >
+          <BookOpen size={19} />
+          <span>О моделях</span>
         </Link>
         <div className="sidebar-section-label" aria-hidden={collapsed && !mobile}>
           Недавние
@@ -386,7 +406,10 @@ function Application() {
   const navigate = useNavigate();
   const sessionVersion = useRef(0);
   useEffect(() => {
-    if (!location.pathname.startsWith('/chats/')) document.title = 'beeGame';
+    if (location.pathname.startsWith('/chats/')) return;
+    document.title = /^\/(info|settings\/models)\/?$/.test(location.pathname)
+      ? 'Модели beeGame'
+      : 'beeGame';
   }, [location.pathname]);
   // Drafts live only for this signed-in user and this tab, never in persistent storage.
   const studioDrafts = useMemo(() => new Map<string, StudioDraft>(), [session?.user?.id]);
@@ -498,11 +521,23 @@ function Application() {
           />
           <Route path="/play/:id" element={<RevisionPlayer />} />
           <Route path="/settings" element={<Preferences />} />
+          <Route path="/settings/models" element={<ModelInfo />} />
+          <Route
+            path="/info"
+            element={
+              <Navigate to={{ pathname: '/settings/models', hash: location.hash }} replace />
+            }
+          />
           <Route path="*" element={<Shell session={session} onLogout={() => void logout()} />} />
         </Routes>
       ) : (
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/info" element={<ModelInfo />} />
+          <Route
+            path="/settings/models"
+            element={<Navigate to={{ pathname: '/info', hash: location.hash }} replace />}
+          />
           <Route path="/login" element={<Login />} />
           <Route
             path="*"

@@ -1,10 +1,10 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { useSoundPreference } from './useSoundPreference';
+import { useProVariantPreference } from './useProVariantPreference';
 import {
   ArrowDownToLine,
   ArrowUp,
   ChevronDown,
-  Square,
   Expand,
   Gamepad2,
   FileText,
@@ -37,7 +37,9 @@ import type {
   VariantBatch,
 } from './types';
 import { useSavedChat } from './useSavedChat';
+import { useVariantDraft } from './useVariantDraft';
 import RunMessage, { RunTime } from './RunMessage';
+import StopGenerationButton from './StopGenerationButton';
 import ModelSelector, { modelLabel, selectedProfile } from './ModelSelector';
 import TemplatePicker from './TemplatePicker';
 import { appendTemplate } from './textLimits';
@@ -47,6 +49,8 @@ import {
   VariantBatchCard,
   VariantPreview,
   VariantReview,
+  canChooseVariant,
+  playableVariantDraft,
   variantRunning,
 } from './VariantBatchCard';
 const feedbackReasons = [
@@ -80,9 +84,10 @@ export default function Studio() {
   const [confirmedReport, setConfirmedReport] = useState<string | null>(null);
   const [prompt, setPrompt] = useState(initialDraft?.prompt ?? '');
   const [audience, setAudience] = useState(initialDraft?.audience ?? 'everyone');
-  const [fourVariants, setFourVariants] = useState(initialDraft?.fourVariants ?? false);
+  const [fourVariants, setFourVariants] = useProVariantPreference(session.user?.id ?? '');
   const [trial, setTrial] = useState<GameVariant | null>(null);
   const [variantReview, setVariantReview] = useState<GameVariant | null>(null);
+  const [draftChoice, rememberDraft] = useVariantDraft(session.user?.id ?? '', id);
   const modelProfile = selectedProfile(session);
   const profiles = session.capabilities.model_profiles ?? [];
   const selectedModel = profiles.find((item) => item.id === modelProfile);
@@ -139,8 +144,8 @@ export default function Studio() {
   const lastPayload = useRef(initialDraft?.lastPayload ?? '');
   const submissionChat = useRef('');
   const audienceReady = useRef(isNew || initialDraft?.audience != null);
-  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle, fourVariants });
-  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle, fourVariants };
+  const draft = useRef({ prompt, audience, selectedRevision, chatTitle: newTitle });
+  draft.current = { prompt, audience, selectedRevision, chatTitle: newTitle };
   useEffect(
     () => () => {
       if (id === 'new' && submissionChat.current === currentId.current) {
@@ -208,7 +213,6 @@ export default function Studio() {
       setBusy(false);
       setError('');
       setPrompt(remembered?.prompt ?? '');
-      setFourVariants(remembered?.fourVariants ?? false);
       idempotency.current = remembered?.idempotencyKey ?? newKey();
       lastPayload.current = remembered?.lastPayload ?? '';
     }
@@ -242,6 +246,15 @@ export default function Studio() {
     }
   const latestIsVariant =
     !!latestRun && (!!latestRun.variant_batch_id || batchByRun.has(latestRun.id));
+  // A trial is bound to the exact build the user opened. A later attempt in
+  // this slot can finish while its predecessor is still open in the player.
+  const shownVariant = trial?.revision ? variantByRevision.get(trial.revision.id) : undefined;
+  const trialChoice =
+    shownVariant &&
+    shownVariant.variant.revision?.artifact_hash === trial?.revision?.artifact_hash &&
+    shownVariant?.variant.run_id === trial?.run_id
+      ? shownVariant
+      : undefined;
   const batchRunning = batches.some((batch) => batch.variants.some(variantRunning));
   const savedSubmission = chat?.messages.find(
     (message) =>
@@ -331,6 +344,8 @@ export default function Studio() {
   const candidateNeedsReview = !!(
     latestRun &&
     !latestIsVariant &&
+    (latestRun.base_revision_id === undefined ||
+      latestRun.base_revision_id === (chat?.current_revision?.id ?? null)) &&
     chat?.candidate_revision &&
     ['unverified', 'needs_attention', 'failed', 'cancelled', 'unknown'].includes(
       latestRun.status,
@@ -338,17 +353,42 @@ export default function Studio() {
     chat?.candidate_revision?.id ===
       (latestRun.candidate_revision_id ?? latestRun.source_revision_id)
   );
-  const defaultRevision = candidateNeedsReview
-    ? chat?.candidate_revision
-    : (chat?.current_revision ?? chat?.candidate_revision);
+  const current = chat?.current_revision;
+  const lastPromptId =
+    chat?.messages.filter((message) => message.role === 'user').at(-1)?.id ?? null;
+  const storedVariant = draftChoice && variantByRevision.get(draftChoice.id)?.variant;
+  const draftRevision =
+    draftChoice &&
+    storedVariant &&
+    canChooseVariant(storedVariant) &&
+    storedVariant.revision?.artifact_hash === draftChoice.hash &&
+    draftChoice.currentId === (current?.id ?? null) &&
+    draftChoice.lastPromptId === lastPromptId
+      ? chat?.revisions.find(
+          (item) => item.id === draftChoice.id && item.artifact_hash === draftChoice.hash,
+        )
+      : null;
+  const defaultRevision =
+    draftRevision ??
+    (candidateNeedsReview ? chat?.candidate_revision : (current ?? chat?.candidate_revision));
   const revision: Revision | null = selectedRevision
     ? (chat?.revisions.find((item) => item.id === selectedRevision) ?? null)
     : (defaultRevision ?? null);
-  const current = chat?.current_revision;
+  const chosenVariantId =
+    draftRevision && draftRevision.id !== current?.id
+      ? draftRevision.accepted
+        ? undefined
+        : draftRevision.id
+      : current?.id;
   const needsVariantChoice =
-    !revision && batches.some((batch) => batch.variants.some((v) => v.revision?.accepted));
+    !revision && batches.some((batch) => batch.variants.some((variant) => variant.revision));
   const composingBlocked =
-    busy || !!activeRun || !!pendingHere || batchRunning || needsVariantChoice;
+    busy ||
+    (isNew && !!view.current.nextId) ||
+    !!activeRun ||
+    !!pendingHere ||
+    batchRunning ||
+    needsVariantChoice;
   const feedbackDone =
     !!revision && (!!revision.feedback_rating || ratedRevisions.includes(revision.id));
   const published =
@@ -434,7 +474,6 @@ export default function Studio() {
         body: JSON.stringify({ model_profile: value }),
       });
       updateSession({ ...session, preferences });
-      if (view.current === startedView && value !== 'pro') setFourVariants(false);
     } catch (cause) {
       if (view.current === startedView) setError(errorText(cause));
     } finally {
@@ -444,7 +483,10 @@ export default function Studio() {
   async function send(event: FormEvent) {
     event.preventDefault();
     if (!prompt.trim() || composingBlocked || modelUnavailable || (!isNew && !chat)) return;
-    if (latestRun?.can_retry_unknown) {
+    const retryUnknown =
+      latestRun?.can_retry_unknown &&
+      (!latestIsVariant || !revision || latestRun.candidate_revision_id === revision.id);
+    if (retryUnknown) {
       if (
         !window.confirm('Ответ на предыдущий запрос не получен полностью. Отправить новый запрос?')
       )
@@ -459,8 +501,8 @@ export default function Studio() {
       audience,
       source_revision_id: revision?.id ?? null,
       source_artifact_hash: revision?.artifact_hash ?? null,
-      source_is_historical: !!selectedRevision,
-      ...(latestRun?.can_retry_unknown
+      source_is_historical: !!selectedRevision || !!draftRevision,
+      ...(retryUnknown
         ? { acknowledge_unknown_run_id: latestRun.id, accept_unknown_cost: true }
         : {}),
       ...(modelProfile ? { model_profile: modelProfile } : { model: session.capabilities.model }),
@@ -478,7 +520,8 @@ export default function Studio() {
       four,
     });
     setPrompt('');
-    let targetId = chat?.id;
+    // A lost acknowledgement can enable retry before React commits the new chat URL.
+    let targetId = isNew ? startedView.nextId : id;
     try {
       if (!targetId) {
         const target = await post<Chat>('/api/chats/', {
@@ -513,11 +556,11 @@ export default function Studio() {
       void refresh();
       if (!isCurrent()) return;
       setPending((value) => (value?.key === key ? { ...value, ...accepted } : value));
-      setFourVariants(false);
       idempotency.current = newKey();
       lastPayload.current = '';
       setPrompt('');
       setSelectedRevision(null);
+      rememberDraft(null);
       chatsChanged();
     } catch (cause) {
       if (isCurrent()) {
@@ -552,7 +595,19 @@ export default function Studio() {
     }
   }
   async function chooseVariant(batch: VariantBatch, variant: GameVariant) {
-    if (!chat || !variant.revision?.accepted || busy) return;
+    if (!chat || !variant.revision || !canChooseVariant(variant) || busy) return;
+    if (playableVariantDraft(variant)) {
+      rememberDraft({
+        id: variant.revision.id,
+        hash: variant.revision.artifact_hash,
+        currentId: current?.id ?? null,
+        lastPromptId,
+      });
+      setError('');
+      setSelectedRevision(null);
+      setTrial(null);
+      return;
+    }
     const startedView = view.current;
     setBusy(true);
     setError('');
@@ -564,10 +619,13 @@ export default function Studio() {
       });
       if (view.current !== startedView) return;
       setSelectedRevision(null);
+      rememberDraft(null);
+      setTrial(null);
       replaceChat(saved);
       chatsChanged();
     } catch (cause) {
       if (view.current === startedView) {
+        setTrial(null);
         setError(errorText(cause));
         load();
       }
@@ -586,6 +644,7 @@ export default function Studio() {
       chatsChanged();
       if (view.current !== startedView) return;
       setSelectedRevision(null);
+      rememberDraft(null);
       load();
     } catch (cause) {
       if (view.current === startedView) setError(errorText(cause));
@@ -795,7 +854,7 @@ export default function Studio() {
       <VariantBatchCard
         key={batch.id}
         batch={batch}
-        currentId={current?.id}
+        currentId={chosenVariantId}
         busy={busy || otherWorkActive}
         onPlay={setTrial}
         onReview={setVariantReview}
@@ -966,9 +1025,9 @@ export default function Studio() {
               .reverse()
               .map(showBatch)}
             {confirmation && (
-              <section className="chat-message" aria-label="Проверка результата">
-                <h3>Игра сохранена. Нужна ваша проверка</h3>
-                <p>Сыграйте в выбранную версию и проверьте эти условия:</p>
+              <details key={confirmationKey} className="chat-message game-plan">
+                <summary>Принять эту версию</summary>
+                <p>Сыграйте в выбранную версию и проверьте игровые условия.</p>
                 <ul>
                   {confirmation.requirements.map((item, index) => (
                     <li key={index}>{item}</li>
@@ -994,7 +1053,7 @@ export default function Studio() {
                 >
                   Подтвердить результат
                 </button>
-              </section>
+              </details>
             )}
             {!latestIsVariant && latestRun?.game_plan?.summary && (
               <details className="chat-message game-plan">
@@ -1026,8 +1085,8 @@ export default function Studio() {
               </details>
             )}
             {!latestIsVariant &&
-              latestRun?.game_plan?.summary &&
-              latestRun.can_continue &&
+              latestRun?.can_continue &&
+              (latestRun.game_plan?.summary || latestRun.error?.code === 'budget_exhausted') &&
               !revision &&
               !activeRun &&
               !pendingHere && (
@@ -1037,7 +1096,9 @@ export default function Studio() {
                   disabled={busy}
                   onClick={() => performRunAction('continue')}
                 >
-                  Продолжить создание по плану
+                  {latestRun.game_plan?.summary
+                    ? 'Продолжить создание по плану'
+                    : 'Продолжить создание'}
                 </button>
               )}
             {pendingHere && !savedSubmission && (
@@ -1149,15 +1210,11 @@ export default function Studio() {
                 <span>Шаблоны</span>
               </button>
               {activeRun && !latestIsVariant ? (
-                <button
-                  type="button"
-                  className="send-button stop-button"
+                <StopGenerationButton
+                  key={activeRun.id}
                   disabled={busy || !activeRun.can_cancel}
-                  aria-label="Остановить генерацию"
-                  onClick={() => void cancel()}
-                >
-                  <Square size={16} fill="currentColor" />
-                </button>
+                  onStop={() => void cancel(activeRun.id)}
+                />
               ) : (
                 <button
                   className="send-button"
@@ -1177,13 +1234,12 @@ export default function Studio() {
               )}
             </div>
           </div>
-          {modelProfile === 'pro' && fourVariants && (
-            <p className="variant-hint">
-              Четыре отдельных задания Pro. Расход учитывается за каждое.
-            </p>
-          )}
           {needsVariantChoice && !batchRunning && (
-            <p className="variant-hint">Выберите вариант, чтобы продолжить доработку.</p>
+            <p className="variant-hint">
+              {batches.some((batch) => batch.variants.some(canChooseVariant))
+                ? 'Выберите вариант, чтобы продолжить доработку.'
+                : 'Выберите версию в списке предпросмотра, чтобы продолжить доработку.'}
+            </p>
           )}
         </form>
         {templatePickerOpen && (
@@ -1219,6 +1275,15 @@ export default function Studio() {
           muted={soundMuted}
           onToggleSound={() => setSoundMuted((value) => !value)}
           onClose={() => setTrial(null)}
+          busy={busy || (!!activeRun && batchByRun.get(activeRun.id)?.id !== trialChoice?.batch.id)}
+          draft={!!trialChoice && playableVariantDraft(trialChoice.variant)}
+          onChoose={
+            trialChoice &&
+            canChooseVariant(trialChoice.variant) &&
+            trial.revision.id !== chosenVariantId
+              ? () => void chooseVariant(trialChoice.batch, trialChoice.variant)
+              : undefined
+          }
         />
       )}
       {variantReview && (

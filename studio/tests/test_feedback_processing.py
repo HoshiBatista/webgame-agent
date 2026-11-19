@@ -129,7 +129,7 @@ def test_model_is_snapshotted_from_account_not_chat_and_never_falls_back(client,
         save(client, account, model_profile='the-client-cannot-override-this')
     job = FeedbackProcessing.objects.get()
     assert job.model_profile == profile
-    assert (job.provider, job.model) == (('codex_api', 'gpt-6-sol') if profile == 'pro' else ('relay', 'configured-lite'))
+    assert (job.provider, job.model) == (('codex_api', 'gpt-6.2-sol') if profile == 'pro' else ('relay', 'configured-lite'))
     pref.model_profile = 'lite' if profile == 'pro' else 'pro'
     pref.save()
     job.refresh_from_db()

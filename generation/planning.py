@@ -102,18 +102,18 @@ def schema(request):
             'layouts': string(minLength=10, maxLength=350),
         })
         plan['required'].append('player_experience')
-    if request.get('pro_parallel') in {1, 2, 3, 4}:
+    if request.get('pro_parallel') in {1, 2, 3, 4, 5}:
         from .pro_parallel import CONTRACT
 
         plan = result['properties']['plan']['anyOf'][0]
         plan['properties']['resource_contract'] = deepcopy(CONTRACT)
         plan['required'].append('resource_contract')
-        if request['pro_parallel'] in {2, 3, 4}:
+        if request['pro_parallel'] in {2, 3, 4, 5}:
             from .pro_partition import PARTITION
 
             plan['properties']['gameplay_partition'] = deepcopy(PARTITION)
             plan['required'].append('gameplay_partition')
-        if request['pro_parallel'] in {3, 4}:
+        if request['pro_parallel'] in {3, 4, 5}:
             from .pro_creative import BRIEF
 
             plan['properties']['experience_direction'] = deepcopy(BRIEF)
@@ -129,7 +129,7 @@ def prompt(request):
     from .pro_partition import PLAN_GUIDANCE as PARTITION_GUIDANCE
     from .pro_staged import PLAN_GUIDANCE as STAGED_GUIDANCE
 
-    base = planning_base(PLAN_PROMPT) if request.get('pro_parallel') in {3, 4} else PLAN_PROMPT
+    base = planning_base(PLAN_PROMPT) if request.get('pro_parallel') in {3, 4, 5} else PLAN_PROMPT
     # The first agent provides a standard Pro interpretation. The others vary
     # only decisions the author left open. All four keep the same request.
     direction = {
@@ -147,14 +147,14 @@ def prompt(request):
         "\nLite: choose one core mechanic and at most one supporting mechanic. Keep rules explicit, implementation small, and the whole game complete."
     ) + (presentation.PLAN_GUIDANCE if presentation.enabled(request) else "") + (
         '\nplayer_experience: specify audience adaptations, original music/action sounds, touch/keyboard and portrait/landscape/desktop layouts. No stock assets, extra stage or full score. Preserve silence/static requests. Include a promise with category=control, viewport=desktop in the 3-8 promises: start AND play without any mouse/touch input. A desktop start promise does not replace this control promise. Each outcome example ends at the decisive winning/losing action; replay is separate. Invariants use regression. Audio quality/mood belongs in player_experience, not a pass/fail promise. Any explicit playback promise uses regression, never start/outcome/restart. Full checks can observe player musicPlaying/effectsPlayed; compact audio stays in player_experience.'
-        if enabled(request) else '') + (PLAN_GUIDANCE if request.get('pro_parallel') in {1, 2, 3, 4} else '') + (
-            PARTITION_GUIDANCE if request.get('pro_parallel') in {2, 3, 4} else '') + (
-            CREATIVE_GUIDANCE if request.get('pro_parallel') in {3, 4} else '') + (
-            STAGED_GUIDANCE if request.get('pro_parallel') == 4 else '')
+        if enabled(request) else '') + (PLAN_GUIDANCE if request.get('pro_parallel') in {1, 2, 3, 4, 5} else '') + (
+            PARTITION_GUIDANCE if request.get('pro_parallel') in {2, 3, 4, 5} else '') + (
+            CREATIVE_GUIDANCE if request.get('pro_parallel') in {3, 4, 5} else '') + (
+            STAGED_GUIDANCE if request.get('pro_parallel') in {4, 5} else '')
 
 
 def strategy(provider, model):
-    return "pro" if provider in {"codex", "codex_api"} and model in {"gpt-6-sol", "gpt-6.1-sol"} else "lite"
+    return "pro" if provider in {"codex", "codex_api"} and model in {"gpt-6-sol", "gpt-6.1-sol", "gpt-6.2-sol"} else "lite"
 
 
 def should_plan(profile, operation, prompt_text, *, provider="", model=""):
@@ -173,15 +173,15 @@ def validate_plan(response, request=None):
         return
     if not isinstance(plan, dict):
         raise ContractError('invalid_plan', 'Успешный замысел требует структуры плана.')
-    if (request or {}).get('pro_parallel') in {1, 2, 3, 4}:
+    if (request or {}).get('pro_parallel') in {1, 2, 3, 4, 5}:
         from .pro_parallel import validate_contract
 
         validate_contract(plan.get('resource_contract'))
-        if request['pro_parallel'] in {2, 3, 4}:
+        if request['pro_parallel'] in {2, 3, 4, 5}:
             from .pro_partition import validate_partition
 
             validate_partition(plan.get('gameplay_partition'))
-        if request['pro_parallel'] in {3, 4}:
+        if request['pro_parallel'] in {3, 4, 5}:
             from .pro_creative import validate_brief
 
             validate_brief(plan)

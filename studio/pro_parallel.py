@@ -30,17 +30,22 @@ def branch_request(run, role, error=None, *, responses=None, previous=None):
                    pro_parallel_plan_hash=digest(run.game_plan),
                    operation='create' if role in {'gameplay', 'scene'} else 'pro_' + role,
                    reasoning_effort='high')
-    if run.pro_parallel_version == 4 and role in {'gameplay', 'scene'}:
+    if run.pro_parallel_version in {4, 5} and role in {'gameplay', 'scene'}:
         from generation.pro_staged import completion_policy
 
         request['reasoning_effort'] = 'medium'
         completion = completion_policy(previous)
         if completion:
             request['response_completion'] = completion
-    if run.pro_parallel_version == 4 and role == 'checks':
+    if run.pro_parallel_version == 5 and role == 'audio':
+        request['reasoning_effort'] = 'medium'
+    if run.pro_parallel_version in {4, 5} and role == 'checks':
         from generation.pro_staged import source_context
 
-        request.update(source_context(responses, run.game_plan))
+        request.update(source_context(responses, run.game_plan, run.pro_parallel_version))
+        if (run.pro_parallel_version == 5 and run.model == 'gpt-6.2-sol'
+                and request['assets'].get('sounds')):
+            request['pro_audio_check_timing'] = 1
     if role in {'mechanics', 'scene'}:
         from generation.pro_partition import interface_hash
 
@@ -153,7 +158,7 @@ def advance(run, lease, generate, materialize):
             if role == 'checks' and any(r not in valid for r in roles if r != 'checks'):
                 continue
             failures = [c for c in calls if c.request['pro_parallel_branch'] == role and c.state == 'failed']
-            if run.pro_parallel_version == 4 and (len(failures) >= 3 or any(
+            if run.pro_parallel_version in {4, 5} and (len(failures) >= 3 or any(
                 c.request.get('response_completion') for c in failures
             ) or sum(
                 (c.error or {}).get('code') == 'response_output_limit' for c in failures
@@ -227,7 +232,7 @@ def advance(run, lease, generate, materialize):
             call = valid[source_author]
             call.state, call.error = 'failed', error_data(exc)
             call.save(update_fields=['state', 'error'])
-            if run.pro_parallel_version == 4 and 'checks' in valid:
+            if run.pro_parallel_version in {4, 5} and 'checks' in valid:
                 check_call = valid['checks']
                 check_call.state = 'failed'
                 check_call.error = {'code': 'parallel_source_changed', 'message': 'Исходники будут исправлены.'}

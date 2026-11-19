@@ -161,8 +161,8 @@ def generate(request, *, on_event, is_cancelled):
 def estimate_reservation(request, price):
     """Conservative one-inference liability, never a claimed actual charge.
 
-    Official limits for the currently verified Codex model profile (2026-10-18):
-    872k maximum context and 128k output. Tools and transport retries are disabled,
+    Verified Codex models have per-model input limits and 128k maximum output.
+    Tools and transport retries are disabled,
     so a product invocation cannot silently turn into an unbounded agent loop.
     Other paid providers must declare their bounds in the operator's tariff.
     """
@@ -176,8 +176,10 @@ def estimate_reservation(request, price):
     if not any(rates):
         return Decimal(0)
     model = request.get("model") or "gpt-6-luna"
-    if request.get("provider", "codex") in {"codex", "codex_api"} and model in {"gpt-6-luna", "gpt-6-sol", "gpt-6.1-sol"}:
-        context, output, input_factor, output_factor = 872000, 128000, Decimal(2), Decimal("1.5")
+    codex_input_limits = {"gpt-6-luna": 872000, "gpt-6-sol": 872000, "gpt-6.1-sol": 872000,
+                          "gpt-6.2-sol": 922000, "gpt-6.2-astra": 922000}
+    if request.get("provider", "codex") in {"codex", "codex_api"} and model in codex_input_limits:
+        context, output, input_factor, output_factor = codex_input_limits[model], 128000, Decimal(2), Decimal("1.5")
     else:
         context, output = price.get("context_window"), price.get("max_output_tokens")
         if type(context) is not int or type(output) is not int or not 0 < output < context:

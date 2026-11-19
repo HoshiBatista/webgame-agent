@@ -214,6 +214,7 @@ export interface GameVariant {
   status: RunStatus;
   stage: string;
   message: string;
+  error_code?: string;
   revision: Pick<
     Revision,
     'id' | 'title' | 'artifact_hash' | 'accepted' | 'preview_url' | 'export_url'

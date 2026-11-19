@@ -34,7 +34,7 @@ def test_reply_uses_the_model_text_only_for_a_verified_result():
     assert assistant_reply("succeeded", "Internal", "Соберите пять звёзд.", checks_passed=True) == (
         "Соберите пять звёзд. Выполненные проверки пройдены — можно пробовать играть."
     )
-    assert "подтвердить не удалось" in assistant_reply("succeeded", "Internal", "Всё проверено!")
+    assert assistant_reply("succeeded", "Internal", "Всё проверено!") == "Версия игры сохранена. Можно сыграть."
     reply = assistant_reply("unverified", "Подтвердите результат", "Всё проверено!", has_candidate=True)
     assert "сохранена" in reply
     assert "Всё проверено" not in reply
@@ -58,7 +58,7 @@ def test_server_evidence_has_priority_over_a_models_completion_message(model_sta
                                  response_status=model_status, error_code='manual_verification')
     assert 'временно недоступна' in unavailable and 'без изменения' in unavailable
     assert 'обнаруженные проблемы' in defect
-    assert 'полностью проверить' in uncertain
+    assert uncertain == 'Версия игры сохранена. Можно сыграть.'
     assert all('Всё готово' not in reply for reply in [unavailable, defect, uncertain])
 
 

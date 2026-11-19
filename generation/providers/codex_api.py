@@ -180,6 +180,9 @@ def fetch(request, *, cancel=False):
 def unpack(status, ident):
     receipt = status.get("receipt")
     if receipt is None:
+        if status.get("state") == "queued" and status.get("queue_paused") is True:
+            raise pending("codex_api_queue_paused", "Запуск новых заданий Pro приостановлен. "
+                          "Ваше задание сохранено и начнётся, когда очередь возобновит работу.")
         raise pending("codex_api_pending", "Pro создаёт ответ." if status.get("state") == "running"
                       else "Задание Pro сохранено. Ожидаем исполнителя.")
     try:

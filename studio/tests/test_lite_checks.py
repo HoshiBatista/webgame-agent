@@ -28,7 +28,7 @@ def test_causal_feedback_is_frozen_only_for_current_lite_artifact(workspace):
         assessment={'gates_passed': True, 'validator_hash': implementation_hash()},
     )
     req = request_for(run, base, findings)
-    assert req['operation'] == 'check_repair' and req['lite_checks_policy'] == 1
+    assert req['operation'] == 'check_repair' and req['lite_checks_policy'] == 2
     evidence = req['lite_causal_feedback']
     assert evidence['artifact_hash'] == base.artifact_hash and evidence['report_id'] == report.id
     assert evidence['comparisons'][0]['with_input']['after'] == 'playing'

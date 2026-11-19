@@ -5,23 +5,22 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 
-PRO_MODEL = "gpt-6-sol"
-
 
 def configured_profiles():
     default_api = settings.GAMEFORGE_PROVIDER in {"vllm", "relay"}
     return {
-        "pro": {"id": "pro", "name": "Pro", "description": "Codex · GPT-6 Sol",
-                "provider": settings.GAMEFORGE_PRO_PROVIDER, "model": PRO_MODEL},
-        "pro_multi": {"id": "pro_multi", "name": "Pro · эксперимент",
-                      "description": "Параллельные геймплей, графика и звук",
-                      "provider": settings.GAMEFORGE_PRO_PROVIDER, "model": PRO_MODEL},
+        "pro": {"id": "pro", "name": "Pro", "description": "Codex · GPT-6.2 Sol",
+                "provider": settings.GAMEFORGE_PRO_PROVIDER, "model": settings.GAMEFORGE_PRO_MODEL},
         "lite": {"id": "lite", "name": "Lite", "description": "Модель через API",
                  "provider": settings.GAMEFORGE_LITE_PROVIDER or (
                      settings.GAMEFORGE_PROVIDER if default_api else "vllm"),
                  "model": settings.GAMEFORGE_LITE_MODEL or (
                      settings.GAMEFORGE_MODEL if default_api else
                      os.environ.get("GAMEFORGE_VLLM_MODEL") or os.environ.get("LLM_MODEL", ""))},
+        "pro_multi": {"id": "pro_multi", "name": "Multiagent",
+                      "description": "После плана агенты параллельно создают геймплей, графику и звук.",
+                      "provider": settings.GAMEFORGE_PRO_PROVIDER,
+                      "model": settings.GAMEFORGE_PRO_PARALLEL_MODEL or settings.GAMEFORGE_PRO_MODEL},
     }
 
 
@@ -58,9 +57,9 @@ def can_use_pro(request):
 def unavailable_reason(profile, request=None):
     if profile["id"] == "pro_multi":
         if not settings.GAMEFORGE_PRO_PARALLEL_ENABLED:
-            return "Экспериментальная Pro не включена на этом сервере."
+            return "Режим Multiagent выключен на этом сервере."
         if profile["provider"] != "codex_api":
-            return "Для экспериментальной Pro нужен Pro API."
+            return "Для режима Multiagent нужен Pro API."
     if profile["id"] in {"pro", "pro_multi"}:
         if not settings.GAMEFORGE_PRO_ENABLED:
             return "Pro не включён на этом сервере."
@@ -71,14 +70,20 @@ def unavailable_reason(profile, request=None):
         if profile["provider"] == "codex_api":
             from generation.providers.codex_api import available_models
 
-            return "" if PRO_MODEL in {item["id"] for item in available_models()} else (
-                "Pro API пока недоступен. Ожидаем обновления подключения."
-            )
+            catalog = {item["id"]: item for item in available_models()}
+            if profile["model"] not in catalog:
+                return "Pro API пока недоступен. Ожидаем обновления подключения."
+            if profile["id"] == "pro_multi":
+                planner = settings.GAMEFORGE_PRO_PARALLEL_PLANNER_MODEL
+                if planner and not any(item["effort"] == "high"
+                                       for item in catalog.get(planner, {}).get("reasoning_efforts", [])):
+                    return "В Pro API пока недоступна выбранная модель планировщика с уровнем high."
+            return ""
         from generation.errors import GenerationError
         from generation.providers.codex import available_models, verify_cli_contract
 
-        if PRO_MODEL not in {item["id"] for item in available_models()}:
-            return "В подключённом Codex пока нет GPT-6 Sol."
+        if profile["model"] not in {item["id"] for item in available_models()}:
+            return "В подключённом Codex пока нет GPT-6.2 Sol."
         try:
             verify_cli_contract()
         except GenerationError as exc:

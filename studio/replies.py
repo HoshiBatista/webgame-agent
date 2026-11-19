@@ -3,6 +3,20 @@
 import re
 
 MAX_PLAYER_MESSAGE_LENGTH = 1000
+SAVED_GAME_REPLY = "Версия игры сохранена. Можно сыграть."
+BUDGET_EXHAUSTED_REPLY = (
+    "Доступного бюджета недостаточно для следующего шага генерации. "
+    "Запрос сохранён. Продолжить можно после пополнения или освобождения бюджета."
+)
+
+# Earlier releases persisted these system replies in the chat history.
+_OLDER_REVIEW_REPLIES = {
+    "Игра сохранена. Полную проверку подтвердить не удалось; попробуйте сыграть.",
+    "Версия игры сохранена, но её работу пока не удалось полностью проверить. Попробуйте сыграть. Если что-то нужно исправить, напишите об этом.",
+    "Игра сохранена. Проверьте отмеченные условия в preview и подтвердите результат.",
+    "Проверки исправлены, код игры сохранён. Проверьте игровые условия и подтвердите результат.",
+    "Игра сохранена. Не удалось подтвердить обязательные проверки; повторите проверку.",
+}
 
 # A conservative fallback for models that ignore the player-facing reply policy.
 # Do not partially redact a technical explanation into misleading fragments.
@@ -50,11 +64,13 @@ def assistant_reply(status, message, model_message="", *, has_candidate=False, r
         if checks_passed:
             result = model_message or ("Проверка игры завершена." if operation == "recheck" else "Игра готова.")
             return f"{result} Выполненные проверки пройдены — можно пробовать играть."
-        return "Игра сохранена. Полную проверку подтвердить не удалось; попробуйте сыграть."
+        return SAVED_GAME_REPLY
     if status == "unknown":
         return "Не удалось получить ответ полностью. Сохранённая игра осталась на месте. Можно отправить новый запрос."
     if status == "cancelled":
         return "Генерация остановлена. Сохранённые версии игры доступны в меню у поля ввода."
+    if error_code == "budget_exhausted":
+        return BUDGET_EXHAUSTED_REPLY
     if error_code == "test_only_change":
         return "Доработка пока не изменила саму игру. Сохранённая версия доступна; можно повторить её проверку или уточнить правку."
     if error_code == 'response_output_limit':
@@ -69,13 +85,28 @@ def assistant_reply(status, message, model_message="", *, has_candidate=False, r
         return "Игра сохранена. Проверка временно недоступна; повторите проверку без изменения игры."
     if has_candidate and error_code in {"repair_exhausted", "no_progress", "repair_regression"}:
         return "Версия игры сохранена, но обнаруженные проблемы не удалось исправить. Можно продолжить доработку." + (" Прежняя рабочая версия сохранена." if has_source else "")
+    if has_candidate and (status == "unverified" or (status == "needs_attention" and error_code == "check_review_required")):
+        return SAVED_GAME_REPLY
     if has_candidate:
-        return "Версия игры сохранена, но её работу пока не удалось полностью проверить. Попробуйте сыграть. Если что-то нужно исправить, напишите об этом."
+        return "Запрос не завершён. Сохранённая версия игры доступна для доработки."
     if status in {"failed", "needs_attention"}:
         if operation != "create" and has_source:
             return "Не удалось применить доработку. Предыдущая версия игры сохранена и доступна. Попробуйте уточнить правку."
         return "Не удалось завершить создание игры. Попробуйте уточнить запрос и отправить его ещё раз."
     return "Не удалось завершить запрос. Попробуйте ещё раз."
+
+
+def chat_message_content(message):
+    if message.role != "assistant" or not message.run_id:
+        return message.content
+    if (message.run.error or {}).get("code") == "budget_exhausted":
+        return BUDGET_EXHAUSTED_REPLY
+    if message.content in _OLDER_REVIEW_REPLIES or (
+        message.content.startswith("Исходники сохранены; проверьте игровые условия вручную.")
+        and message.content == message.run.message
+    ):
+        return run_reply(message.run)
+    return message.content
 
 
 def run_reply(run, model_message="", *, response_status=""):

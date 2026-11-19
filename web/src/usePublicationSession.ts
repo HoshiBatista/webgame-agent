@@ -57,8 +57,9 @@ export function usePublicationSession(
     const keepalive = item.final;
     item.final = false;
     try {
-      await request(opening ? item.path : `${item.path}${item.id}/`, {
+      await request<void>(opening ? item.path : `${item.path}${item.id}/`, {
         method: opening ? 'POST' : 'PUT',
+        headers: { Prefer: 'return=minimal' },
         body: JSON.stringify(
           opening
             ? {
@@ -69,7 +70,7 @@ export function usePublicationSession(
               }
             : { token: item.token, visible_ms: duration },
         ),
-        keepalive,
+        keepalive: opening || keepalive,
       });
       item.opened = true;
       if (!opening) item.sentMs = duration;
@@ -138,7 +139,7 @@ export function usePublicationSession(
       tick();
       const item = activeVisit();
       if (item) void send(item);
-    }, 5000);
+    }, 10000);
     document.addEventListener('visibilitychange', visibility);
     window.addEventListener('pagehide', flush);
     return () => {

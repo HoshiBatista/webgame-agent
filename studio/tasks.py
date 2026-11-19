@@ -390,6 +390,7 @@ def request_for(run, base, findings, last_attempt_error=None):
         from generation.planning import PROVENANCE_VERSION
 
         request["operation"] = "plan"
+        request["model"] = run.model_for("plan")
         request['plan_provenance'] = PROVENANCE_VERSION
         if run.variant_batch_id:
             request["variant_index"] = run.variant_index
@@ -522,6 +523,8 @@ def request_for(run, base, findings, last_attempt_error=None):
     if lite_wire_enabled(request) and request['operation'] == 'create' and not media_enabled(request):
         request['lite_code_blocks'] = 3
         request['lite_input_policy'] = 1
+        request['lite_keyboard_start'] = 1
+        request['lite_regression_touch'] = 1
     if lite_eligible(request) and request.get('lite_policy') == 2 and request['operation'] in {'create', 'edit', 'repair', 'check_repair'}:
         from generation.lite_checks import VERSION as LITE_CHECKS_VERSION
         from generation.lite_wait_budget import VERSION as LITE_WAIT_VERSION

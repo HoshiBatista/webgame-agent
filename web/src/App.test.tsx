@@ -367,6 +367,41 @@ it('does not let a delayed session refresh undo a saved model choice', async () 
 
 const guestSession: Session = { ...session, user: null };
 
+it('opens the model guide from the landing in the same tab', async () => {
+  vi.mocked(getSession).mockResolvedValue(guestSession);
+  setup('/');
+  const link = await screen.findByRole('link', { name: 'О моделях' });
+  expect(link).toHaveAttribute('href', '/info');
+  expect(link).not.toHaveAttribute('target');
+  fireEvent.click(link);
+  await screen.findByRole('heading', { level: 1, name: 'Модели beeGame' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/info$/);
+  for (const name of ['Pro', 'Lite', 'Multiagent', 'Четыре варианта одной игры']) {
+    expect(screen.getByRole('heading', { name })).toBeInTheDocument();
+  }
+  expect(document.title).toBe('Модели beeGame');
+});
+
+it('keeps signed-in readers in the studio when they follow a public guide link', async () => {
+  setup('/info#four-variants');
+  await screen.findByRole('heading', { level: 1, name: 'Модели beeGame' });
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/settings\/models#four-variants$/);
+  expect(screen.queryByRole('link', { name: 'Войти' })).not.toBeInTheDocument();
+});
+
+it('returns signed-in readers from the model guide to their current chat', async () => {
+  setup('/chats/one?revision=2#preview');
+  const link = await screen.findByRole('link', { name: 'О моделях' });
+  expect(link).not.toHaveAttribute('target');
+  fireEvent.click(link);
+  await screen.findByRole('heading', { level: 1, name: 'Модели beeGame' });
+  fireEvent.click(screen.getByRole('link', { name: 'Как работает режим 4×' }));
+  expect(screen.getByTestId('location')).toHaveTextContent(/^\/settings\/models#four-variants$/);
+  fireEvent.click(screen.getByRole('link', { name: 'Назад' }));
+  await screen.findByRole('heading', { name: 'Текущий чат' });
+  expect(screen.getByTestId('location').textContent).toBe('/chats/one?revision=2#preview');
+});
+
 it.each(['Войти', 'Создать свою игру'])('opens the login page from "%s"', async (label) => {
   vi.mocked(getSession).mockResolvedValue(guestSession);
   setup('/');

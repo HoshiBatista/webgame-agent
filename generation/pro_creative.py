@@ -205,7 +205,7 @@ An explicit new user request overrides the earlier creative additions.
 
 
 def enabled(request):
-    return request.get('pro_parallel') in {VERSION, 4}
+    return request.get('pro_parallel') in {VERSION, 4, 5}
 
 
 def validate_brief(plan):

@@ -8,6 +8,7 @@ import json
 import math
 import re
 from copy import deepcopy
+from typing import Any
 
 from jsonschema import Draft202012Validator
 
@@ -55,13 +56,27 @@ def require_keyboard_binding(reply, request):
         )
 
 
-def check_from_lines(check, *, timed=False, wait_budget_ms=10000):
+def check_from_lines(check, *, timed=False, wait_budget_ms=10000, keyboard_start=False, regression_touch=False):
     """Translate data-only input commands to the existing browser DSL."""
     result = deepcopy(check)
-    steps = []
+    steps: list[dict[str, Any]] = []
+    step: dict[str, Any]
     for line in check['steps']:
         action, _, value = line.partition(' ')
-        if action == 'checkpoint' and not value:
+        if keyboard_start and action == 'start_button':
+            target = re.fullmatch(r'(#[A-Za-z_][A-Za-z0-9_-]{0,79})(?: ([1-8]))?', value)
+            if not target or steps or check['viewport'] != 'desktop':
+                raise ContractError('invalid_lite_scenario',
+                                    'start_button требует #id реальной кнопки и 1–8 Tab первым шагом настольного сценария.')
+            # All three operations use the regular browser DSL, including in the
+            # counterfactual replay. No synthetic click or programmatic DOM focus.
+            steps.extend({'action': 'press', 'key': 'Tab'} for _ in range(int(target[2] or 1)))
+            steps.append({'action': 'assert', 'ms': 0,
+                          'observation': {'source': 'text', 'selector':
+                              target[1] + ':is(button,input[type=button],input[type=submit]):enabled:focus'},
+                          'expect': {'operator': 'visible', 'value': None}})
+            step = {'action': 'press', 'key': 'Enter'}
+        elif action == 'checkpoint' and not value:
             step = {'action': action}
         elif action in {'press', 'key_down', 'key_up'} and value:
             step = {'action': action, 'key': value}
@@ -73,6 +88,13 @@ def check_from_lines(check, *, timed=False, wait_budget_ms=10000):
                 if not 0 <= x <= 1 or not 0 <= y <= 1:
                     raise ContractError('invalid_lite_scenario', 'Координаты короткого tap/click — доли 0–1.')
                 step = {'action': action + '_fraction', 'selector': selector, 'x': x, 'y': y}
+            elif regression_touch and action == 'tap' and check.get('category') == 'regression':
+                # A real finger can touch a disabled control. Assert visibility
+                # before the native tap; the browser also hit-tests its centre.
+                steps.append({'action': 'assert', 'ms': 0,
+                              'observation': {'source': 'text', 'selector': value},
+                              'expect': {'operator': 'visible', 'value': None}})
+                step = {'action': 'tap_fraction', 'selector': value, 'x': 0.5, 'y': 0.5}
             else:
                 step = {'action': action, 'selector': value, 'x': None, 'y': None}
         elif action == 'wait' and re.fullmatch(r'\d{1,5}', value) and int(value) <= 10000:
@@ -260,6 +282,8 @@ def decode(reply, request, wire_schema):
     from .lite_wait_budget import enabled as long_waits
 
     result['checks'] = [check_from_lines(c, timed=request.get('lite_code_blocks') == 3,
+                                       keyboard_start=request.get('lite_keyboard_start') == 1,
+                                       regression_touch=request.get('lite_regression_touch') == 1,
                                        wait_budget_ms=MILLISECONDS if long_waits(request) else 10000)
                         for c in scenarios] if simple_checks(request) else scenarios
     if request['operation'] == 'create':
@@ -341,5 +365,11 @@ Use await_state during SETUP to wait for an actual plain state value. Command sy
 For direction buttons wired to click, use tap then wait for actual motion. hold_touch waits BEFORE releasing the finger and triggering click, so its duration does not advance motion in the newly chosen direction. Use it only when your source handles press/hold itself, not an ordinary click button.
 In landscape, add up the heights of every control row, action button, help text and gap below the header. A narrow vertical side panel often OVERFLOWS HEIGHT; reducing its width makes text wrap further. Use a horizontal control/action layout or a second panel column on short screens. Keep visible help text and controls within BOTH axes; overflow:hidden alone is not a layout fix.
 Size the panel for ALL states, including the longer paused/resume label, game-over status and grown score. Do not let action buttons wrap into extra vertical rows when a label changes. A fixed action grid and two side-by-side groups in landscape can reserve that space. Every button needs min-height:44px. If your game has pause/resume, include a mobile regression that starts, pauses, resizes to landscape, then verifies the actual paused state/progress; it checks the layout after the labels change as well as rotation. Do not add pause to a game merely to create this scenario.
+'''
+    if request.get('lite_keyboard_start') == 1:
+        text = text.replace('Commands: "press Enter",', 'Commands: "start_button #start",')
+        text += '''
+KEYBOARD START FOR THIS FORMAT
+Give the visible native Start button a simple id and make it the first enabled tab stop on the opening screen when the design permits. For desktop control, outcome, replay and regression routes starting through that button, the first command is "start_button #actualId". This presses a physical Tab, verifies the named native button actually has focus, and presses Enter. If there are preceding tab stops use "start_button #actualId 2" etc., counting physical Tab presses from the fresh page (1–8). Do not send an extra Enter or Space to start after this command. Example for a game advanced by Space: ["start_button #start","checkpoint","press Space","wait 100"]; observe the first actual progress value. On mobile start by tapping the real button. For a specific shortcut requested by the user, test that exact literal key directly and implement it in the game; "press Enter" at initial body focus tests an actual global Enter shortcut. A pointer action, the focus of a control, or the start transition alone never proves keyboard gameplay.
 '''
     return text

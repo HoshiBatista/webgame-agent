@@ -7,13 +7,13 @@ import type { Run } from './types';
 const run = { id: 'one', status: 'generating', elapsed_seconds: 7, model_profile: 'lite' } as Run;
 afterEach(() => vi.useRealTimers());
 
-it('labels the parallel experiment separately from ordinary Pro and Lite', () => {
+it('labels past and current multiagent runs by their stable profile ID', () => {
   render(
     <MemoryRouter>
-      <RunMessage run={{ ...run, model_profile: 'pro_multi' }} />
+      <RunMessage run={{ ...run, model_profile: 'pro_multi', model_label: 'Pro · эксперимент' }} />
     </MemoryRouter>,
   );
-  expect(screen.getByText(/Pro · эксперимент/)).toBeInTheDocument();
+  expect(screen.getByText('beeGame Multiagent')).toBeInTheDocument();
 });
 
 it('ticks every second between server responses and never moves backwards after polling', () => {
@@ -85,4 +85,16 @@ it.each([
   );
   expect(screen.getByRole('status')).toHaveTextContent(text);
   expect(screen.queryByText('Ожидаю начала работы…')).not.toBeInTheDocument();
+});
+
+it('shows the saved worker pause message in an ordinary Pro chat', () => {
+  const message = 'Запуск новых заданий Pro приостановлен.';
+  render(
+    <MemoryRouter>
+      <RunMessage
+        run={{ ...run, model_profile: 'pro', status: 'queued', stage: 'waiting_model', message }}
+      />
+    </MemoryRouter>,
+  );
+  expect(screen.getByRole('status')).toHaveTextContent(message);
 });

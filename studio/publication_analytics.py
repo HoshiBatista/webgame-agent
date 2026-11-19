@@ -21,12 +21,19 @@ from .services import DomainError
 
 MAX_SESSION_MS = 60 * 60 * 1000
 MAX_RECEIPT_GAP_MS = 15_000
+MIN_AVERAGED_SESSION_MS = 30_000
 HEX = re.compile(r"^[0-9a-f]{64}$")
+
+
+def with_session_stats(queryset):
+    durations = PlaySession.objects.filter(publication_id=OuterRef("pk"), visible_ms__gte=MIN_AVERAGED_SESSION_MS)
+    averages = durations.values("publication").annotate(value=Avg("visible_ms")).values("value")
+    return queryset.select_related("stats").annotate(average_visible_ms=Subquery(averages))
 
 
 def annotated_publications(queryset, user):
     ratings = PublicationRating.objects.filter(publication_id=OuterRef("pk")).order_by().values("publication")
-    queryset = queryset.select_related("stats").annotate(
+    queryset = with_session_stats(queryset).annotate(
         rating_average=Subquery(ratings.annotate(value=Avg("rating")).values("value")[:1]),
         ratings_count=Coalesce(Subquery(ratings.annotate(value=Count("pk")).values("value")[:1]),
                                Value(0), output_field=IntegerField()),
@@ -53,10 +60,12 @@ def rating_data(publication, user=None):
 
 
 def analytics_data(publication):
+    if not hasattr(publication, "average_visible_ms"):
+        publication = with_session_stats(Publication.objects).get(pk=publication.pk)
     stats = getattr(publication, "stats", None)
+    average = publication.average_visible_ms
     return {"opens": stats.opens if stats else 0,
-            "average_duration_seconds": round(stats.visible_ms / stats.opens / 1000, 1)
-            if stats and stats.opens else None,
+            "average_duration_seconds": round(average / 1000, 1) if average is not None else None,
             "successful_completions": stats.successful_completions if stats else None}
 
 
@@ -80,9 +89,14 @@ def available(publication):
     require_available_publication(publication)
 
 
-def session_data(session):
-    return {"session_id": str(session.pk), "visible_ms": session.visible_ms,
-            "expires_at": (session.created_at + timedelta(milliseconds=MAX_SESSION_MS)).isoformat()}
+def session_response(request, session, publication, *, status=200):
+    preferences = request.headers.get("Prefer", "").lower().split(",")
+    if any(preference.strip() == "return=minimal" for preference in preferences):
+        return Response(status=204, headers={"Preference-Applied": "return=minimal"})
+    return Response({
+        "session_id": str(session.pk), "visible_ms": session.visible_ms, "analytics": analytics_data(publication),
+        "expires_at": (session.created_at + timedelta(milliseconds=MAX_SESSION_MS)).isoformat(),
+    }, status=status)
 
 
 @api_view(["POST"])
@@ -104,7 +118,7 @@ def open_session_view(request, ident):
         if (existing.publication_id != publication.pk or existing.revision_id_snapshot != revision_id
                 or existing.artifact_hash != artifact_hash or not hmac.compare_digest(existing.token_hash, secret)):
             raise DomainError("play_session_conflict", "Этот сеанс относится к другому открытию игры.", 409)
-        return Response(session_data(existing))
+        return session_response(request, existing, publication)
     if revision_id != publication.revision_id or artifact_hash != publication.revision.artifact_hash:
         raise DomainError("publication_changed", "Версия публикации обновилась. Откройте игру заново.", 409)
     now = timezone.now()
@@ -117,9 +131,9 @@ def open_session_view(request, ident):
                 created_at=now, last_received_at=now)
     except IntegrityError as exc:
         raise DomainError("play_session_conflict", "Этот сеанс уже используется.", 409) from exc
-    PublicationStats.objects.get_or_create(publication=publication)
+    PublicationStats.objects.get_or_create(publication_id=publication.pk)
     PublicationStats.objects.filter(publication=publication).update(opens=F("opens") + 1)
-    return Response(session_data(session), status=201)
+    return session_response(request, session, publication, status=201)
 
 
 @api_view(["PUT"])
@@ -151,7 +165,7 @@ def update_session_view(request, ident, session_id):
         session.visible_ms += delta
         session.save(update_fields=["reported_ms", "last_received_at", "visible_ms"])
         PublicationStats.objects.filter(publication=publication).update(visible_ms=F("visible_ms") + delta)
-    return Response(session_data(session))
+    return session_response(request, session, publication)
 
 
 @api_view(["PUT"])

@@ -107,13 +107,14 @@ CELERY_BEAT_SCHEDULE = {
     "codex-api-catalog": {"task": "studio.tasks.refresh_codex_api_catalog", "schedule": 60.0,
                           "options": {"expires": 60}},
 }
+GAMEFORGE_PRO_MODEL = "gpt-6.2-sol"
 GAMEFORGE_PROVIDER = os.environ.get("GAMEFORGE_PROVIDER", "fake")
 GAMEFORGE_MODEL = os.environ.get("GAMEFORGE_MODEL") or (
     "fixture"
     if GAMEFORGE_PROVIDER == "fake"
     else (os.environ.get("GAMEFORGE_VLLM_MODEL") or os.environ.get("LLM_MODEL", ""))
     if GAMEFORGE_PROVIDER in {"vllm", "relay"}
-    else "gpt-6-sol" if GAMEFORGE_PROVIDER == "codex_api" else "gpt-6-luna"
+    else GAMEFORGE_PRO_MODEL if GAMEFORGE_PROVIDER == "codex_api" else "gpt-6-luna"
 )
 GAMEFORGE_PREVIEW_ORIGIN = os.environ.get("GAMEFORGE_PREVIEW_ORIGIN", "http://localhost:8001").rstrip("/")
 GAMEFORGE_APP_ORIGIN = os.environ.get("GAMEFORGE_APP_ORIGIN", "http://127.0.0.1:8000").rstrip("/")
@@ -131,6 +132,8 @@ GAMEFORGE_LOCAL_ONLY = os.environ.get("GAMEFORGE_LOCAL_ONLY", "1") == "1"
 # Pro is opt-in. The default remains local-only; a trusted cloud installation
 # can allow all active accounts over HTTPS, or an explicitly restricted list.
 GAMEFORGE_PRO_ENABLED = os.environ.get("GAMEFORGE_PRO_ENABLED", "0") == "1"
+GAMEFORGE_PRO_PARALLEL_MODEL = os.environ.get("GAMEFORGE_PRO_PARALLEL_MODEL", GAMEFORGE_PRO_MODEL)
+GAMEFORGE_PRO_PARALLEL_PLANNER_MODEL = os.environ.get("GAMEFORGE_PRO_PARALLEL_PLANNER_MODEL", "gpt-6.2-astra")
 GAMEFORGE_PRO_PROVIDER = os.environ.get(
     "GAMEFORGE_PRO_PROVIDER", "codex_api" if GAMEFORGE_PROVIDER == "codex_api" else "codex"
 )

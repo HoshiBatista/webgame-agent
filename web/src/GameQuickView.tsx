@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ArrowUpRight, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { ArrowUpRight, ChevronDown, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { GameFrame, Modal, SoundButton, Spinner } from './components';
-import type { Publication, PublicationRating } from './types';
+import { ErrorNotice, GameFrame, Modal, SoundButton, Spinner } from './components';
+import type { Publication } from './types';
 import { PublicationMetrics, PublicationStars, RatingSummary } from './PublicationMetrics';
+import { usePublicationSnapshot } from './usePublicationSnapshot';
 
 const screens = [
   { label: 'Вертикально', width: 390, height: 844, Icon: Smartphone },
@@ -11,18 +12,45 @@ const screens = [
   { label: 'Компьютер', width: 1280, height: 800, Icon: Monitor },
 ] as const;
 
-export default function GameQuickView({
-  game,
-  onClose,
-  onRatingChange,
-}: {
+type PlayerProps = {
   game: Publication;
   onClose: () => void;
-  onRatingChange?: (rating: PublicationRating) => void;
-}) {
+};
+
+export default function GameQuickView({ game, onClose }: PlayerProps) {
+  const snapshot = usePublicationSnapshot(game.id, game);
+  useEffect(() => {
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, []);
+  return (
+    <Modal
+      title={snapshot?.game?.title ?? game.title}
+      onClose={onClose}
+      className="game-quick-view"
+    >
+      {snapshot?.game ? (
+        <QuickViewPlayer game={snapshot.game} onClose={onClose} />
+      ) : snapshot?.error ? (
+        <ErrorNotice message={snapshot.error} />
+      ) : (
+        <div className="quick-view-stage">
+          <Spinner text="Открываем игру…" />
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function QuickViewPlayer({ game, onClose }: PlayerProps) {
   const [mode, setMode] = useState(0);
   const [muted, setMuted] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsId = useId();
   const stage = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
@@ -34,20 +62,13 @@ export default function GameQuickView({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  useEffect(() => {
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = overflow;
-    };
-  }, []);
   const screen = screens[mode];
   const scale = Math.max(
     0,
     Math.min(1, (size.width - 24) / screen.width, (size.height - 24) / screen.height),
   );
   return (
-    <Modal title={game.title} onClose={onClose} className="game-quick-view">
+    <>
       <div className="quick-view-controls">
         <div className="quick-view-modes" role="group" aria-label="Вид экрана">
           {screens.map(({ label, Icon }, index) => (
@@ -99,15 +120,32 @@ export default function GameQuickView({
           />
         </div>
       </div>
-      <details className="quick-view-details">
-        <summary>
-          Оценка и статистика <RatingSummary game={game} />
-        </summary>
-        <div className="quick-view-detail-content">
-          <PublicationMetrics game={game} />
-          <PublicationStars game={game} onChange={onRatingChange} />
+      <div className="quick-view-details">
+        <button
+          className="quick-view-details-toggle"
+          type="button"
+          aria-expanded={detailsOpen}
+          aria-controls={detailsId}
+          onClick={() => setDetailsOpen((open) => !open)}
+        >
+          <ChevronDown size={16} aria-hidden="true" />
+          <span>Оценка и статистика</span>
+          <RatingSummary game={game} />
+        </button>
+        <div
+          id={detailsId}
+          className="quick-view-detail-reveal"
+          inert={!detailsOpen}
+          aria-hidden={!detailsOpen}
+        >
+          <div className="quick-view-detail-clip">
+            <div className="quick-view-detail-content">
+              <PublicationMetrics game={game} />
+              <PublicationStars game={game} />
+            </div>
+          </div>
         </div>
-      </details>
+      </div>
       <div className="quick-view-footer">
         <p>
           <span className="avatar-small">{game.author.username.slice(0, 1).toUpperCase()}</span>
@@ -117,6 +155,6 @@ export default function GameQuickView({
           Открыть игру <ArrowUpRight size={17} />
         </Link>
       </div>
-    </Modal>
+    </>
   );
 }

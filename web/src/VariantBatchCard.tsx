@@ -1,7 +1,8 @@
-import { Check, Play, Square } from 'lucide-react';
+import { Check, Play } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { errorText, post, request } from './api';
 import { ErrorNotice, GameFrame, Modal, SoundButton, Spinner } from './components';
+import StopGenerationButton from './StopGenerationButton';
 import type { GameVariant, Run, RunStatus, VariantBatch } from './types';
 
 const statusLabel: Record<RunStatus, string> = {
@@ -18,6 +19,40 @@ const statusLabel: Record<RunStatus, string> = {
 
 export function variantRunning(variant: GameVariant) {
   return ['queued', 'generating', 'checking'].includes(variant.status);
+}
+
+export function playableVariantDraft(variant: GameVariant) {
+  return (
+    !!variant.revision &&
+    !variant.revision.accepted &&
+    (variant.status === 'unverified' ||
+      (variant.status === 'needs_attention' &&
+        (variant.can_confirm || variant.error_code === 'check_review_required')))
+  );
+}
+
+export function canChooseVariant(variant: GameVariant) {
+  return (
+    (variant.status === 'succeeded' && !!variant.revision?.accepted) ||
+    playableVariantDraft(variant)
+  );
+}
+
+function activeStatus(variant: GameVariant) {
+  switch (variant.stage) {
+    case 'waiting_model':
+      return variant.message || 'Ожидание ответа модели';
+    case 'waiting_admin':
+      return variant.message || 'Ожидание восстановления подключения к модели';
+    case 'waiting_capacity':
+      return 'В очереди · все места заняты';
+    case 'planning':
+      return 'Создаётся план игры';
+    case 'repairing_checks':
+      return 'Уточняются игровые сценарии';
+    default:
+      return statusLabel[variant.status];
+  }
 }
 
 export function VariantBatchCard({
@@ -37,12 +72,12 @@ export function VariantBatchCard({
   onCancel: (runId: string) => void;
   onReview: (variant: GameVariant) => void;
 }) {
-  const ready = batch.variants.filter((variant) => variant.revision?.accepted).length;
+  const ready = batch.variants.filter(canChooseVariant).length;
   return (
     <section className="variant-batch" aria-label="Варианты игры">
       <header>
         <h3>Варианты игры</h3>
-        <span role="status">Готово {ready} из 4</span>
+        <span role="status">Доступно для игры {ready} из 4</span>
       </header>
       <ul>
         {batch.variants.map((variant) => {
@@ -50,6 +85,7 @@ export function VariantBatchCard({
           const selected = !!revision && revision.id === currentId;
           const chosenInBatch = !!revision && revision.id === batch.selected_revision_id;
           const running = variantRunning(variant);
+          const playableDraft = playableVariantDraft(variant);
           return (
             <li
               key={variant.index}
@@ -60,15 +96,26 @@ export function VariantBatchCard({
                 <small>Вариант {variant.index}</small>
                 {revision && <strong>{revision.title}</strong>}
                 <span className="variant-status">
-                  {selected || chosenInBatch ? (
+                  {running ? (
+                    activeStatus(variant)
+                  ) : selected || chosenInBatch ? (
                     <>
-                      <Check size={14} /> {selected ? 'Текущая версия' : 'Выбран в этой серии'}
+                      <Check size={14} />{' '}
+                      {selected
+                        ? playableDraft
+                          ? 'Выбран для доработки'
+                          : 'Текущая версия'
+                        : 'Выбран в этой серии'}
                     </>
+                  ) : playableDraft ? (
+                    'Можно сыграть'
                   ) : (
                     statusLabel[variant.status]
                   )}
                 </span>
-                {!running && !revision?.accepted && variant.message && <p>{variant.message}</p>}
+                {!running && !playableDraft && !revision?.accepted && variant.message && (
+                  <p>{variant.message}</p>
+                )}
               </div>
               <div className="variant-actions">
                 {revision && (
@@ -81,15 +128,15 @@ export function VariantBatchCard({
                     <Play size={14} /> Играть
                   </button>
                 )}
-                {revision?.accepted && !selected && (
+                {canChooseVariant(variant) && !selected && (
                   <button
                     type="button"
                     className="button button-small button-outline"
-                    aria-label={`Выбрать вариант ${variant.index}`}
+                    aria-label={`Выбрать вариант ${variant.index}${playableDraft ? ' для доработки' : ''}`}
                     disabled={busy}
                     onClick={() => onChoose(variant)}
                   >
-                    Выбрать
+                    {playableDraft ? 'Для доработки' : 'Выбрать'}
                   </button>
                 )}
                 {revision && !revision.accepted && variant.can_confirm && (
@@ -104,16 +151,12 @@ export function VariantBatchCard({
                   </button>
                 )}
                 {running && (
-                  <button
-                    type="button"
-                    className="icon-button"
+                  <StopGenerationButton
+                    key={variant.run_id}
+                    variantIndex={variant.index}
                     disabled={busy}
-                    aria-label={`Остановить вариант ${variant.index}`}
-                    title="Остановить вариант"
-                    onClick={() => onCancel(variant.run_id)}
-                  >
-                    <Square size={14} />
-                  </button>
+                    onStop={() => onCancel(variant.run_id)}
+                  />
                 )}
               </div>
             </li>
@@ -222,12 +265,18 @@ export function VariantPreview({
   muted,
   onToggleSound,
   onClose,
+  onChoose,
+  busy,
+  draft,
 }: {
   index: number;
   revision: NonNullable<GameVariant['revision']>;
   muted: boolean;
   onToggleSound: () => void;
   onClose: () => void;
+  onChoose?: () => void;
+  busy: boolean;
+  draft: boolean;
 }) {
   return (
     <Modal
@@ -247,6 +296,17 @@ export function VariantPreview({
         <button className="button button-small button-outline" onClick={onClose}>
           К вариантам
         </button>
+        {onChoose && (
+          <button
+            type="button"
+            className="button button-small button-primary"
+            disabled={busy}
+            onClick={onChoose}
+          >
+            Выбрать вариант {index}
+            {draft ? ' для доработки' : ''}
+          </button>
+        )}
       </div>
     </Modal>
   );

@@ -249,17 +249,7 @@ export default function Feed() {
         </div>
       )}
       {preview && (
-        <GameQuickView
-          key={preview.id}
-          game={preview}
-          onClose={() => setPreview(null)}
-          onRatingChange={(rating) => {
-            setGames((current) =>
-              current.map((game) => (game.id === preview.id ? { ...game, ...rating } : game)),
-            );
-            setPreview((current) => (current ? { ...current, ...rating } : current));
-          }}
-        />
+        <GameQuickView key={preview.id} game={preview} onClose={() => setPreview(null)} />
       )}
       {editing && (
         <Modal title="Название в ленте" onClose={() => setEditing(null)}>
