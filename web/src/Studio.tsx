@@ -409,6 +409,22 @@ export default function Studio() {
       : current?.id;
   const needsVariantChoice =
     !revision && batches.some((batch) => batch.variants.some((variant) => variant.revision));
+  const activeBatch = activeRun ? batchByRun.get(activeRun.id) : undefined;
+  let composerPlaceholder = revision
+    ? 'Что изменим? Например, добавим пару уровней…'
+    : 'Опишите вашу мини-игру…';
+  if (
+    needsVariantChoice &&
+    batches.some(
+      (batch) => (!activeRun || batch === activeBatch) && batch.variants.some(canChooseVariant),
+    )
+  ) {
+    composerPlaceholder = 'Выберите вариант, чтобы продолжить доработку.';
+  } else if (batchRunning) {
+    composerPlaceholder = 'Идёт генерация вариантов…';
+  } else if (needsVariantChoice) {
+    composerPlaceholder = 'Выберите версию в списке предпросмотра, чтобы продолжить доработку.';
+  }
   const composingBlocked =
     busy ||
     (isNew && !!view.current.nextId) ||
@@ -910,7 +926,7 @@ export default function Studio() {
       </div>
     );
   function showBatch(batch: VariantBatch) {
-    const otherWorkActive = !!activeRun && !batch.variants.some((v) => v.run_id === activeRun.id);
+    const otherWorkActive = !!activeRun && batch !== activeBatch;
     return (
       <VariantBatchCard
         key={batch.id}
@@ -1232,11 +1248,7 @@ export default function Studio() {
               aria-label={revision ? 'Что изменить в игре' : 'Описание вашей игры'}
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
-              placeholder={
-                revision
-                  ? 'Что изменим? Например, добавим пару уровней…'
-                  : 'Опишите вашу мини-игру…'
-              }
+              placeholder={composerPlaceholder}
               rows={3}
               disabled={composingBlocked}
               onKeyDown={(event) => {
@@ -1317,13 +1329,6 @@ export default function Studio() {
               )}
             </div>
           </div>
-          {needsVariantChoice && !batchRunning && (
-            <p className="variant-hint">
-              {batches.some((batch) => batch.variants.some(canChooseVariant))
-                ? 'Выберите вариант, чтобы продолжить доработку.'
-                : 'Выберите версию в списке предпросмотра, чтобы продолжить доработку.'}
-            </p>
-          )}
         </form>
         {templatePickerOpen && (
           <TemplatePicker onClose={() => setTemplatePickerOpen(false)} onChoose={chooseTemplate} />
@@ -1361,7 +1366,7 @@ export default function Studio() {
           busy={
             busy ||
             (!!trialChoice && recordingDraftChoices.includes(trialChoice.batch.id)) ||
-            (!!activeRun && batchByRun.get(activeRun.id)?.id !== trialChoice?.batch.id)
+            (!!activeRun && activeBatch?.id !== trialChoice?.batch.id)
           }
           draft={!!trialChoice && playableVariantDraft(trialChoice.variant)}
           onChoose={

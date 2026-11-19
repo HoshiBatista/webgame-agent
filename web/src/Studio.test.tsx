@@ -1470,6 +1470,66 @@ describe('four ordinary Pro variants', () => {
       expect(within(row).getByText(label)).toBeInTheDocument();
     }
   });
+  it('changes the composer placeholder as playable variants arrive and the author chooses one', async () => {
+    const group = batch();
+    const waiting: VariantBatch = {
+      ...group,
+      variants: group.variants.map((variant) => ({
+        ...variant,
+        status: 'checking',
+        revision: null,
+      })),
+    };
+    waiting.variants[0].revision = { ...games[0], accepted: false };
+    let saved = detail(waiting);
+    vi.mocked(request).mockImplementation(async () => saved);
+    vi.mocked(post).mockImplementation(async () => {
+      saved = { ...saved, current_revision: games[1] };
+      return saved;
+    });
+    setup(undefined, undefined, profile('pro'));
+    const generating = 'Идёт генерация вариантов…';
+    const choose = 'Выберите вариант, чтобы продолжить доработку.';
+    const edit = 'Что изменим? Например, добавим пару уровней…';
+    const field = await screen.findByPlaceholderText(generating);
+    expect(field).toBeDisabled();
+    saved = detail({
+      ...waiting,
+      variants: waiting.variants.map((v) => (v.index === 2 ? group.variants[1] : v)),
+    });
+    act(() => window.dispatchEvent(new Event('focus')));
+    expect(await screen.findByPlaceholderText(choose)).toBe(field);
+    expect(screen.queryByText(choose)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Выбрать вариант 2' }));
+    expect(await screen.findByPlaceholderText(generating)).toBeDisabled();
+    saved = detail(group, games[1]);
+    act(() => window.dispatchEvent(new Event('focus')));
+    expect(await screen.findByPlaceholderText(edit)).toBeEnabled();
+  });
+  it('points to the version selector when a finished batch only has a saved failed build', async () => {
+    const group = batch();
+    const draft = { ...games[0], accepted: false };
+    group.variants = group.variants.map((variant) => ({
+      ...variant,
+      status: 'failed',
+      revision: variant.index === 1 ? draft : null,
+    }));
+    vi.mocked(request).mockResolvedValue({ ...detail(group), revisions: [draft] });
+    setup(undefined, undefined, profile('pro'));
+    const hint = 'Выберите версию в списке предпросмотра, чтобы продолжить доработку.';
+    expect(await screen.findByPlaceholderText(hint)).toBeDisabled();
+    expect(screen.queryByText(hint)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Действия с игрой' }));
+    fireEvent.change(
+      within(screen.getByRole('group', { name: 'Инструменты игры' })).getByLabelText('Версия игры'),
+      {
+        target: { value: draft.id },
+      },
+    );
+    expect(
+      screen.getByPlaceholderText('Что изменим? Например, добавим пару уровней…'),
+    ).toBeEnabled();
+  });
   it.each(['lite', 'pro_multi'])(
     'offers the checkbox only for ordinary Pro, not %s',
     async (id) => {
@@ -1693,9 +1753,20 @@ describe('four ordinary Pro variants', () => {
     expect(screen.getByRole('textbox')).toBeDisabled();
     for (const [i, game] of games.entries()) {
       fireEvent.click(within(list).getByRole('button', { name: `Играть в вариант ${i + 1}` }));
-      const player = within(screen.getByRole('dialog')).getByTitle(game.title);
+      const preview = within(screen.getByRole('dialog'));
+      const player = preview.getByTitle(game.title);
       expect(player).toHaveAttribute('src', game.preview_url + '?audio_control=1');
       expect(player).toHaveAttribute('sandbox', 'allow-scripts');
+      const sound = preview.getByRole('button', { name: 'Выключить звук' });
+      expect(sound.textContent).toBe('');
+      expect(sound).toHaveAttribute('title', 'Выключить звук');
+      fireEvent.click(sound);
+      expect(sound).toHaveAccessibleName('Включить звук');
+      expect(sound).toHaveAttribute('title', 'Включить звук');
+      expect(sound).toHaveAttribute('aria-pressed', 'false');
+      expect(sound.textContent).toBe('');
+      fireEvent.click(sound);
+      expect(sound).toHaveAttribute('aria-pressed', 'true');
       fireEvent.click(screen.getByRole('button', { name: 'К вариантам' }));
     }
     expect(post).not.toHaveBeenCalled();

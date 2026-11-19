@@ -95,6 +95,7 @@ export function VariantBatchCard({
           const chosenInBatch = !!revision && revision.id === batch.selected_revision_id;
           const running = variantRunning(variant);
           const playableDraft = playableVariantDraft(variant);
+          const playable = canChooseVariant(variant);
           return (
             <li
               key={variant.index}
@@ -127,17 +128,21 @@ export function VariantBatchCard({
                 )}
               </div>
               <div className="variant-actions">
-                {revision && (
+                {revision && !running && (
                   <button
                     type="button"
                     className="button button-small button-outline"
-                    aria-label={`Играть в вариант ${variant.index}`}
+                    aria-label={
+                      playable
+                        ? `Играть в вариант ${variant.index}`
+                        : `Предпросмотр варианта ${variant.index}`
+                    }
                     onClick={() => onPlay(variant)}
                   >
-                    <Play size={14} /> Играть
+                    <Play size={14} /> {playable ? 'Играть' : 'Предпросмотр'}
                   </button>
                 )}
-                {canChooseVariant(variant) && !selected && (
+                {playable && !selected && (
                   <button
                     type="button"
                     className="button button-small button-outline"
@@ -301,7 +306,7 @@ export function VariantPreview({
         onEscape={onClose}
       />
       <div className="variant-preview-footer">
-        <SoundButton muted={muted} onToggle={onToggleSound} label />
+        <SoundButton muted={muted} onToggle={onToggleSound} />
         <button className="button button-small button-outline" onClick={onClose}>
           К вариантам
         </button>
