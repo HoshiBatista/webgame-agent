@@ -8,7 +8,9 @@ from threading import Barrier
 from unittest.mock import patch
 
 import pytest
-from django.db import close_old_connections, connections
+from django.db import close_old_connections, connection, connections
+from django.db.migrations.exceptions import IrreversibleError
+from django.db.migrations.executor import MigrationExecutor
 from django.test import Client
 
 from generation.prompts import system_prompt
@@ -371,9 +373,11 @@ def test_owner_boundary_and_explicit_pro_are_checked_before_new_work(client, wor
 
 
 def test_experiment_defaults_on_and_retries_preserve_assignment(client, workspace):
-    hint = {'text': 'Сначала предложи короткую цель.', 'hint_key': 'first_goal'}
-    with (patch('studio.analytics_hints.choose_analytics_hint', return_value=hint) as lookup,
-          patch('studio.variants.secrets.randbelow', return_value=2) as draw):
+    hints = [{'text': 'Добавь волны врагов.', 'hint_key': 'enemy_waves'},
+             {'text': 'Дай выбрать маршрут.', 'hint_key': 'route_choice'},
+             {'text': 'Предложи улучшение.', 'hint_key': 'resource_upgrade'}]
+    with (patch('studio.analytics_hints.choose_analytics_hints', return_value=hints) as lookup,
+          patch('studio.variants.secrets.SystemRandom.sample', return_value=[3, 1, 2]) as draw):
         clients = [Client() for _ in range(2)]
         for instance in clients:
             instance.force_login(workspace.owner)
@@ -385,14 +389,17 @@ def test_experiment_defaults_on_and_retries_preserve_assignment(client, workspac
 
         first, retry = concurrently(clients, submit_experiment)
         assert first == retry
-        assert first['analytics_experiment'] == {'status': 'applied'}
+        assert first['analytics_experiment'] == {'status': 'applied', 'hint_count': 3}
         experiment = VariantAnalyticsExperiment.objects.get(batch_id=first['id'])
-        assert experiment.hint_variant_index == 3 and experiment.hint == hint
+        assert experiment.protocol_version == 2
+        assert dict(experiment.assignments.values_list('variant_index', 'hint')) == {
+            3: hints[0], 1: hints[1], 2: hints[2],
+        }
         assert experiment.first_choice_at is None
         assert create_batch(client, workspace, analytics_experiment=True) == first
         assert submit(client, workspace, analytics_experiment=False).status_code == 409
         lookup.assert_called_once_with(prompt=PROMPT, audience='everyone')
-        draw.assert_called_once_with(4)
+        draw.assert_called_once_with(range(1, 5), k=3)
         ordinary = Chat.objects.create(owner=workspace.owner)
         for bad in ('true', 1, None, {}):
             assert submit(client, ordinary, analytics_experiment=bad).status_code == 400
@@ -406,14 +413,14 @@ def test_experiment_defaults_on_and_retries_preserve_assignment(client, workspac
         assert create_batch(client, ordinary, analytics_experiment=False)['id'] == normal['id']
         assert submit(client, ordinary, analytics_experiment=True).status_code == 409
         lookup.assert_called_once()
-    with (patch('studio.analytics_hints.choose_analytics_hint', return_value=None) as lookup,
-          patch('studio.variants.secrets.randbelow') as draw):
+    with (patch('studio.analytics_hints.choose_analytics_hints', return_value=[]) as lookup,
+          patch('studio.variants.secrets.SystemRandom.sample') as draw):
         empty = Chat.objects.create(owner=workspace.owner)
         result = create_batch(client, empty)
-        assert result['analytics_experiment'] == {'status': 'insufficient_data'}
+        assert result['analytics_experiment'] == {'status': 'insufficient_data', 'hint_count': 0}
         assert len(result['variants']) == 4
         experiment = VariantAnalyticsExperiment.objects.get(batch_id=result['id'])
-        assert experiment.hint is None and experiment.hint_variant_index is None
+        assert not experiment.assignments.exists()
         assert create_batch(client, empty, analytics_experiment=True) == result
         lookup.assert_called_once()
         draw.assert_not_called()
@@ -429,11 +436,71 @@ def test_experiment_rejects_edits_without_creating_jobs(client, workspace):
     assert response.status_code == 400 and response.json()['error']['code'] == 'invalid_analytics_experiment'
     assert not workspace.runs.exists() and not workspace.variant_batches.exists()
     assert not workspace.messages.exists() and not Outbox.objects.exists()
-    with patch('studio.analytics_hints.choose_analytics_hint') as lookup:
+    with patch('studio.analytics_hints.choose_analytics_hints') as lookup:
         edit = create_batch(client, workspace, source_revision_id=str(revision.pk), source_artifact_hash=revision.artifact_hash)
         assert 'analytics_experiment' not in edit
         assert workspace.runs.filter(operation='edit').count() == 4
         lookup.assert_not_called()
+
+
+@pytest.mark.parametrize('hint_count', [1, 2, 3])
+def test_hint_count_controls_only_the_assigned_plans(client, workspace, hint_count):
+    hints = [{'hint_key': key, 'text': key} for key in ['enemy_waves', 'route_choice', 'resource_upgrade'][:hint_count]]
+    with patch('studio.analytics_hints.choose_analytics_hints', return_value=hints):
+        batch = create_batch(client, workspace)
+    assert batch['analytics_experiment'] == {'status': 'applied', 'hint_count': hint_count}
+    trial = VariantAnalyticsExperiment.objects.get(pk=batch['id'])
+    by_slot = dict(trial.assignments.values_list('variant_index', 'hint'))
+    assert sorted(h['hint_key'] for h in by_slot.values()) == sorted(h['hint_key'] for h in hints)
+    for run in workspace.runs.all():
+        original = request_for(run, None, [])
+        request = reserve_invocation(run, original).request
+        assert original['variant_index'] == run.variant_index
+        assert 'variant_index' not in request
+        suggested = request.get('design', {}).get('optional_analytics_hint')
+        if run.variant_index in by_slot:
+            assert suggested['suggestion'] == by_slot[run.variant_index]['text']
+            assert 'origin=design' in suggested['guidance']
+        else:
+            assert suggested is None
+
+
+def test_migrating_a_queued_legacy_batch_preserves_its_plans_and_first_choice(client, workspace):
+    batch = create_batch(client, workspace, analytics_experiment=False)
+    hint = {'hint_key': 'enemy_waves', 'text': 'Волны противников', 'source_publication_id': 'legacy-source'}
+    executor = MigrationExecutor(connection)
+    current = executor.loader.graph.leaf_nodes()
+    legacy = [('studio', '0030_variant_analytics_experiment')]
+    try:
+        executor.migrate(legacy)
+        old_models = executor.loader.project_state(legacy).apps
+        old_models.get_model('studio', 'VariantAnalyticsExperiment').objects.create(
+            batch_id=batch['id'], hint_variant_index=3, hint=hint, first_choice_index=1, ready_at_first_choice=4,
+        )
+    finally:
+        MigrationExecutor(connection).migrate(current)
+    trial = VariantAnalyticsExperiment.objects.get(pk=batch['id'])
+    assert (trial.protocol_version, trial.first_choice_index, trial.ready_at_first_choice) == (1, 1, 4)
+    assert list(trial.assignments.values_list('variant_index', 'hint')) == [(3, hint)]
+    assert create_batch(client, workspace)['analytics_experiment'] == {'status': 'applied', 'hint_count': 1}
+    for run in workspace.runs.all():
+        request = reserve_invocation(run, request_for(run, None, [])).request
+        assert request['variant_index'] == run.variant_index
+        assigned = request.get('design', {}).get('optional_analytics_hint')
+        if run.variant_index == 3:
+            assert assigned['suggestion'] == hint['text']
+            assert 'never as a user requirement' in assigned['guidance']
+        else:
+            assert assigned is None
+
+
+def test_downgrade_keeps_the_saved_multi_hint_assignments(client, workspace):
+    hint = {'hint_key': 'enemy_waves', 'text': 'Волны противников'}
+    with patch('studio.analytics_hints.choose_analytics_hints', return_value=[hint]):
+        batch = create_batch(client, workspace)
+    with pytest.raises(IrreversibleError, match='Keep migration 0031'):
+        MigrationExecutor(connection).migrate([('studio', '0030_variant_analytics_experiment')])
+    assert VariantAnalyticsExperiment.objects.get(pk=batch['id']).assignments.get().hint == hint
 
 
 @pytest.mark.parametrize(('pick_draft', 'shown_indexes', 'ready'), [
@@ -446,7 +513,7 @@ def test_experiment_rejects_edits_without_creating_jobs(client, workspace):
     (True, None, None),
 ])
 def test_first_experimental_choice_survives_later_selections(client, workspace, pick_draft, shown_indexes, ready):
-    with patch('studio.analytics_hints.choose_analytics_hint', return_value={'text': 'Подсказка'}):
+    with patch('studio.analytics_hints.choose_analytics_hints', return_value=[{'text': 'Подсказка'}]):
         batch = create_batch(client, workspace, analytics_experiment=True)
     slots = list(workspace.runs.order_by('variant_index'))
     revisions = []

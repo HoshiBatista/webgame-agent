@@ -21,6 +21,13 @@ export function variantRunning(variant: GameVariant) {
   return ['queued', 'generating', 'checking'].includes(variant.status);
 }
 
+const analyticsNotice = [
+  'Пока мало данных о похожих играх. Для всех вариантов действуют обычные правила Pro.',
+  'Для одного из вариантов подобрана подсказка по опыту игроков.',
+  'Для двух вариантов подобраны разные игровые механики по опыту игроков.',
+  'Для трёх вариантов подобраны разные игровые механики по опыту игроков.',
+];
+
 export function playableVariantDraft(variant: GameVariant) {
   return (
     !!variant.revision &&
@@ -75,17 +82,16 @@ export function VariantBatchCard({
   onReview: (variant: GameVariant) => void;
 }) {
   const ready = batch.variants.filter(canChooseVariant).length;
+  const experiment = batch.analytics_experiment;
   return (
     <section className="variant-batch" aria-label="Варианты игры">
       <header>
         <h3>Варианты игры</h3>
         <span role="status">Доступно для игры {ready} из 4</span>
       </header>
-      {batch.analytics_experiment && (
+      {experiment && (
         <p className="field-help">
-          {batch.analytics_experiment.status === 'applied'
-            ? 'Для одного из вариантов подобрана подсказка по опыту игроков.'
-            : 'Пока мало данных о похожих играх. Для всех вариантов действуют обычные правила Pro.'}
+          {analyticsNotice[experiment.hint_count ?? (experiment.status === 'applied' ? 1 : 0)]}
         </p>
       )}
       <ul>

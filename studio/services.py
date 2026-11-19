@@ -159,22 +159,39 @@ def usage_cost(usage, price):
     return cost.quantize(Decimal(".000001"), rounding=ROUND_UP)
 
 
+def apply_variant_plan_hint(run, request):
+    trial = VariantAnalyticsExperiment.objects.filter(batch_id=run.variant_batch_id).first()
+    if trial is None:
+        return
+    if trial.protocol_version == 1:
+        hint = trial.hint if trial.hint_variant_index == run.variant_index else None
+        guidance = ("Use only if compatible with the game request and saved preferences. "
+                    "If adopted, treat it as an optional design assumption with origin=design, "
+                    "never as a user requirement.")
+    else:
+        hints = dict(trial.assignments.values_list("variant_index", "hint"))
+        if not hints:
+            return
+        # The four positions otherwise have different built-in creative directions.
+        # Give all slots the ordinary Pro plan before applying the assigned mechanic.
+        request.pop("variant_index", None)
+        hint = hints.get(run.variant_index)
+        guidance = ("If compatible with the game request, its constraints and saved preferences, "
+                    "incorporate this mechanic into a player action with an observable effect during play. "
+                    "Record it as a design choice with origin=design. The author's instructions take priority.")
+    if hint:
+        request["design"] = {**(request.get("design") or {}), "optional_analytics_hint": {
+            "suggestion": hint["text"], "guidance": guidance,
+        }}
+
+
 @transaction.atomic
 def reserve_invocation(run, request):
     if not run.allow_model_calls:
         raise DomainError("model_calls_disabled", "Этот запуск только проверяет сохранённый ответ.", 409)
     request = {**request, "provider": run.provider, "model": run.model_for(request.get("operation"))}
     if request.get("operation") == "plan" and run.variant_batch_id and run.model_profile == "pro":
-        hint = VariantAnalyticsExperiment.objects.filter(
-            batch_id=run.variant_batch_id, hint_variant_index=run.variant_index,
-        ).values_list("hint", flat=True).first()
-        if hint:
-            request["design"] = {**(request.get("design") or {}), "optional_analytics_hint": {
-                "suggestion": hint["text"],
-                "guidance": "Use only if compatible with the game request and saved preferences. "
-                            "If adopted, treat it as an optional design assumption with origin=design, "
-                            "never as a user requirement.",
-            }}
+        apply_variant_plan_hint(run, request)
     import uuid
 
     invocation_id = uuid.uuid4()

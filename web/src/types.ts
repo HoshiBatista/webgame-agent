@@ -222,7 +222,7 @@ export interface GameVariant {
 }
 export interface VariantBatch {
   id: string;
-  analytics_experiment?: { status: 'applied' | 'insufficient_data' };
+  analytics_experiment?: { status: 'applied' | 'insufficient_data'; hint_count?: 0 | 1 | 2 | 3 };
   prompt: string;
   created_at: string;
   selected_revision_id: string | null;

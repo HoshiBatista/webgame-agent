@@ -64,12 +64,26 @@ class VariantBatch(models.Model):
 class VariantAnalyticsExperiment(models.Model):
     batch = models.OneToOneField(VariantBatch, primary_key=True, on_delete=models.CASCADE,
                                  related_name="analytics_experiment")
+    # The database default also identifies rows written by a v1 application during a rollout.
+    protocol_version = models.PositiveSmallIntegerField(default=2, db_default=1)
     hint = models.JSONField(null=True)
     hint_variant_index = models.PositiveSmallIntegerField(null=True)
     first_choice_index = models.PositiveSmallIntegerField(null=True)
     first_choice_revision_id = models.UUIDField(null=True)
     first_choice_at = models.DateTimeField(null=True)
     ready_at_first_choice = models.PositiveSmallIntegerField(null=True)
+
+
+class VariantAnalyticsHint(models.Model):
+    experiment = models.ForeignKey(VariantAnalyticsExperiment, on_delete=models.CASCADE, related_name="assignments")
+    variant_index = models.PositiveSmallIntegerField()
+    hint = models.JSONField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(variant_index__range=(1, 4)), name="studio_analytics_hint_slot"),
+            models.UniqueConstraint(fields=["experiment", "variant_index"], name="studio_analytics_hint_position"),
+        ]
 
 
 class Run(models.Model):

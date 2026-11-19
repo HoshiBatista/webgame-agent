@@ -1422,7 +1422,7 @@ describe('four ordinary Pro variants', () => {
     openProOptions();
     const option = screen.getByRole('checkbox', { name: experimentLabel });
     expect(option).toBeChecked();
-    expect(option).toHaveAccessibleDescription(/один из четырёх вариантов/);
+    expect(option).toHaveAccessibleDescription(/до трёх разных механик/);
     fireEvent.click(option);
     expect(option).not.toBeChecked();
     const toggle = screen.getByRole('checkbox', { name: /четыре варианта Pro/ });
@@ -1676,6 +1676,21 @@ describe('four ordinary Pro variants', () => {
       ]);
       expect(retry).toEqual(first);
       expect(first[1]).toHaveProperty('analytics_experiment', optIn);
+    },
+  );
+  it.each([
+    [2, 'Для двух вариантов'],
+    [3, 'Для трёх вариантов'],
+  ] as const)(
+    'shows how many mechanics were matched without identifying the %i variants',
+    async (count, text) => {
+      const group = batch();
+      group.analytics_experiment = { status: 'applied', hint_count: count };
+      vi.mocked(request).mockResolvedValue(detail(group));
+      setup(undefined, undefined, profile('pro'));
+      const panel = await screen.findByRole('region', { name: 'Варианты игры' });
+      expect(within(panel).getByText(text, { exact: false })).toBeVisible();
+      expect(within(panel).getByRole('list')).not.toHaveTextContent(/подсказк|механик/i);
     },
   );
   it('reports an opted-in draft choice without losing the local selection on failure', async () => {

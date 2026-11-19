@@ -5,13 +5,13 @@ import uuid
 from copy import copy
 
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from . import services
 from .acceptance import confirmation_report
-from .models import Chat, Run, VariantAnalyticsExperiment, VariantBatch
+from .models import Chat, Run, VariantAnalyticsExperiment, VariantAnalyticsHint, VariantBatch
 from .serialization import preview_url
 
 
@@ -43,12 +43,16 @@ def create_batch(chat, data, *, authorize):
     if experiment and not eligible:
         raise services.DomainError("invalid_analytics_experiment", "Эксперимент доступен при создании новой игры в Pro 4×.")
     if eligible and experiment is not False:
-        from .analytics_hints import choose_analytics_hint
+        from .analytics_hints import choose_analytics_hints
 
-        hint = choose_analytics_hint(prompt=first.prompt, audience=first.audience)
-        VariantAnalyticsExperiment.objects.create(
-            batch=batch, hint=hint, hint_variant_index=secrets.randbelow(4) + 1 if hint else None,
-        )
+        hints = choose_analytics_hints(prompt=first.prompt, audience=first.audience)
+        trial = VariantAnalyticsExperiment.objects.create(batch=batch)
+        if hints:
+            positions = secrets.SystemRandom().sample(range(1, 5), k=len(hints))
+            VariantAnalyticsHint.objects.bulk_create([
+                VariantAnalyticsHint(experiment=trial, variant_index=position, hint=hint)
+                for position, hint in zip(positions, hints, strict=True)
+            ])
     for index in range(2, 5):
         sibling = copy(first)
         sibling.pk = uuid.uuid4()
@@ -66,8 +70,9 @@ def batches_for(chat):
         "id", "variant_batch_id", "variant_index", "prompt", "status", "stage", "message", "error",
         *(f"{rel}__{field}" for rel in ("candidate_revision", "result_revision") for field in revision_fields),
     ).order_by("variant_index", "created_at", "id")
-    return (chat.variant_batches.select_related("analytics_experiment").order_by("-created_at", "-id")
-            .prefetch_related(Prefetch("runs", queryset=runs)))
+    return (chat.variant_batches.select_related("analytics_experiment")
+            .annotate(hint_count=Count("analytics_experiment__assignments"))
+            .order_by("-created_at", "-id").prefetch_related(Prefetch("runs", queryset=runs)))
 
 
 def batch_data(batch):
@@ -101,7 +106,8 @@ def batch_data(batch):
     }
     experiment = getattr(batch, "analytics_experiment", None)
     if experiment is not None:
-        data["analytics_experiment"] = {"status": "applied" if experiment.hint_variant_index else "insufficient_data"}
+        count = int(experiment.hint_variant_index is not None) if experiment.protocol_version == 1 else batch.hint_count
+        data["analytics_experiment"] = {"status": "applied" if count else "insufficient_data", "hint_count": count}
     return data
 
 

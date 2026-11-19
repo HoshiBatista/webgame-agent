@@ -1,4 +1,4 @@
-"""Select one design hypothesis from comparable published games without an LLM call."""
+"""Select distinct mechanics from comparable published games without an LLM call."""
 
 import re
 
@@ -52,6 +52,7 @@ HINTS = {
 }
 RESTRICTION = re.compile(r"\b(?:без|не|никак\w*|только|исключительно|without|never|no|not|only)\b")
 MAX_CANDIDATES = 100
+MAX_HINTS = 3
 MIN_SESSIONS = 8
 MIN_RATINGS = 3
 
@@ -60,7 +61,7 @@ def _genres(text):
     return {key for key, pattern in GENRES.items() if re.search(pattern, text)}
 
 
-def _source_hint(row, requested_genres):
+def _source_hint_keys(row, requested_genres, available_patterns):
     # Read selected design fields only, never the original/private request or transcript.
     descriptions = [row["revision__design__summary"], row["revision__run__game_plan__summary"]]
     mechanics = row["revision__run__game_plan__mechanics"]
@@ -69,23 +70,24 @@ def _source_hint(row, requested_genres):
     fields = [text.casefold() for text in descriptions if isinstance(text, str) and not RESTRICTION.search(text.casefold())]
     if requested_genres:
         if not requested_genres.issubset(_genres(" ".join([row["title"].casefold(), *fields]))):
-            return None
+            return []
     elif not any(SPACE_SETTING.search(field) for field in fields):
-        return None
-    for key, (pattern, text) in HINTS.items():
-        if any(re.search(pattern, field) for field in fields):
-            return key, text
-    return None
+        return []
+    return [key for key, pattern in available_patterns if any(re.search(pattern, field) for field in fields)]
 
 
-def choose_analytics_hint(*, prompt, audience):
-    """Return a serializable audit snapshot or None if the available evidence is weak."""
+def choose_analytics_hints(*, prompt, audience):
+    """Return up to three distinct hints and the strongest source snapshot for each."""
     from .publication_analytics import MIN_AVERAGED_SESSION_MS
 
     prompt = prompt.casefold()
     genres = _genres(prompt)
     if RESTRICTION.search(prompt) or (not genres and not OPEN_SPACE_GAME.fullmatch(prompt.strip(" .!?\t\r\n"))):
-        return None
+        return []
+    # A mechanic already requested by the author belongs in every variant.
+    available_patterns = [(key, pattern) for key, (pattern, _) in HINTS.items() if not re.search(pattern, prompt)]
+    if not available_patterns:
+        return []
 
     recent = Publication.objects.filter(
         unavailable_at__isnull=True, revision__pipeline_version=CONTRACT_VERSION, revision__run__audience=audience,
@@ -94,9 +96,11 @@ def choose_analytics_hint(*, prompt, audience):
         "revision__run__game_plan__summary", "revision__run__game_plan__core_loop",
         "revision__run__game_plan__mechanics", "revision__run__game_plan__progression",
     )[:MAX_CANDIDATES]
-    candidates = {row["pk"]: (row, hint) for row in recent if (hint := _source_hint(row, genres))}
+    candidates = {
+        row["pk"]: (row, keys) for row in recent if (keys := _source_hint_keys(row, genres, available_patterns))
+    }
     if not candidates:
-        return None
+        return []
 
     # Independent grouped queries avoid multiplying sessions by the number of ratings.
     sessions = PlaySession.objects.filter(
@@ -110,7 +114,7 @@ def choose_analytics_hint(*, prompt, audience):
         for s in sessions if s["engaged"] * 2 >= s["n"]
     }
     if not activity:
-        return None
+        return []
 
     # Ratings belong to a publication. Counting only votes cast/updated since its
     # last change conservatively discards ratings left on a previous revision.
@@ -120,11 +124,10 @@ def choose_analytics_hint(*, prompt, audience):
     ).values("publication_id", "publication__revision_id").annotate(
         n=Count("pk"), stars=Sum("rating"),
     ).filter(n__gte=MIN_RATINGS)
-    best_score = None
-    best_hint = None
+    ranked_sources = []
     for rating in ratings:
         publication_id = rating["publication_id"]
-        row, (key, text) = candidates[publication_id]
+        row, keys = candidates[publication_id]
         version = row["revision_id"]
         session = activity.get((publication_id, version, row["revision__artifact_hash"]))
         if not session or rating["publication__revision_id"] != version:
@@ -134,15 +137,21 @@ def choose_analytics_hint(*, prompt, audience):
         if adjusted_rating < 3.5:
             continue
         score = (adjusted_rating, session["engaged"] / session["n"], rating["n"], publication_id)
-        if best_score is None or score > best_score:
-            best_score = score
-            best_hint = {
-                "hint_key": key, "text": text, "source_publication_id": str(publication_id),
-                "source_revision_id": str(version), "source_artifact_hash": row["revision__artifact_hash"],
-                "match_basis": "genre" if genres else "theme",
-                "genre": sorted(genres)[0] if genres else None, "theme": None if genres else "space",
-                "ratings_count": rating["n"],
-                "rating_mean": round(rating["stars"] / rating["n"], 2),
-                "sessions_count": session["n"], "engaged_sessions": session["engaged"],
-            }
-    return best_hint
+        evidence = {
+            "source_publication_id": str(publication_id), "source_revision_id": str(version),
+            "source_artifact_hash": row["revision__artifact_hash"],
+            "match_basis": "genre" if genres else "theme",
+            "genre": sorted(genres)[0] if genres else None, "theme": None if genres else "space",
+            "ratings_count": rating["n"], "rating_mean": round(rating["stars"] / rating["n"], 2),
+            "sessions_count": session["n"], "engaged_sessions": session["engaged"],
+        }
+        ranked_sources.append((score, keys, evidence))
+
+    # Publications with identical rates have a stable ID tie-break. Mechanics
+    # within a publication retain catalogue order, independent of SQL row order.
+    hints = {}
+    for _, keys, evidence in sorted(ranked_sources, key=lambda source: source[0], reverse=True):
+        for key in keys:
+            if key not in hints:
+                hints[key] = {"hint_key": key, "text": HINTS[key][1], **evidence}
+    return list(hints.values())[:MAX_HINTS]
